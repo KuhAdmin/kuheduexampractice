@@ -9,8 +9,6 @@ const workspaceRoot = path.resolve(serverRoot, "..");
 
 dotenv.config({ path: path.join(workspaceRoot, ".env") });
 dotenv.config({ path: path.join(serverRoot, ".env"), override: false });
-dotenv.config({ path: path.join(workspaceRoot, ".env.example"), override: false });
-dotenv.config({ path: path.join(serverRoot, ".env.example"), override: false });
 
 const defaults = {
   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/kuhedu_practice",
