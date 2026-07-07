@@ -1,0 +1,2678 @@
+Pipeline Audit Log
+Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Status: completed
+Created At: Sat Jun 27 2026 05:22:36 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:54 GMT+0530 (India Standard Time)
+Source Section ID: 2
+Source Document ID: 1
+MST Chapter ID: 801
+
+REQUEST PAYLOAD
+{
+  "board": "CBSE",
+  "chapter": "The Living World",
+  "subject": "Physics",
+  "duration": "25",
+  "blueprint": "Understand -> recall -> apply -> retry",
+  "className": "11",
+  "chapterKey": "2:1",
+  "subjectCode": "BIO",
+  "practiceType": "Chapter Master",
+  "sectionNumber": "1.2",
+  "sectionOcrText": "Classification is not a single step process but involves hierarchy of steps in which each step represents a rank or category. Since the category is a part of overall taxonomic arrangement, it is called the **taxonomic category** and all categories together constitute the **taxonomic hierarchy**. Each category, referred to as a unit of classification, in fact, represents a rank and is commonly termed as **taxon** (pl.: taxa).\n\nTaxonomic categories and hierarchy can be illustrated by an example. Insects represent a group of organisms sharing common features such as three pairs of jointed legs. It means insects are recognisable concrete objects which can be classified, and thus were given a rank or category. Can you name other such groups of organisms? Remember, groups represent category. Category further denotes rank. Each rank or taxon, in fact, represents a unit of classification. These taxonomic groups/categories are distinct biological entities and not merely morphological aggregates.\n\nTaxonomical studies of all known organisms have led to the development of common categories such as kingdom, phylum or division (for plants), class, order, family, genus and species. All organisms, including those in the plant and animal kingdoms have species as the lowest category. Now the question you may ask is, how to place organisms in various categories? The basic requirement is the knowledge of characters of an individual or group of organisms. This helps in identifying similarities and dissimilarities among the individuals of the same kind of organisms as well as of other kinds of organisms.",
+  "sectionImageName": "",
+  "targetDifficulty": "Balanced",
+  "sectionImageDataUrl": "",
+  "sectionImageMimeType": ""
+}
+
+LAYERS
+
+Layer Entry 1
+Layer Number: 1
+Layer Name: Knowledge Extraction
+Assessment Unit ID: 
+Status: completed
+Is Cached: false
+Generation ID: 6d05b02a-9d57-475f-99b2-9460f58546fa
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvAdcSAj6j9h4z76xhKWXKejBAbZ3
+Token Input: 663
+Token Output: 1264
+Created At: Sat Jun 27 2026 05:22:48 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:22:48 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "context": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Physics",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "imageName": null,
+    "chapterKey": "2:1",
+    "subjectCode": "BIO",
+    "practiceType": "Chapter Master",
+    "sectionNumber": "1.2",
+    "targetDifficulty": "Balanced"
+  },
+  "source_artifacts": {
+    "section_text": {
+      "has_text": true,
+      "normalized_text": "Classification is not a single step process but involves hierarchy of steps in which each step represents a rank or category. Since the category is a part of overall taxonomic arrangement, it is called the **taxonomic category** and all categories together constitute the **taxonomic hierarchy**. Each category, referred to as a unit of classification, in fact, represents a rank and is commonly termed as **taxon** (pl.: taxa).\n\nTaxonomic categories and hierarchy can be illustrated by an example. Insects represent a group of organisms sharing common features such as three pairs of jointed legs. It means insects are recognisable concrete objects which can be classified, and thus were given a rank or category. Can you name other such groups of organisms? Remember, groups represent category. Category further denotes rank. Each rank or taxon, in fact, represents a unit of classification. These taxonomic groups/categories are distinct biological entities and not merely morphological aggregates.\n\nTaxonomical studies of all known organisms have led to the development of common categories such as kingdom, phylum or division (for plants), class, order, family, genus and species. All organisms, including those in the plant and animal kingdoms have species as the lowest category. Now the question you may ask is, how to place organisms in various categories? The basic requirement is the knowledge of characters of an individual or group of organisms. This helps in identifying similarities and dissimilarities among the individuals of the same kind of organisms as well as of other kinds of organisms.",
+      "full_text_length": 1609
+    },
+    "section_image": {
+      "file_name": null,
+      "has_image": false,
+      "mime_type": null,
+      "image_digest": null,
+      "storage_path": null
+    }
+  }
+}
+
+OUTPUT JSON
+{
+  "diagrams": [],
+  "functions": [
+    {
+      "item": "Taxonomic hierarchy",
+      "function": "Organises organisms into ranked categories for systematic classification."
+    },
+    {
+      "item": "Knowledge of characters",
+      "function": "Helps identify similarities and dissimilarities for placing organisms into categories."
+    }
+  ],
+  "processes": [
+    {
+      "name": "Taxonomic classification",
+      "steps": [
+        "Observe characters of an individual or group",
+        "Identify similarities and dissimilarities",
+        "Recognise the organism as belonging to a group",
+        "Assign it to an appropriate taxonomic category or rank",
+        "Place it within the taxonomic hierarchy"
+      ]
+    }
+  ],
+  "exceptions": [
+    {
+      "case": "Plants",
+      "detail": "The term division is used in place of phylum."
+    }
+  ],
+  "structures": [
+    {
+      "name": "Taxonomic hierarchy",
+      "components": [
+        "Kingdom",
+        "Phylum/Division",
+        "Class",
+        "Order",
+        "Family",
+        "Genus",
+        "Species"
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "items": [
+        "Category",
+        "Rank",
+        "Taxon"
+      ],
+      "comparison": "A category denotes a rank, and each rank as a unit of classification is termed a taxon."
+    },
+    {
+      "items": [
+        "Phylum",
+        "Division"
+      ],
+      "comparison": "Phylum is used generally, while division is used for plants."
+    }
+  ],
+  "terminology": [
+    {
+      "term": "Taxonomic category",
+      "meaning": "A category that forms part of the overall taxonomic arrangement."
+    },
+    {
+      "term": "Taxonomic hierarchy",
+      "meaning": "The arrangement formed by all taxonomic categories together."
+    },
+    {
+      "term": "Taxon",
+      "meaning": "A unit of classification representing a rank or category."
+    },
+    {
+      "term": "Taxa",
+      "meaning": "Plural of taxon."
+    },
+    {
+      "term": "Species",
+      "meaning": "The lowest taxonomic category."
+    }
+  ],
+  "cause_effect": [
+    {
+      "cause": "Taxonomical studies of known organisms",
+      "effect": "Development of common taxonomic categories such as kingdom, phylum/division, class, order, family, genus and species."
+    },
+    {
+      "cause": "Knowledge of organismal characters",
+      "effect": "Proper placement of organisms into various taxonomic categories."
+    }
+  ],
+  "memory_hooks": [
+    {
+      "hook": "KPCOFGS",
+      "helps_remember": "Kingdom, Phylum/Division, Class, Order, Family, Genus, Species"
+    },
+    {
+      "hook": "Species is the smallest step",
+      "helps_remember": "Species is the lowest taxonomic category."
+    }
+  ],
+  "core_concepts": [
+    "Classification involves multiple hierarchical steps, not a single step.",
+    "Each step in classification represents a rank or category.",
+    "A taxonomic category is a unit within the overall taxonomic arrangement.",
+    "All taxonomic categories together form the taxonomic hierarchy.",
+    "Each rank or category is called a taxon; plural is taxa.",
+    "Species is the lowest taxonomic category in both plants and animals.",
+    "Placement of organisms into categories depends on knowledge of their characters and comparison of similarities and dissimilarities."
+  ],
+  "classifications": [
+    {
+      "type": "Taxonomic categories",
+      "members": [
+        "Kingdom",
+        "Phylum",
+        "Division",
+        "Class",
+        "Order",
+        "Family",
+        "Genus",
+        "Species"
+      ]
+    },
+    {
+      "type": "Example group",
+      "members": [
+        "Insects"
+      ]
+    }
+  ],
+  "context_summary": "Taxonomic classification is a hierarchical process in which organisms are arranged into ranked categories called taxa, forming a taxonomic hierarchy from species upward to kingdom.",
+  "assessment_units": [
+    {
+      "unit": "Definitions",
+      "focus": [
+        "Taxonomic category",
+        "Taxonomic hierarchy",
+        "Taxon"
+      ]
+    },
+    {
+      "unit": "Ordered recall",
+      "focus": [
+        "Sequence of taxonomic categories"
+      ]
+    },
+    {
+      "unit": "Conceptual understanding",
+      "focus": [
+        "Why classification is hierarchical",
+        "Role of characters in classification"
+      ]
+    }
+  ],
+  "stages_sequences": [
+    {
+      "name": "Major taxonomic categories",
+      "sequence": [
+        "Kingdom",
+        "Phylum/Division",
+        "Class",
+        "Order",
+        "Family",
+        "Genus",
+        "Species"
+      ]
+    }
+  ],
+  "question_patterns": [
+    "Define taxonomic category, taxon and taxonomic hierarchy.",
+    "Why is classification said to be a hierarchical process?",
+    "List the major taxonomic categories in order.",
+    "What is the lowest taxonomic category in plants and animals?",
+    "How are organisms placed into various taxonomic categories?",
+    "Differentiate between phylum and division."
+  ],
+  "common_misconceptions": [
+    {
+      "correction": "Classification involves a hierarchy of multiple ranked steps.",
+      "misconception": "Classification is a single-step process."
+    },
+    {
+      "correction": "Taxonomic groups are distinct biological entities.",
+      "misconception": "Taxonomic groups are only morphological aggregates."
+    },
+    {
+      "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+      "misconception": "Category, rank and taxon are unrelated terms."
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 2
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: AU-1
+Status: completed
+Is Cached: false
+Generation ID: fd6fc907-f8a4-491e-b49b-57b0d0a85d1f
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvAdmUwQpQxmGFXOHLzUGyOrb5LQx
+Token Input: 329
+Token Output: 259
+Created At: Sat Jun 27 2026 05:22:51 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:22:51 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 1",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-1",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "concept_description": "Taxonomic classification is a hierarchical process in which organisms are arranged into ranked categories called taxa, forming a taxonomic hierarchy from species upward to kingdom.",
+  "supporting_concepts": [],
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of multiple ranked steps.",
+      "misconception": "Classification is a single-step process."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups are distinct biological entities.",
+      "misconception": "Taxonomic groups are only morphological aggregates."
+    },
+    {
+      "concept": null,
+      "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+      "misconception": "Category, rank and taxon are unrelated terms."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "core_memory": "Taxonomic classification is a hierarchical process in which organisms are arranged into ranked categories called taxa, forming a taxonomic hierarchy from species upward to kingdom.",
+      "dependencies": [],
+      "memory_hooks": [],
+      "misconceptions": [
+        {
+          "correction": "Classification involves a hierarchy of multiple ranked steps.",
+          "misconception": "Classification is a single-step process."
+        },
+        {
+          "correction": "Taxonomic groups are distinct biological entities.",
+          "misconception": "Taxonomic groups are only morphological aggregates."
+        },
+        {
+          "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+          "misconception": "Category, rank and taxon are unrelated terms."
+        }
+      ],
+      "primary_concept": "Assessment Unit 1",
+      "concept_category": "general",
+      "fk_mst_chapter_id": "801",
+      "source_section_id": "2",
+      "assessment_unit_id": "AU-1",
+      "supporting_memories": [],
+      "curriculum_importance": "medium"
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 3
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: AU-2
+Status: completed
+Is Cached: false
+Generation ID: f9c3104b-5f92-4fae-a6a4-a6d94dda6c4d
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvAdo1EAKnNxWQky83uO0ZTcnVMsR
+Token Input: 329
+Token Output: 207
+Created At: Sat Jun 27 2026 05:22:53 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:22:53 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 2",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-2",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "concept_description": "Taxonomic classification is a hierarchical process in which organisms are arranged into ranked categories called taxa, forming a taxonomic hierarchy from species upward to kingdom.",
+  "supporting_concepts": [],
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of multiple ranked steps.",
+      "misconception": "Classification is a single-step process."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups are distinct biological entities.",
+      "misconception": "Taxonomic groups are only morphological aggregates."
+    },
+    {
+      "concept": null,
+      "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+      "misconception": "Category, rank and taxon are unrelated terms."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "dependencies": [],
+      "memory_hooks": [],
+      "primary_concept": "Assessment Unit 2",
+      "concept_category": "general",
+      "fk_mst_chapter_id": "801",
+      "source_section_id": "2",
+      "assessment_unit_id": "AU-2",
+      "concept_description": "Taxonomic classification is a hierarchical process in which organisms are arranged into ranked categories called taxa, forming a taxonomic hierarchy from species upward to kingdom.",
+      "supporting_concepts": [],
+      "curriculum_importance": "medium",
+      "misconception_profile": [
+        {
+          "concept": null,
+          "correction": "Classification involves a hierarchy of multiple ranked steps.",
+          "misconception": "Classification is a single-step process."
+        },
+        {
+          "concept": null,
+          "correction": "Taxonomic groups are distinct biological entities.",
+          "misconception": "Taxonomic groups are only morphological aggregates."
+        },
+        {
+          "concept": null,
+          "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+          "misconception": "Category, rank and taxon are unrelated terms."
+        }
+      ]
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 4
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: AU-3
+Status: completed
+Is Cached: false
+Generation ID: 19b539c5-1ab9-4c4d-a831-089e03c83e29
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvAdqDu5JQrAqSeODikyzBzdhaDfJ
+Token Input: 329
+Token Output: 119
+Created At: Sat Jun 27 2026 05:22:55 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:22:55 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 3",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-3",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "concept_description": "Taxonomic classification is a hierarchical process in which organisms are arranged into ranked categories called taxa, forming a taxonomic hierarchy from species upward to kingdom.",
+  "supporting_concepts": [],
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of multiple ranked steps.",
+      "misconception": "Classification is a single-step process."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups are distinct biological entities.",
+      "misconception": "Taxonomic groups are only morphological aggregates."
+    },
+    {
+      "concept": null,
+      "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+      "misconception": "Category, rank and taxon are unrelated terms."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "memory_text": "Taxonomic classification is a hierarchical process: organisms are arranged in ranked categories called taxa, moving stepwise from species upward to kingdom.",
+      "memory_type": "hierarchical-definition",
+      "primary_concept": "Assessment Unit 3",
+      "fk_mst_chapter_id": "801",
+      "source_section_id": "2",
+      "assessment_unit_id": "AU-3",
+      "supporting_concepts": [],
+      "linked_misconceptions": [
+        "Classification is a single-step process.",
+        "Taxonomic groups are only morphological aggregates.",
+        "Category, rank and taxon are unrelated terms."
+      ]
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 5
+Layer Number: 3
+Layer Name: Assessment Capability
+Assessment Unit ID: AU-1
+Status: completed
+Is Cached: false
+Generation ID: 3efc5ee8-78dc-41a0-b5b0-5fd98861c3e0
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DvAdscHNHJRPTizBf7VrTiF32lafk
+Token Input: 296
+Token Output: 459
+Created At: Sat Jun 27 2026 05:22:58 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:22:58 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "concept_memory": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "fd6fc907-f8a4-491e-b49b-57b0d0a85d1f",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 1",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-1",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 1",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-1",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "prerequisite_list": []
+}
+
+OUTPUT JSON
+{
+  "capabilities": [
+    {
+      "layer": "L3",
+      "skill": "identify",
+      "evidence": [
+        "Recognizes the primary concept when presented in a simple prompt.",
+        "Selects the correct concept from a small set of alternatives."
+      ],
+      "difficulty": "low",
+      "description": "Identify the main idea or concept represented by the assessment unit.",
+      "capability_id": "AU-1-L3-1",
+      "prerequisites": [],
+      "misconceptions": [],
+      "assessment_unit_id": "AU-1"
+    },
+    {
+      "layer": "L3",
+      "skill": "recall",
+      "evidence": [
+        "States a relevant fact without prompting.",
+        "Matches a definition to the correct term."
+      ],
+      "difficulty": "low",
+      "description": "Recall a basic fact, definition, or characteristic associated with the assessment unit.",
+      "capability_id": "AU-1-L3-2",
+      "prerequisites": [],
+      "misconceptions": [],
+      "assessment_unit_id": "AU-1"
+    },
+    {
+      "layer": "L3",
+      "skill": "classify",
+      "evidence": [
+        "Sorts examples into correct and incorrect categories.",
+        "Explains why an example fits the concept at a basic level."
+      ],
+      "difficulty": "medium",
+      "description": "Classify a simple example as belonging to the assessment unit concept or not.",
+      "capability_id": "AU-1-L3-3",
+      "prerequisites": [
+        "AU-1-L3-1"
+      ],
+      "misconceptions": [],
+      "assessment_unit_id": "AU-1"
+    },
+    {
+      "layer": "L3",
+      "skill": "apply",
+      "evidence": [
+        "Chooses an appropriate response in a direct scenario.",
+        "Uses the concept correctly in a simple context."
+      ],
+      "difficulty": "medium",
+      "description": "Apply the concept to a straightforward scenario or context.",
+      "capability_id": "AU-1-L3-4",
+      "prerequisites": [
+        "AU-1-L3-2"
+      ],
+      "misconceptions": [],
+      "assessment_unit_id": "AU-1"
+    },
+    {
+      "layer": "L3",
+      "skill": "explain",
+      "evidence": [
+        "Provides a brief explanation that includes the concept and a reason.",
+        "Gives a relevant example that supports the explanation."
+      ],
+      "difficulty": "medium",
+      "description": "Explain the concept in simple terms using one supporting reason or example.",
+      "capability_id": "AU-1-L3-5",
+      "prerequisites": [
+        "AU-1-L3-1",
+        "AU-1-L3-2"
+      ],
+      "misconceptions": [],
+      "assessment_unit_id": "AU-1"
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 6
+Layer Number: 3
+Layer Name: Assessment Capability
+Assessment Unit ID: AU-2
+Status: completed
+Is Cached: false
+Generation ID: ca55ddaf-1b91-446c-b80b-a0ae1d6c8ebb
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DvAdwFvdFagVKz7J3NJ2YLgL7fs6e
+Token Input: 298
+Token Output: 11
+Created At: Sat Jun 27 2026 05:23:00 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:00 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "concept_memory": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "f9c3104b-5f92-4fae-a6a4-a6d94dda6c4d",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 2",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-2",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 2",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-2",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "prerequisite_list": []
+}
+
+OUTPUT JSON
+{
+  "capabilities": []
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 7
+Layer Number: 3
+Layer Name: Assessment Capability
+Assessment Unit ID: AU-3
+Status: completed
+Is Cached: false
+Generation ID: c6a22144-8864-4f4d-bfab-d459e0706b6f
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DvAdxg2f2oxB5CwwegHvm8aXJR2Jt
+Token Input: 295
+Token Output: 150
+Created At: Sat Jun 27 2026 05:23:02 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:02 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "concept_memory": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "19b539c5-1ab9-4c4d-a831-089e03c83e29",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 3",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-3",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 3",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-3",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "prerequisite_list": []
+}
+
+OUTPUT JSON
+{
+  "capabilities": [
+    {
+      "difficulty": "easy",
+      "description": "Recognize the central topic or focus presented by Assessment Unit 3.",
+      "capability_id": "AU-3-L3-01",
+      "prerequisites": [],
+      "misconceptions": [],
+      "retrieval_cues": [
+        "primary concept",
+        "unit title",
+        "main topic"
+      ],
+      "capability_name": "Identify the main idea of the assessment unit",
+      "cognitive_level": "remember",
+      "linked_concepts": [],
+      "evidence_criteria": [
+        "Selects or states the correct main idea when prompted.",
+        "Does not confuse the unit with unrelated topics."
+      ],
+      "assessment_targets": [
+        "Recall the primary concept of the unit.",
+        "Distinguish the unit focus from other content."
+      ],
+      "assessment_unit_id": "AU-3"
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 8
+Layer Number: 4
+Layer Name: Assessment Strategy
+Assessment Unit ID: AU-1
+Status: completed
+Is Cached: false
+Generation ID: 51dcc3cc-84e1-4231-9e06-c0f57ee7889f
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DvAdzXBwS2qxbLjG0bJJagKy7g2bG
+Token Input: 1076
+Token Output: 457
+Created At: Sat Jun 27 2026 05:23:06 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:06 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "capability": {
+    "capabilities": [
+      {
+        "layer": "L3",
+        "skill": "identify",
+        "evidence": [
+          "Recognizes the primary concept when presented in a simple prompt.",
+          "Selects the correct concept from a small set of alternatives."
+        ],
+        "difficulty": "low",
+        "description": "Identify the main idea or concept represented by the assessment unit.",
+        "capability_id": "AU-1-L3-1",
+        "prerequisites": [],
+        "misconceptions": [],
+        "assessment_unit_id": "AU-1"
+      },
+      {
+        "layer": "L3",
+        "skill": "recall",
+        "evidence": [
+          "States a relevant fact without prompting.",
+          "Matches a definition to the correct term."
+        ],
+        "difficulty": "low",
+        "description": "Recall a basic fact, definition, or characteristic associated with the assessment unit.",
+        "capability_id": "AU-1-L3-2",
+        "prerequisites": [],
+        "misconceptions": [],
+        "assessment_unit_id": "AU-1"
+      },
+      {
+        "layer": "L3",
+        "skill": "classify",
+        "evidence": [
+          "Sorts examples into correct and incorrect categories.",
+          "Explains why an example fits the concept at a basic level."
+        ],
+        "difficulty": "medium",
+        "description": "Classify a simple example as belonging to the assessment unit concept or not.",
+        "capability_id": "AU-1-L3-3",
+        "prerequisites": [
+          "AU-1-L3-1"
+        ],
+        "misconceptions": [],
+        "assessment_unit_id": "AU-1"
+      },
+      {
+        "layer": "L3",
+        "skill": "apply",
+        "evidence": [
+          "Chooses an appropriate response in a direct scenario.",
+          "Uses the concept correctly in a simple context."
+        ],
+        "difficulty": "medium",
+        "description": "Apply the concept to a straightforward scenario or context.",
+        "capability_id": "AU-1-L3-4",
+        "prerequisites": [
+          "AU-1-L3-2"
+        ],
+        "misconceptions": [],
+        "assessment_unit_id": "AU-1"
+      },
+      {
+        "layer": "L3",
+        "skill": "explain",
+        "evidence": [
+          "Provides a brief explanation that includes the concept and a reason.",
+          "Gives a relevant example that supports the explanation."
+        ],
+        "difficulty": "medium",
+        "description": "Explain the concept in simple terms using one supporting reason or example.",
+        "capability_id": "AU-1-L3-5",
+        "prerequisites": [
+          "AU-1-L3-1",
+          "AU-1-L3-2"
+        ],
+        "misconceptions": [],
+        "assessment_unit_id": "AU-1"
+      }
+    ]
+  },
+  "memory_profile": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "fd6fc907-f8a4-491e-b49b-57b0d0a85d1f",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 1",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-1",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 1",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-1",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of multiple ranked steps.",
+      "misconception": "Classification is a single-step process."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups are distinct biological entities.",
+      "misconception": "Taxonomic groups are only morphological aggregates."
+    },
+    {
+      "concept": null,
+      "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+      "misconception": "Category, rank and taxon are unrelated terms."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "strategies": [
+    {
+      "layer": "L4",
+      "difficulty": "medium",
+      "strategy_id": "AU-1-L4-1",
+      "common_errors": [
+        "Treating classification as a one-step label-only task.",
+        "Confusing the concept with a broader or narrower related term.",
+        "Using memorized facts without connecting them to the scenario.",
+        "Giving an explanation that repeats the prompt without a reason.",
+        "Assuming category, rank, and taxon are interchangeable or unrelated."
+      ],
+      "strategy_type": "conceptual_integration",
+      "memory_support": [
+        "Use a simple retrieval sequence: name it, define it, sort it, use it, explain it.",
+        "Anchor the concept to a short cue phrase that emphasizes hierarchy and classification steps.",
+        "Reinforce the distinction between rank as a category and taxon as a unit of classification."
+      ],
+      "strategy_summary": "Build a coherent understanding of the unit by linking identification, recall, classification, application, and explanation into one integrated response pattern.",
+      "success_criteria": [
+        "Correctly identifies the primary concept from a prompt.",
+        "Recalls at least one accurate fact or definition related to the concept.",
+        "Classifies a simple example correctly and gives a basic justification.",
+        "Applies the concept appropriately in a straightforward scenario.",
+        "Provides a brief explanation that includes the concept and one relevant reason or example."
+      ],
+      "assessment_format": "short_constructed_response_with_classification_item",
+      "assessment_unit_id": "AU-1",
+      "misconception_links": [
+        "Classification is a single-step process.",
+        "Taxonomic groups are only morphological aggregates.",
+        "Category, rank and taxon are unrelated terms."
+      ],
+      "target_capabilities": [
+        "AU-1-L3-1",
+        "AU-1-L3-2",
+        "AU-1-L3-3",
+        "AU-1-L3-4",
+        "AU-1-L3-5"
+      ],
+      "instructional_actions": [
+        "Present a short prompt that requires the learner to name the concept, state a defining fact, sort an example, apply the concept in a simple scenario, and explain the choice in one or two sentences.",
+        "Use a compare-and-contrast task with one correct example and one distractor to reinforce boundaries of the concept.",
+        "Ask the learner to justify classification decisions using the concept name plus one supporting reason or example.",
+        "Sequence questions from recognition to explanation so the learner must connect facts to use, not just recall them."
+      ]
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 9
+Layer Number: 4
+Layer Name: Assessment Strategy
+Assessment Unit ID: AU-2
+Status: completed
+Is Cached: false
+Generation ID: 2f9508f0-6cc3-4123-b46c-cc290d30462f
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DvAe2RCjvtJ7494mvfC64uzoBWsZP
+Token Input: 445
+Token Output: 215
+Created At: Sat Jun 27 2026 05:23:08 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:08 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "capability": {
+    "capabilities": []
+  },
+  "memory_profile": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "f9c3104b-5f92-4fae-a6a4-a6d94dda6c4d",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 2",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-2",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 2",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-2",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of multiple ranked steps.",
+      "misconception": "Classification is a single-step process."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups are distinct biological entities.",
+      "misconception": "Taxonomic groups are only morphological aggregates."
+    },
+    {
+      "concept": null,
+      "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+      "misconception": "Category, rank and taxon are unrelated terms."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "strategies": [
+    {
+      "layer": "4",
+      "priority": "medium",
+      "strategy": "Teach classification as a hierarchical, multi-rank system. Explicitly distinguish category (the rank), taxon (the unit at that rank), and the biological reality of taxonomic groups. Use a stepwise example to show how organisms are placed into nested ranks rather than assigned in one step.",
+      "rationale": "The listed misconceptions all stem from collapsing taxonomy into a simple label-based grouping. A layered correction should emphasize hierarchy, terminology, and the biological basis of taxa.",
+      "strategy_type": "misconception_correction",
+      "assessment_unit_id": "AU-2",
+      "implementation_notes": [
+        "Present ranks from broad to specific and map each to a taxon example.",
+        "Contrast 'rank' vs 'taxon' in a two-column table.",
+        "Include a quick check asking learners to identify the category and the taxon in sample statements."
+      ],
+      "target_misconceptions": [
+        "Classification is a single-step process.",
+        "Taxonomic groups are only morphological aggregates.",
+        "Category, rank and taxon are unrelated terms."
+      ]
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 10
+Layer Number: 4
+Layer Name: Assessment Strategy
+Assessment Unit ID: AU-3
+Status: completed
+Is Cached: false
+Generation ID: 12c836ce-3668-48f3-9f1a-41fc74b7bb6e
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DvAe4KXn5zOUYw262zNL7PDm73e8i
+Token Input: 635
+Token Output: 284
+Created At: Sat Jun 27 2026 05:23:10 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:10 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "capability": {
+    "capabilities": [
+      {
+        "difficulty": "easy",
+        "description": "Recognize the central topic or focus presented by Assessment Unit 3.",
+        "capability_id": "AU-3-L3-01",
+        "prerequisites": [],
+        "misconceptions": [],
+        "retrieval_cues": [
+          "primary concept",
+          "unit title",
+          "main topic"
+        ],
+        "capability_name": "Identify the main idea of the assessment unit",
+        "cognitive_level": "remember",
+        "linked_concepts": [],
+        "evidence_criteria": [
+          "Selects or states the correct main idea when prompted.",
+          "Does not confuse the unit with unrelated topics."
+        ],
+        "assessment_targets": [
+          "Recall the primary concept of the unit.",
+          "Distinguish the unit focus from other content."
+        ],
+        "assessment_unit_id": "AU-3"
+      }
+    ]
+  },
+  "memory_profile": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "19b539c5-1ab9-4c4d-a831-089e03c83e29",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 3",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-3",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 3",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-3",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of multiple ranked steps.",
+      "misconception": "Classification is a single-step process."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups are distinct biological entities.",
+      "misconception": "Taxonomic groups are only morphological aggregates."
+    },
+    {
+      "concept": null,
+      "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+      "misconception": "Category, rank and taxon are unrelated terms."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "strategies": [
+    {
+      "layer": 4,
+      "difficulty": "easy",
+      "strategy_name": "Taxonomy hierarchy clarification",
+      "strategy_type": "misconception_repair",
+      "success_criteria": [
+        "Learner states that classification is hierarchical and multi-step.",
+        "Learner correctly explains that a category denotes a rank and the unit at that rank is a taxon.",
+        "Learner rejects the idea that taxonomic groups are only morphological aggregates."
+      ],
+      "assessment_unit_id": "AU-3",
+      "diagnostic_prompts": [
+        "Is classification completed in one step or through multiple ranked steps?",
+        "What is the relationship between category, rank, and taxon?",
+        "Are taxonomic groups defined only by morphology?"
+      ],
+      "strategy_description": "Address common errors by emphasizing that classification is hierarchical, that ranks are not arbitrary labels, and that each ranked unit is a taxon.",
+      "target_capability_id": "AU-3-L3-01",
+      "curriculum_importance": "medium",
+      "instructional_actions": [
+        "Present a simple classification hierarchy from broad to specific.",
+        "Ask learners to match category, rank, and taxon in example statements.",
+        "Use a compare-and-correct prompt to distinguish a rank from the group placed at that rank.",
+        "Reinforce that classification proceeds through multiple ordered levels rather than one step."
+      ],
+      "target_misconceptions": [
+        "Classification is a single-step process.",
+        "Taxonomic groups are only morphological aggregates.",
+        "Category, rank and taxon are unrelated terms."
+      ]
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 11
+Layer Number: 5
+Layer Name: Blueprint Generation
+Assessment Unit ID: AU-1
+Status: completed
+Is Cached: false
+Generation ID: 9c3aea49-6e93-4754-b17b-bdc6f8e08c35
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvAe75jiYxxsJNqoV70GklUSrK0QG
+Token Input: 846
+Token Output: 708
+Created At: Sat Jun 27 2026 05:23:15 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:15 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "fd6fc907-f8a4-491e-b49b-57b0d0a85d1f",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 1",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-1",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "strategy": {
+    "strategies": [
+      {
+        "layer": "L4",
+        "difficulty": "medium",
+        "strategy_id": "AU-1-L4-1",
+        "common_errors": [
+          "Treating classification as a one-step label-only task.",
+          "Confusing the concept with a broader or narrower related term.",
+          "Using memorized facts without connecting them to the scenario.",
+          "Giving an explanation that repeats the prompt without a reason.",
+          "Assuming category, rank, and taxon are interchangeable or unrelated."
+        ],
+        "strategy_type": "conceptual_integration",
+        "memory_support": [
+          "Use a simple retrieval sequence: name it, define it, sort it, use it, explain it.",
+          "Anchor the concept to a short cue phrase that emphasizes hierarchy and classification steps.",
+          "Reinforce the distinction between rank as a category and taxon as a unit of classification."
+        ],
+        "strategy_summary": "Build a coherent understanding of the unit by linking identification, recall, classification, application, and explanation into one integrated response pattern.",
+        "success_criteria": [
+          "Correctly identifies the primary concept from a prompt.",
+          "Recalls at least one accurate fact or definition related to the concept.",
+          "Classifies a simple example correctly and gives a basic justification.",
+          "Applies the concept appropriately in a straightforward scenario.",
+          "Provides a brief explanation that includes the concept and one relevant reason or example."
+        ],
+        "assessment_format": "short_constructed_response_with_classification_item",
+        "assessment_unit_id": "AU-1",
+        "misconception_links": [
+          "Classification is a single-step process.",
+          "Taxonomic groups are only morphological aggregates.",
+          "Category, rank and taxon are unrelated terms."
+        ],
+        "target_capabilities": [
+          "AU-1-L3-1",
+          "AU-1-L3-2",
+          "AU-1-L3-3",
+          "AU-1-L3-4",
+          "AU-1-L3-5"
+        ],
+        "instructional_actions": [
+          "Present a short prompt that requires the learner to name the concept, state a defining fact, sort an example, apply the concept in a simple scenario, and explain the choice in one or two sentences.",
+          "Use a compare-and-contrast task with one correct example and one distractor to reinforce boundaries of the concept.",
+          "Ask the learner to justify classification decisions using the concept name plus one supporting reason or example.",
+          "Sequence questions from recognition to explanation so the learner must connect facts to use, not just recall them."
+        ]
+      }
+    ]
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 1",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-1",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  }
+}
+
+OUTPUT JSON
+{
+  "blueprints": [
+    {
+      "layer": "L5",
+      "difficulty": "medium",
+      "blueprint_id": "AU-1-L5-1",
+      "common_errors": [
+        "Treating classification as a one-step label-only task.",
+        "Confusing the concept with a broader or narrower related term.",
+        "Using memorized facts without connecting them to the scenario.",
+        "Giving an explanation that repeats the prompt without a reason.",
+        "Assuming category, rank, and taxon are interchangeable or unrelated."
+      ],
+      "blueprint_type": "assessment_unit",
+      "memory_support": [
+        "Use a simple retrieval sequence: name it, define it, sort it, use it, explain it.",
+        "Anchor the concept to a short cue phrase that emphasizes hierarchy and classification steps.",
+        "Reinforce the distinction between rank as a category and taxon as a unit of classification."
+      ],
+      "primary_concept": "Assessment Unit 1",
+      "prompt_structure": {
+        "task_sequence": [
+          "identify",
+          "define",
+          "classify",
+          "apply",
+          "explain"
+        ],
+        "stem_requirements": [
+          "Include a prompt asking the learner to name the concept.",
+          "Include a prompt asking for one accurate fact or definition.",
+          "Include a simple classification item with one example.",
+          "Include a straightforward application scenario.",
+          "Include a brief explanation request with one reason or example."
+        ],
+        "response_expectations": [
+          "Names the concept correctly.",
+          "States at least one accurate defining fact.",
+          "Classifies the example correctly.",
+          "Applies the concept appropriately in context.",
+          "Explains the answer using the concept and one supporting reason or example."
+        ]
+      },
+      "scoring_criteria": [
+        {
+          "points": 1,
+          "evidence": "Correctly names the primary concept.",
+          "criterion": "Identification accuracy"
+        },
+        {
+          "points": 1,
+          "evidence": "Provides one accurate fact or definition related to the concept.",
+          "criterion": "Definition or fact recall"
+        },
+        {
+          "points": 1,
+          "evidence": "Correctly sorts a simple example and gives a basic justification.",
+          "criterion": "Classification accuracy"
+        },
+        {
+          "points": 1,
+          "evidence": "Uses the concept appropriately in a straightforward scenario.",
+          "criterion": "Application accuracy"
+        },
+        {
+          "points": 1,
+          "evidence": "Provides a brief explanation including the concept and one relevant reason or example.",
+          "criterion": "Explanation quality"
+        }
+      ],
+      "success_criteria": [
+        "Correctly identifies the primary concept from a prompt.",
+        "Recalls at least one accurate fact or definition related to the concept.",
+        "Classifies a simple example correctly and gives a basic justification.",
+        "Applies the concept appropriately in a straightforward scenario.",
+        "Provides a brief explanation that includes the concept and one relevant reason or example."
+      ],
+      "assessment_format": "short_constructed_response_with_classification_item",
+      "fk_mst_chapter_id": "801",
+      "source_section_id": "2",
+      "assessment_unit_id": "AU-1",
+      "target_capabilities": [
+        "AU-1-L3-1",
+        "AU-1-L3-2",
+        "AU-1-L3-3",
+        "AU-1-L3-4",
+        "AU-1-L3-5"
+      ],
+      "based_on_strategy_id": "AU-1-L4-1",
+      "misconception_checks": [
+        "Classification is a single-step process.",
+        "Taxonomic groups are only morphological aggregates.",
+        "Category, rank and taxon are unrelated terms."
+      ],
+      "instructional_alignment": [
+        "Present a short prompt that requires the learner to name the concept, state a defining fact, sort an example, apply the concept in a simple scenario, and explain the choice in one or two sentences.",
+        "Use a compare-and-contrast task with one correct example and one distractor to reinforce boundaries of the concept.",
+        "Ask the learner to justify classification decisions using the concept name plus one supporting reason or example.",
+        "Sequence questions from recognition to explanation so the learner must connect facts to use, not just recall them."
+      ]
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 12
+Layer Number: 5
+Layer Name: Blueprint Generation
+Assessment Unit ID: AU-2
+Status: completed
+Is Cached: false
+Generation ID: 35e584ef-9e6d-465f-a6da-e5ac14fba01c
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvAeCg00fiHGrvHI5tzOKXVsvdOH1
+Token Input: 549
+Token Output: 652
+Created At: Sat Jun 27 2026 05:23:21 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:21 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "f9c3104b-5f92-4fae-a6a4-a6d94dda6c4d",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 2",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-2",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "strategy": {
+    "strategies": [
+      {
+        "layer": "4",
+        "priority": "medium",
+        "strategy": "Teach classification as a hierarchical, multi-rank system. Explicitly distinguish category (the rank), taxon (the unit at that rank), and the biological reality of taxonomic groups. Use a stepwise example to show how organisms are placed into nested ranks rather than assigned in one step.",
+        "rationale": "The listed misconceptions all stem from collapsing taxonomy into a simple label-based grouping. A layered correction should emphasize hierarchy, terminology, and the biological basis of taxa.",
+        "strategy_type": "misconception_correction",
+        "assessment_unit_id": "AU-2",
+        "implementation_notes": [
+          "Present ranks from broad to specific and map each to a taxon example.",
+          "Contrast 'rank' vs 'taxon' in a two-column table.",
+          "Include a quick check asking learners to identify the category and the taxon in sample statements."
+        ],
+        "target_misconceptions": [
+          "Classification is a single-step process.",
+          "Taxonomic groups are only morphological aggregates.",
+          "Category, rank and taxon are unrelated terms."
+        ]
+      }
+    ]
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 2",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-2",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  }
+}
+
+OUTPUT JSON
+{
+  "blueprints": [
+    {
+      "layer": "5",
+      "blueprint_type": "assessment",
+      "item_blueprints": [
+        {
+          "item_id": "AU-2-L5-1",
+          "item_type": "multiple_choice",
+          "prompt_focus": "Identify classification as a nested, hierarchical process rather than a single-step assignment.",
+          "cognitive_level": "understand",
+          "expected_evidence": [
+            "Recognizes multiple ranks are used",
+            "Understands taxa are nested within broader taxa"
+          ],
+          "misconception_targeted": "Classification is a single-step process."
+        },
+        {
+          "item_id": "AU-2-L5-2",
+          "item_type": "multiple_choice",
+          "prompt_focus": "Differentiate rank/category from taxon using an example statement.",
+          "cognitive_level": "understand",
+          "expected_evidence": [
+            "Correctly labels a rank as a level",
+            "Correctly labels a taxon as the organism group at that level"
+          ],
+          "misconception_targeted": "Category, rank and taxon are unrelated terms."
+        },
+        {
+          "item_id": "AU-2-L5-3",
+          "item_type": "short_answer",
+          "prompt_focus": "Given a simple hierarchy, identify the category and the taxon at two specified levels.",
+          "cognitive_level": "apply",
+          "expected_evidence": [
+            "Names the correct rank/category",
+            "Names the correct taxon for each specified rank",
+            "Uses terminology consistently"
+          ],
+          "misconception_targeted": "Category, rank and taxon are unrelated terms."
+        },
+        {
+          "item_id": "AU-2-L5-4",
+          "item_type": "multiple_choice",
+          "prompt_focus": "Evaluate whether a proposed grouping reflects hierarchical taxonomy or only superficial morphological similarity.",
+          "cognitive_level": "analyze",
+          "expected_evidence": [
+            "Rejects purely appearance-based grouping when unsupported",
+            "Recognizes taxa are not defined only by morphology"
+          ],
+          "misconception_targeted": "Taxonomic groups are only morphological aggregates."
+        },
+        {
+          "item_id": "AU-2-L5-5",
+          "item_type": "ordering",
+          "prompt_focus": "Arrange taxonomic ranks from broader to more specific and explain the nesting relationship.",
+          "cognitive_level": "apply",
+          "expected_evidence": [
+            "Correct rank order",
+            "Explanation that each lower taxon is contained within a higher taxon"
+          ],
+          "misconception_targeted": "Classification is a single-step process."
+        }
+      ],
+      "primary_concept": "Assessment Unit 2",
+      "assessment_focus": {
+        "target_skills": [
+          "Identify ranks in a classification hierarchy",
+          "Distinguish category/rank from taxon",
+          "Interpret nested placement of organisms across multiple ranks",
+          "Reject single-step and purely morphological views of classification"
+        ],
+        "target_understanding": "Classification is a hierarchical, multi-rank system in which organisms are placed into nested taxa; category/rank refers to the level, while taxon refers to the named group at that level.",
+        "target_misconceptions": [
+          "Classification is a single-step process.",
+          "Taxonomic groups are only morphological aggregates.",
+          "Category, rank and taxon are unrelated terms."
+        ]
+      },
+      "fk_mst_chapter_id": "801",
+      "scoring_blueprint": {
+        "total_items": 5,
+        "mastery_indicators": [
+          "Accurately distinguishes rank/category from taxon",
+          "Explains classification as nested across multiple ranks",
+          "Avoids defining taxa solely by superficial morphology"
+        ],
+        "suggested_weighting": {
+          "ordering": 1,
+          "short_answer": 1,
+          "multiple_choice": 3
+        }
+      },
+      "source_section_id": "2",
+      "assessment_unit_id": "AU-2",
+      "curriculum_importance": "medium"
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 13
+Layer Number: 5
+Layer Name: Blueprint Generation
+Assessment Unit ID: AU-3
+Status: completed
+Is Cached: false
+Generation ID: 1f894fab-225d-4a08-9a21-d3a08ebeb1df
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvAeIWb0U9HCs2iYxYTGfFBbcoiVj
+Token Input: 641
+Token Output: 605
+Created At: Sat Jun 27 2026 05:23:28 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:28 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "19b539c5-1ab9-4c4d-a831-089e03c83e29",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 3",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-3",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "strategy": {
+    "strategies": [
+      {
+        "layer": 4,
+        "difficulty": "easy",
+        "strategy_name": "Taxonomy hierarchy clarification",
+        "strategy_type": "misconception_repair",
+        "success_criteria": [
+          "Learner states that classification is hierarchical and multi-step.",
+          "Learner correctly explains that a category denotes a rank and the unit at that rank is a taxon.",
+          "Learner rejects the idea that taxonomic groups are only morphological aggregates."
+        ],
+        "assessment_unit_id": "AU-3",
+        "diagnostic_prompts": [
+          "Is classification completed in one step or through multiple ranked steps?",
+          "What is the relationship between category, rank, and taxon?",
+          "Are taxonomic groups defined only by morphology?"
+        ],
+        "strategy_description": "Address common errors by emphasizing that classification is hierarchical, that ranks are not arbitrary labels, and that each ranked unit is a taxon.",
+        "target_capability_id": "AU-3-L3-01",
+        "curriculum_importance": "medium",
+        "instructional_actions": [
+          "Present a simple classification hierarchy from broad to specific.",
+          "Ask learners to match category, rank, and taxon in example statements.",
+          "Use a compare-and-correct prompt to distinguish a rank from the group placed at that rank.",
+          "Reinforce that classification proceeds through multiple ordered levels rather than one step."
+        ],
+        "target_misconceptions": [
+          "Classification is a single-step process.",
+          "Taxonomic groups are only morphological aggregates.",
+          "Category, rank and taxon are unrelated terms."
+        ]
+      }
+    ]
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 3",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-3",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  }
+}
+
+OUTPUT JSON
+{
+  "blueprints": [
+    {
+      "items": [
+        {
+          "prompt": "Which statement best describes biological classification?",
+          "item_id": "AU-3-L5-01-I1",
+          "options": [
+            "It is completed in one step by naming an organism.",
+            "It proceeds through multiple ranked levels from broader to more specific groups.",
+            "It groups organisms only by visible morphology.",
+            "It ignores relationships among groups."
+          ],
+          "item_type": "multiple_choice",
+          "correct_answer": "It proceeds through multiple ranked levels from broader to more specific groups.",
+          "maps_to_misconceptions": [
+            "Classification is a single-step process.",
+            "Taxonomic groups are only morphological aggregates."
+          ],
+          "maps_to_success_criteria": [
+            "Learner states that classification is hierarchical and multi-step."
+          ]
+        },
+        {
+          "prompt": "Which option correctly links category, rank, and taxon?",
+          "item_id": "AU-3-L5-01-I2",
+          "options": [
+            "A category is a rank, and the organism alone is the taxon.",
+            "A category denotes a rank, and the group placed at that rank is a taxon.",
+            "Category and taxon mean exactly the same thing in every use.",
+            "Rank is unrelated to classification levels."
+          ],
+          "item_type": "multiple_choice",
+          "correct_answer": "A category denotes a rank, and the group placed at that rank is a taxon.",
+          "maps_to_misconceptions": [
+            "Category, rank and taxon are unrelated terms."
+          ],
+          "maps_to_success_criteria": [
+            "Learner correctly explains that a category denotes a rank and the unit at that rank is a taxon."
+          ]
+        },
+        {
+          "prompt": "Taxonomic groups are defined only by morphology.",
+          "item_id": "AU-3-L5-01-I3",
+          "item_type": "true_false",
+          "correct_answer": false,
+          "maps_to_misconceptions": [
+            "Taxonomic groups are only morphological aggregates."
+          ],
+          "maps_to_success_criteria": [
+            "Learner rejects the idea that taxonomic groups are only morphological aggregates."
+          ]
+        },
+        {
+          "prompt": "In one or two sentences, explain why classification is considered hierarchical.",
+          "item_id": "AU-3-L5-01-I4",
+          "item_type": "short_answer",
+          "expected_answer_points": [
+            "Classification uses ordered ranks or levels.",
+            "Groups become more specific as one moves through the hierarchy."
+          ],
+          "maps_to_misconceptions": [
+            "Classification is a single-step process."
+          ],
+          "maps_to_success_criteria": [
+            "Learner states that classification is hierarchical and multi-step."
+          ]
+        }
+      ],
+      "layer": 5,
+      "title": "Hierarchy, Rank, and Taxon Check",
+      "scoring": {
+        "total_items": 4,
+        "scoring_method": "1 point per item; short answer earns 1 point if both expected answer points are present or clearly implied.",
+        "mastery_threshold": 3
+      },
+      "difficulty": "easy",
+      "blueprint_id": "AU-3-L5-01",
+      "blueprint_type": "assessment",
+      "primary_concept": "Assessment Unit 3",
+      "fk_mst_chapter_id": "801",
+      "source_section_id": "2",
+      "assessment_unit_id": "AU-3",
+      "target_capability_id": "AU-3-L3-01",
+      "target_strategy_name": "Taxonomy hierarchy clarification",
+      "curriculum_importance": "medium"
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 14
+Layer Number: 6
+Layer Name: Item Generation
+Assessment Unit ID: AU-1
+Status: completed
+Is Cached: false
+Generation ID: a274c994-2d12-4763-9693-14fec4cf1581
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvAePPmvUKvjbxRKt2GOq0cJRSicq
+Token Input: 437
+Token Output: 340
+Created At: Sat Jun 27 2026 05:23:32 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:32 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "blueprints": [
+    {
+      "marks": 0,
+      "difficulty": "medium",
+      "blooms_level": null,
+      "blueprint_id": "AU-1-L5-1",
+      "adaptive_json": {},
+      "memory_support": [
+        "Use a simple retrieval sequence: name it, define it, sort it, use it, explain it.",
+        "Anchor the concept to a short cue phrase that emphasizes hierarchy and classification steps.",
+        "Reinforce the distinction between rank as a category and taxon as a unit of classification."
+      ],
+      "partial_credit": false,
+      "primary_concept": "Assessment Unit 1",
+      "question_family": null,
+      "assessment_notes": null,
+      "interaction_type": null,
+      "success_criteria": "{\"Correctly identifies the primary concept from a prompt.\",\"Recalls at least one accurate fact or definition related to the concept.\",\"Classifies a simple example correctly and gives a basic justification.\",\"Applies the concept appropriately in a straightforward scenario.\",\"Provides a brief explanation that includes the concept and one relevant reason or example.\"}",
+      "learning_objective": null,
+      "distractor_strategy": null,
+      "assessment_dimension": null,
+      "common_misconception": null,
+      "expected_answer_type": null,
+      "generator_constraints": {},
+      "estimated_time_seconds": 0
+    }
+  ],
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 1",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-1",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  }
+}
+
+OUTPUT JSON
+{
+  "assessment_items": [
+    {
+      "marks": 2,
+      "item_id": "AU-1-L6-1",
+      "metadata": {
+        "blooms_level": "understand",
+        "partial_credit": false,
+        "fk_mst_chapter_id": "801",
+        "source_section_id": "2",
+        "expected_answer_type": "short_text"
+      },
+      "question": "What is the difference between a taxonomic rank and a taxon? Give one example of each.",
+      "item_type": "short_answer",
+      "answer_key": {
+        "model_answer": "A taxonomic rank is a level in the classification hierarchy, such as species, genus, or family. A taxon is an actual group of organisms placed at one of those ranks, such as Mammalia, Felidae, or Homo sapiens. Example of a rank: genus. Example of a taxon: Homo.",
+        "scoring_rubric": [
+          {
+            "marks": 1,
+            "criterion": "States that a rank is a category or level in classification"
+          },
+          {
+            "marks": 1,
+            "criterion": "States that a taxon is a named group of organisms and gives a valid example of rank and taxon"
+          }
+        ]
+      },
+      "difficulty": "medium",
+      "blueprint_id": "AU-1-L5-1",
+      "primary_concept": "Assessment Unit 1",
+      "assessment_unit_id": "AU-1",
+      "estimated_time_seconds": 60
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 15
+Layer Number: 6
+Layer Name: Item Generation
+Assessment Unit ID: AU-2
+Status: completed
+Is Cached: false
+Generation ID: 9bf9b38a-9178-4a1c-ab15-8af407152536
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvAeTF1Rd8RJO5hr6MmwwJl8g7OIv
+Token Input: 461
+Token Output: 375
+Created At: Sat Jun 27 2026 05:23:36 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:36 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "blueprints": [
+    {
+      "marks": 0,
+      "difficulty": null,
+      "blooms_level": null,
+      "blueprint_id": "AU-2-L5-01",
+      "adaptive_json": {},
+      "memory_support": {},
+      "partial_credit": false,
+      "primary_concept": "Assessment Unit 2",
+      "question_family": null,
+      "assessment_notes": null,
+      "interaction_type": null,
+      "success_criteria": null,
+      "learning_objective": null,
+      "distractor_strategy": null,
+      "assessment_dimension": null,
+      "common_misconception": null,
+      "expected_answer_type": null,
+      "generator_constraints": {},
+      "estimated_time_seconds": 0
+    },
+    {
+      "marks": 0,
+      "difficulty": null,
+      "blooms_level": null,
+      "blueprint_id": "AU-2-BP-1",
+      "adaptive_json": {},
+      "memory_support": {},
+      "partial_credit": false,
+      "primary_concept": "Assessment Unit 2",
+      "question_family": null,
+      "assessment_notes": null,
+      "interaction_type": null,
+      "success_criteria": null,
+      "learning_objective": null,
+      "distractor_strategy": null,
+      "assessment_dimension": null,
+      "common_misconception": null,
+      "expected_answer_type": null,
+      "generator_constraints": {},
+      "estimated_time_seconds": 0
+    }
+  ],
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 2",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-2",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  }
+}
+
+OUTPUT JSON
+{
+  "assessment_items": [
+    {
+      "marks": 1,
+      "item_id": "AU-2-L6-01",
+      "options": [
+        {
+          "text": "It is the title of the assessment unit being referenced.",
+          "option_id": "A"
+        },
+        {
+          "text": "It is a laboratory instrument used to measure mass.",
+          "option_id": "B"
+        },
+        {
+          "text": "It is a type of cell organelle found only in plants.",
+          "option_id": "C"
+        },
+        {
+          "text": "It is a chemical equation for photosynthesis.",
+          "option_id": "D"
+        }
+      ],
+      "difficulty": "easy",
+      "explanation": "The provided information identifies 'Assessment Unit 2' as the primary concept label for this unit, not a biological structure, instrument, or equation.",
+      "blooms_level": "remember",
+      "blueprint_id": "AU-2-L5-01",
+      "question_stem": "Which statement best describes Assessment Unit 2?",
+      "correct_answer": {
+        "text": "It is the title of the assessment unit being referenced.",
+        "option_id": "A"
+      },
+      "partial_credit": false,
+      "interaction_type": "multiple_choice",
+      "assessment_unit_id": "AU-2",
+      "expected_answer_type": "single_select",
+      "estimated_time_seconds": 30
+    },
+    {
+      "marks": 1,
+      "item_id": "AU-2-L6-02",
+      "options": [
+        {
+          "text": "True",
+          "option_id": "A"
+        },
+        {
+          "text": "False",
+          "option_id": "B"
+        }
+      ],
+      "difficulty": "easy",
+      "explanation": "The input shows an empty array for supporting_concepts, so no supporting concepts are listed.",
+      "blooms_level": "understand",
+      "blueprint_id": "AU-2-BP-1",
+      "question_stem": "True or False: The assessment unit AU-2 includes listed supporting concepts in the input.",
+      "correct_answer": {
+        "text": "False",
+        "option_id": "B"
+      },
+      "partial_credit": false,
+      "interaction_type": "true_false",
+      "assessment_unit_id": "AU-2",
+      "expected_answer_type": "boolean",
+      "estimated_time_seconds": 20
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 16
+Layer Number: 6
+Layer Name: Item Generation
+Assessment Unit ID: AU-3
+Status: completed
+Is Cached: false
+Generation ID: dc2357dc-678b-4f6a-8bdf-47380c08f23c
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvAeY54i1UTakaNuDUOmH7teoSWLX
+Token Input: 514
+Token Output: 400
+Created At: Sat Jun 27 2026 05:23:41 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:41 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "blueprints": [
+    {
+      "marks": 0,
+      "difficulty": "low",
+      "blooms_level": null,
+      "blueprint_id": "AU-3-BP-1",
+      "adaptive_json": {},
+      "memory_support": {},
+      "partial_credit": false,
+      "primary_concept": "Assessment Unit 3",
+      "question_family": null,
+      "assessment_notes": null,
+      "interaction_type": null,
+      "success_criteria": "{\"Learner correctly sorts most statements into in-scope and out-of-scope groups.\",\"Learner avoids inferring a specific biological process from the unit label alone.\",\"Learner can explain why a statement is excluded when it introduces unsupported detail.\"}",
+      "learning_objective": null,
+      "distractor_strategy": null,
+      "assessment_dimension": null,
+      "common_misconception": null,
+      "expected_answer_type": null,
+      "generator_constraints": {},
+      "estimated_time_seconds": 0
+    },
+    {
+      "marks": 0,
+      "difficulty": "easy",
+      "blooms_level": null,
+      "blueprint_id": "AU-3-L5-01",
+      "adaptive_json": {},
+      "memory_support": {},
+      "partial_credit": false,
+      "primary_concept": "Assessment Unit 3",
+      "question_family": null,
+      "assessment_notes": null,
+      "interaction_type": null,
+      "success_criteria": null,
+      "learning_objective": null,
+      "distractor_strategy": null,
+      "assessment_dimension": null,
+      "common_misconception": null,
+      "expected_answer_type": null,
+      "generator_constraints": {},
+      "estimated_time_seconds": 0
+    }
+  ],
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 3",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-3",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  }
+}
+
+OUTPUT JSON
+{
+  "assessment_items": [
+    {
+      "marks": 3,
+      "title": "In-scope vs out-of-scope statements",
+      "prompt": "Sort each statement into one of two groups based only on the information given by the assessment unit label \"Assessment Unit 3.\" Place statements that stay general and do not add unsupported biology details into In-scope. Place statements that introduce specific biological content not stated in the label into Out-of-scope.",
+      "item_id": "AU-3-L6-01",
+      "options": [
+        {
+          "id": "S1",
+          "text": "This unit can be treated as a general assessment unit without assuming a specific biological topic."
+        },
+        {
+          "id": "S2",
+          "text": "The unit definitely focuses on photosynthesis in plants."
+        },
+        {
+          "id": "S3",
+          "text": "It is appropriate to avoid adding details about organs, cells, or molecules unless they are explicitly provided."
+        },
+        {
+          "id": "S4",
+          "text": "The unit must be about human digestion because it appears in a biology context."
+        },
+        {
+          "id": "S5",
+          "text": "A statement remains in scope if it refers only to the unit as a labeled assessment target."
+        },
+        {
+          "id": "S6",
+          "text": "The unit specifically tests mitosis and meiosis."
+        }
+      ],
+      "item_type": "categorization",
+      "answer_key": {
+        "in_scope": [
+          "S1",
+          "S3",
+          "S5"
+        ],
+        "out_of_scope": [
+          "S2",
+          "S4",
+          "S6"
+        ]
+      },
+      "categories": [
+        {
+          "id": "in_scope",
+          "label": "In-scope"
+        },
+        {
+          "id": "out_of_scope",
+          "label": "Out-of-scope"
+        }
+      ],
+      "difficulty": "low",
+      "explanation": "Because the label only says \"Assessment Unit 3,\" no specific biological process or topic is supported. General statements about staying within the provided label are in scope, while statements naming topics such as photosynthesis, digestion, or cell division add unsupported detail and are out of scope.",
+      "blueprint_id": "AU-3-BP-1",
+      "partial_credit": false,
+      "assessment_unit_id": "AU-3",
+      "estimated_time_seconds": 60
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 17
+Layer Number: 7
+Layer Name: Learning Support
+Assessment Unit ID: AU-1
+Status: completed
+Is Cached: false
+Generation ID: 5150cd4a-6ac4-4b18-b4d1-45e959c97155
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DvAecR1B0w3RFf3FT7h7uGiONvsN9
+Token Input: 700
+Token Output: 781
+Created At: Sat Jun 27 2026 05:23:46 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:46 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "fd6fc907-f8a4-491e-b49b-57b0d0a85d1f",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 1",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-1",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 1",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-1",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "assessment_items": [
+    {
+      "marks": 2,
+      "item_id": "AU-1-L6-1",
+      "options": [
+        "It is a single-step process based only on visible body shape.",
+        "It is a hierarchical process in which organisms are grouped into categories, with species as the lowest category.",
+        "It places all organisms with similar color into the same final group.",
+        "It begins with species as the highest category and moves downward."
+      ],
+      "question": "What is the difference between a taxonomic rank and a taxon? Give one example of each.",
+      "difficulty": "medium",
+      "blooms_level": null,
+      "blueprint_id": "AU-1-L5-1",
+      "generation_id": "a274c994-2d12-4763-9693-14fec4cf1581",
+      "correct_answer": null,
+      "question_family": null,
+      "interaction_data": {},
+      "interaction_type": null,
+      "acceptable_answers": [],
+      "assessment_unit_id": "AU-1",
+      "learning_objective": null,
+      "diagram_instruction": null,
+      "assessment_dimension": null,
+      "estimated_time_seconds": 60
+    }
+  ],
+  "student_response": null,
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of multiple ranked steps.",
+      "misconception": "Classification is a single-step process."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups are distinct biological entities.",
+      "misconception": "Taxonomic groups are only morphological aggregates."
+    },
+    {
+      "concept": null,
+      "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+      "misconception": "Category, rank and taxon are unrelated terms."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "learning_support": {
+    "memory": {
+      "story": "Think of biological classification like organizing books on shelves. The shelf level is the rank, and the books placed on that shelf are the taxon.",
+      "analogy": "Rank is the label for the level; taxon is the actual group living at that level.",
+      "visual_hook": "A staircase of labels: kingdom, phylum, class, order, family, genus, species, with each step holding a named group.",
+      "memory_trick": "Rank = rung on the ladder; taxon = the group standing on that rung.",
+      "generation_id": "fd6fc907-f8a4-491e-b49b-57b0d0a85d1f",
+      "retrieval_cues": [
+        "classification hierarchy",
+        "rank vs taxon",
+        "example of genus",
+        "example of species"
+      ],
+      "primary_concept": "Assessment Unit 1",
+      "memory_difficulty": "low",
+      "assessment_unit_id": "AU-1",
+      "associated_concepts": [
+        "taxonomy",
+        "classification",
+        "hierarchy",
+        "species",
+        "genus"
+      ],
+      "misconception_alert": "Do not confuse the category name with the organism group itself: the rank is the level, while the taxon is the named unit at that level.",
+      "supporting_concepts": [],
+      "real_world_connection": "Scientists use ranks and taxa to organize biodiversity and communicate clearly about organisms.",
+      "estimated_memory_strength": "0.000"
+    },
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 1",
+    "assessment_items": [
+      {
+        "marks": 2,
+        "item_id": "AU-1-L6-1",
+        "options": [
+          "It is a single-step process based only on visible body shape.",
+          "It is a hierarchical process in which organisms are grouped into categories, with species as the lowest category.",
+          "It places all organisms with similar color into the same final group.",
+          "It begins with species as the highest category and moves downward."
+        ],
+        "question": "What is the difference between a taxonomic rank and a taxon? Give one example of each.",
+        "difficulty": "medium",
+        "blooms_level": "understand",
+        "blueprint_id": "AU-1-L5-1",
+        "generation_id": "a274c994-2d12-4763-9693-14fec4cf1581",
+        "correct_answer": "A taxonomic rank is a level in the classification hierarchy, such as species, genus, family, order, class, phylum, or kingdom. A taxon is a named group of organisms placed at one of those ranks. Example of a rank: genus. Example of a taxon: Homo.",
+        "question_family": "short_answer",
+        "interaction_data": {},
+        "interaction_type": "constructed_response",
+        "acceptable_answers": [
+          "A taxonomic rank is a level in classification; a taxon is a group at that rank. Example rank: genus. Example taxon: Homo.",
+          "Rank = category/level; taxon = the actual group. Example rank: family. Example taxon: Felidae."
+        ],
+        "assessment_unit_id": "AU-1",
+        "learning_objective": "Differentiate between a taxonomic rank and a taxon, and provide examples.",
+        "diagram_instruction": null,
+        "assessment_dimension": "conceptual understanding",
+        "estimated_time_seconds": 60
+      }
+    ],
+    "concept_category": "general",
+    "student_response": null,
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-1",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium",
+    "misconception_profile": [
+      {
+        "concept": "classification",
+        "correction": "Classification involves a hierarchy of multiple ranked steps.",
+        "misconception": "Classification is a single-step process."
+      },
+      {
+        "concept": "taxon",
+        "correction": "Taxonomic groups are distinct biological entities.",
+        "misconception": "Taxonomic groups are only morphological aggregates."
+      },
+      {
+        "concept": "rank and taxon",
+        "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+        "misconception": "Category, rank and taxon are unrelated terms."
+      }
+    ]
+  }
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 18
+Layer Number: 7
+Layer Name: Learning Support
+Assessment Unit ID: AU-2
+Status: completed
+Is Cached: false
+Generation ID: 526a7981-5c11-40b0-a211-8313e0eaa4de
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DvAeglyo8JxT6BEcCps2kWit6lmhu
+Token Input: 881
+Token Output: 619
+Created At: Sat Jun 27 2026 05:23:50 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:50 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "f9c3104b-5f92-4fae-a6a4-a6d94dda6c4d",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 2",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-2",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 2",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-2",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "assessment_items": [
+    {
+      "marks": 1,
+      "item_id": "AU-2-L6-01",
+      "options": [
+        "It is the title of the assessment unit being referenced.",
+        "It is a laboratory instrument used to measure mass.",
+        "It is a type of cell organelle found only in plants.",
+        "It is a chemical equation for photosynthesis."
+      ],
+      "question": "",
+      "difficulty": "easy",
+      "blooms_level": "remember",
+      "blueprint_id": "AU-2-L5-01",
+      "generation_id": "9bf9b38a-9178-4a1c-ab15-8af407152536",
+      "correct_answer": "{\"option_id\":\"A\",\"text\":\"It is the title of the assessment unit being referenced.\"}",
+      "question_family": null,
+      "interaction_data": {},
+      "interaction_type": "multiple_choice",
+      "acceptable_answers": [],
+      "assessment_unit_id": "AU-2",
+      "learning_objective": null,
+      "diagram_instruction": null,
+      "assessment_dimension": null,
+      "estimated_time_seconds": 30
+    },
+    {
+      "marks": 1,
+      "item_id": "AU-2-L6-02",
+      "options": [
+        "True",
+        "False"
+      ],
+      "question": "",
+      "difficulty": "easy",
+      "blooms_level": "understand",
+      "blueprint_id": "AU-2-BP-1",
+      "generation_id": "9bf9b38a-9178-4a1c-ab15-8af407152536",
+      "correct_answer": "{\"option_id\":\"B\",\"text\":\"False\"}",
+      "question_family": null,
+      "interaction_data": {},
+      "interaction_type": "true_false",
+      "acceptable_answers": [],
+      "assessment_unit_id": "AU-2",
+      "learning_objective": null,
+      "diagram_instruction": null,
+      "assessment_dimension": null,
+      "estimated_time_seconds": 20
+    }
+  ],
+  "student_response": null,
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of multiple ranked steps.",
+      "misconception": "Classification is a single-step process."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups are distinct biological entities.",
+      "misconception": "Taxonomic groups are only morphological aggregates."
+    },
+    {
+      "concept": null,
+      "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+      "misconception": "Category, rank and taxon are unrelated terms."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "learning_support": {
+    "layer": "7",
+    "item_support": [
+      {
+        "hint": "The title is simply the name of the unit being discussed.",
+        "item_id": "AU-2-L6-01",
+        "explanation": "The correct choice identifies that the phrase refers to the assessment unit title, not a lab tool, organelle, or chemical equation.",
+        "target_skill": "Recognize what the assessment unit title refers to."
+      },
+      {
+        "hint": "Check whether the statement matches the idea that ranks and taxa are linked in a hierarchy.",
+        "item_id": "AU-2-L6-02",
+        "explanation": "The correct answer is False because category, rank, and taxon are related terms in classification, not unrelated ones.",
+        "target_skill": "Evaluate a statement about classification terminology."
+      }
+    ],
+    "study_prompt": "Focus on the idea that biological classification is hierarchical. Learn the meaning of rank, category, and taxon, and remember that classification is a multi-step process.",
+    "memory_support": {
+      "story": "Think of classification like organizing a library: you do not place every book on one shelf at once. You sort it step by step into larger and smaller groups until each item has its proper place.",
+      "analogy": "Classification is like sorting books into a library system with multiple levels, not a one-step pile.",
+      "visual_hook": "A branching tree or nested folders showing one group splitting into smaller ranked groups.",
+      "memory_trick": "Rank = the level; taxon = the group at that level.",
+      "retrieval_cues": [
+        "hierarchy",
+        "rank",
+        "taxon",
+        "classification",
+        "nested groups"
+      ],
+      "associated_concepts": [
+        "taxonomy",
+        "classification hierarchy",
+        "taxonomic rank",
+        "taxon"
+      ],
+      "misconception_alert": "Do not think classification is a single step or that taxonomic groups are just loose morphological collections. Classification is hierarchical, and each rank represents a real unit of classification called a taxon.",
+      "real_world_connection": "Biologists use classification to organize living organisms so they can be identified, compared, and studied systematically."
+    },
+    "primary_concept": "Assessment Unit 2",
+    "concept_category": "general",
+    "confidence_boost": "You only need to remember the structure: classification uses levels, each level is a rank, and the group at that rank is a taxon.",
+    "assessment_unit_id": "AU-2",
+    "curriculum_importance": "medium",
+    "misconception_support": [
+      {
+        "correction": "Classification is hierarchical and happens through multiple ranked steps.",
+        "misconception": "Classification is a single-step process.",
+        "why_it_matters": "This helps students understand why organisms are placed into nested groups rather than one broad category."
+      },
+      {
+        "correction": "Taxonomic groups are recognized biological units, not just collections based on appearance.",
+        "misconception": "Taxonomic groups are only morphological aggregates.",
+        "why_it_matters": "This prevents overreliance on visible traits alone when understanding classification."
+      },
+      {
+        "correction": "A category refers to a rank, and the unit of classification at that rank is a taxon.",
+        "misconception": "Category, rank and taxon are unrelated terms.",
+        "why_it_matters": "This clarifies the vocabulary used in taxonomy and supports accurate interpretation of classification questions."
+      }
+    ]
+  }
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 19
+Layer Number: 7
+Layer Name: Learning Support
+Assessment Unit ID: AU-3
+Status: completed
+Is Cached: false
+Generation ID: 5a541114-4b94-4fea-a482-4963b4114f38
+Generation Source Job ID: 8cd558da-0b9f-43ee-8433-4c92a56ff5c2
+Prompt Version: 1.0.0
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DvAelzPBZL5pcHbLWnkT9JZNHCJAo
+Token Input: 887
+Token Output: 474
+Created At: Sat Jun 27 2026 05:23:54 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 05:23:54 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory": {
+    "story": null,
+    "analogy": null,
+    "visual_hook": null,
+    "memory_trick": null,
+    "generation_id": "19b539c5-1ab9-4c4d-a831-089e03c83e29",
+    "retrieval_cues": [],
+    "primary_concept": "Assessment Unit 3",
+    "memory_difficulty": null,
+    "assessment_unit_id": "AU-3",
+    "associated_concepts": [],
+    "misconception_alert": null,
+    "supporting_concepts": [],
+    "real_world_connection": null,
+    "estimated_memory_strength": "0.000"
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Assessment Unit 3",
+    "concept_category": "general",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "2",
+    "assessment_unit_id": "AU-3",
+    "supporting_concepts": [],
+    "curriculum_importance": "medium"
+  },
+  "assessment_items": [
+    {
+      "marks": 1,
+      "item_id": "AU-3-L6-1",
+      "options": [],
+      "question": "",
+      "difficulty": "low",
+      "blooms_level": null,
+      "blueprint_id": "AU-3-BP-1",
+      "generation_id": "aabcba1e-d269-4c44-85e6-76a99aba1acc",
+      "correct_answer": null,
+      "question_family": null,
+      "interaction_data": {},
+      "interaction_type": null,
+      "acceptable_answers": [],
+      "assessment_unit_id": "AU-3",
+      "learning_objective": null,
+      "diagram_instruction": null,
+      "assessment_dimension": null,
+      "estimated_time_seconds": 60
+    },
+    {
+      "marks": 3,
+      "item_id": "AU-3-L6-01",
+      "options": [
+        "This unit can be treated as a general assessment unit without assuming a specific biological topic.",
+        "The unit definitely focuses on photosynthesis in plants.",
+        "It is appropriate to avoid adding details about organs, cells, or molecules unless they are explicitly provided.",
+        "The unit must be about human digestion because it appears in a biology context.",
+        "A statement remains in scope if it refers only to the unit as a labeled assessment target.",
+        "The unit specifically tests mitosis and meiosis."
+      ],
+      "question": "",
+      "difficulty": "low",
+      "blooms_level": null,
+      "blueprint_id": "AU-3-BP-1",
+      "generation_id": "dc2357dc-678b-4f6a-8bdf-47380c08f23c",
+      "correct_answer": null,
+      "question_family": null,
+      "interaction_data": {},
+      "interaction_type": null,
+      "acceptable_answers": [],
+      "assessment_unit_id": "AU-3",
+      "learning_objective": null,
+      "diagram_instruction": null,
+      "assessment_dimension": null,
+      "estimated_time_seconds": 60
+    }
+  ],
+  "student_response": null,
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of multiple ranked steps.",
+      "misconception": "Classification is a single-step process."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups are distinct biological entities.",
+      "misconception": "Taxonomic groups are only morphological aggregates."
+    },
+    {
+      "concept": null,
+      "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+      "misconception": "Category, rank and taxon are unrelated terms."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "learning_support": {
+    "item_support": [
+      {
+        "type": "scope_check",
+        "prompt": "Identify whether the unit should be treated as general or topic-specific.",
+        "item_id": "AU-3-L6-1",
+        "answer_guidance": "General; no specific biology topic is provided."
+      },
+      {
+        "type": "multiple_select_support",
+        "prompt": "Select the statements that are consistent with the provided unit.",
+        "item_id": "AU-3-L6-01",
+        "rationale": "The unit contains no explicit topic, so only scope-safe statements are valid.",
+        "answer_guidance": [
+          "This unit can be treated as a general assessment unit without assuming a specific biological topic.",
+          "It is appropriate to avoid adding details about organs, cells, or molecules unless they are explicitly provided.",
+          "A statement remains in scope if it refers only to the unit as a labeled assessment target."
+        ]
+      }
+    ],
+    "core_guidance": [
+      "Treat this as a general assessment unit unless a specific biological topic is explicitly provided.",
+      "Stay within the information given in the prompt; do not infer organs, cells, molecules, or processes that are not named.",
+      "A statement is in scope if it refers to the unit as a labeled assessment target rather than adding outside content."
+    ],
+    "support_focus": "General assessment-unit reasoning and scope control",
+    "memory_support": {
+      "memory_trick": "If the unit name is all you have, answer only about the unit name.",
+      "retrieval_cues": [
+        "assessment unit",
+        "general scope",
+        "do not assume topic",
+        "stay within provided information"
+      ],
+      "misconception_alert": "Do not convert a general unit into a specific biology topic without evidence."
+    },
+    "misconceptions": [
+      {
+        "correction": "Classification involves a hierarchy of multiple ranked steps.",
+        "misconception": "Classification is a single-step process."
+      },
+      {
+        "correction": "Taxonomic groups are distinct biological entities.",
+        "misconception": "Taxonomic groups are only morphological aggregates."
+      },
+      {
+        "correction": "A category denotes a rank, and each rank as a unit of classification is called a taxon.",
+        "misconception": "Category, rank and taxon are unrelated terms."
+      }
+    ],
+    "primary_concept": "Assessment Unit 3",
+    "concept_category": "general",
+    "student_strategy": [
+      "Read the unit label first.",
+      "Check whether the prompt names a specific biological topic.",
+      "If not, answer conservatively and avoid adding unsupported detail."
+    ],
+    "assessment_unit_id": "AU-3",
+    "curriculum_importance": "medium",
+    "estimated_memory_strength": "0.000"
+  }
+}
+
+--------------------------------------------------------------------------------

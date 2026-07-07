@@ -1,0 +1,3007 @@
+Pipeline Audit Log
+Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Status: completed
+Created At: Sat Jun 27 2026 10:51:17 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:54:02 GMT+0530 (India Standard Time)
+Source Section ID: 1
+Source Document ID: 1
+MST Chapter ID: 801
+
+REQUEST PAYLOAD
+{
+  "board": "CBSE",
+  "chapter": "The Living World",
+  "subject": "Biology",
+  "duration": "25",
+  "blueprint": "Understand -> recall -> apply -> retry",
+  "className": "11",
+  "chapterKey": "2:1",
+  "subjectCode": "BIO",
+  "practiceType": "Competency Based",
+  "sectionNumber": "1.2",
+  "sectionOcrText": "Classification is not a single step process but involves hierarchy of steps in which each step represents a rank or category. Since the category is a part of overall taxonomic arrangement, it is called the taxonomic category and all categories together constitute the taxonomic hierarchy. Each category, referred to as a unit of classification, in fact, represents a rank and is commonly termed as taxon (pl.: taxa).\n\nTaxonomic categories and hierarchy can be illustrated by an example. Insects represent a group of organisms sharing common features such as three pairs of jointed legs. It means insects are recognisable concrete objects which can be classified, and thus were given a rank or category. Can you name other such groups of organisms? Remember, groups represent category. Category further denotes rank. Each rank or taxon, in fact, represents a unit of classification. These taxonomic groups/categories are distinct biological entities and not merely morphological aggregates.\n\nTaxonomical studies of all known organisms have led to the development of common categories such as kingdom, phylum or division (for plants), class, order, family, genus and species. All organisms, including those in the plant and animal kingdoms have species as the lowest category. Now the question you may ask is, how to place organisms in various categories? The basic requirement is the knowledge of characters of an individual or group of organisms. This helps in identifying similarities and dissimilarities among the individuals of the same kind of organisms as well as of other kinds of organisms.\n",
+  "sectionImageName": "",
+  "targetDifficulty": "Balanced",
+  "targetLayerNumber": 2,
+  "sectionImageDataUrl": "",
+  "sectionImageMimeType": ""
+}
+
+LAYERS
+
+Layer Entry 1
+Layer Number: 1
+Layer Name: Knowledge Extraction
+Assessment Unit ID: 
+Status: completed
+Is Cached: false
+Generation ID: 6a982a80-58c0-49c2-923e-024853883929
+Generation Source Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Prompt Version: 1.0.17
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvFlfe9SCFjoUJ2ZK6q7Qm2alzONS
+Token Input: 2139
+Token Output: 3190
+Created At: Sat Jun 27 2026 10:51:41 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:51:41 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "context": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "className": "11",
+    "chapterKey": "2:1",
+    "subjectCode": "BIO",
+    "sectionNumber": "1.2"
+  },
+  "source_artifacts": {
+    "section_text": {
+      "has_text": true,
+      "normalized_text": "Classification is not a single step process but involves hierarchy of steps in which each step represents a rank or category. Since the category is a part of overall taxonomic arrangement, it is called the taxonomic category and all categories together constitute the taxonomic hierarchy. Each category, referred to as a unit of classification, in fact, represents a rank and is commonly termed as taxon (pl.: taxa).\n\nTaxonomic categories and hierarchy can be illustrated by an example. Insects represent a group of organisms sharing common features such as three pairs of jointed legs. It means insects are recognisable concrete objects which can be classified, and thus were given a rank or category. Can you name other such groups of organisms? Remember, groups represent category. Category further denotes rank. Each rank or taxon, in fact, represents a unit of classification. These taxonomic groups/categories are distinct biological entities and not merely morphological aggregates.\n\nTaxonomical studies of all known organisms have led to the development of common categories such as kingdom, phylum or division (for plants), class, order, family, genus and species. All organisms, including those in the plant and animal kingdoms have species as the lowest category. Now the question you may ask is, how to place organisms in various categories? The basic requirement is the knowledge of characters of an individual or group of organisms. This helps in identifying similarities and dissimilarities among the individuals of the same kind of organisms as well as of other kinds of organisms.",
+      "full_text_length": 1597
+    }
+  },
+  "generation_directives": {
+    "constraints": [
+      "Reduce pure fact-only items unless they support a larger applied objective.",
+      "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+    ],
+    "layer_focus": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+    "practice_type": "Competency Based",
+    "blueprint_hint": "Understand -> recall -> apply -> retry",
+    "generation_mode": "applied_reasoning",
+    "target_outcomes": [
+      "Prioritize application, interpretation, and reasoning.",
+      "Test transfer of knowledge, not just recall."
+    ],
+    "target_difficulty": "Balanced",
+    "time_limit_minutes": "25"
+  }
+}
+
+OUTPUT JSON
+{
+  "diagrams": [],
+  "functions": [],
+  "processes": [
+    {
+      "steps": [
+        "Observe characters of an individual or group of organisms",
+        "Identify similarities and dissimilarities",
+        "Recognise a group sharing common features",
+        "Assign the group to a taxonomic category or rank",
+        "Place the category within the overall taxonomic hierarchy"
+      ],
+      "process_name": "Hierarchical classification of organisms",
+      "process_summary": "Classification proceeds through multiple hierarchical steps rather than a single act, using organismal characters to place organisms into taxonomic categories."
+    }
+  ],
+  "exceptions": [
+    {
+      "exception_name": "Division used for plants",
+      "exception_summary": "In the standard hierarchy, division is used in place of phylum for plants."
+    }
+  ],
+  "structures": [],
+  "comparisons": [
+    {
+      "items_compared": [
+        "Single-step classification",
+        "Hierarchy of taxonomic steps"
+      ],
+      "comparison_name": "Single-step versus hierarchical classification",
+      "comparison_summary": "The source emphasizes that classification is not a one-step act but a multi-step hierarchical arrangement of ranks."
+    },
+    {
+      "items_compared": [
+        "Similarities among organisms",
+        "Dissimilarities among organisms"
+      ],
+      "comparison_name": "Similarities versus dissimilarities in classification",
+      "comparison_summary": "Both similarities and dissimilarities are used to decide how organisms of the same kind and different kinds should be classified."
+    },
+    {
+      "items_compared": [
+        "Phylum",
+        "Division"
+      ],
+      "comparison_name": "Phylum versus division terminology",
+      "comparison_summary": "Both refer to the same hierarchical level in the standard list, but division is used for plants."
+    }
+  ],
+  "terminology": [
+    {
+      "term": "Taxonomic category",
+      "meaning": "A category that is part of the overall taxonomic arrangement."
+    },
+    {
+      "term": "Taxonomic hierarchy",
+      "meaning": "The overall arrangement formed by all taxonomic categories together."
+    },
+    {
+      "term": "Rank",
+      "meaning": "The level represented by each step or category in classification."
+    },
+    {
+      "term": "Taxon",
+      "meaning": "A unit of classification representing a rank or category."
+    },
+    {
+      "term": "Taxa",
+      "meaning": "Plural of taxon."
+    },
+    {
+      "term": "Division",
+      "meaning": "The term used for the phylum-level category in plants."
+    }
+  ],
+  "cause_effect": [
+    {
+      "cause": "Knowledge of characters of an individual or group of organisms",
+      "effect": "Helps identify similarities and dissimilarities needed for classification",
+      "explanation": "Character knowledge provides the basis for deciding how organisms should be placed into taxonomic categories."
+    },
+    {
+      "cause": "Organisms sharing common features",
+      "effect": "They can be recognised as a group and assigned a rank or category",
+      "explanation": "Shared characters justify treating a set of organisms as a taxonomic group."
+    },
+    {
+      "cause": "Classification involving multiple ranked categories",
+      "effect": "A taxonomic hierarchy is formed",
+      "explanation": "Because classification occurs through several ordered categories, the result is a hierarchy rather than a single-level grouping."
+    }
+  ],
+  "memory_hooks": [
+    "Category-rank-taxon-unit relationship needs memory support because several closely linked terms are introduced together and can be confused.",
+    "Standard taxonomic hierarchy needs memory support because it is an ordered multi-level sequence used for interpretation tasks.",
+    "Phylum versus division needs memory support because the source specifies plant-specific terminology at one hierarchy level.",
+    "Species as the lowest category needs memory support because it anchors interpretation of the hierarchy across both plants and animals."
+  ],
+  "core_concepts": [
+    "Biological classification",
+    "Taxonomic hierarchy",
+    "Taxonomic category",
+    "Rank",
+    "Taxon",
+    "Unit of classification",
+    "Shared characters",
+    "Similarity and dissimilarity in organisms",
+    "Standard taxonomic categories",
+    "Species as lowest category"
+  ],
+  "relationships": [
+    {
+      "related_concepts": [
+        "Taxonomic category",
+        "Rank",
+        "Taxon",
+        "Unit of classification"
+      ],
+      "relationship_name": "Category-rank-taxon mapping",
+      "relationship_type": "conceptual-mapping",
+      "relationship_summary": "Each taxonomic category represents a rank and is commonly termed a taxon; each taxon is a unit of classification."
+    },
+    {
+      "related_concepts": [
+        "Taxonomic hierarchy",
+        "Taxonomic categories"
+      ],
+      "relationship_name": "Taxonomic hierarchy composition",
+      "relationship_type": "part-whole",
+      "relationship_summary": "All taxonomic categories together constitute the taxonomic hierarchy."
+    },
+    {
+      "related_concepts": [
+        "Phylum",
+        "Division",
+        "Plants"
+      ],
+      "relationship_name": "Phylum and division usage",
+      "relationship_type": "usage",
+      "relationship_summary": "The hierarchy uses phylum generally, while division is used for plants."
+    },
+    {
+      "related_concepts": [
+        "Characters of organisms",
+        "Similarities and dissimilarities",
+        "Placement into categories"
+      ],
+      "relationship_name": "Characters as classification basis",
+      "relationship_type": "classification-basis",
+      "relationship_summary": "Characters are the basis for comparing organisms and placing them into taxonomic categories."
+    },
+    {
+      "related_concepts": [
+        "Shared features",
+        "Recognisable group",
+        "Rank or category"
+      ],
+      "relationship_name": "Group recognition and category assignment",
+      "relationship_type": "conceptual-mapping",
+      "relationship_summary": "A recognisable group of organisms sharing common features can be assigned a taxonomic rank or category."
+    }
+  ],
+  "classifications": [
+    {
+      "basis": "Standard biological hierarchy",
+      "groups": [
+        "Kingdom",
+        "Phylum or Division",
+        "Class",
+        "Order",
+        "Family",
+        "Genus",
+        "Species"
+      ],
+      "classification_name": "Common taxonomic categories",
+      "classification_summary": "Taxonomical studies have led to a common set of categories used to classify known organisms."
+    },
+    {
+      "basis": "Shared characters",
+      "groups": [
+        "Insects"
+      ],
+      "classification_name": "Insects as a recognisable taxonomic group",
+      "classification_summary": "Insects are presented as a group recognised by common features such as three pairs of jointed legs, illustrating how shared characters support grouping."
+    }
+  ],
+  "context_summary": "Students understand and can apply the idea that biological classification uses a hierarchy of taxonomic categories, interpret how ranks relate to taxa and units of classification, use shared characters to justify grouping of organisms, compare similarities and dissimilarities to place organisms into categories, and interpret the standard taxonomic hierarchy across plants and animals.",
+  "assessment_units": [
+    {
+      "dependencies": [],
+      "primary_concept": "Hierarchical nature of classification",
+      "concept_category": "Principle",
+      "assessment_unit_id": "BIO-AU-001",
+      "learning_objective": "Interpret why biological classification is a hierarchy of steps rather than a single-step process.",
+      "supporting_concepts": [
+        "Each step represents a rank or category",
+        "Categories together form a hierarchy",
+        "Classification proceeds through multiple levels"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-001"
+      ],
+      "primary_concept": "Category-rank-taxon relationship",
+      "concept_category": "Relationship",
+      "assessment_unit_id": "BIO-AU-002",
+      "learning_objective": "Apply the relationship among category, rank, taxon, and unit of classification when interpreting taxonomic statements.",
+      "supporting_concepts": [
+        "Taxonomic category",
+        "Rank",
+        "Taxon",
+        "Taxa",
+        "Unit of classification"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-001",
+        "BIO-AU-002"
+      ],
+      "primary_concept": "Taxonomic hierarchy composition",
+      "concept_category": "Relationship",
+      "assessment_unit_id": "BIO-AU-003",
+      "learning_objective": "Justify how individual taxonomic categories together constitute the overall taxonomic hierarchy.",
+      "supporting_concepts": [
+        "Part-whole relation between categories and hierarchy",
+        "Overall taxonomic arrangement",
+        "Hierarchy as ordered set of categories"
+      ],
+      "curriculum_importance": "medium"
+    },
+    {
+      "dependencies": [],
+      "primary_concept": "Shared characters as basis of grouping",
+      "concept_category": "Classification",
+      "assessment_unit_id": "BIO-AU-004",
+      "learning_objective": "Classify or justify grouping of organisms using shared observable characters.",
+      "supporting_concepts": [
+        "Common features define recognisable groups",
+        "Insects as example group",
+        "Three pairs of jointed legs as shared character evidence"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-004"
+      ],
+      "primary_concept": "Characters in category placement",
+      "concept_category": "Process",
+      "assessment_unit_id": "BIO-AU-005",
+      "learning_objective": "Apply knowledge of organismal characters to decide how organisms can be placed into taxonomic categories.",
+      "supporting_concepts": [
+        "Knowledge of characters is the basic requirement",
+        "Placement into categories depends on character evidence",
+        "Character-based classification"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-005"
+      ],
+      "primary_concept": "Similarity and dissimilarity in classification",
+      "concept_category": "Principle",
+      "assessment_unit_id": "BIO-AU-006",
+      "learning_objective": "Compare similarities and dissimilarities among organisms to justify whether they belong to the same or different categories.",
+      "supporting_concepts": [
+        "Comparison within same kind of organisms",
+        "Comparison across different kinds of organisms",
+        "Classification decisions use both similarity and difference"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-001",
+        "BIO-AU-003"
+      ],
+      "primary_concept": "Standard taxonomic hierarchy",
+      "concept_category": "Classification",
+      "assessment_unit_id": "BIO-AU-007",
+      "learning_objective": "Interpret and use the order of the standard taxonomic hierarchy in biological classification tasks.",
+      "supporting_concepts": [
+        "Kingdom",
+        "Phylum or division",
+        "Class",
+        "Order",
+        "Family",
+        "Genus",
+        "Species"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-007"
+      ],
+      "primary_concept": "Phylum-division terminology in plants",
+      "concept_category": "Terminology",
+      "assessment_unit_id": "BIO-AU-008",
+      "learning_objective": "Interpret the use of division in plants as corresponding to the phylum level in the standard hierarchy.",
+      "supporting_concepts": [
+        "Plant-specific terminology",
+        "Equivalent hierarchy position",
+        "Usage difference without changing rank"
+      ],
+      "curriculum_importance": "medium"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-007",
+        "BIO-AU-008"
+      ],
+      "primary_concept": "Species as lowest taxonomic category",
+      "concept_category": "Classification",
+      "assessment_unit_id": "BIO-AU-009",
+      "learning_objective": "Apply the idea of species as the lowest taxonomic category when interpreting plant and animal classification examples.",
+      "supporting_concepts": [
+        "Lowest category in the hierarchy",
+        "Applies to all organisms",
+        "Includes plant and animal kingdoms"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-002",
+        "BIO-AU-004",
+        "BIO-AU-006"
+      ],
+      "primary_concept": "Taxonomic groups as biological entities",
+      "concept_category": "Principle",
+      "assessment_unit_id": "BIO-AU-010",
+      "learning_objective": "Justify why taxonomic groups should be treated as distinct biological entities rather than merely morphological aggregates.",
+      "supporting_concepts": [
+        "Groups represent categories",
+        "Categories denote ranks",
+        "Taxonomic groups have biological significance beyond superficial appearance"
+      ],
+      "curriculum_importance": "medium"
+    }
+  ],
+  "stages_sequences": [
+    {
+      "sequence_name": "Standard taxonomic hierarchy",
+      "ordered_stages": [
+        "Kingdom",
+        "Phylum or Division",
+        "Class",
+        "Order",
+        "Family",
+        "Genus",
+        "Species"
+      ],
+      "sequence_summary": "Common taxonomic categories are arranged in a hierarchy, with species as the lowest category."
+    }
+  ],
+  "question_patterns": [
+    "hierarchy-completion",
+    "table-completion",
+    "odd-one-out",
+    "taxonomy-tree-interpretation",
+    "classification-justification",
+    "term-relationship-mapping",
+    "example-to-principle-transfer",
+    "character-based-grouping",
+    "comparison-based-classification",
+    "sequence-interpretation"
+  ],
+  "common_misconceptions": [
+    {
+      "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+      "misconception": "Classification is done in a single step."
+    },
+    {
+      "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+      "misconception": "Category, rank, and taxon are unrelated ideas."
+    },
+    {
+      "correction": "Taxonomic groups or categories are distinct biological entities, not merely morphological aggregates.",
+      "misconception": "Taxonomic groups are only loose collections based on appearance."
+    },
+    {
+      "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+      "misconception": "Only similarities matter in classification."
+    },
+    {
+      "correction": "Species is the lowest category for all organisms, including both plant and animal kingdoms.",
+      "misconception": "Species is the lowest category only in animals or only in plants."
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 2
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-001
+Status: completed
+Is Cached: false
+Generation ID: 950dd081-4978-4b6e-a2a6-a63a7ac15e3f
+Generation Source Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvFm2eocHF69fWU4dnTVwqKU8Z21q
+Token Input: 1059
+Token Output: 1422
+Created At: Sat Jun 27 2026 10:51:56 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:51:56 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Hierarchical nature of classification",
+    "concept_category": "Principle",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "1",
+    "assessment_unit_id": "BIO-AU-001",
+    "learning_objective": "Interpret why biological classification is a hierarchy of steps rather than a single-step process.",
+    "supporting_concepts": [
+      "Each step represents a rank or category",
+      "Categories together form a hierarchy",
+      "Classification proceeds through multiple levels"
+    ],
+    "curriculum_importance": "high"
+  },
+  "concept_description": "Students understand and can apply the idea that biological classification uses a hierarchy of taxonomic categories, interpret how ranks relate to taxa and units of classification, use shared characters to justify grouping of organisms, compare similarities and dissimilarities to place organisms into categories, and interpret the standard taxonomic hierarchy across plants and animals.",
+  "supporting_concepts": [
+    "Each step represents a rank or category",
+    "Categories together form a hierarchy",
+    "Classification proceeds through multiple levels"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+      "misconception": "Classification is done in a single step."
+    },
+    {
+      "concept": null,
+      "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+      "misconception": "Category, rank, and taxon are unrelated ideas."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups or categories are distinct biological entities, not merely morphological aggregates.",
+      "misconception": "Taxonomic groups are only loose collections based on appearance."
+    },
+    {
+      "concept": null,
+      "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+      "misconception": "Only similarities matter in classification."
+    },
+    {
+      "concept": null,
+      "correction": "Species is the lowest category for all organisms, including both plant and animal kingdoms.",
+      "misconception": "Species is the lowest category only in animals or only in plants."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "layer": "layer2",
+      "core_idea": {
+        "statement": "Classification is not a one-time labeling process; it is a stepwise arrangement of organisms into nested taxonomic categories from broader to more specific levels.",
+        "why_it_matters": "A hierarchical system allows biologists to compare organisms systematically, justify grouping decisions, and communicate biological relationships consistently across plants, animals, and other organisms."
+      },
+      "memory_anchor": "Classification works like narrowing an address: country, state, city, street, house. Each step adds precision; no single step is enough.",
+      "practice_type": "Competency Based",
+      "retrieval_cues": [
+        "Broad to specific",
+        "Nested categories",
+        "Rank = category",
+        "Taxon = unit at a rank",
+        "Use similarities and differences"
+      ],
+      "concept_summary": "Biological classification is organized as a hierarchy because organisms share some features broadly with many organisms and other features narrowly with fewer organisms. Therefore, classification proceeds through multiple ranked categories, with each step refining placement using both similarities and dissimilarities. A category is a rank, and the organism group placed at that rank is a taxon.",
+      "generation_mode": "applied_reasoning",
+      "primary_concept": "Hierarchical nature of classification",
+      "concept_category": "Principle",
+      "fk_mst_chapter_id": "801",
+      "instructional_use": "Use examples where organisms share some traits but differ in others, so students must justify why classification needs multiple levels rather than one label.",
+      "source_section_id": "1",
+      "assessment_unit_id": "BIO-AU-001",
+      "competency_prompts": [
+        {
+          "prompt": "A student says that if two organisms look similar, they should be placed in the same category directly. Explain why a biologist would still classify them through several ranks instead of one step.",
+          "prompt_type": "scenario_interpretation",
+          "expected_competency": "Explains the need for nested categories and progressive refinement using multiple characters."
+        },
+        {
+          "prompt": "Two organisms are placed in the same class but different families. What does this suggest about their similarities and differences?",
+          "prompt_type": "comparison_reasoning",
+          "expected_competency": "Infers that they share broader characteristics but differ in more specific traits used at lower ranks."
+        },
+        {
+          "prompt": "Why is the idea of hierarchy more useful than a flat list of organism groups for biological classification?",
+          "prompt_type": "concept_connection",
+          "expected_competency": "Connects hierarchy with organization, comparison, communication, and increasing specificity."
+        }
+      ],
+      "learning_objective": "Interpret why biological classification is a hierarchy of steps rather than a single-step process.",
+      "reasoning_patterns": {
+        "weak_pattern": [
+          "Notice one obvious feature",
+          "Assign organism to a single group immediately",
+          "Ignore intermediate ranks",
+          "Treat classification as a label rather than a structured process"
+        ],
+        "correct_pattern": [
+          "Observe shared and differing characters",
+          "Place organism in a broad category using common features",
+          "Refine placement through narrower ranks using additional evidence",
+          "Interpret final classification as nested, not isolated"
+        ]
+      },
+      "evidence_of_mastery": [
+        "Student explains classification as a nested sequence of ranks.",
+        "Student distinguishes broad similarity from specific difference.",
+        "Student correctly relates category, rank, and taxon.",
+        "Student justifies why organisms can share higher ranks but differ at lower ones."
+      ],
+      "supporting_concepts": [
+        {
+          "concept": "Each step represents a rank or category",
+          "understanding": "Every stage in classification corresponds to a taxonomic rank such as kingdom, phylum/division, class, order, family, genus, or species.",
+          "applied_reasoning_link": "When a new organism is studied, it is not assigned directly to a final label; evidence is used to place it step by step into ranks."
+        },
+        {
+          "concept": "Categories together form a hierarchy",
+          "understanding": "Taxonomic categories are arranged in an ordered sequence where broader groups contain narrower groups.",
+          "applied_reasoning_link": "This nesting helps explain why two organisms may belong to the same higher category but differ at lower categories."
+        },
+        {
+          "concept": "Classification proceeds through multiple levels",
+          "understanding": "Placement becomes more specific as more distinguishing characters are considered.",
+          "applied_reasoning_link": "This explains how classification can reflect both broad commonality and fine differences at the same time."
+        }
+      ],
+      "applied_understanding": {
+        "key_inference": "If two organisms share many broad features but differ in reproductive, structural, or genetic details, they may remain together at higher ranks but separate at lower ranks.",
+        "transfer_statement": "The same hierarchical logic can be used in real biological tasks such as identifying an unknown specimen, comparing biodiversity, or interpreting why closely related organisms are grouped differently from distantly related ones."
+      },
+      "curriculum_importance": "high",
+      "misconception_handling": [
+        {
+          "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+          "misconception": "Classification is done in a single step.",
+          "diagnostic_signal": "Student tries to assign an organism directly to one group without considering broader and narrower levels."
+        },
+        {
+          "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+          "misconception": "Category, rank, and taxon are unrelated ideas.",
+          "diagnostic_signal": "Student uses these terms as if they refer to completely separate systems."
+        },
+        {
+          "correction": "Taxonomic groups are treated as distinct biological entities supported by multiple characters, not just superficial resemblance.",
+          "misconception": "Taxonomic groups are only loose collections based on appearance.",
+          "diagnostic_signal": "Student groups organisms only by visible similarity without considering broader evidence."
+        },
+        {
+          "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+          "misconception": "Only similarities matter in classification.",
+          "diagnostic_signal": "Student ignores distinguishing traits when deciding rank placement."
+        },
+        {
+          "correction": "Species is the lowest taxonomic category across organisms, including both plants and animals.",
+          "misconception": "Species is the lowest category only in animals or only in plants.",
+          "diagnostic_signal": "Student treats species rank as kingdom-specific."
+        }
+      ]
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 3
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-002
+Status: completed
+Is Cached: false
+Generation ID: 7d7f2f23-76bd-4ba9-88c9-3dea9cef91c8
+Generation Source Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvFmHfH5IYQ4QR1jRfGDNXNR4uufl
+Token Input: 1096
+Token Output: 1263
+Created At: Sat Jun 27 2026 10:52:08 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:52:08 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-001"
+      }
+    ],
+    "primary_concept": "Category-rank-taxon relationship",
+    "concept_category": "Relationship",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "1",
+    "assessment_unit_id": "BIO-AU-002",
+    "learning_objective": "Apply the relationship among category, rank, taxon, and unit of classification when interpreting taxonomic statements.",
+    "supporting_concepts": [
+      "Taxonomic category",
+      "Rank",
+      "Taxon",
+      "Taxa",
+      "Unit of classification"
+    ],
+    "curriculum_importance": "high"
+  },
+  "concept_description": "Students understand and can apply the idea that biological classification uses a hierarchy of taxonomic categories, interpret how ranks relate to taxa and units of classification, use shared characters to justify grouping of organisms, compare similarities and dissimilarities to place organisms into categories, and interpret the standard taxonomic hierarchy across plants and animals.",
+  "supporting_concepts": [
+    "Taxonomic category",
+    "Rank",
+    "Taxon",
+    "Taxa",
+    "Unit of classification"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+      "misconception": "Classification is done in a single step."
+    },
+    {
+      "concept": null,
+      "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+      "misconception": "Category, rank, and taxon are unrelated ideas."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups or categories are distinct biological entities, not merely morphological aggregates.",
+      "misconception": "Taxonomic groups are only loose collections based on appearance."
+    },
+    {
+      "concept": null,
+      "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+      "misconception": "Only similarities matter in classification."
+    },
+    {
+      "concept": null,
+      "correction": "Species is the lowest category for all organisms, including both plant and animal kingdoms.",
+      "misconception": "Species is the lowest category only in animals or only in plants."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "layer": 2,
+      "dependencies": [
+        {
+          "dependency_type": "prerequisite",
+          "depends_on_assessment_unit_id": "BIO-AU-001"
+        }
+      ],
+      "practice_type": "Competency Based",
+      "conceptual_core": {
+        "summary": "Biological classification is hierarchical. Each step in the hierarchy is a taxonomic category or rank, and the actual group placed at that rank is a taxon. Thus, a taxon is the unit of classification occupying a particular category.",
+        "key_relationships": [
+          {
+            "to": "Rank",
+            "from": "Taxonomic category",
+            "relationship": "A category represents a level or position in the hierarchy, called a rank."
+          },
+          {
+            "to": "Unit of classification",
+            "from": "Taxon",
+            "relationship": "A taxon is the actual biological group used as a unit of classification."
+          },
+          {
+            "to": "Taxon",
+            "from": "Rank",
+            "relationship": "At each rank, a corresponding taxon can be identified."
+          },
+          {
+            "to": "Taxon",
+            "from": "Taxa",
+            "relationship": "Taxa is the plural of taxon."
+          },
+          {
+            "to": "Hierarchy",
+            "from": "Classification",
+            "relationship": "Classification proceeds through multiple ordered ranks rather than a single step."
+          }
+        ],
+        "applied_understanding": [
+          "When reading a taxonomic statement, identify whether it names a level in the hierarchy or the actual organism group occupying that level.",
+          "Interpret statements such as 'Mammalia is a taxon at the rank of class' by separating the group name from its hierarchical position.",
+          "Use both similarities and dissimilarities to justify why organisms are placed into the same or different taxa.",
+          "Recognize that species is the lowest taxonomic category across all organisms, not only in one kingdom."
+        ]
+      },
+      "generation_mode": "applied_reasoning",
+      "primary_concept": "Category-rank-taxon relationship",
+      "concept_category": "Relationship",
+      "fk_mst_chapter_id": "801",
+      "source_section_id": "1",
+      "assessment_unit_id": "BIO-AU-002",
+      "learning_objective": "Apply the relationship among category, rank, taxon, and unit of classification when interpreting taxonomic statements.",
+      "reasoning_patterns": {
+        "transfer_expectations": [
+          "Apply the category-rank-taxon relationship to both plant and animal examples.",
+          "Interpret unfamiliar taxonomic statements by using the hierarchy logic.",
+          "Use the idea of unit of classification in new examples, not just textbook cases."
+        ],
+        "what_students_should_do": [
+          "Distinguish between a named group and the rank assigned to it.",
+          "Interpret taxonomic language in context rather than memorizing isolated terms.",
+          "Connect observed characters to placement into broader or narrower taxa.",
+          "Infer whether a statement refers to hierarchy, grouping, or naming."
+        ]
+      },
+      "supporting_concepts": [
+        "Taxonomic category",
+        "Rank",
+        "Taxon",
+        "Taxa",
+        "Unit of classification"
+      ],
+      "assessment_readiness": {
+        "competency_signals": [
+          "Correctly explains that a category is a rank and a taxon is the group at that rank.",
+          "Interprets examples such as genus, family, or species without confusing level and group.",
+          "Uses evidence from similarities and dissimilarities to justify placement.",
+          "Recognizes hierarchical classification as a multistep process."
+        ],
+        "evidence_of_understanding": [
+          "Student can restate a taxonomic statement in their own words.",
+          "Student can identify errors in statements that mix up rank and taxon.",
+          "Student can compare two organisms and infer whether they belong to the same lower or higher taxon."
+        ]
+      },
+      "curriculum_importance": "high",
+      "misconception_anchors": [
+        {
+          "misconception": "Classification is done in a single step.",
+          "correction_focus": "Emphasize that classification is hierarchical and involves successive ranks."
+        },
+        {
+          "misconception": "Category, rank, and taxon are unrelated ideas.",
+          "correction_focus": "Show that category/rank refers to level, while taxon refers to the group occupying that level."
+        },
+        {
+          "misconception": "Taxonomic groups are only loose collections based on appearance.",
+          "correction_focus": "Stress that taxa are recognized biological units supported by multiple characters."
+        },
+        {
+          "misconception": "Only similarities matter in classification.",
+          "correction_focus": "Include comparison tasks requiring use of both similarities and differences."
+        },
+        {
+          "misconception": "Species is the lowest category only in animals or only in plants.",
+          "correction_focus": "Reinforce universality of species as the lowest category across kingdoms."
+        }
+      ],
+      "instructional_emphasis": {
+        "layer1_alignment": "Focus on how hierarchical classification works as a process and why ranks help organize biological diversity.",
+        "layer2_alignment": "Build conceptual clarity that category/rank is the level, while taxon is the actual classified group.",
+        "layer3_alignment": "Encourage interpretation of statements and evidence-based grouping rather than term recall alone.",
+        "layer4_alignment": "Use case-like examples where students must infer whether a word names a rank or a taxon.",
+        "layer5_alignment": "Prepare learners to demonstrate understanding by explaining and applying the relationship in context.",
+        "layer6_alignment": "Favor reasoning-rich prompts involving comparison of organisms and interpretation of taxonomic claims.",
+        "layer7_alignment": "Address confusion between hierarchy level and biological group, and diagnose one-step classification thinking."
+      }
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 4
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-003
+Status: completed
+Is Cached: false
+Generation ID: cd17ff24-4a4f-4c23-820e-507a07a1a9f2
+Generation Source Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvFmS6L2xayy39Em9sBD2ZkhLA5AL
+Token Input: 1120
+Token Output: 1584
+Created At: Sat Jun 27 2026 10:52:23 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:52:23 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-001"
+      },
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-002"
+      }
+    ],
+    "primary_concept": "Taxonomic hierarchy composition",
+    "concept_category": "Relationship",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "1",
+    "assessment_unit_id": "BIO-AU-003",
+    "learning_objective": "Justify how individual taxonomic categories together constitute the overall taxonomic hierarchy.",
+    "supporting_concepts": [
+      "Part-whole relation between categories and hierarchy",
+      "Overall taxonomic arrangement",
+      "Hierarchy as ordered set of categories"
+    ],
+    "curriculum_importance": "medium"
+  },
+  "concept_description": "Students understand and can apply the idea that biological classification uses a hierarchy of taxonomic categories, interpret how ranks relate to taxa and units of classification, use shared characters to justify grouping of organisms, compare similarities and dissimilarities to place organisms into categories, and interpret the standard taxonomic hierarchy across plants and animals.",
+  "supporting_concepts": [
+    "Part-whole relation between categories and hierarchy",
+    "Overall taxonomic arrangement",
+    "Hierarchy as ordered set of categories"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+      "misconception": "Classification is done in a single step."
+    },
+    {
+      "concept": null,
+      "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+      "misconception": "Category, rank, and taxon are unrelated ideas."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups or categories are distinct biological entities, not merely morphological aggregates.",
+      "misconception": "Taxonomic groups are only loose collections based on appearance."
+    },
+    {
+      "concept": null,
+      "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+      "misconception": "Only similarities matter in classification."
+    },
+    {
+      "concept": null,
+      "correction": "Species is the lowest category for all organisms, including both plant and animal kingdoms.",
+      "misconception": "Species is the lowest category only in animals or only in plants."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "layer": 2,
+      "memory_type": "conceptual_understanding",
+      "concept_links": [
+        {
+          "link_explanation": "A single category has meaning only as one level within the larger ordered hierarchy.",
+          "supporting_concept": "Part-whole relation between categories and hierarchy"
+        },
+        {
+          "link_explanation": "The hierarchy is the full arrangement produced when all categories are placed in sequence from lowest to highest.",
+          "supporting_concept": "Overall taxonomic arrangement"
+        },
+        {
+          "link_explanation": "Order matters because each rank differs in inclusiveness and determines how taxa are nested.",
+          "supporting_concept": "Hierarchy as ordered set of categories"
+        }
+      ],
+      "primary_concept": "Taxonomic hierarchy composition",
+      "concept_category": "Relationship",
+      "transfer_prompts": [
+        {
+          "prompt": "If two organisms belong to the same genus but different species, explain what this tells you about their position in the hierarchy and their degree of similarity.",
+          "prompt_type": "comparison"
+        },
+        {
+          "prompt": "A student says classification happens in one step by matching appearance. Identify what is wrong and explain how hierarchical categories improve biological classification.",
+          "prompt_type": "error_analysis"
+        },
+        {
+          "prompt": "Explain why species is treated as the lowest category in both plants and animals, and how this supports a common taxonomic framework.",
+          "prompt_type": "cross_context"
+        },
+        {
+          "prompt": "Why does removing the order of categories make the taxonomic hierarchy less meaningful? Justify using the idea of nested groups.",
+          "prompt_type": "structure_reasoning"
+        }
+      ],
+      "fk_mst_chapter_id": "801",
+      "source_section_id": "1",
+      "assessment_unit_id": "BIO-AU-003",
+      "core_understanding": {
+        "big_idea": "The taxonomic hierarchy is an ordered whole made from nested categories, where each category represents a rank and contains taxa grouped using shared and differing biological characters.",
+        "ordered_structure": "Each higher category includes one or more units from the category below it, so the hierarchy works as a nested arrangement.",
+        "part_whole_relation": "Species, genus, family, order, class, phylum/division, and kingdom are not isolated labels; together they form the complete hierarchy from more specific to more inclusive levels.",
+        "classification_logic": "Organisms are placed into categories by comparing evidence of similarities and dissimilarities, allowing justified grouping rather than arbitrary sorting."
+      },
+      "learning_objective": "Justify how individual taxonomic categories together constitute the overall taxonomic hierarchy.",
+      "reasoning_patterns": [
+        {
+          "pattern": "nested_inclusion",
+          "description": "If two organisms share a lower category, they must also share all higher categories above it."
+        },
+        {
+          "pattern": "increasing_inclusiveness",
+          "description": "Moving upward in the hierarchy broadens the group and includes more organisms with fewer shared specific features."
+        },
+        {
+          "pattern": "evidence_based_grouping",
+          "description": "Placement into a taxon is justified by comparing multiple characters, including important differences."
+        },
+        {
+          "pattern": "rank_taxon_connection",
+          "description": "A rank is the level in the hierarchy, while a taxon is the actual group occupying that level."
+        }
+      ],
+      "competency_evidence": {
+        "student_can": [
+          "Explain how separate taxonomic categories combine to form one ordered hierarchy.",
+          "Justify why order among categories matters for biological classification.",
+          "Interpret the relationship between rank and taxon using examples.",
+          "Use similarities and dissimilarities to defend placement of organisms into categories.",
+          "Transfer the hierarchy concept across both plant and animal classification contexts."
+        ],
+        "evidence_statements": [
+          "Gives a reasoned explanation of nested categories rather than listing ranks only.",
+          "Correctly infers shared higher taxa from a shared lower taxon.",
+          "Rejects appearance-only grouping and cites broader classification logic.",
+          "Explains species as the lowest category in a general, cross-kingdom way."
+        ]
+      },
+      "curriculum_importance": "medium",
+      "misconception_handling": [
+        {
+          "correction": "Classification is hierarchical and proceeds through multiple ranks, each adding structure to the final arrangement.",
+          "misconception": "Classification is done in a single step.",
+          "repair_strategy": "Use a nested example showing how one organism belongs simultaneously to several ordered categories.",
+          "diagnostic_signal": "Learner treats kingdom-to-species grouping as one undivided label."
+        },
+        {
+          "correction": "A category is a level or rank in the hierarchy, and a taxon is the biological group placed at that rank.",
+          "misconception": "Category, rank, and taxon are unrelated ideas.",
+          "repair_strategy": "Ask the learner to pair each rank with an example taxon and explain the relationship.",
+          "diagnostic_signal": "Learner can name levels but cannot connect them to actual groups."
+        },
+        {
+          "correction": "Taxa are meaningful biological groupings supported by multiple characters, not just superficial resemblance.",
+          "misconception": "Taxonomic groups are only loose collections based on appearance.",
+          "repair_strategy": "Present cases where similar appearance hides important differences and ask for reclassification.",
+          "diagnostic_signal": "Learner groups organisms using one visible trait only."
+        },
+        {
+          "correction": "Both similarities and dissimilarities are necessary to decide whether organisms belong in the same or different taxa.",
+          "misconception": "Only similarities matter in classification.",
+          "repair_strategy": "Use compare-and-contrast tables requiring inclusion and exclusion reasoning.",
+          "diagnostic_signal": "Learner ignores distinguishing traits when assigning categories."
+        },
+        {
+          "correction": "Species is the basic lowest category across all organisms in standard taxonomy.",
+          "misconception": "Species is the lowest category only in animals or only in plants.",
+          "repair_strategy": "Use parallel plant and animal examples mapped onto the same hierarchy.",
+          "diagnostic_signal": "Learner applies different lowest ranks to plants and animals."
+        }
+      ],
+      "applied_reasoning_focus": {
+        "practice_type": "Competency Based",
+        "generation_mode": "applied_reasoning",
+        "target_outcomes": [
+          "Prioritize application, interpretation, and reasoning.",
+          "Test transfer of knowledge, not just recall."
+        ],
+        "explicit_application": [
+          "Emphasize that the hierarchy is built stepwise from multiple ordered categories rather than by a single act of labeling.",
+          "Require learners to connect category, rank, and taxon as related ideas within one classification system.",
+          "Use grouping decisions based on both similarities and dissimilarities, not appearance alone.",
+          "Support transfer across plant and animal examples by reinforcing that species is the lowest category for all organisms."
+        ]
+      },
+      "instructional_blueprint_alignment": {
+        "blueprint": "Understand -> recall -> apply -> retry",
+        "layer2_role": "Support conceptual understanding over rote memorization by organizing the hierarchy as a meaningful relationship system.",
+        "applied_assessment_readiness": "This memory supports case-based and inference-driven items where students must interpret grouping decisions, not merely recite ranks."
+      }
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 5
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-004
+Status: completed
+Is Cached: false
+Generation ID: 46df0449-2777-4a61-9a4d-0eeb6d7a094f
+Generation Source Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvFmiBEt7gx3eQKLOh6HEcRWtbcG9
+Token Input: 1063
+Token Output: 1582
+Created At: Sat Jun 27 2026 10:52:37 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:52:37 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Shared characters as basis of grouping",
+    "concept_category": "Classification",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "1",
+    "assessment_unit_id": "BIO-AU-004",
+    "learning_objective": "Classify or justify grouping of organisms using shared observable characters.",
+    "supporting_concepts": [
+      "Common features define recognisable groups",
+      "Insects as example group",
+      "Three pairs of jointed legs as shared character evidence"
+    ],
+    "curriculum_importance": "high"
+  },
+  "concept_description": "Students understand and can apply the idea that biological classification uses a hierarchy of taxonomic categories, interpret how ranks relate to taxa and units of classification, use shared characters to justify grouping of organisms, compare similarities and dissimilarities to place organisms into categories, and interpret the standard taxonomic hierarchy across plants and animals.",
+  "supporting_concepts": [
+    "Common features define recognisable groups",
+    "Insects as example group",
+    "Three pairs of jointed legs as shared character evidence"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+      "misconception": "Classification is done in a single step."
+    },
+    {
+      "concept": null,
+      "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+      "misconception": "Category, rank, and taxon are unrelated ideas."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups or categories are distinct biological entities, not merely morphological aggregates.",
+      "misconception": "Taxonomic groups are only loose collections based on appearance."
+    },
+    {
+      "concept": null,
+      "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+      "misconception": "Only similarities matter in classification."
+    },
+    {
+      "concept": null,
+      "correction": "Species is the lowest category for all organisms, including both plant and animal kingdoms.",
+      "misconception": "Species is the lowest category only in animals or only in plants."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "layer": 2,
+      "core_idea": {
+        "statement": "Organisms are grouped by comparing shared observable characters, and a valid grouping is justified when members show common defining features while differing from organisms outside the group.",
+        "why_it_matters": "This helps students move from naming groups to explaining why an organism belongs to a group using evidence."
+      },
+      "practice_type": "Competency Based",
+      "generation_mode": "applied_reasoning",
+      "primary_concept": "Shared characters as basis of grouping",
+      "worked_examples": [
+        {
+          "title": "Grouping by a defining character",
+          "answer": "Butterfly, housefly, and ant can be grouped together as insects because they share the defining observable character of three pairs of jointed legs. The spider is excluded because it does not share this character.",
+          "question": "Which organisms can be grouped together as insects, and why?",
+          "scenario": "A butterfly, housefly, and ant all have three pairs of jointed legs, while a spider has four pairs of legs.",
+          "reasoning": "The grouping is based on a shared defining feature, not just general appearance."
+        },
+        {
+          "title": "Using both similarity and difference",
+          "answer": "No. Although both have jointed appendages, an insect must show the defining shared character of three pairs of jointed legs. A crab does not fit this defining insect pattern.",
+          "question": "Is this grouping sufficient to call both insects?",
+          "scenario": "A student groups a grasshopper and a crab together because both have jointed appendages.",
+          "reasoning": "A broad similarity may suggest relatedness at some level, but correct grouping into a specific category needs the relevant defining character."
+        }
+      ],
+      "concept_category": "Classification",
+      "conceptual_links": [
+        {
+          "to": "recognisable biological groups",
+          "from": "shared observable characters",
+          "link_type": "basis_of_grouping"
+        },
+        {
+          "to": "placement within a group",
+          "from": "similarities",
+          "link_type": "supports"
+        },
+        {
+          "to": "separation from other groups",
+          "from": "dissimilarities",
+          "link_type": "refines_classification"
+        },
+        {
+          "to": "application of classification rule",
+          "from": "insect example",
+          "link_type": "worked_model"
+        }
+      ],
+      "fk_mst_chapter_id": "801",
+      "retrieval_support": {
+        "application_anchor": "To justify a group, look for a defining shared character and use differences to exclude non-members.",
+        "minimal_recall_anchor": "Insects are recognised by three pairs of jointed legs."
+      },
+      "source_section_id": "1",
+      "assessment_unit_id": "BIO-AU-004",
+      "learning_objective": "Classify or justify grouping of organisms using shared observable characters.",
+      "reasoning_patterns": [
+        {
+          "steps": [
+            "Observe characters of the organism.",
+            "Identify which characters are shared with a known group.",
+            "Check whether the defining character is present.",
+            "Use both matching and non-matching features to justify the decision."
+          ],
+          "pattern_name": "evidence_to_group"
+        },
+        {
+          "steps": [
+            "Compare two or more organisms.",
+            "Find the common observable character.",
+            "Decide which organisms form a group.",
+            "Explain why the excluded organism does not fit that group."
+          ],
+          "pattern_name": "compare_and_exclude"
+        }
+      ],
+      "supporting_concepts": [
+        {
+          "concept": "Common features define recognisable groups",
+          "understanding_goal": "Students should infer that grouping is evidence-based, not arbitrary."
+        },
+        {
+          "concept": "Insects as example group",
+          "understanding_goal": "Students should use a familiar group to practice applying shared-character reasoning."
+        },
+        {
+          "concept": "Three pairs of jointed legs as shared character evidence",
+          "understanding_goal": "Students should identify this as a defining observable character that supports insect grouping."
+        }
+      ],
+      "assessment_blueprint": {
+        "focus": "applied conceptual understanding",
+        "item_types": [
+          "case-based grouping",
+          "odd-one-out with justification",
+          "evidence selection",
+          "compare-and-classify prompts"
+        ],
+        "sample_prompts": [
+          {
+            "type": "case_based_grouping",
+            "prompt": "Four organisms are shown: beetle, mosquito, spider, and ant. Select the organisms that belong to one group and justify your choice using a shared observable character.",
+            "expected_competency": "selection plus evidence-based justification"
+          },
+          {
+            "type": "odd_one_out_with_reasoning",
+            "prompt": "Choose the odd one out: cockroach, butterfly, crab, bee. Explain your answer using shared characters, not just names.",
+            "expected_competency": "comparison and exclusion reasoning"
+          },
+          {
+            "type": "evidence_selection",
+            "prompt": "A learner says, 'This organism is an insect because it is small and can move fast.' Evaluate the claim and replace it with a stronger classification reason.",
+            "expected_competency": "distinguishing weak from valid evidence"
+          }
+        ]
+      },
+      "competency_indicators": [
+        "Identifies a shared observable character from a set of organisms.",
+        "Uses a defining feature to justify grouping rather than merely naming the group.",
+        "Distinguishes between a useful defining character and a vague similarity.",
+        "Explains why an organism is excluded from a proposed group."
+      ],
+      "curriculum_importance": "high",
+      "misconception_handling": [
+        {
+          "misconception": "Classification is done in a single step.",
+          "transfer_risk": "Students may think one matching feature completely determines all classification.",
+          "correction_focus": "Even when using shared characters, grouping happens within a broader hierarchy; one observed feature helps justify placement at a particular level, not all levels at once."
+        },
+        {
+          "misconception": "Only similarities matter in classification.",
+          "transfer_risk": "Students may overgroup organisms based on one superficial resemblance.",
+          "correction_focus": "Students must compare both similarities and dissimilarities to justify why some organisms belong together and others do not."
+        },
+        {
+          "misconception": "Taxonomic groups are only loose collections based on appearance.",
+          "transfer_risk": "Students may treat classification as subjective.",
+          "correction_focus": "Shared observable characters are used as evidence for recognised biological groups, not random visual sorting."
+        }
+      ],
+      "applied_directives_used": {
+        "layer_emphasis": [
+          "conceptual understanding over rote memorization",
+          "causal understanding of grouping by shared characters",
+          "comparison using similarities and dissimilarities",
+          "case-based and inference-driven assessment",
+          "competency demonstration through justification"
+        ],
+        "constraints_applied": [
+          "reduced pure fact-only prompts",
+          "preferred prompts requiring selecting, connecting, explaining, or interpreting"
+        ],
+        "prioritized_outcomes": [
+          "application",
+          "interpretation",
+          "reasoning",
+          "transfer_of_knowledge"
+        ]
+      }
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 6
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-005
+Status: completed
+Is Cached: false
+Generation ID: 1d9b4a3b-9e43-4475-8e74-aa5945f502a7
+Generation Source Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvFmwFBFENLq58w69cnzTK84y3JNI
+Token Input: 1091
+Token Output: 1543
+Created At: Sat Jun 27 2026 10:52:52 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:52:52 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-004"
+      }
+    ],
+    "primary_concept": "Characters in category placement",
+    "concept_category": "Process",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "1",
+    "assessment_unit_id": "BIO-AU-005",
+    "learning_objective": "Apply knowledge of organismal characters to decide how organisms can be placed into taxonomic categories.",
+    "supporting_concepts": [
+      "Knowledge of characters is the basic requirement",
+      "Placement into categories depends on character evidence",
+      "Character-based classification"
+    ],
+    "curriculum_importance": "high"
+  },
+  "concept_description": "Students understand and can apply the idea that biological classification uses a hierarchy of taxonomic categories, interpret how ranks relate to taxa and units of classification, use shared characters to justify grouping of organisms, compare similarities and dissimilarities to place organisms into categories, and interpret the standard taxonomic hierarchy across plants and animals.",
+  "supporting_concepts": [
+    "Knowledge of characters is the basic requirement",
+    "Placement into categories depends on character evidence",
+    "Character-based classification"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+      "misconception": "Classification is done in a single step."
+    },
+    {
+      "concept": null,
+      "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+      "misconception": "Category, rank, and taxon are unrelated ideas."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups or categories are distinct biological entities, not merely morphological aggregates.",
+      "misconception": "Taxonomic groups are only loose collections based on appearance."
+    },
+    {
+      "concept": null,
+      "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+      "misconception": "Only similarities matter in classification."
+    },
+    {
+      "concept": null,
+      "correction": "Species is the lowest category for all organisms, including both plant and animal kingdoms.",
+      "misconception": "Species is the lowest category only in animals or only in plants."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "layer": "layer2",
+      "practice_type": "Competency Based",
+      "transfer_goals": [
+        "Apply the same classification logic to unfamiliar organisms",
+        "Move from memorized hierarchy to evidence-based placement",
+        "Use character comparison in both plant and animal contexts",
+        "Distinguish scientifically useful characters from superficial traits"
+      ],
+      "feedback_design": {
+        "retry_guidance": [
+          "Re-examine both similarities and dissimilarities",
+          "Decide whether the evidence supports a broad or narrow category",
+          "State the rank being inferred before naming the taxon"
+        ],
+        "effective_feedback_features": [
+          "Points to the exact character evidence missed or overused",
+          "Explains why one trait is insufficient for final placement",
+          "Reconnects the decision to hierarchical classification",
+          "Contrasts superficial similarity with biologically meaningful characters"
+        ]
+      },
+      "generation_mode": "applied_reasoning",
+      "primary_concept": "Characters in category placement",
+      "concept_category": "Process",
+      "conceptual_focus": {
+        "big_idea": "Organisms are placed into taxonomic categories by evaluating shared and differing characters and using that evidence across a hierarchy of ranks.",
+        "why_it_matters": "Classification is not a one-step naming exercise; it is an evidence-based process used to compare organisms, justify grouping, and communicate biological relationships consistently across plants and animals.",
+        "process_emphasis": [
+          "Observe characters",
+          "Compare organisms using multiple traits",
+          "Identify meaningful similarities and differences",
+          "Infer the most appropriate taxonomic grouping",
+          "Place organisms within hierarchical categories"
+        ],
+        "core_understandings": [
+          "Knowledge of characters is the basic requirement for classification.",
+          "Placement into categories depends on evidence from similarities and dissimilarities.",
+          "A category represents a rank and functions as a taxon, or unit of classification.",
+          "Classification proceeds through a hierarchy rather than a single step.",
+          "Species is the lowest taxonomic category across all organisms."
+        ],
+        "real_world_relevance": [
+          "Helps identify unknown organisms using observable evidence",
+          "Supports communication in biodiversity studies",
+          "Prevents grouping based only on superficial appearance"
+        ]
+      },
+      "dependency_links": [
+        {
+          "dependency_type": "prerequisite",
+          "depends_on_assessment_unit_id": "BIO-AU-004"
+        }
+      ],
+      "duration_minutes": 25,
+      "fk_mst_chapter_id": "801",
+      "source_section_id": "1",
+      "target_difficulty": "Balanced",
+      "assessment_unit_id": "BIO-AU-005",
+      "learning_objective": "Apply knowledge of organismal characters to decide how organisms can be placed into taxonomic categories.",
+      "reasoning_patterns": {
+        "weak_reasoning_examples": [
+          "They look alike, so they must be in the same group.",
+          "If one character matches, classification is complete."
+        ],
+        "strong_reasoning_examples": [
+          "These two organisms share several structural characters, so they may belong to the same lower category, but one major reproductive difference suggests they should not be placed in the same species.",
+          "A taxon is not just a label; it is a unit at a particular rank, so deciding the rank depends on how broad or specific the shared characters are."
+        ]
+      },
+      "competency_evidence": {
+        "student_can": [
+          "Use a set of organismal characters to decide whether two organisms should be placed in the same category.",
+          "Explain why a classification decision cannot be made from a single trait alone.",
+          "Interpret a simple comparison table and infer likely grouping.",
+          "Correctly use the terms category, rank, and taxon in a classification context.",
+          "Recognize that species is the lowest category in both plants and animals."
+        ],
+        "mastery_signals": [
+          "Gives evidence-based rather than appearance-only justifications",
+          "Uses hierarchical language appropriately",
+          "Considers both matching and contrasting characters",
+          "Explains classification as a stepwise process"
+        ]
+      },
+      "supporting_concepts": [
+        "Knowledge of characters is the basic requirement",
+        "Placement into categories depends on character evidence",
+        "Character-based classification"
+      ],
+      "assessment_blueprint": {
+        "emphasis": "conceptual understanding over rote memorization",
+        "cognitive_sequence": [
+          "Understand character evidence",
+          "Recall hierarchy terms when needed",
+          "Apply to organism grouping",
+          "Retry with corrected reasoning after feedback"
+        ],
+        "item_styles_preferred": [
+          "case-based classification prompts",
+          "comparison-table interpretation",
+          "assertion-reason with evidence focus",
+          "multi-step reasoning MCQs",
+          "short justification items"
+        ],
+        "item_styles_deemphasized": [
+          "isolated definition recall",
+          "single-fact direct questions without application"
+        ]
+      },
+      "curriculum_importance": "high",
+      "instructional_prompts": [
+        "Given three organisms with overlapping and differing characters, which two would you place in the same lower category and why?",
+        "A student grouped organisms only by color and size. What additional character evidence is needed to improve the classification?",
+        "If two organisms share many characters but differ in one major reproductive feature, how might that affect their placement?"
+      ],
+      "misconception_handling": [
+        {
+          "misconception": "Classification is done in a single step.",
+          "correction_focus": "Emphasize that organisms are placed through multiple hierarchical ranks, from broader to narrower categories.",
+          "diagnostic_signal": "Student jumps directly to a final category without considering intermediate ranks."
+        },
+        {
+          "misconception": "Category, rank, and taxon are unrelated ideas.",
+          "correction_focus": "Show that a category is a rank in the hierarchy and each such unit is termed a taxon.",
+          "diagnostic_signal": "Student uses the terms interchangeably without contextual meaning or treats them as separate systems."
+        },
+        {
+          "misconception": "Taxonomic groups are only loose collections based on appearance.",
+          "correction_focus": "Stress that categories are biological entities supported by character evidence, not casual visual groupings.",
+          "diagnostic_signal": "Student justifies grouping only by superficial resemblance."
+        },
+        {
+          "misconception": "Only similarities matter in classification.",
+          "correction_focus": "Require comparison of both shared and differing characters before placement.",
+          "diagnostic_signal": "Student ignores a key dissimilarity that changes category placement."
+        },
+        {
+          "misconception": "Species is the lowest category only in animals or only in plants.",
+          "correction_focus": "Reinforce that species is the basic and lowest category across all organisms.",
+          "diagnostic_signal": "Student applies different lowest ranks to plant and animal examples."
+        }
+      ],
+      "applied_reasoning_targets": [
+        "Select relevant characters for grouping organisms",
+        "Justify category placement using evidence",
+        "Distinguish between rank, category, and taxon in context",
+        "Interpret why both similarities and dissimilarities matter",
+        "Transfer the hierarchy concept across plant and animal examples"
+      ]
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 7
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-006
+Status: completed
+Is Cached: false
+Generation ID: b2663215-c36b-46be-9da5-98698a8cad30
+Generation Source Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvFnCNuJKLAOKycnDljfHMKvkpQ2Y
+Token Input: 1101
+Token Output: 1444
+Created At: Sat Jun 27 2026 10:53:07 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:53:07 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-005"
+      }
+    ],
+    "primary_concept": "Similarity and dissimilarity in classification",
+    "concept_category": "Principle",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "1",
+    "assessment_unit_id": "BIO-AU-006",
+    "learning_objective": "Compare similarities and dissimilarities among organisms to justify whether they belong to the same or different categories.",
+    "supporting_concepts": [
+      "Comparison within same kind of organisms",
+      "Comparison across different kinds of organisms",
+      "Classification decisions use both similarity and difference"
+    ],
+    "curriculum_importance": "high"
+  },
+  "concept_description": "Students understand and can apply the idea that biological classification uses a hierarchy of taxonomic categories, interpret how ranks relate to taxa and units of classification, use shared characters to justify grouping of organisms, compare similarities and dissimilarities to place organisms into categories, and interpret the standard taxonomic hierarchy across plants and animals.",
+  "supporting_concepts": [
+    "Comparison within same kind of organisms",
+    "Comparison across different kinds of organisms",
+    "Classification decisions use both similarity and difference"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+      "misconception": "Classification is done in a single step."
+    },
+    {
+      "concept": null,
+      "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+      "misconception": "Category, rank, and taxon are unrelated ideas."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups or categories are distinct biological entities, not merely morphological aggregates.",
+      "misconception": "Taxonomic groups are only loose collections based on appearance."
+    },
+    {
+      "concept": null,
+      "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+      "misconception": "Only similarities matter in classification."
+    },
+    {
+      "concept": null,
+      "correction": "Species is the lowest category for all organisms, including both plant and animal kingdoms.",
+      "misconception": "Species is the lowest category only in animals or only in plants."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "layer": 2,
+      "layer2_memory": {
+        "core_idea": "Classification decisions are made by comparing both shared characters and differences among organisms. Organisms are placed in the same category when they share important features, but they are separated into different categories when differences are significant enough to outweigh the similarities at that level.",
+        "worked_examples": [
+          {
+            "scenario": "Two flowering plants both produce seeds and flowers, but one has parallel venation and fibrous roots while the other has reticulate venation and tap roots.",
+            "takeaway": "Similarity supports grouping; dissimilarity refines the grouping.",
+            "reasoning": "They share important plant characters and can belong to the same broader plant groups, but the differences in leaf venation and root system justify placing them in different lower categories."
+          },
+          {
+            "scenario": "A bat and a bird both fly, but one has hair and mammary glands while the other has feathers and a beak.",
+            "takeaway": "A single functional similarity does not override multiple major differences.",
+            "reasoning": "Flight is a similarity, but it is not enough to place them in the same close category. Their major body features show they belong to different categories."
+          },
+          {
+            "scenario": "A dog and a wolf share many body features, feeding structures, and reproductive traits, but differ in some behavioral and domestication-related features.",
+            "takeaway": "Greater overall similarity usually indicates closer classification.",
+            "reasoning": "Because the similarities are numerous and fundamental, they are placed much closer in classification than organisms that only share superficial traits."
+          }
+        ],
+        "comparison_rules": [
+          "Use more than one character before making a classification decision.",
+          "Do not classify organisms only by outward appearance.",
+          "Shared fundamental traits usually support grouping at some level.",
+          "Major structural or reproductive differences may justify separation into different categories.",
+          "The same pair of organisms can be similar at one rank and different at another rank."
+        ],
+        "transfer_prompts": [
+          {
+            "prompt": "If two organisms share habitat and movement style but differ strongly in body covering, reproduction, and internal structure, should they be placed in the same close category?",
+            "expected_reasoning": "No. Shared habitat or movement may be superficial, while major biological differences justify different close categories."
+          },
+          {
+            "prompt": "If two organisms differ in one visible trait but share many structural and reproductive features, what should be checked before separating them?",
+            "expected_reasoning": "The importance of that differing trait must be evaluated against the many shared characters; one minor difference may not justify separation at a broader level."
+          },
+          {
+            "prompt": "Why can two organisms be placed in the same higher category but different lower categories?",
+            "expected_reasoning": "They share broad common features that justify grouping at a higher rank, but they also have enough specific differences to be separated at lower ranks."
+          }
+        ],
+        "competency_signals": [
+          "Compares organisms using multiple characters rather than one trait.",
+          "Explains grouping decisions with both similarities and differences.",
+          "Recognizes that classification depends on level or rank being considered.",
+          "Avoids classification based only on superficial resemblance.",
+          "Justifies whether organisms belong to the same or different categories using evidence."
+        ],
+        "applied_reasoning_frames": [
+          {
+            "frame": "Same category decision",
+            "use_when": "Two organisms share several important characters and differ only in minor ways.",
+            "reasoning_pattern": [
+              "Identify common characters.",
+              "Check whether the differences are minor or major for the category being considered.",
+              "Conclude whether they can be placed in the same category at that level."
+            ]
+          },
+          {
+            "frame": "Different category decision",
+            "use_when": "Two organisms show key differences despite some similarities.",
+            "reasoning_pattern": [
+              "List the similarities first.",
+              "Identify the major distinguishing characters.",
+              "Explain why those differences justify separation into different categories."
+            ]
+          },
+          {
+            "frame": "Hierarchy-aware comparison",
+            "use_when": "Organisms seem similar overall but not identical.",
+            "reasoning_pattern": [
+              "Decide whether they fit together at a broader rank.",
+              "Then test whether they still fit at a narrower rank.",
+              "Use increasing specificity to justify the final placement."
+            ]
+          }
+        ],
+        "misconception_corrections": [
+          {
+            "correction": "Classification uses both similarities and dissimilarities. Similarities suggest grouping, while differences determine whether the grouping should remain broad or become separate.",
+            "misconception": "Only similarities matter in classification."
+          },
+          {
+            "correction": "Classification is based on meaningful biological characters, not just superficial looks.",
+            "misconception": "Taxonomic groups are only loose collections based on appearance."
+          },
+          {
+            "correction": "Organisms are compared across levels of a hierarchy, so grouping becomes more specific step by step.",
+            "misconception": "Classification is done in a single step."
+          }
+        ],
+        "conceptual_understanding_points": [
+          {
+            "point": "Similarity alone is not enough for classification.",
+            "why_it_matters": "Many organisms may look alike in one feature, but classification requires considering multiple characters together."
+          },
+          {
+            "point": "Dissimilarity is equally important in deciding categories.",
+            "why_it_matters": "Differences help determine whether organisms should remain in the same group or be separated into different groups."
+          },
+          {
+            "point": "Classification is comparative, not absolute.",
+            "why_it_matters": "An organism is grouped by comparing it with others, not by judging a single trait in isolation."
+          },
+          {
+            "point": "Closer categories show more similarities; broader categories allow more differences.",
+            "why_it_matters": "This helps explain why two organisms may belong to the same higher category but different lower categories."
+          },
+          {
+            "point": "A valid classification justification must mention both common features and distinguishing features.",
+            "why_it_matters": "This supports evidence-based grouping rather than guesswork or superficial appearance."
+          }
+        ]
+      },
+      "practice_type": "Competency Based",
+      "generation_mode": "applied_reasoning",
+      "primary_concept": "Similarity and dissimilarity in classification",
+      "concept_category": "Principle",
+      "fk_mst_chapter_id": "801",
+      "source_section_id": "1",
+      "assessment_unit_id": "BIO-AU-006",
+      "learning_objective": "Compare similarities and dissimilarities among organisms to justify whether they belong to the same or different categories.",
+      "curriculum_importance": "high"
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 8
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-007
+Status: completed
+Is Cached: false
+Generation ID: 96cf7daa-a50e-44ca-bbaa-6d82f374fd42
+Generation Source Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvFnRkHvJkwLDYBlFPhZ7JR0v8shW
+Token Input: 1133
+Token Output: 1786
+Created At: Sat Jun 27 2026 10:53:24 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:53:24 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-001"
+      },
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-003"
+      }
+    ],
+    "primary_concept": "Standard taxonomic hierarchy",
+    "concept_category": "Classification",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "1",
+    "assessment_unit_id": "BIO-AU-007",
+    "learning_objective": "Interpret and use the order of the standard taxonomic hierarchy in biological classification tasks.",
+    "supporting_concepts": [
+      "Kingdom",
+      "Phylum or division",
+      "Class",
+      "Order",
+      "Family",
+      "Genus",
+      "Species"
+    ],
+    "curriculum_importance": "high"
+  },
+  "concept_description": "Students understand and can apply the idea that biological classification uses a hierarchy of taxonomic categories, interpret how ranks relate to taxa and units of classification, use shared characters to justify grouping of organisms, compare similarities and dissimilarities to place organisms into categories, and interpret the standard taxonomic hierarchy across plants and animals.",
+  "supporting_concepts": [
+    "Kingdom",
+    "Phylum or division",
+    "Class",
+    "Order",
+    "Family",
+    "Genus",
+    "Species"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+      "misconception": "Classification is done in a single step."
+    },
+    {
+      "concept": null,
+      "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+      "misconception": "Category, rank, and taxon are unrelated ideas."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups or categories are distinct biological entities, not merely morphological aggregates.",
+      "misconception": "Taxonomic groups are only loose collections based on appearance."
+    },
+    {
+      "concept": null,
+      "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+      "misconception": "Only similarities matter in classification."
+    },
+    {
+      "concept": null,
+      "correction": "Species is the lowest category for all organisms, including both plant and animal kingdoms.",
+      "misconception": "Species is the lowest category only in animals or only in plants."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "layer": 2,
+      "primary_concept": "Standard taxonomic hierarchy",
+      "transfer_checks": [
+        {
+          "skill": "Use hierarchy in unfamiliar examples",
+          "evidence_of_mastery": "Student can infer closeness of relationship from shared rank without needing a memorized organism example."
+        },
+        {
+          "skill": "Interpret rank-taxon relationship",
+          "evidence_of_mastery": "Student can distinguish between a level such as family and a named family as a taxon."
+        },
+        {
+          "skill": "Apply both similarity and difference in grouping",
+          "evidence_of_mastery": "Student explains why organisms may share a higher category yet differ at lower categories."
+        }
+      ],
+      "comparison_logic": {
+        "interpretive_rules": [
+          "Higher rank shared -> broader similarity, less specificity.",
+          "Lower rank shared -> narrower grouping, greater similarity.",
+          "Different lower ranks can still exist within the same higher rank.",
+          "A taxon is a named unit at any rank."
+        ],
+        "broad_to_specific_order": [
+          "Kingdom",
+          "Phylum or division",
+          "Class",
+          "Order",
+          "Family",
+          "Genus",
+          "Species"
+        ]
+      },
+      "concept_category": "Classification",
+      "conceptual_frames": [
+        {
+          "frame": "Hierarchy as nested grouping",
+          "explanation": "Each lower category fits inside a higher one. A genus belongs to one family, a family belongs to one order, and so on."
+        },
+        {
+          "frame": "Rank, category, and taxon connection",
+          "explanation": "A rank is a level in the hierarchy, such as family or genus. A category refers to that level, and a taxon is the actual named unit occupying it."
+        },
+        {
+          "frame": "Specificity increases downward",
+          "explanation": "Kingdom is broad and includes many organisms with fewer shared features. Species is narrow and includes organisms with the greatest set of shared characteristics within this hierarchy."
+        },
+        {
+          "frame": "Classification uses similarities and dissimilarities",
+          "explanation": "Organisms are not grouped only because they look alike. Differences are also important for deciding whether they belong in the same or different taxa."
+        }
+      ],
+      "fk_mst_chapter_id": "801",
+      "retrieval_support": {
+        "meaning_hook": "Moving downward means fewer organisms but more shared characteristics.",
+        "minimal_memory_hook": "Broad to narrow: Kingdom -> Phylum/Division -> Class -> Order -> Family -> Genus -> Species"
+      },
+      "source_section_id": "1",
+      "assessment_unit_id": "BIO-AU-007",
+      "core_understanding": {
+        "summary": "Biological classification is not a one-step labeling process. Organisms are placed into a nested hierarchy of categories, from broader groups to more specific ones: Kingdom, Phylum/Division, Class, Order, Family, Genus, Species. Each rank represents a taxonomic category, and each named group at that rank is a taxon. As one moves downward in the hierarchy, organisms share more characteristics and become more closely related conceptually.",
+        "process_view": [
+          "Observe organisms and compare characters.",
+          "Use shared and differing features to decide relative grouping.",
+          "Place organisms into broader to narrower taxonomic categories.",
+          "Interpret how lower ranks indicate greater similarity within a smaller group."
+        ],
+        "why_it_matters": [
+          "Helps interpret how organisms are grouped using both similarities and dissimilarities.",
+          "Supports reading and using scientific names and classification tables.",
+          "Allows transfer of hierarchy knowledge to unfamiliar organisms in plants and animals."
+        ]
+      },
+      "learning_objective": "Interpret and use the order of the standard taxonomic hierarchy in biological classification tasks.",
+      "supporting_concepts": [
+        {
+          "concept": "Kingdom",
+          "role_in_understanding": "Broadest standard rank in the school-level hierarchy used here; contains many diverse organisms."
+        },
+        {
+          "concept": "Phylum or division",
+          "role_in_understanding": "Second rank; phylum is commonly used for animals and division for plants in school biology contexts."
+        },
+        {
+          "concept": "Class",
+          "role_in_understanding": "Groups related orders within a phylum or division."
+        },
+        {
+          "concept": "Order",
+          "role_in_understanding": "Groups related families and helps bridge broad and narrow classification levels."
+        },
+        {
+          "concept": "Family",
+          "role_in_understanding": "Groups related genera with more shared features than at order level."
+        },
+        {
+          "concept": "Genus",
+          "role_in_understanding": "Contains closely related species and is more specific than family."
+        },
+        {
+          "concept": "Species",
+          "role_in_understanding": "Lowest standard category in this hierarchy for both plants and animals."
+        }
+      ],
+      "generation_alignment": {
+        "practice_type": "Competency Based",
+        "generation_mode": "applied_reasoning",
+        "target_outcomes": [
+          "Prioritize application, interpretation, and reasoning.",
+          "Test transfer of knowledge, not just recall."
+        ],
+        "applied_directives_used": [
+          "Prompts emphasize selecting, connecting, explaining, and interpreting taxonomic ranks.",
+          "Items reduce isolated fact recall and embed hierarchy knowledge in classification decisions.",
+          "Concept framing highlights process, comparison, and use across plant and animal examples."
+        ]
+      },
+      "curriculum_importance": "high",
+      "misconception_targets": [
+        {
+          "misconception": "Classification is done in a single step.",
+          "correction_focus": "Emphasize the sequential hierarchy of ranks and nested placement."
+        },
+        {
+          "misconception": "Category, rank, and taxon are unrelated ideas.",
+          "correction_focus": "Show that rank/category is the level, while taxon is the named unit at that level."
+        },
+        {
+          "misconception": "Taxonomic groups are only loose collections based on appearance.",
+          "correction_focus": "Stress that classification uses structured biological grouping based on multiple shared and differing characters."
+        },
+        {
+          "misconception": "Only similarities matter in classification.",
+          "correction_focus": "Use examples where organisms share a higher rank but differ at lower ranks."
+        },
+        {
+          "misconception": "Species is the lowest category only in animals or only in plants.",
+          "correction_focus": "Reinforce that species is the lowest standard category across organisms."
+        }
+      ],
+      "applied_reasoning_prompts": [
+        {
+          "prompt": "A student says that family is broader than class because families contain many organisms. Evaluate the claim using the standard hierarchy.",
+          "prompt_type": "ordering",
+          "expected_reasoning": [
+            "Compare positions of family and class in the hierarchy.",
+            "Recognize that class is above order and family, so it is broader.",
+            "Conclude that number alone does not override hierarchical rank."
+          ]
+        },
+        {
+          "prompt": "Two organisms share the same genus but belong to different species. What does this imply about their similarity compared with two organisms that only share the same family?",
+          "prompt_type": "classification_decision",
+          "expected_reasoning": [
+            "Lower shared rank means closer grouping.",
+            "Sharing a genus indicates more similarity than sharing only a family.",
+            "Use nested hierarchy logic rather than memorized wording."
+          ]
+        },
+        {
+          "prompt": "A learner thinks species is the lowest category only in animals because plants use division instead of phylum. Identify the error.",
+          "prompt_type": "cross-context",
+          "expected_reasoning": [
+            "Recognize that division/phylum difference affects a higher rank, not the lowest rank.",
+            "State that species remains the lowest standard category in both plants and animals."
+          ]
+        },
+        {
+          "prompt": "If two organisms are placed in the same order but different families, what can be inferred about their relationship?",
+          "prompt_type": "interpretation",
+          "expected_reasoning": [
+            "They share enough features to be grouped in the same order.",
+            "They differ enough to be separated into different families.",
+            "Classification uses both similarity and difference."
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 9
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-008
+Status: completed
+Is Cached: false
+Generation ID: d06b58bc-585c-4509-8e20-29af6f7e3476
+Generation Source Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvFnhnRQNmzWCqRAHKhFl99tN4MHe
+Token Input: 1084
+Token Output: 894
+Created At: Sat Jun 27 2026 10:53:34 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:53:34 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-007"
+      }
+    ],
+    "primary_concept": "Phylum-division terminology in plants",
+    "concept_category": "Terminology",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "1",
+    "assessment_unit_id": "BIO-AU-008",
+    "learning_objective": "Interpret the use of division in plants as corresponding to the phylum level in the standard hierarchy.",
+    "supporting_concepts": [
+      "Plant-specific terminology",
+      "Equivalent hierarchy position",
+      "Usage difference without changing rank"
+    ],
+    "curriculum_importance": "medium"
+  },
+  "concept_description": "Students understand and can apply the idea that biological classification uses a hierarchy of taxonomic categories, interpret how ranks relate to taxa and units of classification, use shared characters to justify grouping of organisms, compare similarities and dissimilarities to place organisms into categories, and interpret the standard taxonomic hierarchy across plants and animals.",
+  "supporting_concepts": [
+    "Plant-specific terminology",
+    "Equivalent hierarchy position",
+    "Usage difference without changing rank"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+      "misconception": "Classification is done in a single step."
+    },
+    {
+      "concept": null,
+      "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+      "misconception": "Category, rank, and taxon are unrelated ideas."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups or categories are distinct biological entities, not merely morphological aggregates.",
+      "misconception": "Taxonomic groups are only loose collections based on appearance."
+    },
+    {
+      "concept": null,
+      "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+      "misconception": "Only similarities matter in classification."
+    },
+    {
+      "concept": null,
+      "correction": "Species is the lowest category for all organisms, including both plant and animal kingdoms.",
+      "misconception": "Species is the lowest category only in animals or only in plants."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "layer": 2,
+      "primary_concept": "Phylum-division terminology in plants",
+      "competency_focus": [
+        "Interpret equivalent taxonomic ranks across kingdoms",
+        "Apply terminology correctly in plant classification contexts",
+        "Distinguish change in naming from change in hierarchical position",
+        "Transfer hierarchy understanding between animal and plant examples"
+      ],
+      "concept_category": "Terminology",
+      "assessment_unit_id": "BIO-AU-008",
+      "learning_objective": "Interpret the use of division in plants as corresponding to the phylum level in the standard hierarchy.",
+      "core_understandings": [
+        {
+          "type": "equivalence",
+          "statement": "In biological classification, plants often use the term division where animals commonly use phylum."
+        },
+        {
+          "type": "rank_relationship",
+          "statement": "Division and phylum refer to the same hierarchical level, so the rank does not change when the terminology changes."
+        },
+        {
+          "type": "interpretive_principle",
+          "statement": "The terminology difference is kingdom-specific usage, not evidence of a different classification system."
+        },
+        {
+          "type": "application_rule",
+          "statement": "To interpret a taxonomic label correctly, students must identify both the term used and the rank it represents."
+        }
+      ],
+      "supporting_concepts": [
+        "Plant-specific terminology",
+        "Equivalent hierarchy position",
+        "Usage difference without changing rank"
+      ],
+      "assessment_design_notes": {
+        "avoid": [
+          "isolated one-word recall items with no interpretive demand"
+        ],
+        "preferred_item_types": [
+          "assertion-reason",
+          "case-based interpretation",
+          "classification sequence analysis",
+          "error-detection prompts"
+        ],
+        "reasoning_expectation": "Students should justify that the terminology difference does not alter taxonomic rank."
+      },
+      "applied_reasoning_frames": [
+        {
+          "frame": "cross-kingdom comparison",
+          "prompt_focus": "Compare a plant classification statement using division with an animal classification statement using phylum and infer whether the rank is the same."
+        },
+        {
+          "frame": "terminology correction",
+          "prompt_focus": "Evaluate whether a student’s claim confuses terminology difference with hierarchy difference."
+        },
+        {
+          "frame": "classification interpretation",
+          "prompt_focus": "Read a taxonomic sequence and identify whether the plant term division has been placed at the correct level."
+        }
+      ],
+      "evidence_of_understanding": [
+        "Explains that division in plants and phylum in animals occupy the same place in the hierarchy",
+        "Corrects an incorrectly ordered plant taxonomic sequence",
+        "Interprets classification language without assuming a change in rank",
+        "Transfers the idea of equivalent rank terminology to unfamiliar examples"
+      ],
+      "instructional_memory_hooks": [
+        {
+          "hook": "Same step, different label",
+          "purpose": "Reinforces that terminology can vary while hierarchical position stays constant."
+        },
+        {
+          "hook": "Plants say division; animals say phylum",
+          "purpose": "Supports quick retrieval of kingdom-specific terminology with conceptual equivalence."
+        }
+      ],
+      "connections_to_prior_learning": [
+        {
+          "connection": "Builds on prior understanding that classification is hierarchical and that each category represents a rank.",
+          "depends_on_assessment_unit_id": "BIO-AU-007"
+        }
+      ],
+      "common_misconceptions_to_target": [
+        {
+          "correction": "Division is not an extra step; it corresponds to the phylum level.",
+          "misconception": "Division in plants is an extra category added to the hierarchy."
+        },
+        {
+          "correction": "The rank structure remains the same; only the preferred term differs.",
+          "misconception": "If plants use division and animals use phylum, then plants and animals are classified using different rank structures."
+        },
+        {
+          "correction": "In this case, different terms can represent the same taxonomic rank.",
+          "misconception": "Different terminology always means different biological meaning."
+        }
+      ]
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 10
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-009
+Status: completed
+Is Cached: false
+Generation ID: a8f9779b-386a-48dd-be49-7111f35cda95
+Generation Source Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvFnqVD5zDpdDgxkX2TJPDwVq6Fwg
+Token Input: 1120
+Token Output: 1571
+Created At: Sat Jun 27 2026 10:53:47 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:53:47 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-007"
+      },
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-008"
+      }
+    ],
+    "primary_concept": "Species as lowest taxonomic category",
+    "concept_category": "Classification",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "1",
+    "assessment_unit_id": "BIO-AU-009",
+    "learning_objective": "Apply the idea of species as the lowest taxonomic category when interpreting plant and animal classification examples.",
+    "supporting_concepts": [
+      "Lowest category in the hierarchy",
+      "Applies to all organisms",
+      "Includes plant and animal kingdoms"
+    ],
+    "curriculum_importance": "high"
+  },
+  "concept_description": "Students understand and can apply the idea that biological classification uses a hierarchy of taxonomic categories, interpret how ranks relate to taxa and units of classification, use shared characters to justify grouping of organisms, compare similarities and dissimilarities to place organisms into categories, and interpret the standard taxonomic hierarchy across plants and animals.",
+  "supporting_concepts": [
+    "Lowest category in the hierarchy",
+    "Applies to all organisms",
+    "Includes plant and animal kingdoms"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+      "misconception": "Classification is done in a single step."
+    },
+    {
+      "concept": null,
+      "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+      "misconception": "Category, rank, and taxon are unrelated ideas."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups or categories are distinct biological entities, not merely morphological aggregates.",
+      "misconception": "Taxonomic groups are only loose collections based on appearance."
+    },
+    {
+      "concept": null,
+      "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+      "misconception": "Only similarities matter in classification."
+    },
+    {
+      "concept": null,
+      "correction": "Species is the lowest category for all organisms, including both plant and animal kingdoms.",
+      "misconception": "Species is the lowest category only in animals or only in plants."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "layer": "layer2",
+      "memory_anchors": [
+        "Species = lowest standard taxonomic category",
+        "Lowest does not mean least important; it means most specific",
+        "Same rule for plants and animals",
+        "Classification uses both similarities and differences",
+        "Species makes sense only within a hierarchy"
+      ],
+      "transfer_goals": [
+        "apply the same taxonomic logic across unfamiliar plant and animal examples",
+        "move from memorized hierarchy to reasoned interpretation of classification data",
+        "connect rank names to biological meaning rather than treating them as a sequence to recite"
+      ],
+      "primary_concept": "Species as lowest taxonomic category",
+      "concept_category": "Classification",
+      "dependency_links": {
+        "prerequisites": [
+          "BIO-AU-007",
+          "BIO-AU-008"
+        ],
+        "dependency_use": "Learners should already recognize taxonomic hierarchy and the meaning of categories/ranks so they can now apply species-level interpretation in examples."
+      },
+      "fk_mst_chapter_id": "801",
+      "source_section_id": "1",
+      "assessment_unit_id": "BIO-AU-009",
+      "core_understanding": {
+        "big_idea": "Species is the lowest taxonomic category in biological classification for all organisms, including plants and animals.",
+        "why_it_matters": "Understanding species as the lowest category helps students interpret real classification examples, avoid treating grouping as superficial sorting, and transfer the same logic across different kinds of organisms.",
+        "conceptual_frame": [
+          "Classification is hierarchical, not a single-step act.",
+          "Each category is a rank and also a taxon, meaning a unit in classification.",
+          "Species represents the most specific standard category in the hierarchy.",
+          "Placement into species depends on evaluating shared and differing characters.",
+          "The idea applies across kingdoms, so plant and animal examples can both be interpreted using the same taxonomic principle."
+        ]
+      },
+      "learning_objective": "Apply the idea of species as the lowest taxonomic category when interpreting plant and animal classification examples.",
+      "practice_alignment": {
+        "practice_type": "Competency Based",
+        "generation_mode": "applied_reasoning",
+        "target_outcomes": [
+          "Prioritize application, interpretation, and reasoning.",
+          "Test transfer of knowledge, not just recall."
+        ],
+        "applied_directive_summary": "Focus on interpreting classification examples from plants and animals, using species as the lowest rank in a hierarchy, and requiring learners to justify choices using similarities, dissimilarities, and taxonomic logic rather than recall alone."
+      },
+      "competency_evidence": {
+        "student_can": [
+          "identify species as the lowest taxonomic category in a classification sequence",
+          "distinguish species from broader ranks such as genus or family",
+          "interpret plant and animal examples using the same taxonomic rule",
+          "justify grouping decisions using similarities and dissimilarities",
+          "explain why classification is hierarchical rather than single-step"
+        ],
+        "student_cannot_yet_if": [
+          "they treat species as just another name without relating it to hierarchy",
+          "they assume one visible similarity is enough to assign species",
+          "they think species applies differently in plants and animals",
+          "they confuse rank names with unrelated labels"
+        ]
+      },
+      "supporting_concepts": [
+        {
+          "concept": "Lowest category in the hierarchy",
+          "role_in_understanding": "Anchors the idea that species is the most specific standard rank and must be interpreted relative to broader categories above it."
+        },
+        {
+          "concept": "Applies to all organisms",
+          "role_in_understanding": "Prevents overgeneralization that species is limited to one kingdom or one type of organism."
+        },
+        {
+          "concept": "Includes plant and animal kingdoms",
+          "role_in_understanding": "Supports transfer by requiring students to use the same classification principle in both plant and animal contexts."
+        }
+      ],
+      "curriculum_importance": "high",
+      "misconception_handling": [
+        {
+          "misconception": "Classification is done in a single step.",
+          "correction_focus": "Reinforce that species is understood only within a hierarchy of ranks.",
+          "instructional_response": "Use nested classification examples where learners move from broad to specific categories and identify species as the final standard level."
+        },
+        {
+          "misconception": "Category, rank, and taxon are unrelated ideas.",
+          "correction_focus": "Show that a category is a rank and functions as a taxon in classification.",
+          "instructional_response": "Ask learners to interpret statements such as genus and species as both ranks and taxonomic units."
+        },
+        {
+          "misconception": "Taxonomic groups are only loose collections based on appearance.",
+          "correction_focus": "Emphasize that classification uses biologically meaningful grouping, not casual visual sorting.",
+          "instructional_response": "Present cases where superficial similarity is misleading and students must justify grouping using multiple characters."
+        },
+        {
+          "misconception": "Only similarities matter in classification.",
+          "correction_focus": "Require attention to both shared traits and distinguishing traits.",
+          "instructional_response": "Use compare-and-contrast prompts asking why two organisms may share a genus but not the same species."
+        },
+        {
+          "misconception": "Species is the lowest category only in animals or only in plants.",
+          "correction_focus": "Generalize the concept across all organisms.",
+          "instructional_response": "Pair plant and animal classification examples and ask students to identify the same taxonomic principle in both."
+        }
+      ],
+      "applied_reasoning_patterns": [
+        {
+          "pattern": "Hierarchy interpretation",
+          "description": "Given a classification chain, identify species as the lowest and most specific category rather than confusing it with genus or higher ranks."
+        },
+        {
+          "pattern": "Cross-kingdom transfer",
+          "description": "Use the same reasoning to interpret a plant example and an animal example, showing that species is universal in taxonomy."
+        },
+        {
+          "pattern": "Evidence-based grouping",
+          "description": "Use both similarities and dissimilarities to justify whether two organisms belong to the same species or only to higher shared categories."
+        },
+        {
+          "pattern": "Taxon-rank connection",
+          "description": "Interpret category, rank, and taxon as connected ideas when reading or constructing classification statements."
+        }
+      ],
+      "assessment_design_guidance": {
+        "avoid_or_reduce": [
+          "isolated definition-only recall items",
+          "fact listing without interpretation",
+          "single-word rank naming without context"
+        ],
+        "preferred_item_types": [
+          "case-based classification interpretation",
+          "compare-and-justify prompts",
+          "two-example transfer items using one plant and one animal",
+          "error-analysis items based on misconceptions"
+        ],
+        "sample_prompt_frames": [
+          "Two organisms share many features but differ in key reproductive or structural traits. Explain whether they should be placed in the same species or only in a higher common category.",
+          "A student says species is the lowest category only in animals because animal examples are more common in textbooks. Evaluate this claim using one plant and one animal example.",
+          "Given a partial taxonomic hierarchy, identify which level represents the most specific grouping and justify why."
+        ]
+      }
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 11
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-010
+Status: completed
+Is Cached: false
+Generation ID: ce28d1b2-99d1-4d0c-ab53-732cb1bcec85
+Generation Source Job ID: e6abcdef-e27d-4e72-8997-e01c927b3e6b
+Prompt Version: 1.0.0
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-DvFo5e8YZK44KSCulVg8f5w95eVnq
+Token Input: 1151
+Token Output: 1604
+Created At: Sat Jun 27 2026 10:54:02 GMT+0530 (India Standard Time)
+Updated At: Sat Jun 27 2026 10:54:02 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-002"
+      },
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-004"
+      },
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-006"
+      }
+    ],
+    "primary_concept": "Taxonomic groups as biological entities",
+    "concept_category": "Principle",
+    "fk_mst_chapter_id": "801",
+    "source_section_id": "1",
+    "assessment_unit_id": "BIO-AU-010",
+    "learning_objective": "Justify why taxonomic groups should be treated as distinct biological entities rather than merely morphological aggregates.",
+    "supporting_concepts": [
+      "Groups represent categories",
+      "Categories denote ranks",
+      "Taxonomic groups have biological significance beyond superficial appearance"
+    ],
+    "curriculum_importance": "medium"
+  },
+  "concept_description": "Students understand and can apply the idea that biological classification uses a hierarchy of taxonomic categories, interpret how ranks relate to taxa and units of classification, use shared characters to justify grouping of organisms, compare similarities and dissimilarities to place organisms into categories, and interpret the standard taxonomic hierarchy across plants and animals.",
+  "supporting_concepts": [
+    "Groups represent categories",
+    "Categories denote ranks",
+    "Taxonomic groups have biological significance beyond superficial appearance"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "Classification involves a hierarchy of steps, each representing a rank or category.",
+      "misconception": "Classification is done in a single step."
+    },
+    {
+      "concept": null,
+      "correction": "A category represents a rank and is commonly termed a taxon, which is a unit of classification.",
+      "misconception": "Category, rank, and taxon are unrelated ideas."
+    },
+    {
+      "concept": null,
+      "correction": "Taxonomic groups or categories are distinct biological entities, not merely morphological aggregates.",
+      "misconception": "Taxonomic groups are only loose collections based on appearance."
+    },
+    {
+      "concept": null,
+      "correction": "Both similarities and dissimilarities are used to place organisms into categories.",
+      "misconception": "Only similarities matter in classification."
+    },
+    {
+      "concept": null,
+      "correction": "Species is the lowest category for all organisms, including both plant and animal kingdoms.",
+      "misconception": "Species is the lowest category only in animals or only in plants."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "board": "CBSE",
+      "layer": "L2",
+      "chapter": "The Living World",
+      "subject": "Biology",
+      "className": "11",
+      "layer2_memory": {
+        "core_idea": "A taxonomic group is not just a visual collection of similar-looking organisms. It is a biologically meaningful unit formed by considering multiple shared and differing characters within a ranked hierarchy.",
+        "dependencies": [
+          {
+            "dependency_type": "prerequisite",
+            "depends_on_assessment_unit_id": "BIO-AU-002"
+          },
+          {
+            "dependency_type": "prerequisite",
+            "depends_on_assessment_unit_id": "BIO-AU-004"
+          },
+          {
+            "dependency_type": "prerequisite",
+            "depends_on_assessment_unit_id": "BIO-AU-006"
+          }
+        ],
+        "transfer_checks": [
+          {
+            "situation": "An organism resembles a cactus in shape but belongs to a different plant lineage.",
+            "what_to_check": "Can the learner explain why external similarity alone does not justify placing both in the same close taxon?"
+          },
+          {
+            "situation": "Two birds differ in color but share many structural and reproductive traits.",
+            "what_to_check": "Can the learner infer that visible differences do not automatically place organisms in distant taxa?"
+          },
+          {
+            "situation": "A student confuses family and genus as just names to memorize.",
+            "what_to_check": "Can the learner explain that these ranks indicate different levels of biological relatedness?"
+          }
+        ],
+        "comparison_frames": [
+          {
+            "compare": "morphological aggregate vs biological taxon",
+            "distinction": "A morphological aggregate is based mainly on visible resemblance, whereas a biological taxon is supported by a broader set of shared characters and hierarchical placement."
+          },
+          {
+            "compare": "single-step grouping vs hierarchical classification",
+            "distinction": "Single-step grouping ignores levels of relatedness, whereas hierarchical classification organizes organisms into nested ranks showing degrees of similarity and difference."
+          },
+          {
+            "compare": "similarity alone vs similarity plus dissimilarity",
+            "distinction": "Similarity alone may overgroup unrelated organisms; considering dissimilarities helps refine and justify taxonomic placement."
+          }
+        ],
+        "competency_evidence": [
+          "Explains why taxonomic groups have biological significance beyond appearance.",
+          "Uses hierarchy correctly to compare closeness of relationship among organisms.",
+          "Selects multiple relevant characters to justify grouping decisions.",
+          "Identifies and corrects superficial or single-trait classification errors."
+        ],
+        "supporting_concepts": [
+          "Groups represent categories",
+          "Categories denote ranks",
+          "Taxonomic groups have biological significance beyond superficial appearance"
+        ],
+        "real_world_relevance": [
+          "Correct taxonomic grouping helps biologists communicate accurately about organisms across regions and languages.",
+          "Treating taxa as biological entities improves prediction: organisms in the same group often share important traits, ecological roles, or physiological features.",
+          "It prevents misleading classification based only on appearance, which is important in biodiversity studies, conservation, agriculture, and medicine."
+        ],
+        "applied_reasoning_focus": [
+          {
+            "stem": "A student groups whale, shark, and dolphin together because all have streamlined bodies and live in water. Evaluate whether this is a strong taxonomic grouping.",
+            "prompt_type": "case_judgment",
+            "expected_reasoning": [
+              "Recognize that shared habitat and body shape may result from adaptation, not close taxonomic relationship.",
+              "Ask for additional biological characters such as reproduction, respiration, body covering, and developmental traits.",
+              "Conclude that a taxonomic group must be justified by broader biological evidence, not superficial morphology alone."
+            ]
+          },
+          {
+            "stem": "Two organisms share the same genus but belong to different species. What does this imply about their biological relationship compared with two organisms that only share the same family?",
+            "prompt_type": "hierarchy_interpretation",
+            "expected_reasoning": [
+              "Lower ranks indicate closer relationship than higher ranks.",
+              "Organisms in the same genus share more characters than organisms grouped only at the family level.",
+              "Taxonomic categories therefore represent degrees of biological relatedness, not arbitrary labels."
+            ]
+          },
+          {
+            "stem": "A learner says, 'Category, rank, and taxon are unrelated terms, so classification is mostly naming.' Identify the flaw.",
+            "prompt_type": "error_analysis",
+            "expected_reasoning": [
+              "A category is a level in the hierarchy.",
+              "That level is called a rank.",
+              "The actual group occupying that rank is a taxon.",
+              "Thus classification is structured biological organization, not mere naming."
+            ]
+          },
+          {
+            "stem": "When deciding whether two organisms belong to the same taxonomic group, which is more valid: one striking similarity or a pattern of multiple shared and contrasting characters? Justify.",
+            "prompt_type": "evidence_selection",
+            "expected_reasoning": [
+              "A pattern of multiple characters is more reliable.",
+              "Single similarities can be misleading due to convergent adaptation or superficial resemblance.",
+              "Taxa are biological entities because they are supported by integrated evidence."
+            ]
+          }
+        ],
+        "conceptual_understanding": [
+          "Classification is hierarchical, not a single-step sorting process.",
+          "A category denotes a rank in the hierarchy, and a taxon is the unit placed at that rank.",
+          "Taxonomic groups are treated as biological entities because they reflect meaningful relationships among organisms, not merely superficial resemblance.",
+          "Both similarities and dissimilarities are used to justify placement of organisms into taxa.",
+          "The same hierarchical logic applies across plants, animals, and other organisms, with species as the basic lowest category."
+        ],
+        "misconception_corrections": [
+          {
+            "correction": "Classification proceeds through multiple hierarchical ranks, each narrowing or broadening biological relationship.",
+            "misconception": "Classification is done in a single step."
+          },
+          {
+            "correction": "They are linked: a category is a rank, and the group placed there is a taxon.",
+            "misconception": "Category, rank, and taxon are unrelated ideas."
+          },
+          {
+            "correction": "Taxonomic groups are biologically meaningful entities supported by multiple characters and relationships.",
+            "misconception": "Taxonomic groups are only loose collections based on appearance."
+          },
+          {
+            "correction": "Dissimilarities are equally important because they help distinguish one taxon from another.",
+            "misconception": "Only similarities matter in classification."
+          },
+          {
+            "correction": "Species is the basic lowest taxonomic category across all organisms.",
+            "misconception": "Species is the lowest category only in animals or only in plants."
+          }
+        ]
+      },
+      "practice_type": "Competency Based",
+      "generation_mode": "applied_reasoning",
+      "primary_concept": "Taxonomic groups as biological entities",
+      "concept_category": "Principle",
+      "duration_minutes": 25,
+      "fk_mst_chapter_id": "801",
+      "source_section_id": "1",
+      "target_difficulty": "Balanced",
+      "assessment_unit_id": "BIO-AU-010",
+      "learning_objective": "Justify why taxonomic groups should be treated as distinct biological entities rather than merely morphological aggregates.",
+      "curriculum_importance": "medium"
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------

@@ -1,0 +1,1436 @@
+Pipeline Audit Log
+Job ID: 0049119a-43a5-4c7a-9bad-30a47c4e3f81
+Status: running
+Created At: Mon Jun 29 2026 14:18:05 GMT+0530 (India Standard Time)
+Updated At: Mon Jun 29 2026 14:18:06 GMT+0530 (India Standard Time)
+Source Section ID: 2
+Source Document ID: 2
+MST Chapter ID: 894
+
+REQUEST PAYLOAD
+{
+  "board": "CBSE",
+  "chapter": "The Living World",
+  "subject": "Biology",
+  "duration": "25",
+  "blueprint": "Understand -> recall -> apply -> retry",
+  "className": "11",
+  "chapterKey": "2:7",
+  "subjectCode": "BIO",
+  "practiceType": "Competency Based",
+  "sectionNumber": "7.1",
+  "sectionOcrText": "## **৯.১ রাসায়নিক গঠন কীভাবে বিশ্লেষণ করা হয়?**\n\nআমরা একইভাবে আরেকটি প্রশ্ন করতে পারি—জীবন্ত প্রাণীর মধ্যে কী ধরনের জৈব যৌগ (Organic Compounds) পাওয়া যায়? এর উত্তর জানার জন্য আমাদের রাসায়নিক বিশ্লেষণ (Chemical Analysis) করতে হয়।\n\nধরা যাক, আমরা কোনো জীবন্ত টিস্যু (যেমন একটি সবজির অংশ বা যকৃতের একটি অংশ) নিয়ে সেটিকে ট্রাইক্লোরোঅ্যাসিটিক অ্যাসিড (Trichloroacetic Acid, Cl₃CCOOH)-এর সঙ্গে হামানদিস্তায় ভালোভাবে পিষে নিলাম। এতে একটি ঘন মিশ্রণ (Slurry) তৈরি হবে।\n\nএখন এই মিশ্রণটিকে যদি সুতির কাপড় বা চিজক্লথ দিয়ে ছেঁকে নেওয়া হয়, তাহলে দুটি অংশ পাওয়া যায়—\n\n* **Filtrate (ফিল্ট্রেট বা Acid-soluble pool)** — যে অংশটি ছেঁকে বেরিয়ে আসে।\n* **Retentate (রিটেনটেট বা Acid-insoluble fraction)** — যে অংশটি কাপড়ে থেকে যায়।\n\nবিজ্ঞানীরা দেখেছেন যে **Acid-soluble pool**-এ হাজার হাজার ধরনের জৈব যৌগ (Organic Compounds) থাকে।\n\nউচ্চ শ্রেণিতে তোমরা শিখবে কীভাবে জীবন্ত টিস্যুর নমুনা বিশ্লেষণ করে একটি নির্দিষ্ট জৈব যৌগকে শনাক্ত করা যায়। এর জন্য বিভিন্ন পৃথকীকরণ (Separation) ও বিশ্লেষণ (Analytical) পদ্ধতি ব্যবহার করা হয়।\n\nবিশ্লেষণের মাধ্যমে যৌগটির আণবিক গঠন (Molecular Structure) নির্ণয় করা সম্ভব হয়। জীবন্ত টিস্যু থেকে প্রাপ্ত এই সমস্ত যৌগকে একত্রে **জৈব অণু (Biomolecules)** বলা হয়।\n\nতবে জীবন্ত প্রাণীতে শুধু জৈব অণুই নয়, বিভিন্ন **অজৈব মৌল (Inorganic Elements)** এবং **অজৈব যৌগ (Inorganic Compounds)**-ও উপস্থিত থাকে।\n\n---\n\n## জীবদেহে অজৈব পদার্থের উপস্থিতি\n\nজীবদেহে জৈব ও অজৈব উভয় ধরনের উপাদানই রয়েছে—এটি কীভাবে জানা যায়?\n\nএর জন্য একটি সাধারণ পরীক্ষার কথা ধরা যাক।\n\n১. একটি নির্দিষ্ট পরিমাণ (ধরা যাক ১ গ্রাম) জীবন্ত টিস্যুর ওজন নেওয়া হয়।\n\n২. টিস্যুটিকে সম্পূর্ণ শুকিয়ে পুনরায় ওজন করা হয়।\n\n৩. এরপর টিস্যুটিকে সম্পূর্ণভাবে দহন (Burning) করা হয়।\n\nদহনের ফলে সমস্ত কার্বনযুক্ত যৌগ অক্সিডিত হয়ে কার্বন ডাই-অক্সাইড, জলীয় বাষ্প এবং নাইট্রোজেন অক্সাইডে পরিণত হয়।\n\nদহন শেষে যে অদাহ্য অবশিষ্টাংশ থাকে তাকে **Ash (ছাই)** বলা হয়।\n\nএই ছাইয়ে ক্যালসিয়াম, ম্যাগনেসিয়াম ইত্যাদি অজৈব উপাদান পাওয়া যায়।\n\nএ থেকে বোঝা যায় যে জীবদেহে অজৈব উপাদানও উপস্থিত থাকে।\n\n---\n\n## জীবদেহে পাওয়া প্রধান জৈব অণু\n\nরাসায়নিক বিশ্লেষণের মাধ্যমে দেখা যায় যে জীবন্ত কোষে প্রধানত নিম্নলিখিত জৈব অণুগুলি থাকে—\n\n* অ্যামিনো অ্যাসিড (Amino Acids)\n* শর্করা (Sugars)\n* লিপিড (Lipids)\n* নিউক্লিওটাইড (Nucleotides)\n* নিউক্লিক অ্যাসিড (Nucleic Acids)\n* প্রোটিন (Proteins)\n\n---\n\n## অ্যামিনো অ্যাসিড (Amino Acids)\n\nঅ্যামিনো অ্যাসিড হলো এমন জৈব যৌগ যার মধ্যে একই সঙ্গে থাকে—\n\n* একটি **অ্যামিনো গ্রুপ (–NH₂)**\n* একটি **কার্বক্সিল গ্রুপ (–COOH)**\n\nএই দুটি গ্রুপ একই কার্বন পরমাণুর সঙ্গে যুক্ত থাকে। সেই কার্বনের সঙ্গে আরও একটি পরিবর্তনশীল পার্শ্ব শৃঙ্খল (Side Chain বা **R-group**) যুক্ত থাকে।\n\nউদাহরণ—\n\n* গ্লাইসিন (Glycine): R = H\n* অ্যালানিন (Alanine): R = CH₃\n* সেরিন (Serine): R = CH₂OH\n\nঅর্থাৎ বিভিন্ন অ্যামিনো অ্যাসিডের মধ্যে মূল পার্থক্য হলো তাদের **R-group**।\n\nজীবদেহের স্বাভাবিক pH-এ অ্যামিনো অ্যাসিড সাধারণত **Zwitterion (জুইটার আয়ন)** আকারে থাকে, যেখানে একই অণুতে ধনাত্মক (+) এবং ঋণাত্মক (–) উভয় চার্জই উপস্থিত থাকে।\n\n---\n\n## লিপিড (Lipids)\n\nলিপিড সাধারণত **জলে অদ্রবণীয় (Water Insoluble)**।\n\nএকটি **ফ্যাটি অ্যাসিড (Fatty Acid)**-এ থাকে—\n\n* একটি কার্বক্সিল গ্রুপ (–COOH)\n* একটি দীর্ঘ হাইড্রোকার্বন শৃঙ্খল\n\nফ্যাটি অ্যাসিড দুই ধরনের হতে পারে—\n\n* **সম্পৃক্ত (Saturated Fatty Acid)** — কোনো দ্বিবন্ধন (Double Bond) থাকে না।\n* **অসম্পৃক্ত (Unsaturated Fatty Acid)** — এক বা একাধিক দ্বিবন্ধন থাকে।\n\nউদাহরণ—\n\n* Palmitic Acid\n* Arachidonic Acid\n\nঅনেক লিপিড গ্লিসারল ও ফ্যাটি অ্যাসিড দ্বারা গঠিত।\n\nযেসব লিপিডে ফসফরাস থাকে তাদের **Phospholipids** বলা হয়।\n\nফসফোলিপিড কোষঝিল্লির (Cell Membrane) অন্যতম প্রধান উপাদান।\n\n---\n\n## নিউক্লিওটাইড ও নিউক্লিক অ্যাসিড\n\nজীবদেহে বিভিন্ন **নাইট্রোজেনযুক্ত ক্ষারক (Nitrogenous Bases)** থাকে, যেমন—\n\n* অ্যাডেনিন (Adenine)\n* গুয়ানিন (Guanine)\n* সাইটোসিন (Cytosine)\n* ইউরাসিল (Uracil)\n* থাইমিন (Thymine)\n\nএই ক্ষারকের সঙ্গে শর্করা যুক্ত হলে **Nucleoside** গঠিত হয়।\n\nএর সঙ্গে ফসফেট যুক্ত হলে **Nucleotide** গঠিত হয়।\n\nঅনেক নিউক্লিওটাইড একত্রে যুক্ত হয়ে **DNA** ও **RNA** গঠন করে, যা জীবের **বংশগত বৈশিষ্ট্যের (Genetic Information)** বাহক হিসেবে কাজ করে।\n\n",
+  "sectionImageName": "",
+  "targetDifficulty": "Balanced",
+  "targetLayerNumber": 7,
+  "sectionImageDataUrl": "",
+  "sectionImageMimeType": ""
+}
+
+LAYERS
+
+Layer Entry 1
+Layer Number: 1
+Layer Name: Knowledge Extraction
+Assessment Unit ID: 
+Status: completed
+Is Cached: false
+Generation ID: e2e1b25a-cea4-402c-9275-90a2b0c8a841
+Generation Source Job ID: 0049119a-43a5-4c7a-9bad-30a47c4e3f81
+Prompt Version: 1.0.17
+Model: gpt-5.5-2026-04-23
+OpenAI Response ID: chatcmpl-Dw1yLx0egLVLD77qpRXFYhg8D4R3W
+Token Input: 3544
+Token Output: 4610
+Created At: Mon Jun 29 2026 14:20:40 GMT+0530 (India Standard Time)
+Updated At: Mon Jun 29 2026 14:20:40 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "context": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "className": "11",
+    "chapterKey": "2:7",
+    "subjectCode": "BIO",
+    "sectionNumber": "7.1"
+  },
+  "source_artifacts": {
+    "section_text": {
+      "has_text": true,
+      "normalized_text": "## **৯.১ রাসায়নিক গঠন কীভাবে বিশ্লেষণ করা হয়?**\n\nআমরা একইভাবে আরেকটি প্রশ্ন করতে পারি—জীবন্ত প্রাণীর মধ্যে কী ধরনের জৈব যৌগ (Organic Compounds) পাওয়া যায়? এর উত্তর জানার জন্য আমাদের রাসায়নিক বিশ্লেষণ (Chemical Analysis) করতে হয়।\n\nধরা যাক, আমরা কোনো জীবন্ত টিস্যু (যেমন একটি সবজির অংশ বা যকৃতের একটি অংশ) নিয়ে সেটিকে ট্রাইক্লোরোঅ্যাসিটিক অ্যাসিড (Trichloroacetic Acid, Cl₃CCOOH)-এর সঙ্গে হামানদিস্তায় ভালোভাবে পিষে নিলাম। এতে একটি ঘন মিশ্রণ (Slurry) তৈরি হবে।\n\nএখন এই মিশ্রণটিকে যদি সুতির কাপড় বা চিজক্লথ দিয়ে ছেঁকে নেওয়া হয়, তাহলে দুটি অংশ পাওয়া যায়—\n\n* **Filtrate (ফিল্ট্রেট বা Acid-soluble pool)** — যে অংশটি ছেঁকে বেরিয়ে আসে।\n* **Retentate (রিটেনটেট বা Acid-insoluble fraction)** — যে অংশটি কাপড়ে থেকে যায়।\n\nবিজ্ঞানীরা দেখেছেন যে **Acid-soluble pool**-এ হাজার হাজার ধরনের জৈব যৌগ (Organic Compounds) থাকে।\n\nউচ্চ শ্রেণিতে তোমরা শিখবে কীভাবে জীবন্ত টিস্যুর নমুনা বিশ্লেষণ করে একটি নির্দিষ্ট জৈব যৌগকে শনাক্ত করা যায়। এর জন্য বিভিন্ন পৃথকীকরণ (Separation) ও বিশ্লেষণ (Analytical) পদ্ধতি ব্যবহার করা হয়।\n\nবিশ্লেষণের মাধ্যমে যৌগটির আণবিক গঠন (Molecular Structure) নির্ণয় করা সম্ভব হয়। জীবন্ত টিস্যু থেকে প্রাপ্ত এই সমস্ত যৌগকে একত্রে **জৈব অণু (Biomolecules)** বলা হয়।\n\nতবে জীবন্ত প্রাণীতে শুধু জৈব অণুই নয়, বিভিন্ন **অজৈব মৌল (Inorganic Elements)** এবং **অজৈব যৌগ (Inorganic Compounds)**-ও উপস্থিত থাকে।\n\n---\n\n## জীবদেহে অজৈব পদার্থের উপস্থিতি\n\nজীবদেহে জৈব ও অজৈব উভয় ধরনের উপাদানই রয়েছে—এটি কীভাবে জানা যায়?\n\nএর জন্য একটি সাধারণ পরীক্ষার কথা ধরা যাক।\n\n১. একটি নির্দিষ্ট পরিমাণ (ধরা যাক ১ গ্রাম) জীবন্ত টিস্যুর ওজন নেওয়া হয়।\n\n২. টিস্যুটিকে সম্পূর্ণ শুকিয়ে পুনরায় ওজন করা হয়।\n\n৩. এরপর টিস্যুটিকে সম্পূর্ণভাবে দহন (Burning) করা হয়।\n\nদহনের ফলে সমস্ত কার্বনযুক্ত যৌগ অক্সিডিত হয়ে কার্বন ডাই-অক্সাইড, জলীয় বাষ্প এবং নাইট্রোজেন অক্সাইডে পরিণত হয়।\n\nদহন শেষে যে অদাহ্য অবশিষ্টাংশ থাকে তাকে **Ash (ছাই)** বলা হয়।\n\nএই ছাইয়ে ক্যালসিয়াম, ম্যাগনেসিয়াম ইত্যাদি অজৈব উপাদান পাওয়া যায়।\n\nএ থেকে বোঝা যায় যে জীবদেহে অজৈব উপাদানও উপস্থিত থাকে।\n\n---\n\n## জীবদেহে পাওয়া প্রধান জৈব অণু\n\nরাসায়নিক বিশ্লেষণের মাধ্যমে দেখা যায় যে জীবন্ত কোষে প্রধানত নিম্নলিখিত জৈব অণুগুলি থাকে—\n\n* অ্যামিনো অ্যাসিড (Amino Acids)\n* শর্করা (Sugars)\n* লিপিড (Lipids)\n* নিউক্লিওটাইড (Nucleotides)\n* নিউক্লিক অ্যাসিড (Nucleic Acids)\n* প্রোটিন (Proteins)\n\n---\n\n## অ্যামিনো অ্যাসিড (Amino Acids)\n\nঅ্যামিনো অ্যাসিড হলো এমন জৈব যৌগ যার মধ্যে একই সঙ্গে থাকে—\n\n* একটি **অ্যামিনো গ্রুপ (–NH₂)**\n* একটি **কার্বক্সিল গ্রুপ (–COOH)**\n\nএই দুটি গ্রুপ একই কার্বন পরমাণুর সঙ্গে যুক্ত থাকে। সেই কার্বনের সঙ্গে আরও একটি পরিবর্তনশীল পার্শ্ব শৃঙ্খল (Side Chain বা **R-group**) যুক্ত থাকে।\n\nউদাহরণ—\n\n* গ্লাইসিন (Glycine): R = H\n* অ্যালানিন (Alanine): R = CH₃\n* সেরিন (Serine): R = CH₂OH\n\nঅর্থাৎ বিভিন্ন অ্যামিনো অ্যাসিডের মধ্যে মূল পার্থক্য হলো তাদের **R-group**।\n\nজীবদেহের স্বাভাবিক pH-এ অ্যামিনো অ্যাসিড সাধারণত **Zwitterion (জুইটার আয়ন)** আকারে থাকে, যেখানে একই অণুতে ধনাত্মক (+) এবং ঋণাত্মক (–) উভয় চার্জই উপস্থিত থাকে।\n\n---\n\n## লিপিড (Lipids)\n\nলিপিড সাধারণত **জলে অদ্রবণীয় (Water Insoluble)**।\n\nএকটি **ফ্যাটি অ্যাসিড (Fatty Acid)**-এ থাকে—\n\n* একটি কার্বক্সিল গ্রুপ (–COOH)\n* একটি দীর্ঘ হাইড্রোকার্বন শৃঙ্খল\n\nফ্যাটি অ্যাসিড দুই ধরনের হতে পারে—\n\n* **সম্পৃক্ত (Saturated Fatty Acid)** — কোনো দ্বিবন্ধন (Double Bond) থাকে না।\n* **অসম্পৃক্ত (Unsaturated Fatty Acid)** — এক বা একাধিক দ্বিবন্ধন থাকে।\n\nউদাহরণ—\n\n* Palmitic Acid\n* Arachidonic Acid\n\nঅনেক লিপিড গ্লিসারল ও ফ্যাটি অ্যাসিড দ্বারা গঠিত।\n\nযেসব লিপিডে ফসফরাস থাকে তাদের **Phospholipids** বলা হয়।\n\nফসফোলিপিড কোষঝিল্লির (Cell Membrane) অন্যতম প্রধান উপাদান।\n\n---\n\n## নিউক্লিওটাইড ও নিউক্লিক অ্যাসিড\n\nজীবদেহে বিভিন্ন **নাইট্রোজেনযুক্ত ক্ষারক (Nitrogenous Bases)** থাকে, যেমন—\n\n* অ্যাডেনিন (Adenine)\n* গুয়ানিন (Guanine)\n* সাইটোসিন (Cytosine)\n* ইউরাসিল (Uracil)\n* থাইমিন (Thymine)\n\nএই ক্ষারকের সঙ্গে শর্করা যুক্ত হলে **Nucleoside** গঠিত হয়।\n\nএর সঙ্গে ফসফেট যুক্ত হলে **Nucleotide** গঠিত হয়।\n\nঅনেক নিউক্লিওটাইড একত্রে যুক্ত হয়ে **DNA** ও **RNA** গঠন করে, যা জীবের **বংশগত বৈশিষ্ট্যের (Genetic Information)** বাহক হিসেবে কাজ করে।",
+      "full_text_length": 3964
+    }
+  },
+  "generation_directives": {
+    "constraints": [
+      "Reduce pure fact-only items unless they support a larger applied objective.",
+      "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+    ],
+    "layer_focus": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+    "practice_type": "Competency Based",
+    "blueprint_hint": "Understand -> recall -> apply -> retry",
+    "generation_mode": "applied_reasoning",
+    "target_outcomes": [
+      "Prioritize application, interpretation, and reasoning.",
+      "Test transfer of knowledge, not just recall."
+    ],
+    "target_difficulty": "Balanced",
+    "time_limit_minutes": "25"
+  }
+}
+
+OUTPUT JSON
+{
+  "diagrams": [],
+  "functions": [
+    "Phospholipids serve as major components of the cell membrane.",
+    "DNA and RNA act as carriers of genetic information."
+  ],
+  "processes": [
+    "Grinding living tissue with trichloroacetic acid to form a slurry",
+    "Filtering slurry through cotton cloth or cheesecloth",
+    "Separating filtrate from retentate",
+    "Using separation and analytical methods to identify specific organic compounds",
+    "Determining molecular structure through analysis",
+    "Drying tissue and weighing it again",
+    "Burning dried tissue completely",
+    "Oxidation of carbon-containing compounds during combustion",
+    "Formation of nucleoside from nitrogenous base and sugar",
+    "Formation of nucleotide from nucleoside and phosphate",
+    "Formation of DNA and RNA from linked nucleotides"
+  ],
+  "exceptions": [],
+  "structures": [
+    "Cell membrane",
+    "Amino group",
+    "Carboxyl group",
+    "R-group",
+    "Long hydrocarbon chain",
+    "Nitrogenous base",
+    "Sugar",
+    "Phosphate group"
+  ],
+  "comparisons": [
+    "Filtrate is the portion that passes through the cloth, whereas retentate remains on the cloth.",
+    "Acid-soluble pool contains many organic compounds, whereas acid-insoluble fraction is retained during filtration.",
+    "Organic compounds are oxidized during burning, whereas inorganic components remain in ash.",
+    "Saturated fatty acids lack double bonds, whereas unsaturated fatty acids contain one or more double bonds.",
+    "A nucleoside contains nitrogenous base and sugar, whereas a nucleotide also contains phosphate."
+  ],
+  "terminology": [
+    "Chemical analysis: analysis used to find what organic compounds occur in living organisms",
+    "Slurry: thick mixture formed by grinding tissue with trichloroacetic acid",
+    "Filtrate: acid-soluble pool that passes through cloth during filtration",
+    "Retentate: acid-insoluble fraction that remains on the cloth",
+    "Biomolecules: compounds obtained from living tissue and identified through analysis",
+    "Ash: non-combustible residue left after complete burning of tissue",
+    "Zwitterion: form of amino acid with both positive and negative charges in the same molecule",
+    "Phospholipid: lipid containing phosphorus",
+    "Nucleoside: nitrogenous base joined with sugar",
+    "Nucleotide: nucleoside with phosphate attached"
+  ],
+  "cause_effect": [
+    "Filtering the tissue slurry causes separation into acid-soluble filtrate and acid-insoluble retentate.",
+    "Chemical analysis of acid-soluble pool reveals thousands of organic compounds.",
+    "Burning tissue oxidizes carbon-containing compounds into carbon dioxide, water vapour and nitrogen oxides.",
+    "Non-combustible ash remaining after burning indicates inorganic components such as calcium and magnesium.",
+    "Different R-groups cause differences among amino acids.",
+    "Presence or absence of double bonds distinguishes unsaturated and saturated fatty acids.",
+    "Addition of phosphate to a nucleoside produces a nucleotide.",
+    "Linking many nucleotides produces nucleic acids such as DNA and RNA."
+  ],
+  "memory_hooks": [
+    "Filtrate-retentate distinction needs memory support because both are produced in the same filtration step but represent opposite fractions.",
+    "Acid-soluble pool and acid-insoluble fraction need memory support because the terms are linked to filtrate and retentate respectively.",
+    "Drying-burning-ash sequence needs memory support because evidence for inorganic components depends on interpreting the order of experimental steps.",
+    "Amino acid common structure needs memory support because amino group, carboxyl group and R-group must be connected to the same core carbon arrangement.",
+    "R-group examples need memory support because glycine, alanine and serine differ by small side-chain changes.",
+    "Saturated-unsaturated fatty acid comparison needs memory support because the distinction depends specifically on double bonds.",
+    "Nucleoside-nucleotide-nucleic acid sequence needs memory support because each stage adds a component or links repeated units."
+  ],
+  "core_concepts": [
+    "Chemical analysis of living tissue",
+    "Acid-soluble pool",
+    "Acid-insoluble fraction",
+    "Biomolecules",
+    "Inorganic components in living organisms",
+    "Ash analysis",
+    "Amino acid structure",
+    "R-group variation",
+    "Zwitterion form",
+    "Lipid water insolubility",
+    "Fatty acid saturation",
+    "Phospholipids",
+    "Nucleoside-nucleotide relationship",
+    "DNA and RNA as nucleic acids"
+  ],
+  "relationships": [
+    {
+      "related_concepts": [
+        "Living tissue",
+        "Chemical analysis",
+        "Organic compounds",
+        "Biomolecules"
+      ],
+      "relationship_name": "Tissue analysis to biomolecule identification",
+      "relationship_type": "usage",
+      "relationship_summary": "Chemical analysis of living tissue is used to detect and characterize organic compounds collectively called biomolecules."
+    },
+    {
+      "related_concepts": [
+        "Filtrate",
+        "Acid-soluble pool"
+      ],
+      "relationship_name": "Filtrate and acid-soluble pool equivalence",
+      "relationship_type": "equivalence",
+      "relationship_summary": "The filtrate obtained after filtering the trichloroacetic-acid tissue slurry is described as the acid-soluble pool."
+    },
+    {
+      "related_concepts": [
+        "Retentate",
+        "Acid-insoluble fraction"
+      ],
+      "relationship_name": "Retentate and acid-insoluble fraction equivalence",
+      "relationship_type": "equivalence",
+      "relationship_summary": "The material remaining on the cloth after filtration is described as the acid-insoluble fraction."
+    },
+    {
+      "related_concepts": [
+        "Burning",
+        "Ash",
+        "Inorganic elements",
+        "Calcium",
+        "Magnesium"
+      ],
+      "relationship_name": "Ash as evidence of inorganic components",
+      "relationship_type": "conceptual-mapping",
+      "relationship_summary": "After organic compounds are oxidized during burning, the non-combustible ash shows that inorganic components are present in living tissue."
+    },
+    {
+      "related_concepts": [
+        "Amino group",
+        "Carboxyl group",
+        "Same carbon atom",
+        "R-group",
+        "Amino acid"
+      ],
+      "relationship_name": "Amino acid common structural plan",
+      "relationship_type": "part-whole",
+      "relationship_summary": "An amino acid contains amino and carboxyl groups attached to the same carbon, along with a variable R-group."
+    },
+    {
+      "related_concepts": [
+        "R-group",
+        "Glycine",
+        "Alanine",
+        "Serine",
+        "Amino acid variation"
+      ],
+      "relationship_name": "R-group as amino acid distinction basis",
+      "relationship_type": "classification-basis",
+      "relationship_summary": "Amino acids differ mainly because their R-groups differ, as shown by glycine, alanine and serine."
+    },
+    {
+      "related_concepts": [
+        "Fatty acid",
+        "Carboxyl group",
+        "Hydrocarbon chain"
+      ],
+      "relationship_name": "Fatty acid structural basis",
+      "relationship_type": "part-whole",
+      "relationship_summary": "A fatty acid contains a carboxyl group and a long hydrocarbon chain."
+    },
+    {
+      "related_concepts": [
+        "Nitrogenous base",
+        "Sugar",
+        "Nucleoside",
+        "Phosphate",
+        "Nucleotide"
+      ],
+      "relationship_name": "Nucleotide construction relationship",
+      "relationship_type": "conceptual-mapping",
+      "relationship_summary": "A nitrogenous base plus sugar forms a nucleoside, and addition of phosphate forms a nucleotide."
+    },
+    {
+      "related_concepts": [
+        "Nucleotide",
+        "DNA",
+        "RNA",
+        "Genetic information"
+      ],
+      "relationship_name": "Nucleotides to nucleic acids",
+      "relationship_type": "part-whole",
+      "relationship_summary": "Many linked nucleotides form DNA and RNA, which carry genetic information."
+    }
+  ],
+  "classifications": [
+    "Major biomolecule groups: amino acids, sugars, lipids, nucleotides, nucleic acids, proteins",
+    "Fatty acid types: saturated fatty acids and unsaturated fatty acids",
+    "Nitrogenous bases mentioned: adenine, guanine, cytosine, uracil, thymine",
+    "Amino acid examples by R-group: glycine with H, alanine with CH3, serine with CH2OH",
+    "Phosphorus-containing lipids: phospholipids"
+  ],
+  "context_summary": "Students learn to interpret how chemical analysis of living tissue reveals biomolecules and inorganic components, classify major biomolecule groups using structural features, and connect molecular building blocks such as amino acids, lipids, nucleotides, DNA and RNA to biological relevance.",
+  "assessment_units": [
+    {
+      "dependencies": [],
+      "primary_concept": "Tissue chemical analysis workflow",
+      "concept_category": "Process",
+      "assessment_unit_id": "BIO-AU-001",
+      "learning_objective": "Interpret the sequence by which living tissue is chemically processed into slurry, filtrate and retentate.",
+      "supporting_concepts": [
+        "living tissue sample",
+        "trichloroacetic acid",
+        "slurry",
+        "cotton cloth or cheesecloth",
+        "filtration"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-001"
+      ],
+      "primary_concept": "Acid-soluble and acid-insoluble fractions",
+      "concept_category": "Relationship",
+      "assessment_unit_id": "BIO-AU-002",
+      "learning_objective": "Compare filtrate and retentate by applying their positions and names in the tissue filtration experiment.",
+      "supporting_concepts": [
+        "filtrate",
+        "acid-soluble pool",
+        "retentate",
+        "acid-insoluble fraction",
+        "cloth filtration"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-001",
+        "BIO-AU-002"
+      ],
+      "primary_concept": "Biomolecule identification through analysis",
+      "concept_category": "Principle",
+      "assessment_unit_id": "BIO-AU-003",
+      "learning_objective": "Explain how separation and analytical methods allow organic compounds from living tissue to be recognized as biomolecules.",
+      "supporting_concepts": [
+        "organic compounds",
+        "acid-soluble pool",
+        "separation methods",
+        "analytical methods",
+        "molecular structure"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [],
+      "primary_concept": "Ash evidence for inorganic components",
+      "concept_category": "Process",
+      "assessment_unit_id": "BIO-AU-004",
+      "learning_objective": "Justify the presence of inorganic components in living tissue from drying, burning and ash observations.",
+      "supporting_concepts": [
+        "weighed tissue",
+        "drying",
+        "complete burning",
+        "ash",
+        "calcium",
+        "magnesium"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-004"
+      ],
+      "primary_concept": "Combustion interpretation in tissue analysis",
+      "concept_category": "Principle",
+      "assessment_unit_id": "BIO-AU-005",
+      "learning_objective": "Apply the effect of combustion to distinguish oxidized carbon-containing compounds from non-combustible ash residue.",
+      "supporting_concepts": [
+        "carbon-containing compounds",
+        "oxidation",
+        "carbon dioxide",
+        "water vapour",
+        "nitrogen oxides",
+        "inorganic residue"
+      ],
+      "curriculum_importance": "medium"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-003"
+      ],
+      "primary_concept": "Major biomolecule classes",
+      "concept_category": "Classification",
+      "assessment_unit_id": "BIO-AU-006",
+      "learning_objective": "Classify examples from living cells into major biomolecule groups identified by chemical analysis.",
+      "supporting_concepts": [
+        "amino acids",
+        "sugars",
+        "lipids",
+        "nucleotides",
+        "nucleic acids",
+        "proteins"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-006"
+      ],
+      "primary_concept": "Amino acid structural plan",
+      "concept_category": "Structure",
+      "assessment_unit_id": "BIO-AU-007",
+      "learning_objective": "Apply the common amino acid structural plan to recognize molecules containing amino and carboxyl groups on the same carbon with an R-group.",
+      "supporting_concepts": [
+        "amino group",
+        "carboxyl group",
+        "same carbon atom",
+        "side chain",
+        "R-group"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-007"
+      ],
+      "primary_concept": "R-group basis of amino acid variation",
+      "concept_category": "Relationship",
+      "assessment_unit_id": "BIO-AU-008",
+      "learning_objective": "Compare amino acids by using R-group differences to justify why glycine, alanine and serine are distinct.",
+      "supporting_concepts": [
+        "glycine R equals H",
+        "alanine R equals CH3",
+        "serine R equals CH2OH",
+        "side-chain variation"
+      ],
+      "curriculum_importance": "medium"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-007"
+      ],
+      "primary_concept": "Amino acid zwitterion form",
+      "concept_category": "Structure",
+      "assessment_unit_id": "BIO-AU-009",
+      "learning_objective": "Explain how an amino acid can carry both positive and negative charges in zwitterion form at normal biological pH.",
+      "supporting_concepts": [
+        "zwitterion",
+        "normal pH",
+        "positive charge",
+        "negative charge",
+        "same molecule"
+      ],
+      "curriculum_importance": "medium"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-006"
+      ],
+      "primary_concept": "Lipid and fatty acid recognition",
+      "concept_category": "Classification",
+      "assessment_unit_id": "BIO-AU-010",
+      "learning_objective": "Classify lipid-related molecules by applying water insolubility and fatty acid structural features.",
+      "supporting_concepts": [
+        "water insolubility",
+        "fatty acid",
+        "carboxyl group",
+        "long hydrocarbon chain",
+        "glycerol"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-010"
+      ],
+      "primary_concept": "Fatty acid saturation",
+      "concept_category": "Classification",
+      "assessment_unit_id": "BIO-AU-011",
+      "learning_objective": "Compare saturated and unsaturated fatty acids by interpreting the presence or absence of double bonds.",
+      "supporting_concepts": [
+        "saturated fatty acid",
+        "unsaturated fatty acid",
+        "double bond",
+        "palmitic acid",
+        "arachidonic acid"
+      ],
+      "curriculum_importance": "medium"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-010"
+      ],
+      "primary_concept": "Phospholipids and cell membrane",
+      "concept_category": "Relationship",
+      "assessment_unit_id": "BIO-AU-012",
+      "learning_objective": "Explain why phosphorus-containing lipids are recognized as phospholipids and linked to the cell membrane.",
+      "supporting_concepts": [
+        "phosphorus",
+        "phospholipid",
+        "lipid",
+        "cell membrane",
+        "major component"
+      ],
+      "curriculum_importance": "medium"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-006"
+      ],
+      "primary_concept": "Nucleoside-nucleotide-nucleic acid sequence",
+      "concept_category": "Process",
+      "assessment_unit_id": "BIO-AU-013",
+      "learning_objective": "Interpret the assembly sequence from nitrogenous base and sugar to nucleoside, nucleotide, DNA and RNA.",
+      "supporting_concepts": [
+        "adenine",
+        "guanine",
+        "cytosine",
+        "uracil",
+        "thymine",
+        "sugar",
+        "phosphate"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-013"
+      ],
+      "primary_concept": "Nucleic acids as genetic information carriers",
+      "concept_category": "Function",
+      "assessment_unit_id": "BIO-AU-014",
+      "learning_objective": "Explain the relationship between linked nucleotides, DNA and RNA, and the carrying of genetic information.",
+      "supporting_concepts": [
+        "many nucleotides",
+        "DNA",
+        "RNA",
+        "nucleic acids",
+        "genetic information"
+      ],
+      "curriculum_importance": "high"
+    }
+  ],
+  "stages_sequences": [
+    "living tissue sample -> trichloroacetic acid grinding -> slurry -> filtration -> filtrate and retentate",
+    "weighed living tissue -> dried tissue -> burned tissue -> ash",
+    "nitrogenous base + sugar -> nucleoside -> nucleotide after phosphate addition -> nucleic acid after many nucleotides join"
+  ],
+  "question_patterns": [
+    "sequence-completion",
+    "table-completion",
+    "odd-one-out",
+    "experimental-result-interpretation",
+    "classification-justification",
+    "term-relationship-mapping",
+    "example-to-principle-transfer",
+    "cause-effect-linking",
+    "molecular-component-mapping",
+    "evidence-based-inference"
+  ],
+  "common_misconceptions": [
+    "Living tissue should not be treated as containing only organic biomolecules; inorganic elements and compounds are also present.",
+    "The filtrate and retentate should not be confused; only the filtrate is the acid-soluble pool.",
+    "Ash is not unburned organic tissue; it represents non-combustible inorganic residue after oxidation of carbon-containing compounds.",
+    "All fatty acids should not be assumed to be identical; double bonds separate saturated from unsaturated types.",
+    "A nucleoside should not be treated as the same as a nucleotide because phosphate is added only in the nucleotide."
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 2
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-001
+Status: completed
+Is Cached: false
+Generation ID: 20545dd7-cf69-45a4-9d48-59acf7de516f
+Generation Source Job ID: 0049119a-43a5-4c7a-9bad-30a47c4e3f81
+Prompt Version: 1.0.3
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-Dw1zOYKhTDCMvhcb0vljFpeKRJZjn
+Token Input: 847
+Token Output: 519
+Created At: Mon Jun 29 2026 14:20:48 GMT+0530 (India Standard Time)
+Updated At: Mon Jun 29 2026 14:20:48 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "dependencies": [],
+  "memory_hooks": [
+    {
+      "concept": "Filtrate-retentate distinction",
+      "memory_hook": "Filtrate-retentate distinction needs memory support because both are produced in the same filtration step but represent opposite fractions.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "both are produced in the same filtration step but represent opposite fractions."
+    }
+  ],
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Tissue chemical analysis workflow",
+    "concept_category": "Process",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "2",
+    "assessment_unit_id": "BIO-AU-001",
+    "learning_objective": "Interpret the sequence by which living tissue is chemically processed into slurry, filtrate and retentate.",
+    "supporting_concepts": [
+      "living tissue sample",
+      "trichloroacetic acid",
+      "slurry",
+      "cotton cloth or cheesecloth",
+      "filtration"
+    ],
+    "curriculum_importance": "high"
+  },
+  "supporting_concepts": [
+    "living tissue sample",
+    "trichloroacetic acid",
+    "slurry",
+    "cotton cloth or cheesecloth",
+    "filtration"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": []
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "story": "A piece of living tissue is first broken into a chemical mush with trichloroacetic acid, forming a slurry. That slurry is then poured through cotton cloth, where the process splits into two paths: what passes through becomes the filtrate, and what stays behind is the retentate.",
+      "analogy": "Like making juice from crushed fruit: first mash the fruit into pulp, then strain it through cloth. The liquid that comes through is the filtrate; the solids left in the cloth are the retentate.",
+      "visual_hook": "Picture a funnel lined with cheesecloth: above it is a cloudy slurry, below it drips filtrate, and inside the cloth a thicker retentate remains.",
+      "memory_trick": "FIltrate = FInishes through the filter. REtentate = REmains behind.",
+      "curiosity_hook": "If one filtration step makes two products at once, how do you avoid mixing up which one passed through and which one stayed back?",
+      "micro_activity": "Use your hands to mime pouring a slurry through cloth, then point down for filtrate and pinch upward for retentate.",
+      "retrieval_cues": [
+        "tissue plus trichloroacetic acid makes slurry",
+        "slurry is the mixture before filtration",
+        "cloth or cheesecloth separates the mixture",
+        "filtrate passes through",
+        "retentate remains on the cloth",
+        "one process step creates opposite fractions"
+      ],
+      "primary_concept": "Tissue chemical analysis workflow",
+      "memory_difficulty": "medium",
+      "assessment_unit_id": "BIO-AU-001",
+      "associated_concepts": [
+        "Filtrate-retentate distinction",
+        "sequence interpretation",
+        "mixture separation"
+      ],
+      "misconception_alert": "Do not confuse slurry with filtrate: slurry is the starting mixture before filtration, while filtrate and retentate are the two separated results after filtration.",
+      "supporting_concepts": [
+        "living tissue sample",
+        "trichloroacetic acid",
+        "slurry",
+        "cotton cloth or cheesecloth",
+        "filtration"
+      ],
+      "real_world_connection": "This mirrors kitchen straining steps such as separating broth from solids or juice from pulp, helping you remember that one mixture becomes two fractions after filtration."
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 3
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-002
+Status: completed
+Is Cached: false
+Generation ID: 83af96a7-1bdc-4a35-ac50-c2071a4731c3
+Generation Source Job ID: 0049119a-43a5-4c7a-9bad-30a47c4e3f81
+Prompt Version: 1.0.3
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-Dw1zVivxnDg1hKfp2p2CZoUJMRi6V
+Token Input: 992
+Token Output: 517
+Created At: Mon Jun 29 2026 14:20:54 GMT+0530 (India Standard Time)
+Updated At: Mon Jun 29 2026 14:20:54 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "dependencies": [
+    {
+      "dependency_type": "prerequisite",
+      "depends_on_assessment_unit_id": "BIO-AU-001"
+    }
+  ],
+  "memory_hooks": [
+    {
+      "concept": "Filtrate-retentate distinction",
+      "memory_hook": "Filtrate-retentate distinction needs memory support because both are produced in the same filtration step but represent opposite fractions.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "both are produced in the same filtration step but represent opposite fractions."
+    },
+    {
+      "concept": "Acid-soluble pool and acid-insoluble fraction",
+      "memory_hook": "Acid-soluble pool and acid-insoluble fraction need memory support because the terms are linked to filtrate and retentate respectively.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "the terms are linked to filtrate and retentate respectively."
+    }
+  ],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-001"
+      }
+    ],
+    "primary_concept": "Acid-soluble and acid-insoluble fractions",
+    "concept_category": "Relationship",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "2",
+    "assessment_unit_id": "BIO-AU-002",
+    "learning_objective": "Compare filtrate and retentate by applying their positions and names in the tissue filtration experiment.",
+    "supporting_concepts": [
+      "filtrate",
+      "acid-soluble pool",
+      "retentate",
+      "acid-insoluble fraction",
+      "cloth filtration"
+    ],
+    "curriculum_importance": "high"
+  },
+  "supporting_concepts": [
+    "filtrate",
+    "acid-soluble pool",
+    "retentate",
+    "acid-insoluble fraction",
+    "cloth filtration"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": []
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "story": "A tissue mixture is poured onto a cloth after acid treatment. The small dissolved parts slip through the cloth as the filtrate, forming the acid-soluble pool. The larger undissolved material stays behind on the cloth as the retentate, forming the acid-insoluble fraction.",
+      "analogy": "Like straining soup: the liquid and tiny dissolved bits pass through as filtrate, while the chunky leftovers remain as retentate.",
+      "visual_hook": "Picture a cloth filter with two labels: below it, dripping liquid marked 'filtrate = acid-soluble'; on the cloth, trapped solid marked 'retentate = acid-insoluble.'",
+      "memory_trick": "F goes Forward through the filter: Filtrate = flows through = acid-soluble. R remains: Retentate = remains on cloth = acid-insoluble.",
+      "curiosity_hook": "If both fractions come from one filtration step, why do they end up telling opposite stories about the sample?",
+      "micro_activity": "Use one hand as a cloth filter: move two fingers down through it saying 'filtrate, soluble,' and keep the other hand on top saying 'retentate, insoluble.'",
+      "retrieval_cues": [
+        "What goes through the cloth?",
+        "What remains on the cloth?",
+        "Which fraction matches dissolved material?",
+        "Which fraction matches undissolved material?",
+        "Filtrate links to which acid fraction?",
+        "Retentate links to which acid fraction?"
+      ],
+      "primary_concept": "Acid-soluble and acid-insoluble fractions",
+      "memory_difficulty": "medium",
+      "assessment_unit_id": "BIO-AU-002",
+      "associated_concepts": [
+        "filtrate",
+        "retentate"
+      ],
+      "misconception_alert": "Do not swap position and name: filtrate is the passed-through fraction and matches the acid-soluble pool, while retentate stays on the cloth and matches the acid-insoluble fraction.",
+      "supporting_concepts": [
+        "filtrate",
+        "acid-soluble pool",
+        "retentate",
+        "acid-insoluble fraction",
+        "cloth filtration"
+      ],
+      "real_world_connection": "This mirrors everyday filtering, where what passes through and what stays behind tell you which material is dissolved versus not dissolved."
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 4
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-003
+Status: completed
+Is Cached: false
+Generation ID: 9635145e-409d-4f50-8932-63db47b2d4d8
+Generation Source Job ID: 0049119a-43a5-4c7a-9bad-30a47c4e3f81
+Prompt Version: 1.0.3
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-Dw1zb7nsDQrl42zMQRtpL6xRDvkfL
+Token Input: 972
+Token Output: 538
+Created At: Mon Jun 29 2026 14:21:02 GMT+0530 (India Standard Time)
+Updated At: Mon Jun 29 2026 14:21:02 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "dependencies": [
+    {
+      "dependency_type": "prerequisite",
+      "depends_on_assessment_unit_id": "BIO-AU-001"
+    },
+    {
+      "dependency_type": "prerequisite",
+      "depends_on_assessment_unit_id": "BIO-AU-002"
+    }
+  ],
+  "memory_hooks": [
+    {
+      "concept": "Acid-soluble pool and acid-insoluble fraction",
+      "memory_hook": "Acid-soluble pool and acid-insoluble fraction need memory support because the terms are linked to filtrate and retentate respectively.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "the terms are linked to filtrate and retentate respectively."
+    }
+  ],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-001"
+      },
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-002"
+      }
+    ],
+    "primary_concept": "Biomolecule identification through analysis",
+    "concept_category": "Principle",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "2",
+    "assessment_unit_id": "BIO-AU-003",
+    "learning_objective": "Explain how separation and analytical methods allow organic compounds from living tissue to be recognized as biomolecules.",
+    "supporting_concepts": [
+      "organic compounds",
+      "acid-soluble pool",
+      "separation methods",
+      "analytical methods",
+      "molecular structure"
+    ],
+    "curriculum_importance": "high"
+  },
+  "supporting_concepts": [
+    "organic compounds",
+    "acid-soluble pool",
+    "separation methods",
+    "analytical methods",
+    "molecular structure"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": []
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "story": "Imagine a bag of crushed living tissue entering a forensic lab. First, the sample is split: small dissolved molecules pass into the filtrate as the acid-soluble pool, while larger structural material stays behind as the retentate in the acid-insoluble fraction. Then each part is separated and tested until the hidden biomolecules can be recognized from their behavior and structure.",
+      "analogy": "It is like sorting a mixed box of objects at an airport scanner: first separate what passes through from what gets held back, then inspect each group more closely to identify what each item is.",
+      "visual_hook": "Picture a funnel with liquid dripping through as 'acid-soluble = filtrate' and chunky material staying on the filter as 'acid-insoluble = retentate,' followed by arrows to labeled test tubes revealing different biomolecules.",
+      "memory_trick": "Solve then identify: Split first, test next, recognize last. 'Soluble slips through; insoluble stays.'",
+      "curiosity_hook": "How can one messy tissue sample reveal many different biomolecules without seeing any molecule directly?",
+      "micro_activity": "Use your hand as a filter: say 'through = soluble, stays = insoluble,' then mime pointing each fraction to a different analysis step.",
+      "retrieval_cues": [
+        "mixture to separation to analysis to identification",
+        "acid-soluble pool = filtrate",
+        "acid-insoluble fraction = retentate",
+        "identity comes from behavior in tests",
+        "structure is inferred after components are separated"
+      ],
+      "primary_concept": "Biomolecule identification through analysis",
+      "memory_difficulty": "medium",
+      "assessment_unit_id": "BIO-AU-003",
+      "associated_concepts": [
+        "Acid-soluble pool and acid-insoluble fraction",
+        "filtrate and retentate",
+        "recognition of biomolecules from test behavior"
+      ],
+      "misconception_alert": "Do not confuse separation with identification: separation isolates components, but analytical methods are what allow the biomolecules to be recognized.",
+      "supporting_concepts": [
+        "organic compounds",
+        "acid-soluble pool",
+        "separation methods",
+        "analytical methods",
+        "molecular structure"
+      ],
+      "real_world_connection": "Scientists identify molecules in tissues the way labs identify unknown substances: separate the mixture, analyze the parts, and infer identity from measurable properties rather than guessing from appearance."
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 5
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-004
+Status: completed
+Is Cached: false
+Generation ID: ed044bf8-c590-4f99-8069-7ec05d088fc2
+Generation Source Job ID: 0049119a-43a5-4c7a-9bad-30a47c4e3f81
+Prompt Version: 1.0.3
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-Dw1zixA4EwP95VKeKmMM78Md7CUgt
+Token Input: 836
+Token Output: 523
+Created At: Mon Jun 29 2026 14:21:09 GMT+0530 (India Standard Time)
+Updated At: Mon Jun 29 2026 14:21:09 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "dependencies": [],
+  "memory_hooks": [
+    {
+      "concept": "Drying-burning-ash sequence",
+      "memory_hook": "Drying-burning-ash sequence needs memory support because evidence for inorganic components depends on interpreting the order of experimental steps.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "evidence for inorganic components depends on interpreting the order of experimental steps."
+    }
+  ],
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Ash evidence for inorganic components",
+    "concept_category": "Process",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "2",
+    "assessment_unit_id": "BIO-AU-004",
+    "learning_objective": "Justify the presence of inorganic components in living tissue from drying, burning and ash observations.",
+    "supporting_concepts": [
+      "weighed tissue",
+      "drying",
+      "complete burning",
+      "ash",
+      "calcium",
+      "magnesium"
+    ],
+    "curriculum_importance": "high"
+  },
+  "supporting_concepts": [
+    "weighed tissue",
+    "drying",
+    "complete burning",
+    "ash",
+    "calcium",
+    "magnesium"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": []
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "story": "A biologist weighs a piece of tissue, dries it, then burns it completely. Water disappears during drying, smoky organic material disappears during burning, but a small ash residue remains. That leftover ash is the clue: something in the tissue did not burn away, so inorganic mineral components such as calcium and magnesium were present.",
+      "analogy": "It is like emptying a mixed bag in stages: first evaporating away the water, then burning the paper and food scraps, and noticing that gritty mineral dust is still left behind. The part that survives the fire points to inorganic material.",
+      "visual_hook": "Picture a three-step trail: fresh tissue on a balance -> dried tissue shrinking as water leaves -> flame -> tiny gray ash on a dish labeled 'minerals stayed.'",
+      "memory_trick": "Dry, Burn, Ash, Ask: if ash remains after complete burning, ask what could survive fire. Answer: inorganic minerals.",
+      "curiosity_hook": "If living tissue can be burned away, why is anything still left at the end?",
+      "micro_activity": "Mime three actions in order with your fingers: weigh, dry, burn, then tap the table once for ash and say 'leftover means inorganic.'",
+      "retrieval_cues": [
+        "What disappears during drying?",
+        "What disappears during complete burning?",
+        "What does remaining ash mean?",
+        "Why does ash support the presence of calcium or magnesium?",
+        "Why must the burning be complete before interpreting the ash?"
+      ],
+      "primary_concept": "Ash evidence for inorganic components",
+      "memory_difficulty": "medium",
+      "assessment_unit_id": "BIO-AU-004",
+      "associated_concepts": [
+        "evidence from sequence of observations",
+        "residue interpretation",
+        "inorganic minerals in tissue"
+      ],
+      "misconception_alert": "Ash is not evidence of water or unburned organic matter when burning is complete; it is evidence that non-combustible inorganic components remained.",
+      "supporting_concepts": [
+        "weighed tissue",
+        "drying",
+        "complete burning",
+        "ash",
+        "calcium",
+        "magnesium"
+      ],
+      "real_world_connection": "When biological material is burned, the residue can reveal mineral content, similar to how ash left after burning plant or animal matter shows that not everything in living tissue is combustible."
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 6
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-005
+Status: completed
+Is Cached: false
+Generation ID: 601a9503-d513-4e28-8632-526b21bade1b
+Generation Source Job ID: 0049119a-43a5-4c7a-9bad-30a47c4e3f81
+Prompt Version: 1.0.3
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-Dw1zpZq9cMv8167XgjYsY5Gji5Cp7
+Token Input: 1383
+Token Output: 578
+Created At: Mon Jun 29 2026 14:21:16 GMT+0530 (India Standard Time)
+Updated At: Mon Jun 29 2026 14:21:16 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "dependencies": [
+    {
+      "dependency_type": "prerequisite",
+      "depends_on_assessment_unit_id": "BIO-AU-004"
+    }
+  ],
+  "memory_hooks": [
+    {
+      "concept": "Filtrate-retentate distinction",
+      "memory_hook": "Filtrate-retentate distinction needs memory support because both are produced in the same filtration step but represent opposite fractions.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "both are produced in the same filtration step but represent opposite fractions."
+    },
+    {
+      "concept": "Acid-soluble pool and acid-insoluble fraction",
+      "memory_hook": "Acid-soluble pool and acid-insoluble fraction need memory support because the terms are linked to filtrate and retentate respectively.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "the terms are linked to filtrate and retentate respectively."
+    },
+    {
+      "concept": "Drying-burning-ash sequence",
+      "memory_hook": "Drying-burning-ash sequence needs memory support because evidence for inorganic components depends on interpreting the order of experimental steps.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "evidence for inorganic components depends on interpreting the order of experimental steps."
+    },
+    {
+      "concept": "Amino acid common structure",
+      "memory_hook": "Amino acid common structure needs memory support because amino group, carboxyl group and R-group must be connected to the same core carbon arrangement.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "amino group, carboxyl group and R-group must be connected to the same core carbon arrangement."
+    },
+    {
+      "concept": "R-group examples",
+      "memory_hook": "R-group examples need memory support because glycine, alanine and serine differ by small side-chain changes.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "glycine, alanine and serine differ by small side-chain changes."
+    },
+    {
+      "concept": "Saturated-unsaturated fatty acid comparison",
+      "memory_hook": "Saturated-unsaturated fatty acid comparison needs memory support because the distinction depends specifically on double bonds.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "the distinction depends specifically on double bonds."
+    },
+    {
+      "concept": "Nucleoside-nucleotide-nucleic acid sequence",
+      "memory_hook": "Nucleoside-nucleotide-nucleic acid sequence needs memory support because each stage adds a component or links repeated units.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "each stage adds a component or links repeated units."
+    }
+  ],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-004"
+      }
+    ],
+    "primary_concept": "Combustion interpretation in tissue analysis",
+    "concept_category": "Principle",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "2",
+    "assessment_unit_id": "BIO-AU-005",
+    "learning_objective": "Apply the effect of combustion to distinguish oxidized carbon-containing compounds from non-combustible ash residue.",
+    "supporting_concepts": [
+      "carbon-containing compounds",
+      "oxidation",
+      "carbon dioxide",
+      "water vapour",
+      "nitrogen oxides",
+      "inorganic residue"
+    ],
+    "curriculum_importance": "medium"
+  },
+  "supporting_concepts": [
+    "carbon-containing compounds",
+    "oxidation",
+    "carbon dioxide",
+    "water vapour",
+    "nitrogen oxides",
+    "inorganic residue"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": []
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "story": "A tissue sample goes through a simple trial: first it is dried, then burned. What disappears into gases was combustible organic material being oxidized; what remains as ash is the non-combustible inorganic residue. The key interpretation is not just that burning changes the sample, but that the split between 'gone as gases' and 'left as ash' reveals different kinds of material in the tissue.",
+      "analogy": "Like burning firewood in a stove: the burnable part turns into smoke and gases, while the minerals stay behind as ash. In tissue analysis, carbon-containing compounds are the burnable part; inorganic material is the ash left behind.",
+      "visual_hook": "Picture a labeled sequence: dry tissue -> flame -> upward arrows marked CO2, H2O, nitrogen oxides -> tiny gray pile at the bottom labeled ash. 'Up = oxidized products, down = inorganic residue.'",
+      "memory_trick": "Burn to learn: if it flies off in combustion, it was oxidizable organic matter; if it stays as ash, it was inorganic residue.",
+      "curiosity_hook": "If almost everything vanishes in a flame, why does a tiny ash residue still remain?",
+      "micro_activity": "Use your hand to trace a quick sequence in the air: 'dry -> burn -> gases up, ash down,' then say which part shows inorganic material.",
+      "retrieval_cues": [
+        "After burning, what leaves the sample and what stays?",
+        "Ash means what kind of material?",
+        "Combustion products point to which compounds being present?",
+        "Why is the drying-burning-ash order important for interpretation?",
+        "What does 'gone as gases' tell you about carbon-containing compounds?"
+      ],
+      "primary_concept": "Combustion interpretation in tissue analysis",
+      "memory_difficulty": "medium",
+      "assessment_unit_id": "BIO-AU-005",
+      "associated_concepts": [
+        "Drying-burning-ash sequence"
+      ],
+      "misconception_alert": "Do not interpret ash as unburned carbon compounds. In this context, ash is the non-combustible inorganic residue left after oxidizable organic material has burned away.",
+      "supporting_concepts": [
+        "carbon-containing compounds",
+        "oxidation",
+        "carbon dioxide",
+        "water vapour",
+        "nitrogen oxides",
+        "inorganic residue"
+      ],
+      "real_world_connection": "When food or plant material is completely burned, most organic matter is lost as gases, but mineral content remains as ash. The same logic helps interpret what part of a tissue sample was carbon-based and what part was inorganic."
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 7
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-006
+Status: completed
+Is Cached: false
+Generation ID: e8e1effc-b9d8-4c58-ae20-07924c255361
+Generation Source Job ID: 0049119a-43a5-4c7a-9bad-30a47c4e3f81
+Prompt Version: 1.0.3
+Model: gpt-5.4-2026-03-05
+OpenAI Response ID: chatcmpl-Dw1zxC9ohvER98ty7fsLR6uycd7Jr
+Token Input: 1376
+Token Output: 804
+Created At: Mon Jun 29 2026 14:21:27 GMT+0530 (India Standard Time)
+Updated At: Mon Jun 29 2026 14:21:27 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "dependencies": [
+    {
+      "dependency_type": "prerequisite",
+      "depends_on_assessment_unit_id": "BIO-AU-003"
+    }
+  ],
+  "memory_hooks": [
+    {
+      "concept": "Filtrate-retentate distinction",
+      "memory_hook": "Filtrate-retentate distinction needs memory support because both are produced in the same filtration step but represent opposite fractions.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "both are produced in the same filtration step but represent opposite fractions."
+    },
+    {
+      "concept": "Acid-soluble pool and acid-insoluble fraction",
+      "memory_hook": "Acid-soluble pool and acid-insoluble fraction need memory support because the terms are linked to filtrate and retentate respectively.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "the terms are linked to filtrate and retentate respectively."
+    },
+    {
+      "concept": "Drying-burning-ash sequence",
+      "memory_hook": "Drying-burning-ash sequence needs memory support because evidence for inorganic components depends on interpreting the order of experimental steps.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "evidence for inorganic components depends on interpreting the order of experimental steps."
+    },
+    {
+      "concept": "Amino acid common structure",
+      "memory_hook": "Amino acid common structure needs memory support because amino group, carboxyl group and R-group must be connected to the same core carbon arrangement.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "amino group, carboxyl group and R-group must be connected to the same core carbon arrangement."
+    },
+    {
+      "concept": "R-group examples",
+      "memory_hook": "R-group examples need memory support because glycine, alanine and serine differ by small side-chain changes.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "glycine, alanine and serine differ by small side-chain changes."
+    },
+    {
+      "concept": "Saturated-unsaturated fatty acid comparison",
+      "memory_hook": "Saturated-unsaturated fatty acid comparison needs memory support because the distinction depends specifically on double bonds.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "the distinction depends specifically on double bonds."
+    },
+    {
+      "concept": "Nucleoside-nucleotide-nucleic acid sequence",
+      "memory_hook": "Nucleoside-nucleotide-nucleic acid sequence needs memory support because each stage adds a component or links repeated units.",
+      "memory_type": "support_candidate",
+      "why_it_helps": "each stage adds a component or links repeated units."
+    }
+  ],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-003"
+      }
+    ],
+    "primary_concept": "Major biomolecule classes",
+    "concept_category": "Classification",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "2",
+    "assessment_unit_id": "BIO-AU-006",
+    "learning_objective": "Classify examples from living cells into major biomolecule groups identified by chemical analysis.",
+    "supporting_concepts": [
+      "amino acids",
+      "sugars",
+      "lipids",
+      "nucleotides",
+      "nucleic acids",
+      "proteins"
+    ],
+    "curriculum_importance": "high"
+  },
+  "supporting_concepts": [
+    "amino acids",
+    "sugars",
+    "lipids",
+    "nucleotides",
+    "nucleic acids",
+    "proteins"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "The Living World",
+    "subject": "Biology",
+    "duration": "25",
+    "blueprint": "Understand -> recall -> apply -> retry",
+    "className": "11",
+    "practiceType": "Competency Based",
+    "practice_profile": {
+      "constraints": [
+        "Reduce pure fact-only items unless they support a larger applied objective.",
+        "Prefer prompts that require selecting, connecting, explaining, or interpreting."
+      ],
+      "practice_type": "Competency Based",
+      "layer_emphasis": {
+        "layer1": "Highlight causal understanding, processes, comparisons, and real-world relevance.",
+        "layer2": "Support conceptual understanding over rote memorization.",
+        "layer3": "Favor interpretation, analysis, application, and evidence-based reasoning capabilities.",
+        "layer4": "Prefer contextual, case-based, inference-driven assessment strategies.",
+        "layer5": "Blueprint for competency demonstration, not fact listing.",
+        "layer6": "Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.",
+        "layer7": "Explain reasoning, misconception patterns, and transfer gaps."
+      },
+      "generation_mode": "applied_reasoning",
+      "target_outcomes": [
+        "Prioritize application, interpretation, and reasoning.",
+        "Test transfer of knowledge, not just recall."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Competency Based\nGeneration Mode: applied_reasoning\nTarget Outcomes:\n- Prioritize application, interpretation, and reasoning.\n- Test transfer of knowledge, not just recall.\nLayer Emphasis:\n- layer1: Highlight causal understanding, processes, comparisons, and real-world relevance.\n- layer2: Support conceptual understanding over rote memorization.\n- layer3: Favor interpretation, analysis, application, and evidence-based reasoning capabilities.\n- layer4: Prefer contextual, case-based, inference-driven assessment strategies.\n- layer5: Blueprint for competency demonstration, not fact listing.\n- layer6: Generate applied, data-aware, case, scenario, or reasoning-rich items where suitable.\n- layer7: Explain reasoning, misconception patterns, and transfer gaps.\nConstraints:\n- Reduce pure fact-only items unless they support a larger applied objective.\n- Prefer prompts that require selecting, connecting, explaining, or interpreting.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": []
+}
+
+OUTPUT JSON
+{
+  "concept_memories": [
+    {
+      "story": "Imagine a cell sample entering a sorting lab. First, filtration splits it into what passes through and what stays behind. The small dissolved pieces form the acid-soluble pool; the larger built structures stay in the acid-insoluble fraction. Then chemical clues sort the pieces again: sugars are quick fuel-like units, amino acids are protein pieces built on one central carbon, fatty acids are long hydrocarbon chains whose bends reveal double bonds, and nucleotides are the repeat units that build nucleic acids. The key memory is not just the names, but how evidence from analysis lets you decide which class a mystery molecule belongs to.",
+      "analogy": "Think of biomolecule classification like sorting items from a backpack after a trip. Loose coins and candy pass easily into the small-items tray, while books and clothing stay in the main bin. Then you identify each item by its features: a chain with bends suggests an unsaturated lipid, a central carbon with amino and carboxyl groups signals an amino acid, and a unit that can join into an information chain points to a nucleotide.",
+      "visual_hook": "Picture four labeled detective cards on a lab bench: a hexagon sugar cube for sugars, a central carbon with NH2 and COOH arms for amino acids, a long tail with a kink for unsaturated lipids, and a nucleotide block snapping into a nucleic-acid ladder. Beside them, a sieve shows 'through = soluble/small' and 'stays = insoluble/large.'",
+      "memory_trick": "Sort by clues, not by name: pass through = small/soluble, stay back = large/structured; amino acid = NH2 + COOH on one carbon; unsaturated fat = double bond bend; nucleotide = building block of nucleic acid.",
+      "curiosity_hook": "How can one unknown cell sample be split and identified just by seeing what passes through, what stays back, and a few structural clues?",
+      "micro_activity": "In 10 seconds, point to four imaginary boxes and place these aloud: glucose -> sugar, glycine -> amino acid, kinked fatty acid -> lipid, ATP-like unit -> nucleotide.",
+      "retrieval_cues": [
+        "What kind of molecule would pass into an acid-soluble pool?",
+        "What structural pattern identifies an amino acid?",
+        "What feature separates saturated from unsaturated fatty acids?",
+        "How does a nucleotide relate to a nucleic acid?",
+        "When classifying a mystery molecule, which evidence matters more: label or chemical features?"
+      ],
+      "primary_concept": "Major biomolecule classes",
+      "memory_difficulty": "medium",
+      "assessment_unit_id": "BIO-AU-006",
+      "associated_concepts": [
+        "Filtrate-retentate distinction",
+        "Acid-soluble pool and acid-insoluble fraction",
+        "Amino acid common structure",
+        "Saturated-unsaturated fatty acid comparison",
+        "Nucleoside-nucleotide-nucleic acid sequence"
+      ],
+      "misconception_alert": "Do not classify only by memorized names. Use the evidence: soluble vs insoluble behavior, core structural groups, and whether the molecule is a small unit or a larger assembled polymer. Also, nucleotides are building blocks, while nucleic acids are chains made from them.",
+      "supporting_concepts": [
+        "amino acids",
+        "sugars",
+        "lipids",
+        "nucleotides",
+        "nucleic acids",
+        "proteins"
+      ],
+      "real_world_connection": "Biochemists classify unknown cell components by combining structural clues and separation results, much like reading a lab report to identify whether a sample contains sugars, proteins, lipids, or nucleic-acid building blocks."
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------

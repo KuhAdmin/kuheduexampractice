@@ -1,0 +1,2109 @@
+Pipeline Audit Log
+Job ID: eb0fb4e4-257c-4932-81f4-070495e8069a
+Status: completed
+Created At: Sat Jul 04 2026 06:58:17 GMT+0530 (India Standard Time)
+Updated At: Sat Jul 04 2026 06:59:36 GMT+0530 (India Standard Time)
+Source Section ID: 13
+Source Document ID: 4
+MST Chapter ID: 894
+
+REQUEST PAYLOAD
+{
+  "board": "CBSE",
+  "chapter": "Structural Organisation in Animals",
+  "subject": "Biology",
+  "duration": "20",
+  "blueprint": "Understand -> recall -> apply",
+  "className": "11",
+  "chapterKey": "2:7",
+  "subjectCode": "BIO",
+  "practiceType": "Concept Builder",
+  "sectionNumber": "7.2.1",
+  "outputLanguage": "en",
+  "sectionOcrText": "Morphology refers to the study of form or externally visible features of an organism. In frogs, the body is divisible into head and trunk, and a distinct neck and tail are absent.",
+  "sourceLanguage": "en",
+  "targetDifficulty": "Balanced",
+  "targetLayerNumber": 3
+}
+
+LAYERS
+
+Layer Entry 1
+Layer Number: 1
+Layer Name: Knowledge Extraction
+Assessment Unit ID: 
+Status: completed
+Is Cached: false
+Generation ID: acb549f2-c41c-4b8e-a451-515ac6726d59
+Generation Source Job ID: eb0fb4e4-257c-4932-81f4-070495e8069a
+Prompt Version: 1.0.18
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DxjT1bqTGbQr8mjDmdI8nhprFxN7g
+Token Input: 1982
+Token Output: 1067
+Created At: Sat Jul 04 2026 06:58:23 GMT+0530 (India Standard Time)
+Updated At: Sat Jul 04 2026 06:58:23 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "context": {
+    "board": "CBSE",
+    "chapter": "Structural Organisation in Animals",
+    "subject": "Biology",
+    "className": "11",
+    "chapterKey": "2:7",
+    "subjectCode": "BIO",
+    "sectionNumber": "7.2.1"
+  },
+  "language": {
+    "output_language": "en",
+    "source_language": "en"
+  },
+  "source_artifacts": {
+    "section_text": {
+      "has_text": true,
+      "normalized_text": "Morphology refers to the study of form or externally visible features of an organism. In frogs, the body is divisible into head and trunk, and a distinct neck and tail are absent.",
+      "full_text_length": 179
+    }
+  },
+  "generation_directives": {
+    "constraints": [
+      "Do not over-specialize unless the selected practice type requires it."
+    ],
+    "layer_focus": "Extract all examinable concepts without bias.",
+    "practice_type": "Concept Builder",
+    "blueprint_hint": "Understand -> recall -> apply",
+    "generation_mode": "balanced_mixed",
+    "output_language": "en",
+    "source_language": "en",
+    "target_outcomes": [
+      "Blend recall, understanding, and application.",
+      "Keep question forms varied and curriculum-aligned."
+    ],
+    "target_difficulty": "Balanced",
+    "time_limit_minutes": "20"
+  }
+}
+
+OUTPUT JSON
+{
+  "diagrams": [],
+  "functions": [],
+  "processes": [],
+  "exceptions": [
+    {
+      "exception": "Frogs do not have a distinct neck or tail.",
+      "exception_context": "The frog body plan described in this section."
+    }
+  ],
+  "structures": [],
+  "comparisons": [],
+  "terminology": [
+    {
+      "term": "Morphology",
+      "definition": "The study of an organism’s form or externally visible features."
+    },
+    {
+      "term": "Externally visible features",
+      "definition": "Features that can be observed on the outside of an organism."
+    }
+  ],
+  "cause_effect": [],
+  "memory_hooks": [
+    {
+      "concept": "Morphology",
+      "memory_support": "This concept needs memory support because it is a key terminology item and may be confused with anatomy or internal structure."
+    },
+    {
+      "concept": "Frog body plan",
+      "memory_support": "This concept needs memory support because the visible body divisions and absent parts must be recalled accurately."
+    }
+  ],
+  "core_concepts": [
+    "Morphology",
+    "Externally visible features",
+    "Body form",
+    "Frog body plan",
+    "Head and trunk",
+    "Absence of neck and tail"
+  ],
+  "relationships": [
+    {
+      "related_concepts": [
+        "Morphology",
+        "Externally visible features",
+        "Body form"
+      ],
+      "relationship_name": "Morphology and visible form",
+      "relationship_type": "conceptual-mapping",
+      "relationship_summary": "Morphology is the study of an organism’s form and externally visible features."
+    },
+    {
+      "related_concepts": [
+        "Frog body plan",
+        "Head and trunk",
+        "Absence of neck and tail"
+      ],
+      "relationship_name": "Frog body division",
+      "relationship_type": "part-whole",
+      "relationship_summary": "A frog’s body is divisible into head and trunk, with no distinct neck or tail."
+    }
+  ],
+  "classifications": [],
+  "context_summary": "Students learn to define morphology as the study of externally visible form and to apply this idea to recognize visible body features in frogs, including the absence of a neck and tail and the division into head and trunk.",
+  "assessment_units": [
+    {
+      "dependencies": [],
+      "primary_concept": "Morphology",
+      "concept_category": "Terminology",
+      "assessment_unit_id": "BIO-AU-001",
+      "learning_objective": "Interpret morphology as the study of an organism’s externally visible form.",
+      "supporting_concepts": [
+        "Externally visible features",
+        "Body form"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-001"
+      ],
+      "primary_concept": "External features",
+      "concept_category": "Relationship",
+      "assessment_unit_id": "BIO-AU-002",
+      "learning_objective": "Identify externally visible features as the focus of morphology.",
+      "supporting_concepts": [
+        "Morphology",
+        "Visible form"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-001",
+        "BIO-AU-002"
+      ],
+      "primary_concept": "Frog body form",
+      "concept_category": "Classification",
+      "assessment_unit_id": "BIO-AU-003",
+      "learning_objective": "Apply the described frog body plan to recognize its main visible divisions.",
+      "supporting_concepts": [
+        "Head and trunk",
+        "Absence of neck and tail"
+      ],
+      "curriculum_importance": "high"
+    },
+    {
+      "dependencies": [
+        "BIO-AU-003"
+      ],
+      "primary_concept": "Frog body divisions",
+      "concept_category": "Relationship",
+      "assessment_unit_id": "BIO-AU-004",
+      "learning_objective": "Classify the frog body as divided into head and trunk, not neck and tail.",
+      "supporting_concepts": [
+        "Head and trunk",
+        "No distinct neck",
+        "No distinct tail"
+      ],
+      "curriculum_importance": "medium"
+    }
+  ],
+  "stages_sequences": [],
+  "question_patterns": [
+    "table-completion",
+    "odd-one-out",
+    "taxonomy-tree-interpretation",
+    "hierarchy-completion"
+  ],
+  "common_misconceptions": [
+    {
+      "correction": "In this section, morphology is limited to form and externally visible features.",
+      "misconception": "Morphology includes internal organs or hidden structures."
+    },
+    {
+      "correction": "The frog body is described as having head and trunk only, with no distinct neck or tail.",
+      "misconception": "A frog has a distinct neck and tail."
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 2
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-001
+Status: completed
+Is Cached: false
+Generation ID: 15402194-d4af-43b6-8cb6-09d58afab98f
+Generation Source Job ID: eb0fb4e4-257c-4932-81f4-070495e8069a
+Prompt Version: 1.0.4
+Model: deepseek-v4-flash
+OpenAI Response ID: f7a9b5cf-6872-4779-bbb6-68cd0a6fc753
+Token Input: 1062
+Token Output: 2850
+Created At: Sat Jul 04 2026 06:58:51 GMT+0530 (India Standard Time)
+Updated At: Sat Jul 04 2026 06:58:51 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "dependencies": [],
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Morphology",
+    "concept_category": "Terminology",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "13",
+    "assessment_unit_id": "BIO-AU-001",
+    "learning_objective": "Interpret morphology as the study of an organism’s externally visible form.",
+    "supporting_concepts": [
+      "Externally visible features",
+      "Body form"
+    ],
+    "curriculum_importance": "high"
+  },
+  "supporting_concepts": [
+    "Externally visible features",
+    "Body form"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "Structural Organisation in Animals",
+    "subject": "Biology",
+    "duration": "20",
+    "blueprint": "Understand -> recall -> apply",
+    "className": "11",
+    "practiceType": "Concept Builder",
+    "output_language": "en",
+    "source_language": "en",
+    "practice_profile": {
+      "constraints": [
+        "Do not over-specialize unless the selected practice type requires it."
+      ],
+      "practice_type": "Concept Builder",
+      "layer_emphasis": {
+        "layer1": "Extract all examinable concepts without bias.",
+        "layer2": "Build memory support that is useful across question styles.",
+        "layer3": "Balance recall and reasoning capabilities.",
+        "layer4": "Mix direct, conceptual, and applied strategies.",
+        "layer5": "Create balanced blueprints.",
+        "layer6": "Generate a mixed assessment set.",
+        "layer7": "Provide general remediation and learning support."
+      },
+      "generation_mode": "balanced_mixed",
+      "target_outcomes": [
+        "Blend recall, understanding, and application.",
+        "Keep question forms varied and curriculum-aligned."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Concept Builder\nGeneration Mode: balanced_mixed\nTarget Outcomes:\n- Blend recall, understanding, and application.\n- Keep question forms varied and curriculum-aligned.\nLayer Emphasis:\n- layer1: Extract all examinable concepts without bias.\n- layer2: Build memory support that is useful across question styles.\n- layer3: Balance recall and reasoning capabilities.\n- layer4: Mix direct, conceptual, and applied strategies.\n- layer5: Create balanced blueprints.\n- layer6: Generate a mixed assessment set.\n- layer7: Provide general remediation and learning support.\nConstraints:\n- Do not over-specialize unless the selected practice type requires it.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": [
+    {
+      "concept": null,
+      "correction": "In this section, morphology is limited to form and externally visible features.",
+      "misconception": "Morphology includes internal organs or hidden structures."
+    },
+    {
+      "concept": null,
+      "correction": "The frog body is described as having head and trunk only, with no distinct neck or tail.",
+      "misconception": "A frog has a distinct neck and tail."
+    }
+  ]
+}
+
+OUTPUT JSON
+{
+  "concept_memory": {
+    "story": "A biologist named Alex was observing a frog in a pond. Instead of cutting it open, Alex noted its smooth skin, long hind legs, and the absence of a neck and tail. This external description is morphology—capturing the visible blueprint of an organism.",
+    "terms": [
+      "morphology",
+      "externally_visible_features",
+      "body_form"
+    ],
+    "aliases": [
+      "external morphology"
+    ],
+    "analogy": "Morphology is like studying the exterior design of a car—its shape, doors, and headlights—without peeking under the hood. Just as car morphology helps identify the model, biological morphology helps identify and compare organisms.",
+    "formula": "",
+    "examples": [
+      "frog_body_consists_of_head_and_trunk_no_distinct_neck_or_tail",
+      "human_body_consists_of_head_neck_trunk_and_limbs"
+    ],
+    "attributes": [
+      "externally_visible_features",
+      "body_form"
+    ],
+    "concept_id": "morphology",
+    "definition": "Morphology is the study of an organism's externally visible form and structure, focusing on features such as body shape, appendages, and surface characteristics.",
+    "exceptions": [],
+    "flashcards": [
+      {
+        "back": "The study of an organism's externally visible form and structure.",
+        "front": "What is morphology?"
+      },
+      {
+        "back": "A frog's body has a head and trunk but no distinct neck or tail.",
+        "front": "Give an example of a morphological description."
+      },
+      {
+        "back": "No, it is limited to externally visible features.",
+        "front": "Does morphology include internal organs?"
+      }
+    ],
+    "properties": [
+      "observable",
+      "descriptive"
+    ],
+    "visual_hook": "Imagine yourself as a tiny explorer standing on a frog's head, looking down its back. You see the smooth, green skin stretching to a blunt rear with no tail, and notice the body is just two parts: head and trunk.",
+    "memory_trick": "Mnemonic: 'MORE-follow-the-ology' — Morphology = MORE (More ORganism Externals) + ology (study of).",
+    "concept_label": "Morphology",
+    "prerequisites": [],
+    "relationships": [
+      {
+        "target": "biology",
+        "relation": "is_subfield_of"
+      },
+      {
+        "target": "externally_visible_features",
+        "relation": "studies"
+      },
+      {
+        "target": "body_form",
+        "relation": "studies"
+      },
+      {
+        "target": "anatomy",
+        "relation": "is_distinct_from"
+      }
+    ],
+    "classification": [
+      "subfield_of_biology"
+    ],
+    "curiosity_hook": "If you could only see the outside of an animal, how much could you infer about its lifestyle, diet, and environment?",
+    "micro_activity": "Quickly sketch a frog from memory. Compare your sketch with a real photo: list three externally visible features you got right and one you missed.",
+    "retrieval_cues": [
+      "external form",
+      "visible features",
+      "body shape",
+      "not internal"
+    ],
+    "primary_concept": "Morphology",
+    "search_metadata": {
+      "keywords": [
+        "morphology",
+        "externally visible features",
+        "body form",
+        "external morphology",
+        "frog: body consists of head and trunk, no distinct neck or tail",
+        "human: body consists of head, neck, trunk, and limbs",
+        "Morphology"
+      ],
+      "semantic_text": "Morphology | Morphology is the study of an organism's externally visible form and structure, focusing on features such as body shape, appendages, and surface characteristics. | observable | descriptive | externally visible features | body form | frog: body consists of head and trunk, no distinct neck or tail | human: body consists of head, neck, trunk, and limbs"
+    },
+    "tutor_grounding": {
+      "summary": "Morphology is the study of an organism's externally visible form and structure, focusing on features such as body shape, appendages, and surface characteristics.",
+      "prerequisites": [],
+      "misconceptions": [
+        "Common misconception: Morphology includes internal organs or hidden structures. Correction: In this context, morphology is limited to externally visible features such as body form and surface characteristics."
+      ],
+      "retrieval_cues": [
+        "external form",
+        "visible features",
+        "body shape",
+        "not internal"
+      ]
+    },
+    "concept_map_edges": [
+      {
+        "source": "morphology",
+        "target": "externally_visible_features",
+        "relation": "studies"
+      },
+      {
+        "source": "morphology",
+        "target": "body_form",
+        "relation": "studies"
+      },
+      {
+        "source": "morphology",
+        "target": "biology",
+        "relation": "is_subfield_of"
+      },
+      {
+        "source": "morphology",
+        "target": "anatomy",
+        "relation": "is_distinct_from"
+      }
+    ],
+    "memory_difficulty": "low",
+    "mind_map_branches": [],
+    "assessment_unit_id": "BIO-AU-001",
+    "associated_concepts": [
+      "Externally visible features",
+      "Body form",
+      "Anatomy",
+      "External morphology"
+    ],
+    "misconception_alert": "Common misconception: Morphology includes internal organs or hidden structures. Correction: In this context, morphology is limited to externally visible features such as body form and surface characteristics.",
+    "supporting_concepts": [
+      "Externally visible features",
+      "Body form"
+    ],
+    "real_world_connection": "Field guides for birdwatchers rely heavily on morphology—birders identify species by noting external features like beak shape, wing patterns, and tail length, all without capturing the bird."
+  }
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 3
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-002
+Status: completed
+Is Cached: false
+Generation ID: 7bda1adb-aa01-4747-8fc2-f7f1bc47f669
+Generation Source Job ID: eb0fb4e4-257c-4932-81f4-070495e8069a
+Prompt Version: 1.0.4
+Model: deepseek-v4-flash
+OpenAI Response ID: 9ca4eab9-efca-4c1c-9af3-379d0e393739
+Token Input: 1035
+Token Output: 1954
+Created At: Sat Jul 04 2026 06:59:09 GMT+0530 (India Standard Time)
+Updated At: Sat Jul 04 2026 06:59:09 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "dependencies": [
+    {
+      "dependency_type": "prerequisite",
+      "depends_on_assessment_unit_id": "BIO-AU-001"
+    }
+  ],
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-001"
+      }
+    ],
+    "primary_concept": "Cold-blooded vertebrate",
+    "concept_category": "Terminology",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "12",
+    "assessment_unit_id": "BIO-AU-002",
+    "learning_objective": "Interpret the source-based traits that describe frogs as cold-blooded vertebrates.",
+    "supporting_concepts": [
+      "Cold-blooded",
+      "Vertebrate",
+      "Frog"
+    ],
+    "curriculum_importance": "medium"
+  },
+  "supporting_concepts": [
+    "Cold-blooded",
+    "Vertebrate",
+    "Frog"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "Structural Organisation in Animals",
+    "subject": "Biology",
+    "duration": "20",
+    "blueprint": "Understand -> recall -> apply",
+    "className": "11",
+    "practiceType": "Concept Builder",
+    "output_language": "en",
+    "source_language": "en",
+    "practice_profile": {
+      "constraints": [
+        "Do not over-specialize unless the selected practice type requires it."
+      ],
+      "practice_type": "Concept Builder",
+      "layer_emphasis": {
+        "layer1": "Extract all examinable concepts without bias.",
+        "layer2": "Build memory support that is useful across question styles.",
+        "layer3": "Balance recall and reasoning capabilities.",
+        "layer4": "Mix direct, conceptual, and applied strategies.",
+        "layer5": "Create balanced blueprints.",
+        "layer6": "Generate a mixed assessment set.",
+        "layer7": "Provide general remediation and learning support."
+      },
+      "generation_mode": "balanced_mixed",
+      "target_outcomes": [
+        "Blend recall, understanding, and application.",
+        "Keep question forms varied and curriculum-aligned."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Concept Builder\nGeneration Mode: balanced_mixed\nTarget Outcomes:\n- Blend recall, understanding, and application.\n- Keep question forms varied and curriculum-aligned.\nLayer Emphasis:\n- layer1: Extract all examinable concepts without bias.\n- layer2: Build memory support that is useful across question styles.\n- layer3: Balance recall and reasoning capabilities.\n- layer4: Mix direct, conceptual, and applied strategies.\n- layer5: Create balanced blueprints.\n- layer6: Generate a mixed assessment set.\n- layer7: Provide general remediation and learning support.\nConstraints:\n- Do not over-specialize unless the selected practice type requires it.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": []
+}
+
+OUTPUT JSON
+{
+  "concept_memory": {
+    "story": "Imagine a frog sitting on a lily pad on a sunny day. It feels warm and active. But if a cloud covers the sun, the frog quickly becomes cooler and less active. Unlike you, it can't shiver to warm up—it must rely on the sun's rays or a warm rock to raise its body temperature.",
+    "terms": [
+      "ectotherm",
+      "poikilotherm",
+      "amphibian",
+      "reptile"
+    ],
+    "aliases": [
+      "ectothermic vertebrate",
+      "poikilothermic vertebrate"
+    ],
+    "analogy": "A cold-blooded vertebrate is like a solar-powered car. It needs the sun (external heat) to run; when the sun goes down, it stops. A warm-blooded animal is like a gasoline-powered car; it carries its own fuel and can run regardless of the weather.",
+    "formula": "",
+    "examples": [
+      "frog",
+      "lizard",
+      "snake",
+      "turtle",
+      "fish"
+    ],
+    "attributes": [
+      "ectothermic",
+      "poikilothermic",
+      "vertebrate"
+    ],
+    "concept_id": "cold-blooded_vertebrate",
+    "definition": "A cold-blooded vertebrate is an animal with a backbone that cannot internally regulate its body temperature; its body temperature varies with the environment. Common examples include frogs, lizards, snakes, turtles, and fish.",
+    "exceptions": [
+      "some_large_fish_e_g_tuna_can_retain_some_heat_but_they_are_still_considered_cold_blooded"
+    ],
+    "flashcards": [
+      {
+        "back": "A vertebrate that cannot regulate its body temperature internally; its body temperature matches the environment. Example: frog.",
+        "front": "What is a cold-blooded vertebrate?"
+      },
+      {
+        "back": "Body temperature is regulated by external sources, not internally.",
+        "front": "What does 'ectothermic' mean?"
+      },
+      {
+        "back": "Frog, lizard, snake (or turtle, fish).",
+        "front": "Give three examples of cold-blooded vertebrates."
+      }
+    ],
+    "properties": [
+      "body_temperature_varies_with_environment",
+      "relies_on_external_heat_sources",
+      "sluggish_in_cold_temperatures"
+    ],
+    "visual_hook": "Picture a frog changing color like a mood ring as it moves from a warm rock into a cool pond—its body temperature visibly affects its behavior and color.",
+    "memory_trick": "Cold-blooded = 'cold when cold out, warm when warm out.' Remember the rhyme: 'Frog on a log, warm as a dog; frog in a pond, cold as a bond.' Or simply: 'Frogs are solar-powered.'",
+    "concept_label": "Cold-blooded Vertebrate",
+    "prerequisites": [
+      "vertebrate"
+    ],
+    "relationships": [
+      {
+        "target": "vertebrate",
+        "relation": "is_a"
+      },
+      {
+        "target": "frog",
+        "relation": "has_example"
+      },
+      {
+        "target": "ectothermic",
+        "relation": "has_characteristic"
+      }
+    ],
+    "classification": [
+      "vertebrata",
+      "ectotherms"
+    ],
+    "curiosity_hook": "Did you know that some cold-blooded animals, like wood frogs, can survive being frozen solid during winter? Their bodies produce a natural antifreeze!",
+    "micro_activity": "List three cold-blooded vertebrates you might see near a pond or lake. Explain how each one uses its environment to control its body temperature.",
+    "retrieval_cues": [
+      "What determines a frog's body temperature?",
+      "Name a vertebrate that is ectothermic.",
+      "How does a cold-blooded animal respond when the environment gets cold?",
+      "Why do lizards bask on rocks in the sun?"
+    ],
+    "primary_concept": "Cold-blooded vertebrate",
+    "search_metadata": {
+      "keywords": [
+        "ectotherm",
+        "poikilotherm",
+        "amphibian",
+        "reptile",
+        "ectothermic vertebrate",
+        "poikilothermic vertebrate",
+        "frog",
+        "lizard",
+        "snake",
+        "turtle",
+        "fish",
+        "Cold-blooded Vertebrate"
+      ],
+      "semantic_text": "Cold-blooded Vertebrate | A cold-blooded vertebrate is an animal with a backbone that cannot internally regulate its body temperature; its body temperature varies with the environment. Common examples include frogs, lizards, snakes, turtles, and fish. | body temperature varies with environment | relies on external heat sources | sluggish in cold temperatures | ectothermic | poikilothermic | vertebrate | frog | lizard | snake | turtle | fish"
+    },
+    "tutor_grounding": {
+      "summary": "A cold-blooded vertebrate is an animal with a backbone that cannot internally regulate its body temperature; its body temperature varies with the environment. Common examples include frogs, lizards, snakes, turtles, and fish.",
+      "prerequisites": [
+        "vertebrate"
+      ],
+      "misconceptions": [
+        "Being cold-blooded does NOT mean the blood is always cold. In a warm environment, a cold-blooded animal's blood can be just as warm as a warm-blooded animal's. The difference is that cold-blooded animals cannot generate their own heat internally."
+      ],
+      "retrieval_cues": [
+        "What determines a frog's body temperature?",
+        "Name a vertebrate that is ectothermic.",
+        "How does a cold-blooded animal respond when the environment gets cold?",
+        "Why do lizards bask on rocks in the sun?"
+      ]
+    },
+    "concept_map_edges": [
+      {
+        "source": "cold_blooded_vertebrate",
+        "target": "vertebrate",
+        "relation": "related_to"
+      },
+      {
+        "source": "cold_blooded_vertebrate",
+        "target": "ectothermic",
+        "relation": "related_to"
+      },
+      {
+        "source": "frog",
+        "target": "cold_blooded_vertebrate",
+        "relation": "related_to"
+      }
+    ],
+    "memory_difficulty": "medium",
+    "mind_map_branches": [],
+    "assessment_unit_id": "BIO-AU-002",
+    "associated_concepts": [
+      "ectotherm",
+      "poikilotherm",
+      "endotherm",
+      "amphibian",
+      "reptile"
+    ],
+    "misconception_alert": "Being cold-blooded does NOT mean the blood is always cold. In a warm environment, a cold-blooded animal's blood can be just as warm as a warm-blooded animal's. The difference is that cold-blooded animals cannot generate their own heat internally.",
+    "supporting_concepts": [
+      "Cold-blooded",
+      "Vertebrate",
+      "Frog"
+    ],
+    "real_world_connection": "Turtles basking on logs in the sun are warming up their bodies to become active. Frogs often hide under rocks or in mud during cold weather to keep from freezing."
+  }
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 4
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-003
+Status: completed
+Is Cached: false
+Generation ID: 4cc8d802-c730-4068-b60c-71235cf3348d
+Generation Source Job ID: eb0fb4e4-257c-4932-81f4-070495e8069a
+Prompt Version: 1.0.4
+Model: deepseek-v4-flash
+OpenAI Response ID: 3e7b64dd-512f-4d05-953d-2fbb992b2068
+Token Input: 1040
+Token Output: 2436
+Created At: Sat Jul 04 2026 06:59:29 GMT+0530 (India Standard Time)
+Updated At: Sat Jul 04 2026 06:59:29 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "dependencies": [
+    {
+      "dependency_type": "prerequisite",
+      "depends_on_assessment_unit_id": "BIO-AU-001"
+    }
+  ],
+  "memory_hooks": [],
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-001"
+      }
+    ],
+    "primary_concept": "Frog habitat",
+    "concept_category": "Relationship",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "12",
+    "assessment_unit_id": "BIO-AU-003",
+    "learning_objective": "Identify the habitats in which frogs are commonly found from the source.",
+    "supporting_concepts": [
+      "Ponds and rivers habitat",
+      "Aquatic and terrestrial life",
+      "Frog"
+    ],
+    "curriculum_importance": "medium"
+  },
+  "supporting_concepts": [
+    "Ponds and rivers habitat",
+    "Aquatic and terrestrial life",
+    "Frog"
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "Structural Organisation in Animals",
+    "subject": "Biology",
+    "duration": "20",
+    "blueprint": "Understand -> recall -> apply",
+    "className": "11",
+    "practiceType": "Concept Builder",
+    "output_language": "en",
+    "source_language": "en",
+    "practice_profile": {
+      "constraints": [
+        "Do not over-specialize unless the selected practice type requires it."
+      ],
+      "practice_type": "Concept Builder",
+      "layer_emphasis": {
+        "layer1": "Extract all examinable concepts without bias.",
+        "layer2": "Build memory support that is useful across question styles.",
+        "layer3": "Balance recall and reasoning capabilities.",
+        "layer4": "Mix direct, conceptual, and applied strategies.",
+        "layer5": "Create balanced blueprints.",
+        "layer6": "Generate a mixed assessment set.",
+        "layer7": "Provide general remediation and learning support."
+      },
+      "generation_mode": "balanced_mixed",
+      "target_outcomes": [
+        "Blend recall, understanding, and application.",
+        "Keep question forms varied and curriculum-aligned."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Concept Builder\nGeneration Mode: balanced_mixed\nTarget Outcomes:\n- Blend recall, understanding, and application.\n- Keep question forms varied and curriculum-aligned.\nLayer Emphasis:\n- layer1: Extract all examinable concepts without bias.\n- layer2: Build memory support that is useful across question styles.\n- layer3: Balance recall and reasoning capabilities.\n- layer4: Mix direct, conceptual, and applied strategies.\n- layer5: Create balanced blueprints.\n- layer6: Generate a mixed assessment set.\n- layer7: Provide general remediation and learning support.\nConstraints:\n- Do not over-specialize unless the selected practice type requires it.\nApply these directives explicitly while producing the JSON."
+  },
+  "misconception_profile": []
+}
+
+OUTPUT JSON
+{
+  "concept_memory": {
+    "story": "In a lush green forest, a spotted frog named Freddie lived by a peaceful pond. Every spring, Freddie returned to the same pond to lay his eggs among the lily pads. The pond was his nursery, and the surrounding woods were his hunting ground for insects.",
+    "terms": [
+      "amphibian",
+      "metamorphosis",
+      "tadpole",
+      "pond",
+      "river"
+    ],
+    "aliases": [
+      "Frog environments",
+      "Amphibian habitats"
+    ],
+    "analogy": "A frog's habitat is like a two-room house: the water room for raising young and the land room for adult living.",
+    "formula": "",
+    "examples": [
+      "ponds",
+      "lakes",
+      "rivers",
+      "marshes",
+      "swamps",
+      "streams",
+      "wetlands"
+    ],
+    "attributes": [
+      "water_dependent",
+      "moist",
+      "freshwater"
+    ],
+    "concept_id": "frog-habitat",
+    "definition": "Frog habitat refers to the specific environments where frogs are commonly found, typically characterized by proximity to water sources such as ponds, lakes, rivers, and marshes, which support both their aquatic and terrestrial life stages.",
+    "exceptions": [
+      "deserts_some_frogs_adapt_but_not_common",
+      "highly_saline_waters"
+    ],
+    "flashcards": [
+      {
+        "back": "Ponds, lakes, rivers, marshes, and other freshwater bodies.",
+        "front": "What are common habitats for frogs?"
+      },
+      {
+        "back": "Because they lay eggs in water and live on land as adults.",
+        "front": "Why do frogs need both aquatic and terrestrial habitats?"
+      }
+    ],
+    "properties": [],
+    "visual_hook": "Imagine a split view: top half showing a frog on a lily pad, bottom half showing tadpoles swimming underwater.",
+    "memory_trick": "Remember 'Pond and Land' - frogs need both to complete their life cycle.",
+    "concept_label": "Frog habitat",
+    "prerequisites": [
+      "BIO-AU-001"
+    ],
+    "relationships": [
+      {
+        "target": "amphibian_habitat",
+        "relation": "is_a"
+      },
+      {
+        "target": "ponds_and_rivers_habitat",
+        "relation": "related_to"
+      },
+      {
+        "target": "ecosystem",
+        "relation": "part_of"
+      }
+    ],
+    "classification": [
+      "habitat_type",
+      "amphibian_habitat"
+    ],
+    "curiosity_hook": "Did you know some frogs live in trees? They need water bodies nearby to breed.",
+    "micro_activity": "Draw a diagram of a frog habitat showing water and land areas.",
+    "retrieval_cues": [
+      "What bodies of water are frog habitats?",
+      "What do tadpoles need?",
+      "Where do adult frogs feed?"
+    ],
+    "primary_concept": "Frog habitat",
+    "search_metadata": {
+      "keywords": [
+        "Amphibian",
+        "Metamorphosis",
+        "Tadpole",
+        "Pond",
+        "River",
+        "Frog environments",
+        "Amphibian habitats",
+        "Ponds",
+        "Lakes",
+        "Rivers",
+        "Marshes",
+        "Swamps",
+        "Streams",
+        "Wetlands",
+        "Frog habitat"
+      ],
+      "semantic_text": "Frog habitat | Frog habitat refers to the specific environments where frogs are commonly found, typically characterized by proximity to water sources such as ponds, lakes, rivers, and marshes, which support both their aquatic and terrestrial life stages. | water-dependent | moist | freshwater | Ponds | Lakes | Rivers | Marshes | Swamps | Streams | Wetlands"
+    },
+    "tutor_grounding": {
+      "summary": "Frog habitat refers to the specific environments where frogs are commonly found, typically characterized by proximity to water sources such as ponds, lakes, rivers, and marshes, which support both their aquatic and terrestrial life stages.",
+      "prerequisites": [
+        "BIO-AU-001"
+      ],
+      "misconceptions": [
+        "Not all frogs live in water; some live in forests or deserts, but most require a nearby water source for breeding."
+      ],
+      "retrieval_cues": [
+        "What bodies of water are frog habitats?",
+        "What do tadpoles need?",
+        "Where do adult frogs feed?"
+      ]
+    },
+    "concept_map_edges": [
+      {
+        "source": "frog",
+        "target": "ponds_and_rivers_habitat",
+        "relation": "lives_in"
+      },
+      {
+        "source": "frog",
+        "target": "aquatic_and_terrestrial_life",
+        "relation": "requires"
+      },
+      {
+        "source": "ponds_and_rivers_habitat",
+        "target": "freshwater_ecosystems",
+        "relation": "part_of"
+      }
+    ],
+    "memory_difficulty": "low",
+    "mind_map_branches": [],
+    "assessment_unit_id": "BIO-AU-003",
+    "associated_concepts": [
+      "Amphibians",
+      "Metamorphosis",
+      "Ecosystems",
+      "Ponds",
+      "Rivers"
+    ],
+    "misconception_alert": "Not all frogs live in water; some live in forests or deserts, but most require a nearby water source for breeding.",
+    "supporting_concepts": [
+      "Ponds and rivers habitat",
+      "Aquatic and terrestrial life",
+      "Frog"
+    ],
+    "real_world_connection": "Many frogs are found in local parks with ponds or streams; you can often hear them calling after rain."
+  }
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 5
+Layer Number: 2
+Layer Name: Concept Memory
+Assessment Unit ID: BIO-AU-004
+Status: completed
+Is Cached: true
+Generation ID: 
+Generation Source Job ID: 
+Prompt Version: 1.0.4
+Model: deepseek-v4-flash
+OpenAI Response ID: 
+Token Input: 0
+Token Output: 0
+Created At: Sat Jul 04 2026 06:59:29 GMT+0530 (India Standard Time)
+Updated At: Sat Jul 04 2026 06:59:29 GMT+0530 (India Standard Time)
+
+INPUT JSON
+null
+
+OUTPUT JSON
+null
+
+--------------------------------------------------------------------------------
+
+Layer Entry 6
+Layer Number: 3
+Layer Name: Assessment Capability
+Assessment Unit ID: BIO-AU-001
+Status: completed
+Is Cached: false
+Generation ID: e80f9872-9d0f-4df0-bf2d-91b11a788013
+Generation Source Job ID: eb0fb4e4-257c-4932-81f4-070495e8069a
+Prompt Version: 1.0.1
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DxjUAFEXjECcgEUWuzY7UIfxjN2m9
+Token Input: 2567
+Token Output: 171
+Created At: Sat Jul 04 2026 06:59:32 GMT+0530 (India Standard Time)
+Updated At: Sat Jul 04 2026 06:59:32 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "concept_memory": {
+    "story": "A little frog named Freddy started his life as a tadpole in a pond, swimming with gills. As he grew, he sprouted legs and lost his tail, moving onto land to catch insects. This journey from water to land is why he's called an amphibian.",
+    "terms": [
+      "amphibian",
+      "tadpole",
+      "metamorphosis",
+      "ectothermic",
+      "cutaneous_respiration"
+    ],
+    "aliases": [
+      "True frog",
+      "Rana"
+    ],
+    "analogy": "A frog is like a transformer - it starts as a water-dwelling tadpole and transforms into a land-dwelling adult, able to live in two worlds.",
+    "formula": "",
+    "examples": [
+      "rana_temporaria_common_frog",
+      "hyla_arborea_tree_frog",
+      "dendrobates_tinctorius_poison_dart_frog"
+    ],
+    "attributes": [
+      "cold_blooded",
+      "moist_skin",
+      "webbed_feet",
+      "long_hind_legs",
+      "metamorphosis"
+    ],
+    "concept_id": "FROG_AMPHIBIAN",
+    "definition": "A frog is a cold-blooded vertebrate belonging to the class Amphibia, characterized by a dual life cycle that begins in water (as tadpoles) and continues on land (as adults), with moist, permeable skin and undergoing metamorphosis.",
+    "exceptions": [
+      "some_frogs_e_g_african_clawed_frog_are_fully_aquatic_others_e_g_toads_have_drier_skin_but_still_classified_as_frogs"
+    ],
+    "flashcards": [
+      {
+        "back": "Amphibia",
+        "front": "What class does a frog belong to?"
+      },
+      {
+        "back": "Tadpole",
+        "front": "What is the larval stage of a frog called?"
+      },
+      {
+        "back": "They live both in water and on land.",
+        "front": "Why are frogs called amphibians?"
+      },
+      {
+        "back": "Cold-blooded",
+        "front": "Are frogs cold-blooded or warm-blooded?"
+      }
+    ],
+    "properties": [
+      "ectothermic",
+      "cutaneous_respiration",
+      "biphasic_life_cycle",
+      "external_fertilization"
+    ],
+    "visual_hook": "Picture a frog with one foot in a pond and the other on a lily pad, symbolizing its dual life.",
+    "memory_trick": "Think: 'Amphibian = aMpHibian' - the 'M' and 'P' remind you: Moist skin, Permeable, and two-phase life (MetaMorphosis).",
+    "concept_label": "Frog as amphibian",
+    "generation_id": "fc6e27da-f029-4a11-89c8-9ba0f0524b1c",
+    "prerequisites": [
+      "Vertebrate classification",
+      "Cold-blooded vs. warm-blooded",
+      "Aquatic and terrestrial habitats"
+    ],
+    "relationships": [
+      {
+        "target": "amphibian",
+        "relation": "is_a_type_of"
+      },
+      {
+        "target": "metamorphosis",
+        "relation": "undergoes"
+      },
+      {
+        "target": "aquatic_and_terrestrial_life",
+        "relation": "has_habitat"
+      },
+      {
+        "target": "cold_blooded_vertebrate",
+        "relation": "is_a"
+      },
+      {
+        "target": "moist_and_permeable",
+        "relation": "has_skin"
+      }
+    ],
+    "classification": [
+      "kingdom_animalia",
+      "phylum_chordata",
+      "class_amphibia",
+      "order_anura"
+    ],
+    "curiosity_hook": "Some frogs can freeze solid in winter and thaw out alive in spring!",
+    "micro_activity": "Draw a simple life cycle diagram of a frog (egg -> tadpole -> froglet -> adult frog) to visualize the amphibian dual life.",
+    "retrieval_cues": [
+      "Tadpole",
+      "Metamorphosis",
+      "Moist skin",
+      "Cold-blooded",
+      "Anura"
+    ],
+    "primary_concept": "Frog as amphibian",
+    "search_metadata": {
+      "keywords": [
+        "Amphibian",
+        "Tadpole",
+        "Metamorphosis",
+        "Ectothermic",
+        "Cutaneous respiration",
+        "True frog",
+        "Rana",
+        "Rana temporaria (common frog)",
+        "Hyla arborea (tree frog)",
+        "Dendrobates tinctorius (poison dart frog)",
+        "Frog as amphibian"
+      ],
+      "semantic_text": "Frog as amphibian | A frog is a cold-blooded vertebrate belonging to the class Amphibia, characterized by a dual life cycle that begins in water (as tadpoles) and continues on land (as adults), with moist, permeable skin and undergoing metamorphosis. | ectothermic | cutaneous respiration | biphasic life cycle | external fertilization | cold-blooded | moist skin | webbed feet | long hind legs | metamorphosis | Rana temporaria (common frog) | Hyla arborea (tree frog) | Dendrobates tinctorius (poison dart frog)"
+    },
+    "tutor_grounding": {
+      "summary": "A frog is a cold-blooded vertebrate belonging to the class Amphibia, characterized by a dual life cycle that begins in water (as tadpoles) and continues on land (as adults), with moist, permeable skin and undergoing metamorphosis.",
+      "prerequisites": [
+        "Vertebrate classification",
+        "Cold-blooded vs. warm-blooded",
+        "Aquatic and terrestrial habitats"
+      ],
+      "misconceptions": [
+        "Common misconception: Frogs are reptiles. Actually, they are amphibians, with moist skin and no scales, and they undergo metamorphosis."
+      ],
+      "retrieval_cues": [
+        "Tadpole",
+        "Metamorphosis",
+        "Moist skin",
+        "Cold-blooded",
+        "Anura"
+      ]
+    },
+    "concept_map_edges": [
+      {
+        "source": "frog",
+        "target": "amphibian",
+        "relation": "related_to"
+      },
+      {
+        "source": "frog",
+        "target": "metamorphosis",
+        "relation": "related_to"
+      },
+      {
+        "source": "frog",
+        "target": "aquatic_and_terrestrial_life",
+        "relation": "related_to"
+      },
+      {
+        "source": "frog",
+        "target": "cold_blooded_vertebrate",
+        "relation": "related_to"
+      }
+    ],
+    "memory_difficulty": "low",
+    "mind_map_branches": [
+      {
+        "label": "Frog"
+      },
+      {
+        "label": "Characteristics"
+      },
+      {
+        "label": "Cold-blooded"
+      },
+      {
+        "label": "Moist skin"
+      },
+      {
+        "label": "Webbed feet"
+      },
+      {
+        "label": "Life cycle"
+      },
+      {
+        "label": "Egg"
+      },
+      {
+        "label": "Tadpole"
+      },
+      {
+        "label": "Adult frog"
+      },
+      {
+        "label": "Habitat"
+      },
+      {
+        "label": "Water (larval)"
+      },
+      {
+        "label": "Land (adult)"
+      }
+    ],
+    "assessment_unit_id": "BIO-AU-001",
+    "associated_concepts": [
+      "Salamander",
+      "Toad",
+      "Reptile",
+      "Metamorphosis",
+      "Ectotherm"
+    ],
+    "misconception_alert": "Common misconception: Frogs are reptiles. Actually, they are amphibians, with moist skin and no scales, and they undergo metamorphosis.",
+    "supporting_concepts": [
+      "Frog",
+      "Amphibian",
+      "Aquatic and terrestrial life",
+      "Cold-blooded vertebrate"
+    ],
+    "real_world_connection": "Frogs are often found near ponds and are indicators of ecosystem health; their permeable skin makes them sensitive to pollution.",
+    "estimatedMemoryStrength": 0.76,
+    "estimated_memory_strength": "0.760"
+  },
+  "assessment_unit": {
+    "dependencies": [],
+    "primary_concept": "Frog as amphibian",
+    "concept_category": "Classification",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "12",
+    "assessment_unit_id": "BIO-AU-001",
+    "learning_objective": "Classify frogs as amphibians using their ability to live in water and on land.",
+    "supporting_concepts": [
+      "Frog",
+      "Amphibian",
+      "Aquatic and terrestrial life",
+      "Cold-blooded vertebrate"
+    ],
+    "curriculum_importance": "high"
+  },
+  "prerequisite_list": [],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "Structural Organisation in Animals",
+    "subject": "Biology",
+    "duration": "20",
+    "blueprint": "Understand -> recall -> apply",
+    "className": "11",
+    "practiceType": "Concept Builder",
+    "output_language": "en",
+    "source_language": "en",
+    "practice_profile": {
+      "constraints": [
+        "Do not over-specialize unless the selected practice type requires it."
+      ],
+      "practice_type": "Concept Builder",
+      "layer_emphasis": {
+        "layer1": "Extract all examinable concepts without bias.",
+        "layer2": "Build memory support that is useful across question styles.",
+        "layer3": "Balance recall and reasoning capabilities.",
+        "layer4": "Mix direct, conceptual, and applied strategies.",
+        "layer5": "Create balanced blueprints.",
+        "layer6": "Generate a mixed assessment set.",
+        "layer7": "Provide general remediation and learning support."
+      },
+      "generation_mode": "balanced_mixed",
+      "target_outcomes": [
+        "Blend recall, understanding, and application.",
+        "Keep question forms varied and curriculum-aligned."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Concept Builder\nGeneration Mode: balanced_mixed\nTarget Outcomes:\n- Blend recall, understanding, and application.\n- Keep question forms varied and curriculum-aligned.\nLayer Emphasis:\n- layer1: Extract all examinable concepts without bias.\n- layer2: Build memory support that is useful across question styles.\n- layer3: Balance recall and reasoning capabilities.\n- layer4: Mix direct, conceptual, and applied strategies.\n- layer5: Create balanced blueprints.\n- layer6: Generate a mixed assessment set.\n- layer7: Provide general remediation and learning support.\nConstraints:\n- Do not over-specialize unless the selected practice type requires it.\nApply these directives explicitly while producing the JSON."
+  }
+}
+
+OUTPUT JSON
+{
+  "capability": {
+    "bloom": [
+      "Remember",
+      "Understand",
+      "Apply"
+    ],
+    "skills": [
+      "frog_amphibian_classification",
+      "habitat_comparison",
+      "trait_matching"
+    ],
+    "concept": "frog_as_amphibian",
+    "mastery": [
+      "amphibian_definition",
+      "aquatic_terrestrial_lifecycle",
+      "metamorphosis_link"
+    ],
+    "objectives": [
+      "OBJ_CLASSIFY_AS_AMPHIBIAN",
+      "OBJ_RECOGNIZE_DUAL_LIFE",
+      "OBJ_IDENTIFY_KEY_TRAITS"
+    ],
+    "competencies": [
+      "classify_living_things",
+      "attribute_reasoning",
+      "life_cycle_understanding"
+    ],
+    "dependencies": [
+      "vertebrate-classification",
+      "cold-blooded-vs-warm-blooded",
+      "aquatic-and-terrestrial-habitats"
+    ],
+    "misconceptions": [
+      "M01"
+    ],
+    "assessment_unit_id": "BIO-AU-001"
+  }
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 7
+Layer Number: 3
+Layer Name: Assessment Capability
+Assessment Unit ID: BIO-AU-002
+Status: completed
+Is Cached: false
+Generation ID: d5cf525b-a27b-4ce8-86ea-cd9e01daaf8a
+Generation Source Job ID: eb0fb4e4-257c-4932-81f4-070495e8069a
+Prompt Version: 1.0.1
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DxjUC9CFFwEMOrWdC1WXtKQSHP4WQ
+Token Input: 2380
+Token Output: 132
+Created At: Sat Jul 04 2026 06:59:33 GMT+0530 (India Standard Time)
+Updated At: Sat Jul 04 2026 06:59:33 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "concept_memory": {
+    "story": "Imagine a frog sitting on a lily pad on a sunny day. It feels warm and active. But if a cloud covers the sun, the frog quickly becomes cooler and less active. Unlike you, it can't shiver to warm up—it must rely on the sun's rays or a warm rock to raise its body temperature.",
+    "terms": [
+      "ectotherm",
+      "poikilotherm",
+      "amphibian",
+      "reptile"
+    ],
+    "aliases": [
+      "ectothermic vertebrate",
+      "poikilothermic vertebrate"
+    ],
+    "analogy": "A cold-blooded vertebrate is like a solar-powered car. It needs the sun (external heat) to run; when the sun goes down, it stops. A warm-blooded animal is like a gasoline-powered car; it carries its own fuel and can run regardless of the weather.",
+    "formula": "",
+    "examples": [
+      "frog",
+      "lizard",
+      "snake",
+      "turtle",
+      "fish"
+    ],
+    "attributes": [
+      "ectothermic",
+      "poikilothermic",
+      "vertebrate"
+    ],
+    "concept_id": "cold-blooded_vertebrate",
+    "definition": "A cold-blooded vertebrate is an animal with a backbone that cannot internally regulate its body temperature; its body temperature varies with the environment. Common examples include frogs, lizards, snakes, turtles, and fish.",
+    "exceptions": [
+      "some_large_fish_e_g_tuna_can_retain_some_heat_but_they_are_still_considered_cold_blooded"
+    ],
+    "flashcards": [
+      {
+        "back": "A vertebrate that cannot regulate its body temperature internally; its body temperature matches the environment. Example: frog.",
+        "front": "What is a cold-blooded vertebrate?"
+      },
+      {
+        "back": "Body temperature is regulated by external sources, not internally.",
+        "front": "What does 'ectothermic' mean?"
+      },
+      {
+        "back": "Frog, lizard, snake (or turtle, fish).",
+        "front": "Give three examples of cold-blooded vertebrates."
+      }
+    ],
+    "properties": [
+      "body_temperature_varies_with_environment",
+      "relies_on_external_heat_sources",
+      "sluggish_in_cold_temperatures"
+    ],
+    "visual_hook": "Picture a frog changing color like a mood ring as it moves from a warm rock into a cool pond—its body temperature visibly affects its behavior and color.",
+    "memory_trick": "Cold-blooded = 'cold when cold out, warm when warm out.' Remember the rhyme: 'Frog on a log, warm as a dog; frog in a pond, cold as a bond.' Or simply: 'Frogs are solar-powered.'",
+    "concept_label": "Cold-blooded Vertebrate",
+    "generation_id": "7bda1adb-aa01-4747-8fc2-f7f1bc47f669",
+    "prerequisites": [
+      "vertebrate"
+    ],
+    "relationships": [
+      {
+        "target": "vertebrate",
+        "relation": "is_a"
+      },
+      {
+        "target": "frog",
+        "relation": "has_example"
+      },
+      {
+        "target": "ectothermic",
+        "relation": "has_characteristic"
+      }
+    ],
+    "classification": [
+      "vertebrata",
+      "ectotherms"
+    ],
+    "curiosity_hook": "Did you know that some cold-blooded animals, like wood frogs, can survive being frozen solid during winter? Their bodies produce a natural antifreeze!",
+    "micro_activity": "List three cold-blooded vertebrates you might see near a pond or lake. Explain how each one uses its environment to control its body temperature.",
+    "retrieval_cues": [
+      "What determines a frog's body temperature?",
+      "Name a vertebrate that is ectothermic.",
+      "How does a cold-blooded animal respond when the environment gets cold?",
+      "Why do lizards bask on rocks in the sun?"
+    ],
+    "primary_concept": "Cold-blooded Vertebrate",
+    "search_metadata": {
+      "keywords": [
+        "ectotherm",
+        "poikilotherm",
+        "amphibian",
+        "reptile",
+        "ectothermic vertebrate",
+        "poikilothermic vertebrate",
+        "frog",
+        "lizard",
+        "snake",
+        "turtle",
+        "fish",
+        "Cold-blooded Vertebrate"
+      ],
+      "semantic_text": "Cold-blooded Vertebrate | A cold-blooded vertebrate is an animal with a backbone that cannot internally regulate its body temperature; its body temperature varies with the environment. Common examples include frogs, lizards, snakes, turtles, and fish. | body temperature varies with environment | relies on external heat sources | sluggish in cold temperatures | ectothermic | poikilothermic | vertebrate | frog | lizard | snake | turtle | fish"
+    },
+    "tutor_grounding": {
+      "summary": "A cold-blooded vertebrate is an animal with a backbone that cannot internally regulate its body temperature; its body temperature varies with the environment. Common examples include frogs, lizards, snakes, turtles, and fish.",
+      "prerequisites": [
+        "vertebrate"
+      ],
+      "misconceptions": [
+        "Being cold-blooded does NOT mean the blood is always cold. In a warm environment, a cold-blooded animal's blood can be just as warm as a warm-blooded animal's. The difference is that cold-blooded animals cannot generate their own heat internally."
+      ],
+      "retrieval_cues": [
+        "What determines a frog's body temperature?",
+        "Name a vertebrate that is ectothermic.",
+        "How does a cold-blooded animal respond when the environment gets cold?",
+        "Why do lizards bask on rocks in the sun?"
+      ]
+    },
+    "concept_map_edges": [
+      {
+        "source": "cold_blooded_vertebrate",
+        "target": "vertebrate",
+        "relation": "related_to"
+      },
+      {
+        "source": "cold_blooded_vertebrate",
+        "target": "ectothermic",
+        "relation": "related_to"
+      },
+      {
+        "source": "frog",
+        "target": "cold_blooded_vertebrate",
+        "relation": "related_to"
+      }
+    ],
+    "memory_difficulty": "medium",
+    "mind_map_branches": [],
+    "assessment_unit_id": "BIO-AU-002",
+    "associated_concepts": [
+      "ectotherm",
+      "poikilotherm",
+      "endotherm",
+      "amphibian",
+      "reptile"
+    ],
+    "misconception_alert": "Being cold-blooded does NOT mean the blood is always cold. In a warm environment, a cold-blooded animal's blood can be just as warm as a warm-blooded animal's. The difference is that cold-blooded animals cannot generate their own heat internally.",
+    "supporting_concepts": [
+      "Cold-blooded",
+      "Vertebrate",
+      "Frog"
+    ],
+    "real_world_connection": "Turtles basking on logs in the sun are warming up their bodies to become active. Frogs often hide under rocks or in mud during cold weather to keep from freezing.",
+    "estimatedMemoryStrength": 0.57,
+    "estimated_memory_strength": "0.570"
+  },
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-001"
+      }
+    ],
+    "primary_concept": "Cold-blooded vertebrate",
+    "concept_category": "Terminology",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "12",
+    "assessment_unit_id": "BIO-AU-002",
+    "learning_objective": "Interpret the source-based traits that describe frogs as cold-blooded vertebrates.",
+    "supporting_concepts": [
+      "Cold-blooded",
+      "Vertebrate",
+      "Frog"
+    ],
+    "curriculum_importance": "medium"
+  },
+  "prerequisite_list": [
+    {
+      "dependency_type": "prerequisite",
+      "depends_on_assessment_unit_id": "BIO-AU-001"
+    }
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "Structural Organisation in Animals",
+    "subject": "Biology",
+    "duration": "20",
+    "blueprint": "Understand -> recall -> apply",
+    "className": "11",
+    "practiceType": "Concept Builder",
+    "output_language": "en",
+    "source_language": "en",
+    "practice_profile": {
+      "constraints": [
+        "Do not over-specialize unless the selected practice type requires it."
+      ],
+      "practice_type": "Concept Builder",
+      "layer_emphasis": {
+        "layer1": "Extract all examinable concepts without bias.",
+        "layer2": "Build memory support that is useful across question styles.",
+        "layer3": "Balance recall and reasoning capabilities.",
+        "layer4": "Mix direct, conceptual, and applied strategies.",
+        "layer5": "Create balanced blueprints.",
+        "layer6": "Generate a mixed assessment set.",
+        "layer7": "Provide general remediation and learning support."
+      },
+      "generation_mode": "balanced_mixed",
+      "target_outcomes": [
+        "Blend recall, understanding, and application.",
+        "Keep question forms varied and curriculum-aligned."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Concept Builder\nGeneration Mode: balanced_mixed\nTarget Outcomes:\n- Blend recall, understanding, and application.\n- Keep question forms varied and curriculum-aligned.\nLayer Emphasis:\n- layer1: Extract all examinable concepts without bias.\n- layer2: Build memory support that is useful across question styles.\n- layer3: Balance recall and reasoning capabilities.\n- layer4: Mix direct, conceptual, and applied strategies.\n- layer5: Create balanced blueprints.\n- layer6: Generate a mixed assessment set.\n- layer7: Provide general remediation and learning support.\nConstraints:\n- Do not over-specialize unless the selected practice type requires it.\nApply these directives explicitly while producing the JSON."
+  }
+}
+
+OUTPUT JSON
+{
+  "capability": {
+    "bloom": [
+      "Remember",
+      "Understand",
+      "Apply"
+    ],
+    "skills": [
+      "term_recognition",
+      "trait_matching",
+      "example_selection",
+      "context_inference"
+    ],
+    "concept": "cold_blooded_vertebrate",
+    "mastery": [
+      "cold_blooded",
+      "vertebrate",
+      "frog",
+      "ectothermic"
+    ],
+    "objectives": [
+      "interpret_source_traits",
+      "identify_ectothermic_vertebrate",
+      "apply_environment_body_temperature_relation"
+    ],
+    "competencies": [
+      "recall",
+      "understanding",
+      "application"
+    ],
+    "dependencies": [
+      "BIO-AU-001"
+    ],
+    "misconceptions": [
+      "M01",
+      "M02"
+    ],
+    "assessment_unit_id": "BIO-AU-002"
+  }
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 8
+Layer Number: 3
+Layer Name: Assessment Capability
+Assessment Unit ID: BIO-AU-003
+Status: completed
+Is Cached: false
+Generation ID: ab27c59f-83e6-4dc2-9244-bc5b11eaab24
+Generation Source Job ID: eb0fb4e4-257c-4932-81f4-070495e8069a
+Prompt Version: 1.0.1
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DxjUDQNasGKitGgPpsokNoohdgHcg
+Token Input: 2053
+Token Output: 162
+Created At: Sat Jul 04 2026 06:59:34 GMT+0530 (India Standard Time)
+Updated At: Sat Jul 04 2026 06:59:34 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "concept_memory": {
+    "story": "In a lush green forest, a spotted frog named Freddie lived by a peaceful pond. Every spring, Freddie returned to the same pond to lay his eggs among the lily pads. The pond was his nursery, and the surrounding woods were his hunting ground for insects.",
+    "terms": [
+      "amphibian",
+      "metamorphosis",
+      "tadpole",
+      "pond",
+      "river"
+    ],
+    "aliases": [
+      "Frog environments",
+      "Amphibian habitats"
+    ],
+    "analogy": "A frog's habitat is like a two-room house: the water room for raising young and the land room for adult living.",
+    "formula": "",
+    "examples": [
+      "ponds",
+      "lakes",
+      "rivers",
+      "marshes",
+      "swamps",
+      "streams",
+      "wetlands"
+    ],
+    "attributes": [
+      "water_dependent",
+      "moist",
+      "freshwater"
+    ],
+    "concept_id": "frog-habitat",
+    "definition": "Frog habitat refers to the specific environments where frogs are commonly found, typically characterized by proximity to water sources such as ponds, lakes, rivers, and marshes, which support both their aquatic and terrestrial life stages.",
+    "exceptions": [
+      "deserts_some_frogs_adapt_but_not_common",
+      "highly_saline_waters"
+    ],
+    "flashcards": [
+      {
+        "back": "Ponds, lakes, rivers, marshes, and other freshwater bodies.",
+        "front": "What are common habitats for frogs?"
+      },
+      {
+        "back": "Because they lay eggs in water and live on land as adults.",
+        "front": "Why do frogs need both aquatic and terrestrial habitats?"
+      }
+    ],
+    "properties": [],
+    "visual_hook": "Imagine a split view: top half showing a frog on a lily pad, bottom half showing tadpoles swimming underwater.",
+    "memory_trick": "Remember 'Pond and Land' - frogs need both to complete their life cycle.",
+    "concept_label": "Frog habitat",
+    "generation_id": "4cc8d802-c730-4068-b60c-71235cf3348d",
+    "prerequisites": [
+      "BIO-AU-001"
+    ],
+    "relationships": [
+      {
+        "target": "amphibian_habitat",
+        "relation": "is_a"
+      },
+      {
+        "target": "ponds_and_rivers_habitat",
+        "relation": "related_to"
+      },
+      {
+        "target": "ecosystem",
+        "relation": "part_of"
+      }
+    ],
+    "classification": [
+      "habitat_type",
+      "amphibian_habitat"
+    ],
+    "curiosity_hook": "Did you know some frogs live in trees? They need water bodies nearby to breed.",
+    "micro_activity": "Draw a diagram of a frog habitat showing water and land areas.",
+    "retrieval_cues": [
+      "What bodies of water are frog habitats?",
+      "What do tadpoles need?",
+      "Where do adult frogs feed?"
+    ],
+    "primary_concept": "Frog habitat",
+    "search_metadata": {
+      "keywords": [
+        "Amphibian",
+        "Metamorphosis",
+        "Tadpole",
+        "Pond",
+        "River",
+        "Frog environments",
+        "Amphibian habitats",
+        "Ponds",
+        "Lakes",
+        "Rivers",
+        "Marshes",
+        "Swamps",
+        "Streams",
+        "Wetlands",
+        "Frog habitat"
+      ],
+      "semantic_text": "Frog habitat | Frog habitat refers to the specific environments where frogs are commonly found, typically characterized by proximity to water sources such as ponds, lakes, rivers, and marshes, which support both their aquatic and terrestrial life stages. | water-dependent | moist | freshwater | Ponds | Lakes | Rivers | Marshes | Swamps | Streams | Wetlands"
+    },
+    "tutor_grounding": {
+      "summary": "Frog habitat refers to the specific environments where frogs are commonly found, typically characterized by proximity to water sources such as ponds, lakes, rivers, and marshes, which support both their aquatic and terrestrial life stages.",
+      "prerequisites": [
+        "BIO-AU-001"
+      ],
+      "misconceptions": [
+        "Not all frogs live in water; some live in forests or deserts, but most require a nearby water source for breeding."
+      ],
+      "retrieval_cues": [
+        "What bodies of water are frog habitats?",
+        "What do tadpoles need?",
+        "Where do adult frogs feed?"
+      ]
+    },
+    "concept_map_edges": [
+      {
+        "source": "frog",
+        "target": "ponds_and_rivers_habitat",
+        "relation": "lives_in"
+      },
+      {
+        "source": "frog",
+        "target": "aquatic_and_terrestrial_life",
+        "relation": "requires"
+      },
+      {
+        "source": "ponds_and_rivers_habitat",
+        "target": "freshwater_ecosystems",
+        "relation": "part_of"
+      }
+    ],
+    "memory_difficulty": "low",
+    "mind_map_branches": [],
+    "assessment_unit_id": "BIO-AU-003",
+    "associated_concepts": [
+      "Amphibians",
+      "Metamorphosis",
+      "Ecosystems",
+      "Ponds",
+      "Rivers"
+    ],
+    "misconception_alert": "Not all frogs live in water; some live in forests or deserts, but most require a nearby water source for breeding.",
+    "supporting_concepts": [
+      "Ponds and rivers habitat",
+      "Aquatic and terrestrial life",
+      "Frog"
+    ],
+    "real_world_connection": "Many frogs are found in local parks with ponds or streams; you can often hear them calling after rain.",
+    "estimatedMemoryStrength": 0.675,
+    "estimated_memory_strength": "0.675"
+  },
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-001"
+      }
+    ],
+    "primary_concept": "Frog habitat",
+    "concept_category": "Relationship",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "12",
+    "assessment_unit_id": "BIO-AU-003",
+    "learning_objective": "Identify the habitats in which frogs are commonly found from the source.",
+    "supporting_concepts": [
+      "Ponds and rivers habitat",
+      "Aquatic and terrestrial life",
+      "Frog"
+    ],
+    "curriculum_importance": "medium"
+  },
+  "prerequisite_list": [
+    {
+      "dependency_type": "prerequisite",
+      "depends_on_assessment_unit_id": "BIO-AU-001"
+    }
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "Structural Organisation in Animals",
+    "subject": "Biology",
+    "duration": "20",
+    "blueprint": "Understand -> recall -> apply",
+    "className": "11",
+    "practiceType": "Concept Builder",
+    "output_language": "en",
+    "source_language": "en",
+    "practice_profile": {
+      "constraints": [
+        "Do not over-specialize unless the selected practice type requires it."
+      ],
+      "practice_type": "Concept Builder",
+      "layer_emphasis": {
+        "layer1": "Extract all examinable concepts without bias.",
+        "layer2": "Build memory support that is useful across question styles.",
+        "layer3": "Balance recall and reasoning capabilities.",
+        "layer4": "Mix direct, conceptual, and applied strategies.",
+        "layer5": "Create balanced blueprints.",
+        "layer6": "Generate a mixed assessment set.",
+        "layer7": "Provide general remediation and learning support."
+      },
+      "generation_mode": "balanced_mixed",
+      "target_outcomes": [
+        "Blend recall, understanding, and application.",
+        "Keep question forms varied and curriculum-aligned."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Concept Builder\nGeneration Mode: balanced_mixed\nTarget Outcomes:\n- Blend recall, understanding, and application.\n- Keep question forms varied and curriculum-aligned.\nLayer Emphasis:\n- layer1: Extract all examinable concepts without bias.\n- layer2: Build memory support that is useful across question styles.\n- layer3: Balance recall and reasoning capabilities.\n- layer4: Mix direct, conceptual, and applied strategies.\n- layer5: Create balanced blueprints.\n- layer6: Generate a mixed assessment set.\n- layer7: Provide general remediation and learning support.\nConstraints:\n- Do not over-specialize unless the selected practice type requires it.\nApply these directives explicitly while producing the JSON."
+  }
+}
+
+OUTPUT JSON
+{
+  "capability": {
+    "bloom": [
+      "Remember",
+      "Understand",
+      "Apply"
+    ],
+    "skills": [
+      "recall_habitat_examples",
+      "understand_water_dependence",
+      "apply_to_scenarios"
+    ],
+    "concept": "frog_habitat",
+    "mastery": [
+      "frog_habitat_common_environments",
+      "frog_aquatic_terrestrial_requirement",
+      "freshwater_habitat_selection"
+    ],
+    "objectives": [
+      "identify-common-frog-habitats",
+      "distinguish-aquatic-and-terrestrial-needs",
+      "apply-habitat-knowledge-to-examples"
+    ],
+    "competencies": [
+      "habitat_recognition",
+      "life_cycle_relation",
+      "example_classification"
+    ],
+    "dependencies": [
+      "BIO-AU-001"
+    ],
+    "misconceptions": [
+      "M01",
+      "M02"
+    ],
+    "assessment_unit_id": "BIO-AU-003"
+  }
+}
+
+--------------------------------------------------------------------------------
+
+Layer Entry 9
+Layer Number: 3
+Layer Name: Assessment Capability
+Assessment Unit ID: BIO-AU-004
+Status: completed
+Is Cached: false
+Generation ID: 4d0815db-caf8-4496-b321-6a6ad05ca6c5
+Generation Source Job ID: eb0fb4e4-257c-4932-81f4-070495e8069a
+Prompt Version: 1.0.1
+Model: gpt-5.4-mini-2026-03-17
+OpenAI Response ID: chatcmpl-DxjUFQfMKX52ou5l5qJYnuhz7PBc4
+Token Input: 2083
+Token Output: 147
+Created At: Sat Jul 04 2026 06:59:36 GMT+0530 (India Standard Time)
+Updated At: Sat Jul 04 2026 06:59:36 GMT+0530 (India Standard Time)
+
+INPUT JSON
+{
+  "concept_memory": {
+    "story": "In a forest, after the first heavy rain, frogs emerge from their hidden burrows to mate and feed. As the dry season approaches, they dig back into the mud and wait for the next monsoon.",
+    "terms": [
+      "hibernation",
+      "burrow_dwelling",
+      "rainy_season_activity",
+      "estivation"
+    ],
+    "aliases": [],
+    "analogy": "Frogs are like seasonal workers: they are busy during the rainy 'tourist season' and rest during the off-season.",
+    "formula": "",
+    "examples": [
+      "tree_frogs_are_active_after_monsoon_rains",
+      "bullfrogs_burrow_into_mud_during_drought"
+    ],
+    "attributes": [
+      "ectothermic",
+      "moist_skin",
+      "vertebrate"
+    ],
+    "concept_id": "BIO-C-004",
+    "definition": "Frogs exhibit a seasonal pattern of activity: they are active during the rainy season and become inactive during other seasons, often by burrowing or hibernating.",
+    "exceptions": [
+      "some_tropical_frogs_may_breed_year_round_if_moisture_is_constant"
+    ],
+    "flashcards": [
+      {
+        "back": "During the rainy season.",
+        "front": "When are frogs typically active?"
+      },
+      {
+        "back": "They become inactive, often by burrowing or hibernating.",
+        "front": "What do frogs do during dry or cold seasons?"
+      },
+      {
+        "back": "Estivation or hibernation depending on season.",
+        "front": "What is the term for frogs spending dry seasons in a dormant state?"
+      }
+    ],
+    "properties": [
+      "active_in_rainy_season",
+      "inactive_in_dry_cold_seasons",
+      "uses_burrows_for_shelter",
+      "hibernates_in_winter"
+    ],
+    "visual_hook": "Imagine a frog peeking out of a muddy burrow with raindrops falling around it.",
+    "memory_trick": "Remember: 'Rain brings frogs out, dry sends them deep.'",
+    "concept_label": "Seasonal activity of frogs",
+    "generation_id": "8587d114-02b7-44c8-815a-392c3bb5a598",
+    "prerequisites": [],
+    "relationships": [
+      {
+        "target": "amphibian_behavior",
+        "relation": "is_a"
+      },
+      {
+        "target": "rainy_season_activity",
+        "relation": "has_part"
+      },
+      {
+        "target": "burrow_dwelling",
+        "relation": "has_part"
+      },
+      {
+        "target": "hibernation",
+        "relation": "has_part"
+      }
+    ],
+    "classification": [
+      "amphibian",
+      "anura"
+    ],
+    "curiosity_hook": "Some frogs can stay underground for months without food or water!",
+    "micro_activity": "List two ways frogs survive the dry season.",
+    "retrieval_cues": [
+      "Rainy season",
+      "Burrow",
+      "Hibernation",
+      "Inactivity"
+    ],
+    "primary_concept": "Seasonal activity of frogs",
+    "search_metadata": {
+      "keywords": [
+        "Hibernation",
+        "Burrow dwelling",
+        "Rainy-season activity",
+        "Estivation",
+        "Tree frogs are active after monsoon rains",
+        "Bullfrogs burrow into mud during drought",
+        "Seasonal activity of frogs"
+      ],
+      "semantic_text": "Seasonal activity of frogs | Frogs exhibit a seasonal pattern of activity: they are active during the rainy season and become inactive during other seasons, often by burrowing or hibernating. | active in rainy season | inactive in dry/cold seasons | uses burrows for shelter | hibernates in winter | ectothermic | moist skin | vertebrate | Tree frogs are active after monsoon rains | Bullfrogs burrow into mud during drought"
+    },
+    "tutor_grounding": {
+      "summary": "Frogs exhibit a seasonal pattern of activity: they are active during the rainy season and become inactive during other seasons, often by burrowing or hibernating.",
+      "prerequisites": [],
+      "misconceptions": [
+        "Not all frogs hibernate in winter; some estivate during summer droughts. The key is that they become inactive when conditions are unfavorable."
+      ],
+      "retrieval_cues": [
+        "Rainy season",
+        "Burrow",
+        "Hibernation",
+        "Inactivity"
+      ]
+    },
+    "concept_map_edges": [
+      {
+        "source": "seasonal_activity_of_frogs",
+        "target": "rainy_season_activity",
+        "relation": "includes"
+      },
+      {
+        "source": "seasonal_activity_of_frogs",
+        "target": "burrow_dwelling",
+        "relation": "includes"
+      },
+      {
+        "source": "seasonal_activity_of_frogs",
+        "target": "hibernation",
+        "relation": "includes"
+      },
+      {
+        "source": "frog_anatomy_and_life_cycle",
+        "target": "seasonal_activity_of_frogs",
+        "relation": "prerequisite"
+      }
+    ],
+    "memory_difficulty": "medium",
+    "mind_map_branches": [],
+    "assessment_unit_id": "BIO-AU-004",
+    "associated_concepts": [
+      "Amphibian life cycle",
+      "Ectothermy",
+      "Seasonal behavior"
+    ],
+    "misconception_alert": "Not all frogs hibernate in winter; some estivate during summer droughts. The key is that they become inactive when conditions are unfavorable.",
+    "supporting_concepts": [
+      "Rainy-season activity",
+      "Burrow dwelling",
+      "Hibernation",
+      "Other seasons"
+    ],
+    "real_world_connection": "In many tropical regions, frog choruses are a sign that the rainy season has started.",
+    "estimatedMemoryStrength": 0.595,
+    "estimated_memory_strength": "0.595"
+  },
+  "assessment_unit": {
+    "dependencies": [
+      {
+        "dependency_type": "prerequisite",
+        "depends_on_assessment_unit_id": "BIO-AU-003"
+      }
+    ],
+    "primary_concept": "Seasonal activity of frogs",
+    "concept_category": "Process",
+    "fk_mst_chapter_id": "894",
+    "source_section_id": "12",
+    "assessment_unit_id": "BIO-AU-004",
+    "learning_objective": "Apply the source information to distinguish when frogs are active and when they become inactive.",
+    "supporting_concepts": [
+      "Rainy-season activity",
+      "Burrow dwelling",
+      "Hibernation",
+      "Other seasons"
+    ],
+    "curriculum_importance": "high"
+  },
+  "prerequisite_list": [
+    {
+      "dependency_type": "prerequisite",
+      "depends_on_assessment_unit_id": "BIO-AU-003"
+    }
+  ],
+  "generation_directives": {
+    "board": "CBSE",
+    "chapter": "Structural Organisation in Animals",
+    "subject": "Biology",
+    "duration": "20",
+    "blueprint": "Understand -> recall -> apply",
+    "className": "11",
+    "practiceType": "Concept Builder",
+    "output_language": "en",
+    "source_language": "en",
+    "practice_profile": {
+      "constraints": [
+        "Do not over-specialize unless the selected practice type requires it."
+      ],
+      "practice_type": "Concept Builder",
+      "layer_emphasis": {
+        "layer1": "Extract all examinable concepts without bias.",
+        "layer2": "Build memory support that is useful across question styles.",
+        "layer3": "Balance recall and reasoning capabilities.",
+        "layer4": "Mix direct, conceptual, and applied strategies.",
+        "layer5": "Create balanced blueprints.",
+        "layer6": "Generate a mixed assessment set.",
+        "layer7": "Provide general remediation and learning support."
+      },
+      "generation_mode": "balanced_mixed",
+      "target_outcomes": [
+        "Blend recall, understanding, and application.",
+        "Keep question forms varied and curriculum-aligned."
+      ]
+    },
+    "targetDifficulty": "Balanced",
+    "practice_type_directives": "Practice Type: Concept Builder\nGeneration Mode: balanced_mixed\nTarget Outcomes:\n- Blend recall, understanding, and application.\n- Keep question forms varied and curriculum-aligned.\nLayer Emphasis:\n- layer1: Extract all examinable concepts without bias.\n- layer2: Build memory support that is useful across question styles.\n- layer3: Balance recall and reasoning capabilities.\n- layer4: Mix direct, conceptual, and applied strategies.\n- layer5: Create balanced blueprints.\n- layer6: Generate a mixed assessment set.\n- layer7: Provide general remediation and learning support.\nConstraints:\n- Do not over-specialize unless the selected practice type requires it.\nApply these directives explicitly while producing the JSON."
+  }
+}
+
+OUTPUT JSON
+{
+  "capability": {
+    "bloom": [
+      "Remember",
+      "Understand",
+      "Apply"
+    ],
+    "skills": [
+      "recall_rainy_season_activity",
+      "identify_dormant_state",
+      "apply_conditions_to_frog_behavior"
+    ],
+    "concept": "seasonal_activity_of_frogs",
+    "mastery": [
+      "active_in_rainy_season",
+      "inactive_in_dry_cold_seasons",
+      "burrow_dwelling",
+      "hibernation_or_estivation"
+    ],
+    "objectives": [
+      "apply_source_info_distinguish_active_inactive_periods"
+    ],
+    "competencies": [
+      "seasonal_behavior",
+      "pattern_recognition",
+      "source_based_reasoning"
+    ],
+    "dependencies": [
+      "BIO-AU-003"
+    ],
+    "misconceptions": [
+      "M01"
+    ],
+    "assessment_unit_id": "BIO-AU-004"
+  }
+}
+
+--------------------------------------------------------------------------------
