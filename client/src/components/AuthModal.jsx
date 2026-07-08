@@ -134,10 +134,9 @@ export const AuthModal = ({ open, onClose, onLogin, onRegister }) => {
     }
   };
 
-  const openGoogle = () => {
-    window.location.href =
-      `${import.meta.env.VITE_API_URL || "http://localhost:5005/api"}/auth/google`;
-  };
+ const openGoogle = () => {
+  window.location.href = "/api/auth/google";
+};
 
   return (
     <AnimatePresence>

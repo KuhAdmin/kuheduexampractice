@@ -3,14 +3,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 const GOOGLE_AUTH_URL =
-  `${import.meta.env.VITE_API_URL || "http://localhost:5005/api"}/auth/google`;
+ "/api/auth/google";
 
 const homeScreens = [
   {
     id: "splash",
     kind: "splash",
     title: "BIOLOGY",
-    note: "(for CBSE class IX-XII)",
+    note: "(for CBSE class XI-XII)",
     subtitle: "Learn - Practice - Excel",
     artClass: "is-splash",
   },

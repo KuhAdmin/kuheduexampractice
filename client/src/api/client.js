@@ -1,4 +1,4 @@
-const API_ROOT = import.meta.env.VITE_API_URL || "http://localhost:5005/api";
+const API_ROOT = "/api";
 
 const readJson = async (response) => {
   if (response.status === 204) {
@@ -38,9 +38,11 @@ export const apiRequest = async (path, options = {}) => {
       credentials: "include",
     });
   } catch (error) {
-    throw new Error(
-      `Unable to reach KUHEDU API at ${API_ROOT}. Confirm the server is running on port 5005 and CLIENT_URL/CORS matches the browser origin. ${error.message || ""}`.trim()
-    );
+   throw new Error(
+  `Unable to connect to the KUHEDU server. Please check your internet connection and try again. ${
+    error.message || ""
+  }`.trim()
+);
   }
 
   return readJson(response);
