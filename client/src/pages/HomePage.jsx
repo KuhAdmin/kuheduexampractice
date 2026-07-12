@@ -582,21 +582,28 @@ const HomeScreen = ({
 
             {isWelcome ? (
               <div className="home-screen-actions">
-                <button
-                  type="button"
-                  className="home-secondary-cta"
-                  onClick={user ? onChooseLogout : onChooseSignIn}
-                >
-                  {user ? "Logout" : "Sign In"}
-                </button>
-                {!user ? (
-                  <p className="home-auth-divider" aria-hidden="true">
-                    OR
-                  </p>
-                ) : null}
-                <button type="button" className="home-primary-cta" onClick={onChooseGetStarted}>
-                  {user ? "Go to Dashboard" : "Sign Up"}
-                </button>
+                {user ? (
+                  <>
+                    <button type="button" className="home-primary-cta" onClick={onChooseGetStarted}>
+                      Go to Dashboard
+                    </button>
+                    <button type="button" className="home-secondary-cta" onClick={onChooseLogout}>
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" className="home-secondary-cta" onClick={onChooseSignIn}>
+                      Sign In
+                    </button>
+                    <p className="home-auth-divider" aria-hidden="true">
+                      OR
+                    </p>
+                    <button type="button" className="home-primary-cta" onClick={onChooseGetStarted}>
+                      Sign Up
+                    </button>
+                  </>
+                )}
               </div>
             ) : screen.kind === "register" ? (
               <RegisterForm
@@ -685,16 +692,25 @@ const DesktopHomeScreen = ({
 
         {isWelcome ? (
           <div className="home-desktop-actions">
-            <button
-              type="button"
-              className="home-secondary-cta"
-              onClick={user ? onChooseLogout : onChooseSignIn}
-            >
-              {user ? "Logout" : "Sign In"}
-            </button>
-            <button type="button" className="home-primary-cta" onClick={onChooseGetStarted}>
-              {user ? "Go to Dashboard" : "Sign Up"}
-            </button>
+            {user ? (
+              <>
+                <button type="button" className="home-primary-cta" onClick={onChooseGetStarted}>
+                  Go to Dashboard
+                </button>
+                <button type="button" className="home-secondary-cta" onClick={onChooseLogout}>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" className="home-secondary-cta" onClick={onChooseSignIn}>
+                  Sign In
+                </button>
+                <button type="button" className="home-primary-cta" onClick={onChooseGetStarted}>
+                  Sign Up
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="home-desktop-carousel-nav">

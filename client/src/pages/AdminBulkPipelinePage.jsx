@@ -39,6 +39,42 @@ const PIPELINE_LAYERS = [
   "Learning Support",
 ];
 
+// Table column headers only -- PIPELINE_LAYERS above stays the internal
+// identifier list (used for the "run through layer" dialog select and the
+// failure banner's "at Layer N" text), this is purely a display relabel so
+// the grid reads the same as the rest of the redesigned page.
+const LAYER_COLUMN_LABELS = [
+  "Development Framework",
+  "Concept Maturity",
+  "Assessment Capability",
+  "Assessment Stability",
+  "Blueprint Generation",
+  "Item Generation",
+  "Learning Support",
+];
+
+// layerStatuses uses "paused" for a layer not yet reached (see row creation
+// below) -- everything here is a real, already-tracked state, no invented
+// per-layer percentage.
+const LAYER_STATUS_META = {
+  completed: { label: "Completed", className: "is-completed" },
+  running: { label: "Running", className: "is-running" },
+  queued: { label: "Queued", className: "is-queued" },
+  failed: { label: "Failed", className: "is-failed" },
+  aborted: { label: "Aborted", className: "is-aborted" },
+  paused: { label: "Not Started", className: "is-not-started" },
+  idle: { label: "Not Started", className: "is-not-started" },
+};
+
+const ROW_STATUS_META = {
+  idle: { label: "Idle", className: "is-idle" },
+  queued: { label: "Queued", className: "is-queued" },
+  running: { label: "Running", className: "is-running" },
+  completed: { label: "Completed", className: "is-completed" },
+  failed: { label: "Failed", className: "is-failed" },
+  aborted: { label: "Aborted", className: "is-aborted" },
+};
+
 const PRACTICE_TYPES = [
   "Concept Builder",
   "Rapid Revision",
@@ -86,6 +122,9 @@ export const AdminBulkPipelinePage = () => {
   rowsRef.current = rows;
 
   const [concurrency, setConcurrency] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
     getAssessmentStudioBootstrap({}).then(setBootstrap).catch(() => {});
@@ -223,6 +262,9 @@ export const AdminBulkPipelinePage = () => {
         targetLayerNumber: dialog.targetLayerNumber,
       };
 
+      const levelName =
+        bootstrap.levels.find((level) => level.code === dialog.levelCode)?.name || dialog.levelCode;
+
       setRows((current) => {
         const existingIds = new Set(current.map((row) => row.id));
         const newRows = pendingSections
@@ -232,6 +274,8 @@ export const AdminBulkPipelinePage = () => {
             chapterName: dialog.chapterName,
             sectionNumber: section.sectionNumber,
             topicName: section.topicName || "",
+            levelName,
+            subjectName: dialog.subjectName,
             sharedParameters,
             sectionText: "",
             jobId: null,
@@ -363,24 +407,48 @@ export const AdminBulkPipelinePage = () => {
     const running = rows.filter((row) => row.status === "running").length;
     const queued = rows.filter((row) => row.status === "queued").length;
     const failed = rows.filter((row) => row.status === "failed").length;
+    const aborted = rows.filter((row) => row.status === "aborted").length;
     const totalTokens = rows.reduce(
       (sum, row) => sum + row.tokenRows.reduce((rowSum, value) => rowSum + value, 0),
       0
     );
-    return { total, completed, running, queued, failed, totalTokens };
+    const overallProgressPercent = total ? Math.round((completed / total) * 100) : 0;
+    return { total, completed, running, queued, failed, aborted, totalTokens, overallProgressPercent };
   }, [rows]);
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+  const clampedPage = Math.min(page, totalPages);
+  const pagedRows = rows.slice((clampedPage - 1) * rowsPerPage, clampedPage * rowsPerPage);
+  const pageStart = rows.length ? (clampedPage - 1) * rowsPerPage + 1 : 0;
+  const pageEnd = Math.min(clampedPage * rowsPerPage, rows.length);
+
+  const goToPage = (nextPage) => setPage(Math.max(1, Math.min(nextPage, totalPages)));
 
   return (
     <section className="admin-bulk-pipeline-page">
+      <nav className="admin-bulk-pipeline-breadcrumb" aria-label="Breadcrumb">
+        <span className="admin-bulk-pipeline-breadcrumb-icon" aria-hidden="true">
+          ◇
+        </span>
+        <span>AI Assessment Studio</span>
+      </nav>
+
       <div className="admin-bulk-pipeline-header">
         <div>
-          <span className="eyebrow">Admin module</span>
           <h1>Content Generation Inventory</h1>
           <p>Run the 7-layer pipeline across many sections in parallel and watch every layer live.</p>
         </div>
-        <button type="button" className="primary-button" onClick={openDialog}>
-          New Pipeline
-        </button>
+        <div className="admin-bulk-pipeline-header-actions">
+          <button type="button" className="primary-button" onClick={openDialog}>
+            + New Pipeline
+          </button>
+          <button type="button" className="ghost-button" disabled title="Coming soon">
+            Filter
+          </button>
+          <button type="button" className="ghost-button" disabled title="Coming soon">
+            Export
+          </button>
+        </div>
       </div>
 
       {concurrency && (
@@ -391,13 +459,40 @@ export const AdminBulkPipelinePage = () => {
       )}
 
       {rows.length > 0 && (
-        <div className="admin-bulk-pipeline-summary">
-          <span>{summary.total} sections</span>
-          <span>{summary.completed} completed</span>
-          <span>{summary.running} running</span>
-          <span>{summary.queued} queued</span>
-          <span>{summary.failed} failed</span>
-          <span>{summary.totalTokens.toLocaleString()} tokens</span>
+        <div className="admin-bulk-pipeline-stats">
+          <div className="admin-bulk-pipeline-stat-cards">
+            <div className="admin-bulk-pipeline-stat-card">
+              <span>Total sections</span>
+              <strong>{summary.total}</strong>
+            </div>
+            <div className="admin-bulk-pipeline-stat-card is-completed">
+              <span>Completed</span>
+              <strong>{summary.completed}</strong>
+            </div>
+            <div className="admin-bulk-pipeline-stat-card is-running">
+              <span>Running</span>
+              <strong>{summary.running}</strong>
+            </div>
+            <div className="admin-bulk-pipeline-stat-card is-queued">
+              <span>Queued</span>
+              <strong>{summary.queued}</strong>
+            </div>
+            <div className="admin-bulk-pipeline-stat-card is-failed">
+              <span>Failed</span>
+              <strong>{summary.failed}</strong>
+            </div>
+            <div className="admin-bulk-pipeline-stat-card is-aborted">
+              <span>Aborted</span>
+              <strong>{summary.aborted}</strong>
+            </div>
+          </div>
+          <div
+            className="admin-bulk-pipeline-progress-ring"
+            style={{ "--progress": `${summary.overallProgressPercent}%` }}
+          >
+            <strong>{summary.overallProgressPercent}%</strong>
+            <span>Overall progress</span>
+          </div>
         </div>
       )}
 
@@ -433,110 +528,166 @@ export const AdminBulkPipelinePage = () => {
             No pipelines yet. Click "New Pipeline" to select a chapter and start generating.
           </div>
         ) : (
-          <table className="admin-bulk-pipeline-grid">
-            <thead>
-              <tr>
-                <th>Section</th>
-                {PIPELINE_LAYERS.map((layer) => (
-                  <th key={layer}>{layer}</th>
-                ))}
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const needsSourceText =
-                  row.status === "idle" || row.status === "failed" || row.status === "aborted";
-                return (
-                  <Fragment key={row.id}>
-                    <tr>
-                      <td>
-                        <strong>{row.chapterName}</strong>
-                        <span className="admin-bulk-pipeline-section-label">
-                          {row.sectionNumber} {row.topicName ? `· ${row.topicName}` : ""}
-                        </span>
-                      </td>
-                      {PIPELINE_LAYERS.map((_, index) => {
-                        const layerStatus = row.layerStatuses[index];
-                        const tokens = row.tokenRows[index];
-                        return (
-                          <td key={index} className="admin-bulk-pipeline-layer-cell">
-                            {layerStatus === "completed" ? (
-                              <span className="admin-bulk-pipeline-token-count">
-                                {tokens.toLocaleString()}
-                              </span>
-                            ) : layerStatus === "running" || layerStatus === "queued" ? (
-                              <span
-                                className={`admin-bulk-pipeline-dot is-${layerStatus}`}
-                                title={layerStatus}
-                              />
-                            ) : layerStatus === "failed" ? (
-                              <span
-                                className="admin-bulk-pipeline-dot is-failed"
-                                title={`${FAILURE_CATEGORY_LABELS[row.errorCategory] || "Failed"}: ${row.error}`}
-                              />
-                            ) : layerStatus === "aborted" ? (
-                              <span className="admin-bulk-pipeline-dot is-aborted" title="Aborted" />
-                            ) : (
-                              <span className="admin-bulk-pipeline-dot is-idle" />
-                            )}
-                          </td>
-                        );
-                      })}
-                      <td className="admin-bulk-pipeline-actions">
-                        {row.status === "running" || row.status === "queued" ? (
-                          <button type="button" className="ghost-button" onClick={() => stopRow(row.id)}>
-                            Stop
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="ghost-button"
-                            disabled={!row.sectionText.trim()}
-                            onClick={() => startRow(row.id)}
-                          >
-                            {row.status === "failed" || row.status === "aborted" ? "Retry" : "Start"}
-                          </button>
-                        )}
-                        <a
-                          className={`ghost-button ${!row.jobId ? "is-disabled" : ""}`}
-                          href={row.jobId ? `/admin/ai-assessment-studio/workbench/${row.jobId}` : undefined}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          View
-                        </a>
-                      </td>
-                    </tr>
-                    {needsSourceText && (
-                      <tr className="admin-bulk-pipeline-source-row">
-                        <td colSpan={PIPELINE_LAYERS.length + 2}>
-                          {row.status === "failed" && (
-                            <div className="admin-bulk-pipeline-failure-banner">
-                              <strong>
-                                {FAILURE_CATEGORY_LABELS[row.errorCategory] || "Failed"}
-                                {row.failedLayerNumber
-                                  ? ` at Layer ${row.failedLayerNumber} (${PIPELINE_LAYERS[row.failedLayerNumber - 1]})`
-                                  : ""}
-                              </strong>
-                              <span>{row.error}</span>
-                            </div>
+          <>
+            <table className="admin-bulk-pipeline-grid">
+              <thead>
+                <tr>
+                  <th>Section</th>
+                  <th>Curriculum Level</th>
+                  {LAYER_COLUMN_LABELS.map((label) => (
+                    <th key={label}>{label}</th>
+                  ))}
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedRows.map((row) => {
+                  const needsSourceText =
+                    row.status === "idle" || row.status === "failed" || row.status === "aborted";
+                  const rowStatusMeta = ROW_STATUS_META[row.status] || ROW_STATUS_META.idle;
+                  return (
+                    <Fragment key={row.id}>
+                      <tr>
+                        <td>
+                          <strong>{row.chapterName}</strong>
+                          <span className="admin-bulk-pipeline-section-label">
+                            {row.sectionNumber} {row.topicName ? `· ${row.topicName}` : ""}
+                          </span>
+                          {row.subjectName && (
+                            <span className="admin-bulk-pipeline-subject-badge">{row.subjectName}</span>
                           )}
-                          <textarea
-                            className="admin-bulk-pipeline-source-text"
-                            rows={3}
-                            placeholder="Paste section OCR text to enable Start"
-                            value={row.sectionText}
-                            onChange={(event) => updateRowText(row.id, event.target.value)}
-                          />
+                        </td>
+                        <td>
+                          <strong>{row.levelName || "—"}</strong>
+                        </td>
+                        {PIPELINE_LAYERS.map((_, index) => {
+                          const layerStatus = row.layerStatuses[index];
+                          const tokens = row.tokenRows[index];
+                          const meta = LAYER_STATUS_META[layerStatus] || LAYER_STATUS_META.paused;
+                          const title =
+                            layerStatus === "failed"
+                              ? `${FAILURE_CATEGORY_LABELS[row.errorCategory] || "Failed"}: ${row.error}`
+                              : undefined;
+                          return (
+                            <td key={index} className="admin-bulk-pipeline-layer-cell">
+                              <span className={`admin-bulk-pipeline-status-badge ${meta.className}`} title={title}>
+                                {meta.label}
+                              </span>
+                              {layerStatus === "completed" && tokens > 0 && (
+                                <span className="admin-bulk-pipeline-token-count">
+                                  {tokens.toLocaleString()} tokens
+                                </span>
+                              )}
+                            </td>
+                          );
+                        })}
+                        <td className="admin-bulk-pipeline-actions">
+                          {row.status === "running" || row.status === "queued" ? (
+                            <button type="button" className="ghost-button" onClick={() => stopRow(row.id)}>
+                              Stop
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="ghost-button"
+                              disabled={!row.sectionText.trim()}
+                              onClick={() => startRow(row.id)}
+                            >
+                              {row.status === "failed" || row.status === "aborted" ? "Retry" : "Start"}
+                            </button>
+                          )}
+                          <a
+                            className={`ghost-button ${!row.jobId ? "is-disabled" : ""}`}
+                            href={row.jobId ? `/admin/ai-assessment-studio/workbench/${row.jobId}` : undefined}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View
+                          </a>
                         </td>
                       </tr>
-                    )}
-                  </Fragment>
-                );
-              })}
-            </tbody>
-          </table>
+                      {needsSourceText && (
+                        <tr className="admin-bulk-pipeline-source-row">
+                          <td colSpan={LAYER_COLUMN_LABELS.length + 3}>
+                            {row.status === "failed" && (
+                              <div className="admin-bulk-pipeline-failure-banner">
+                                <strong>
+                                  {FAILURE_CATEGORY_LABELS[row.errorCategory] || "Failed"}
+                                  {row.failedLayerNumber
+                                    ? ` at Layer ${row.failedLayerNumber} (${PIPELINE_LAYERS[row.failedLayerNumber - 1]})`
+                                    : ""}
+                                </strong>
+                                <span>{row.error}</span>
+                              </div>
+                            )}
+                            <textarea
+                              className="admin-bulk-pipeline-source-text"
+                              rows={3}
+                              placeholder="Paste section OCR text to enable Start"
+                              value={row.sectionText}
+                              onChange={(event) => updateRowText(row.id, event.target.value)}
+                            />
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            <div className="admin-bulk-pipeline-pagination">
+              <span>
+                Showing {pageStart} to {pageEnd} of {rows.length} sections
+              </span>
+              <div className="admin-bulk-pipeline-pagination-pages">
+                <button
+                  type="button"
+                  className="admin-bulk-pipeline-page-button"
+                  onClick={() => goToPage(clampedPage - 1)}
+                  disabled={clampedPage <= 1}
+                  aria-label="Previous page"
+                >
+                  ‹
+                </button>
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    className={`admin-bulk-pipeline-page-button ${pageNumber === clampedPage ? "is-active" : ""}`}
+                    onClick={() => goToPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="admin-bulk-pipeline-page-button"
+                  onClick={() => goToPage(clampedPage + 1)}
+                  disabled={clampedPage >= totalPages}
+                  aria-label="Next page"
+                >
+                  ›
+                </button>
+              </div>
+              <label className="admin-bulk-pipeline-rows-per-page">
+                Rows per page:
+                <select
+                  value={rowsPerPage}
+                  onChange={(event) => {
+                    setRowsPerPage(Number(event.target.value));
+                    setPage(1);
+                  }}
+                >
+                  {[5, 10, 25, 50].map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </>
         )}
       </div>
 
