@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
+import { FocusLayout } from "../components/FocusLayout";
 import { getStudentFlashcards } from "../api/client";
 
 const BackIcon = () => (
@@ -54,8 +55,8 @@ export const StudentFlashcardsPage = () => {
   };
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-flashcards-phone">
+    <StudentPageShell pageClass="student-page--flashcards" legacyModifierClass="student-flashcards-phone">
+      <FocusLayout>
         <header className="student-section-detail-header">
           <button
             type="button"
@@ -128,9 +129,7 @@ export const StudentFlashcardsPage = () => {
             </footer>
           </>
         )}
-
-        <StudentBottomNav activeItem="chapters" />
-      </section>
-    </main>
+      </FocusLayout>
+    </StudentPageShell>
   );
 };

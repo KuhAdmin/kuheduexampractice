@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentMediaViewer } from "../components/StudentMediaViewer";
 import { StudentMicroActivityPanel } from "../components/StudentMicroActivityPanel";
 import { getStudentMemoryBoosterForSection } from "../api/client";
@@ -91,6 +91,7 @@ export const StudentMemoryBoosterPage = () => {
   const [activeTabKey, setActiveTabKey] = useState(null);
   const swipeStartX = useRef(null);
   const tabsScrollRef = useRef(null);
+  const previousTabIndexRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,8 +128,51 @@ export const StudentMemoryBoosterPage = () => {
 
   useEffect(() => {
     setActiveTabKey(tabs[0]?.key || null);
+    // A new concept's tab list has no meaningful relationship to the
+    // previous concept's tab positions -- start its scroll-direction
+    // tracking fresh so the first tab shown always left-aligns instead of
+    // being compared against an unrelated index from before.
+    previousTabIndexRef.current = null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndex, memoryAids]);
+
+  // Keeps the active tab scrolled into view regardless of how it became
+  // active -- a direct click (handleTabClick) as well as landing on a new
+  // concept above (which resets activeTabKey to that concept's first tab,
+  // possibly scrolled out of view from wherever the row was left at) both
+  // need this, so it lives here rather than only in the click handler.
+  //
+  // Direction-aware: selecting a tab to the right of the previously active
+  // one aligns its LEFT edge to the container's left edge (revealing what's
+  // ahead, in the direction of travel); selecting one to the left aligns
+  // its RIGHT edge to the container's right edge (revealing what's behind).
+  // A plain scrollIntoView({inline:"nearest"}) doesn't do this -- it's a
+  // no-op whenever the tab already happens to sit flush at whichever edge,
+  // which is exactly the case that needs fixing here.
+  useEffect(() => {
+    if (!activeTabKey) return;
+    const container = tabsScrollRef.current;
+    const button = container?.querySelector(`[data-tab-key="${activeTabKey}"]`);
+    if (!container || !button) return;
+
+    const currentIndex = tabs.findIndex((tab) => tab.key === activeTabKey);
+    const previousIndex = previousTabIndexRef.current;
+    previousTabIndexRef.current = currentIndex;
+
+    const containerRect = container.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+
+    if (previousIndex !== null && currentIndex < previousIndex) {
+      // Right-side tab -> left-side tab: reveal earlier tabs.
+      const shift = buttonRect.right - containerRect.right;
+      container.scrollBy({ left: shift + 12, behavior: "smooth" });
+    } else if (previousIndex === null || currentIndex > previousIndex) {
+      // Left-side tab -> right-side tab (or the first tab shown for a
+      // concept): reveal later tabs.
+      const shift = buttonRect.left - containerRect.left;
+      container.scrollBy({ left: shift - 12, behavior: "smooth" });
+    }
+  }, [activeTabKey, tabs]);
 
   const goToConcept = (nextIndex) => {
     setActiveIndex((current) => {
@@ -155,18 +199,12 @@ export const StudentMemoryBoosterPage = () => {
     event.currentTarget.scrollLeft += event.deltaY;
   };
 
-  const handleTabClick = (key, event) => {
+  const handleTabClick = (key) => {
     setActiveTabKey(key);
-    const container = tabsScrollRef.current;
-    const button = event.currentTarget;
-    if (!container || !button) return;
-    const shift = button.getBoundingClientRect().left - container.getBoundingClientRect().left;
-    container.scrollBy({ left: shift - 4, behavior: "smooth" });
   };
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-memory-booster-phone">
+    <StudentPageShell pageClass="student-page--memory-booster" legacyModifierClass="student-memory-booster-phone">
         <header className="student-section-detail-header">
           <button
             type="button"
@@ -235,8 +273,9 @@ export const StudentMemoryBoosterPage = () => {
                     <button
                       key={tab.key}
                       type="button"
+                      data-tab-key={tab.key}
                       className={`student-memory-booster-tab ${tab.key === activeTabKey ? "is-active" : ""}`}
-                      onClick={(event) => handleTabClick(tab.key, event)}
+                      onClick={() => handleTabClick(tab.key)}
                     >
                       {tab.label}
                     </button>
@@ -301,8 +340,6 @@ export const StudentMemoryBoosterPage = () => {
           </>
         )}
 
-        <StudentBottomNav activeItem="chapters" />
-      </section>
-    </main>
+    </StudentPageShell>
   );
 };

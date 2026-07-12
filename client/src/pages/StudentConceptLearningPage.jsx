@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentMediaViewer } from "../components/StudentMediaViewer";
 import { StudentMicroActivityPanel } from "../components/StudentMicroActivityPanel";
-import { getStudentConceptCard } from "../api/client";
+import { useBreakpoint } from "../hooks/useBreakpoint";
+import { getStudentConceptCard, getStudentSections } from "../api/client";
 
 const ConceptLearningIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -81,6 +82,59 @@ const ConceptLearningIcon = ({ type, className = "" }) => {
     );
   }
 
+  if (type === "home") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="m4 11 8-6.5L20 11v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.7"
+        />
+      </svg>
+    );
+  }
+
+  if (type === "check") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="m5 12.5 4.5 4.5L19 7"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2.2"
+        />
+      </svg>
+    );
+  }
+
+  if (type === "book") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M4 5.5c0-.83.67-1.5 1.5-1.5H12v16H5.5A1.5 1.5 0 0 0 4 21.5v-16Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.6"
+        />
+        <path
+          d="M20 5.5c0-.83-.67-1.5-1.5-1.5H12v16h6.5a1.5 1.5 0 0 1 1.5 1.5v-16Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.6"
+        />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
       <path
@@ -96,6 +150,64 @@ const ConceptLearningIcon = ({ type, className = "" }) => {
 };
 
 const TABS = ["Learn", "Explore", "Practice", "Notes"];
+
+// Ordered, real fields only -- mirrors exactly what renderExploreMode's
+// accordion already checks for presence, just as a sequence instead of a
+// grid, so the step rail and the old accordion never drift apart on what
+// counts as "this concept has X".
+const EXPLORE_STEPS = [
+  { key: "analogy", label: "Analogy", subtitle: "Understand with comparison", hasContent: (c) => Boolean(c.analogy) },
+  { key: "story", label: "Story", subtitle: "A short story to connect", hasContent: (c) => Boolean(c.story) },
+  { key: "visualHook", label: "Visual Hook", subtitle: "See it to believe it", hasContent: (c) => Boolean(c.visualHook) },
+  {
+    key: "realWorldConnection",
+    label: "Real World Connection",
+    subtitle: "Where it matters",
+    hasContent: (c) => Boolean(c.realWorldConnection),
+  },
+  {
+    key: "curiosityHook",
+    label: "Curiosity Hook",
+    subtitle: "Spark your curiosity",
+    hasContent: (c) => Boolean(c.curiosityHook),
+  },
+  {
+    key: "microActivity",
+    label: "Try This",
+    subtitle: "Put it into practice",
+    hasContent: (c) => Boolean(c.microActivity),
+  },
+  {
+    key: "memoryTrick",
+    label: "Memory Trick",
+    subtitle: "A trick to remember it",
+    hasContent: (c) => Boolean(c.memoryTrick),
+  },
+  {
+    key: "misconceptions",
+    label: "Common Misconceptions",
+    subtitle: "Clear up confusion",
+    hasContent: (c) => Boolean(c.misconceptions?.length || c.misconceptionAlert),
+  },
+  {
+    key: "supportingConcepts",
+    label: "Supporting Concepts",
+    subtitle: "Concepts that support this",
+    hasContent: (c) => Boolean(c.supportingConcepts?.length),
+  },
+  {
+    key: "retrievalCues",
+    label: "Retrieval Cues",
+    subtitle: "Quick recall cues",
+    hasContent: (c) => Boolean(c.retrievalCues?.length),
+  },
+  {
+    key: "associatedConcepts",
+    label: "Associated Concepts",
+    subtitle: "Related ideas",
+    hasContent: (c) => Boolean(c.associatedConcepts?.length),
+  },
+];
 
 // Collapsible card for the Explore tab. mediaType ("image" | "video" | null)
 // hints at the kind of media a future admin authoring pass will attach to
@@ -166,6 +278,8 @@ const buildLearnSlides = (card) => {
 
 export const StudentConceptLearningPage = () => {
   const navigate = useNavigate();
+  const tier = useBreakpoint();
+  const isDesktop = tier !== "mobile";
   const { chapterId: chapterNumber, sectionId: sourceSectionId, conceptId: assessmentUnitId } = useParams();
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -173,6 +287,9 @@ export const StudentConceptLearningPage = () => {
   const [activeTab, setActiveTab] = useState(TABS[0]);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [expandedSections, setExpandedSections] = useState(() => new Set());
+  const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", topicName: "" });
+  const [activeExploreStepKey, setActiveExploreStepKey] = useState(null);
+  const [visitedExploreSteps, setVisitedExploreSteps] = useState(() => new Set());
 
   const toggleSection = (sectionKey) => {
     setExpandedSections((current) => {
@@ -207,9 +324,53 @@ export const StudentConceptLearningPage = () => {
     };
   }, [assessmentUnitId]);
 
+  // Breadcrumb only (chapter name + this section's topic name) -- same
+  // endpoint StudentChapterDetailPage already uses for its own header, so
+  // this doesn't add a new data source, just reuses an existing one.
+  useEffect(() => {
+    let cancelled = false;
+
+    getStudentSections(chapterNumber)
+      .then((result) => {
+        if (cancelled) return;
+        const section = (result?.sections || []).find(
+          (item) => String(item.sourceSectionId) === String(sourceSectionId)
+        );
+        setBreadcrumbMeta({
+          chapterName: result?.chapterName || "",
+          topicName: section?.topicName || section?.sectionNumber || "",
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setBreadcrumbMeta({ chapterName: "", topicName: "" });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chapterNumber, sourceSectionId]);
+
   const slides = useMemo(() => (card ? buildLearnSlides(card) : []), [card]);
   const totalSlides = slides.length;
   const activeSlide = slides[activeSlideIndex] || slides[0];
+
+  const exploreSteps = useMemo(
+    () => (card ? EXPLORE_STEPS.filter((step) => step.hasContent(card)) : []),
+    [card]
+  );
+
+  useEffect(() => {
+    setActiveExploreStepKey(exploreSteps[0]?.key || null);
+    setVisitedExploreSteps(new Set(exploreSteps[0] ? [exploreSteps[0].key] : []));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assessmentUnitId, exploreSteps.length]);
+
+  const goToExploreStep = (key) => {
+    setActiveExploreStepKey(key);
+    setVisitedExploreSteps((current) => new Set(current).add(key));
+  };
+
+  const activeExploreStepIndex = exploreSteps.findIndex((step) => step.key === activeExploreStepKey);
 
   const renderLearnMode = () => (
     <>
@@ -262,6 +423,149 @@ export const StudentConceptLearningPage = () => {
     </>
   );
 
+  // Desktop/tablet step view: one field at a time, image/video on the left
+  // and text on the right (matching the reference layout), driven by the
+  // same real card fields the mobile accordion (renderExploreMode below)
+  // already reads -- no new data, just a different presentation of it.
+  const renderExploreStepContent = () => {
+    const step = exploreSteps[activeExploreStepIndex];
+    if (!step) return null;
+
+    if (step.key === "misconceptions") {
+      const misconceptionEntries = card.misconceptions?.length ? card.misconceptions : [];
+      return (
+        <div className="student-concept-step-copy is-full-width">
+          {card.misconceptionAlert && <p>{card.misconceptionAlert}</p>}
+          {misconceptionEntries.length > 0 && (
+            <ul className="student-concept-learning-list">
+              {misconceptionEntries.map((entry, index) => (
+                <li key={`${entry.misconception}-${index}`}>
+                  <strong>{entry.misconception}</strong>
+                  {entry.correction ? ` — ${entry.correction}` : ""}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    if (step.key === "supportingConcepts" || step.key === "associatedConcepts") {
+      const items = card[step.key] || [];
+      return (
+        <div className="student-concept-step-copy is-full-width">
+          {step.key === "supportingConcepts" ? (
+            <ul className="student-concept-learning-list">
+              {items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          ) : (
+            <div className="student-concept-explore-tags">
+              {items.map((item) => (
+                <span key={item} className="student-concept-explore-tag">
+                  {item}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (step.key === "retrievalCues") {
+      return (
+        <div className="student-concept-step-copy is-full-width">
+          <div className="student-concept-explore-tags">
+            {(card.retrievalCues || []).map((cue) => (
+              <span key={cue} className="student-concept-explore-tag">
+                {cue}
+              </span>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    const media = card[`${step.key}Media`];
+    const text = card[step.key];
+
+    // Try This is an interactive task (photo/text + submit + feedback), not
+    // a passive image/video to view -- always single-column, and only ever
+    // shows real media if the pipeline actually generated some (matching
+    // the mobile accordion/StudentMemoryBoosterPage's own behavior); never
+    // the "Visual coming soon" placeholder, which just wastes space next to
+    // an activity that isn't waiting on a visual at all.
+    if (step.key === "microActivity") {
+      return (
+        <div className="student-concept-step-copy is-full-width">
+          <h3>{step.subtitle}</h3>
+          {media && (
+            <StudentMediaViewer
+              mediaType={media.mediaType}
+              src={media.mediaData}
+              alt={`${step.label} illustration`}
+            />
+          )}
+          <StudentMicroActivityPanel assessmentUnitId={assessmentUnitId} prompt={text} />
+        </div>
+      );
+    }
+
+    return (
+      <div className="student-concept-step-split">
+        <div className="student-concept-step-media">
+          {media ? (
+            <StudentMediaViewer
+              mediaType={media.mediaType}
+              src={media.mediaData}
+              alt={`${step.label} illustration`}
+              speechText={text}
+            />
+          ) : (
+            <div className="student-memory-booster-media-placeholder">
+              <ConceptLearningIcon type="image" />
+              <span>Visual coming soon</span>
+            </div>
+          )}
+        </div>
+        <div className="student-concept-step-copy">
+          <h3>{step.subtitle}</h3>
+          <p>{text}</p>
+        </div>
+      </div>
+    );
+  };
+
+  const renderExploreRail = () => (
+    <aside className="student-concept-explore-rail" aria-label="Explore steps">
+      <h2>Explore</h2>
+      <ol>
+        {exploreSteps.map((step, index) => (
+          <li key={step.key}>
+            <button
+              type="button"
+              className={`student-concept-explore-rail-item ${step.key === activeExploreStepKey ? "is-active" : ""}`}
+              onClick={() => goToExploreStep(step.key)}
+            >
+              <span className="student-concept-explore-rail-index">
+                {visitedExploreSteps.has(step.key) && step.key !== activeExploreStepKey ? (
+                  <ConceptLearningIcon type="check" />
+                ) : (
+                  index + 1
+                )}
+              </span>
+              <span className="student-concept-explore-rail-copy">
+                <strong>{step.label}</strong>
+                <span>{step.subtitle}</span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ol>
+    </aside>
+  );
+
   const renderExploreMode = () => {
     const misconceptionEntries = card?.misconceptions?.length ? card.misconceptions : [];
     const hasAnyExploreContent =
@@ -292,7 +596,7 @@ export const StudentConceptLearningPage = () => {
     const isExpanded = (sectionKey) => expandedSections.has(sectionKey);
 
     return (
-      <>
+      <div className="student-explore-grid">
         {card.analogy && (
           <ExploreSection
             sectionKey="analogy"
@@ -506,28 +810,25 @@ export const StudentConceptLearningPage = () => {
             </div>
           </ExploreSection>
         )}
-      </>
+      </div>
     );
   };
 
-  const renderPracticeMode = () => (
-    <section className="student-concept-learning-card">
-      <div className="student-concept-learning-copy">
-        <p>Practice just this concept's questions to build focused, measurable progress.</p>
-        <button
-          type="button"
-          className="student-concept-practice-next"
-          onClick={() =>
-            navigate(
-              `/chapters/${chapterNumber}/sections/${sourceSectionId}/concepts/${assessmentUnitId}/assessment`
-            )
-          }
-        >
-          Practice This Concept
-        </button>
-      </div>
-    </section>
-  );
+  const goToConceptAssessment = () =>
+    navigate(`/chapters/${chapterNumber}/sections/${sourceSectionId}/concepts/${assessmentUnitId}/assessment`);
+
+  // Practice was previously its own in-page tab with a single "Practice
+  // This Concept" button whose only job was to navigate to the assessment
+  // page -- a redundant extra click through a near-empty intermediate
+  // screen. Selecting the tab now navigates straight there instead of
+  // switching to local tab state.
+  const selectTab = (tab) => {
+    if (tab === "Practice") {
+      goToConceptAssessment();
+      return;
+    }
+    setActiveTab(tab);
+  };
 
   const renderComingSoon = (label) => (
     <section className="student-concept-learning-card">
@@ -537,9 +838,125 @@ export const StudentConceptLearningPage = () => {
     </section>
   );
 
+  // Desktop/tablet only: breadcrumb + hero card + tab bar as persistent
+  // chrome, matching the reference design's Notion/Duolingo-style layout.
+  // Only the Explore tab's content structure actually changes (accordion ->
+  // step rail); Learn/Practice/Notes keep exactly their existing render
+  // functions, just under this header instead of the plain back-button one.
+  // Mobile is untouched -- see the unconditional return below this branch.
+  if (isDesktop) {
+    return (
+      <StudentPageShell pageClass="student-page--concept-learning" legacyModifierClass="student-concept-learning-phone">
+        <div className="student-concept-desktop">
+          <nav className="student-concept-breadcrumb" aria-label="Breadcrumb">
+            <button type="button" onClick={() => navigate("/dashboard")} aria-label="Home">
+              <ConceptLearningIcon type="home" />
+            </button>
+            <ConceptLearningIcon type="chevron-right" />
+            <button type="button" onClick={() => navigate(`/chapters/${chapterNumber}`)}>
+              {breadcrumbMeta.chapterName || `Chapter ${chapterNumber}`}
+            </button>
+            <ConceptLearningIcon type="chevron-right" />
+            <span className="is-current">{breadcrumbMeta.topicName || card?.primaryConcept || ""}</span>
+          </nav>
+
+          <header className="student-concept-hero">
+            <div className="student-concept-hero-icon">
+              <ConceptLearningIcon type="book" />
+            </div>
+            <div className="student-concept-hero-copy">
+              <span className="student-concept-hero-badge">Chapter {chapterNumber}</span>
+              <h1>{card?.primaryConcept || "Concept"}</h1>
+              {(card?.learningObjective || card?.contextSummary) && (
+                <p>{card.learningObjective || card.contextSummary}</p>
+              )}
+            </div>
+          </header>
+
+          <nav className="student-concept-tabbar" aria-label="Concept modes">
+            {TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={`student-concept-tabbar-tab ${tab === activeTab ? "is-active" : ""}`}
+                onClick={() => selectTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </nav>
+
+          {loading ? (
+            <p className="student-empty-state">Loading concept...</p>
+          ) : error || !card ? (
+            <p className="student-empty-state">{error || "This concept has not been generated yet."}</p>
+          ) : (
+            <div
+              className={`student-concept-desktop-body ${
+                activeTab === "Explore" && exploreSteps.length > 0 ? "has-rail" : ""
+              }`}
+            >
+              <div className="student-concept-desktop-main">
+                {activeTab === "Learn" ? (
+                  renderLearnMode()
+                ) : activeTab === "Explore" ? (
+                  exploreSteps.length > 0 ? (
+                    <section className="student-concept-learning-card student-concept-step-card">
+                      <div className="student-concept-step-heading">
+                        <span className="student-concept-step-index">
+                          {activeExploreStepIndex + 1}. {exploreSteps[activeExploreStepIndex]?.label}
+                        </span>
+                      </div>
+                      {renderExploreStepContent()}
+                      <footer className="student-concept-learning-footer is-two-up">
+                        <button
+                          type="button"
+                          className="student-concept-learning-nav is-previous"
+                          onClick={() =>
+                            goToExploreStep(exploreSteps[Math.max(activeExploreStepIndex - 1, 0)].key)
+                          }
+                          disabled={activeExploreStepIndex <= 0}
+                        >
+                          <ConceptLearningIcon type="chevron-left" />
+                          <span>Previous</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="student-concept-learning-nav is-next"
+                          onClick={() =>
+                            goToExploreStep(
+                              exploreSteps[Math.min(activeExploreStepIndex + 1, exploreSteps.length - 1)].key
+                            )
+                          }
+                          disabled={activeExploreStepIndex >= exploreSteps.length - 1}
+                        >
+                          <span>Continue</span>
+                          <ConceptLearningIcon type="chevron-right" />
+                        </button>
+                      </footer>
+                    </section>
+                  ) : (
+                    <section className="student-concept-learning-card">
+                      <div className="student-concept-learning-copy">
+                        <h2>Supporting concepts</h2>
+                        <p>No supporting concepts recorded for this idea.</p>
+                      </div>
+                    </section>
+                  )
+                ) : (
+                  renderComingSoon(activeTab)
+                )}
+              </div>
+              {activeTab === "Explore" && exploreSteps.length > 0 && renderExploreRail()}
+            </div>
+          )}
+        </div>
+      </StudentPageShell>
+    );
+  }
+
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-concept-learning-phone">
+    <StudentPageShell pageClass="student-page--concept-learning" legacyModifierClass="student-concept-learning-phone">
         <header className="student-concept-learning-header">
           <button
             type="button"
@@ -573,14 +990,10 @@ export const StudentConceptLearningPage = () => {
           renderLearnMode()
         ) : activeTab === "Explore" ? (
           renderExploreMode()
-        ) : activeTab === "Practice" ? (
-          renderPracticeMode()
         ) : (
           renderComingSoon(activeTab)
         )}
 
-        <StudentBottomNav activeItem="chapters" />
-      </section>
-    </main>
+    </StudentPageShell>
   );
 };

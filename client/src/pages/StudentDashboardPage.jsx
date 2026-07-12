@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentNotificationPanel } from "../components/StudentNotificationPanel";
 import { getNotifications, markNotificationsSeen } from "../api/client";
 
@@ -426,8 +426,7 @@ export const StudentDashboardPage = ({ dashboard, dashboardMode = "returning", u
   };
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone">
+    <StudentPageShell pageClass="student-page--dashboard">
         <header className="student-dashboard-header">
           <div className="student-dashboard-header-copy">
             <p className="student-dashboard-greeting">{view.greeting}</p>
@@ -462,8 +461,6 @@ export const StudentDashboardPage = ({ dashboard, dashboardMode = "returning", u
         ) : (
           <ReturningDashboard view={view} />
         )}
-        <StudentBottomNav activeItem="home" />
-      </section>
-    </main>
+    </StudentPageShell>
   );
 };

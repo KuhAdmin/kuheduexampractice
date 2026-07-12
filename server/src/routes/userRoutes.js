@@ -26,9 +26,12 @@ import {
   getAssessmentResultHandler,
   getMindMap,
   getRecentAttempts,
+  getRecentChapterAttempts,
   getRecentConceptAttempts,
   restartAssessmentHandler,
+  restartChapterAssessmentHandler,
   startAssessment,
+  startChapterAssessment,
   startConceptAssessment,
 } from "../controllers/studentPracticeController.js";
 import { postHandwrittenNoteOcr } from "../controllers/ocrController.js";
@@ -56,6 +59,9 @@ router.post("/sections/:sourceSectionId/assessment/restart", restartAssessmentHa
 router.get("/sections/:sourceSectionId/assessment/attempts", getRecentAttempts);
 router.post("/concepts/:assessmentUnitId/assessment/start", startConceptAssessment);
 router.get("/concepts/:assessmentUnitId/assessment/attempts", getRecentConceptAttempts);
+router.post("/chapters/:chapterNumber/assessment/start", startChapterAssessment);
+router.post("/chapters/:chapterNumber/assessment/restart", restartChapterAssessmentHandler);
+router.get("/chapters/:chapterNumber/assessment/attempts", getRecentChapterAttempts);
 router.post("/attempts/:attemptId/items/:displayOrder/answer", answerAssessmentItem);
 router.post("/attempts/:attemptId/submit", finishAssessment);
 router.get("/attempts/:attemptId/result", getAssessmentResultHandler);

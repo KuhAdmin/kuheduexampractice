@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
+import { FocusLayout } from "../components/FocusLayout";
 import { StudentCameraCapture } from "../components/StudentCameraCapture";
 import {
   getRecentAssessmentAttempts,
+  getRecentChapterAssessmentAttempts,
   getRecentConceptAssessmentAttempts,
   ocrHandwrittenNote,
+  restartChapterAssessment,
   restartSectionAssessment,
+  startChapterAssessment,
   startConceptAssessment,
   startSectionAssessment,
   submitAssessment,
@@ -136,6 +140,7 @@ export const StudentAssessmentPage = () => {
   const navigate = useNavigate();
   const { chapterId: chapterNumber, sectionId: sourceSectionId, conceptId } = useParams();
   const isConceptMode = Boolean(conceptId);
+  const isChapterMode = !sourceSectionId && !conceptId;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -158,7 +163,9 @@ export const StudentAssessmentPage = () => {
     setLoading(true);
     setError("");
 
-    const startAssessment = isConceptMode
+    const startAssessment = isChapterMode
+      ? startChapterAssessment(chapterNumber)
+      : isConceptMode
       ? startConceptAssessment(conceptId)
       : startSectionAssessment(sourceSectionId);
 
@@ -173,7 +180,11 @@ export const StudentAssessmentPage = () => {
         if (!cancelled) {
           setError(
             fetchError.message ||
-              (isConceptMode ? "This concept has no practice questions yet." : "This section has no assessment yet.")
+              (isChapterMode
+                ? "This chapter has no practice questions yet."
+                : isConceptMode
+                ? "This concept has no practice questions yet."
+                : "This section has no assessment yet.")
           );
         }
       })
@@ -181,7 +192,9 @@ export const StudentAssessmentPage = () => {
         if (!cancelled) setLoading(false);
       });
 
-    const recentAttemptsRequest = isConceptMode
+    const recentAttemptsRequest = isChapterMode
+      ? getRecentChapterAssessmentAttempts(chapterNumber)
+      : isConceptMode
       ? getRecentConceptAssessmentAttempts(conceptId)
       : getRecentAssessmentAttempts(sourceSectionId);
 
@@ -196,7 +209,7 @@ export const StudentAssessmentPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [sourceSectionId, conceptId, isConceptMode]);
+  }, [chapterNumber, sourceSectionId, conceptId, isConceptMode, isChapterMode]);
 
   const items = assessment?.items || [];
   const activeItem = items[activeIndex];
@@ -215,9 +228,14 @@ export const StudentAssessmentPage = () => {
 
   const sectionPath = `/chapters/${chapterNumber}/sections/${sourceSectionId}`;
   // Both "back" and the post-submit result route resolve relative to wherever
-  // this assessment was launched from -- the section overview in section
-  // mode, or the concept page in concept mode.
-  const basePath = isConceptMode ? `${sectionPath}/concepts/${conceptId}` : sectionPath;
+  // this assessment was launched from -- the chapter detail page in chapter
+  // mode, the section overview in section mode, or the concept page in
+  // concept mode.
+  const basePath = isChapterMode
+    ? `/chapters/${chapterNumber}`
+    : isConceptMode
+    ? `${sectionPath}/concepts/${conceptId}`
+    : sectionPath;
 
   const beginAssessment = async () => {
     if (activeIndex >= items.length) {
@@ -241,7 +259,9 @@ export const StudentAssessmentPage = () => {
     setRestarting(true);
     setError("");
     try {
-      const result = await restartSectionAssessment(sourceSectionId);
+      const result = isChapterMode
+        ? await restartChapterAssessment(chapterNumber)
+        : await restartSectionAssessment(sourceSectionId);
       setAssessment(result);
       setActiveIndex(0);
       setStartedAt(Date.now());
@@ -553,9 +573,23 @@ export const StudentAssessmentPage = () => {
     return renderFreeText();
   };
 
+  // Ordering/matching questions carry real multi-item content that benefits
+  // from desktop width; single_select/free_text stay in the narrow focus
+  // layout while still being answered, since that's a single, simple
+  // decision. The instructions screen (stats + rules + recent attempts) is
+  // overview content, not a single-task question, so it also gets the wide
+  // layout -- and once feedback is showing (any interaction type), the
+  // question sits beside its feedback in a second column, so that's wide too.
+  const isWideQuestion =
+    (phase === "question" || phase === "feedback") && (interactionType === "ordering" || interactionType === "matching");
+  const isWide = isWideQuestion || phase === "instructions" || phase === "feedback";
+
+  const Wrapper = isWide ? "div" : FocusLayout;
+  const wrapperProps = isWide ? { className: "student-assessment-wide" } : {};
+
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-assessment-phone">
+    <StudentPageShell pageClass="student-page--assessment" legacyModifierClass="student-assessment-phone">
+      <Wrapper {...wrapperProps}>
         <header className="student-section-detail-header">
           <button
             type="button"
@@ -566,7 +600,11 @@ export const StudentAssessmentPage = () => {
             <BackIcon />
           </button>
           <h1>
-            {isConceptMode
+            {isChapterMode
+              ? assessment?.topicName
+                ? `${assessment.topicName} Chapter Assessment`
+                : "Chapter Assessment"
+              : isConceptMode
               ? assessment?.topicName
                 ? `${assessment.topicName} Practice`
                 : "Concept Practice"
@@ -615,7 +653,7 @@ export const StudentAssessmentPage = () => {
                 disabled={restarting}
                 onClick={beginAssessment}
               >
-                {isConceptMode ? "Continue Practice" : "Continue Assessment"}
+                {isConceptMode ? "Practice Concept" : "Continue Assessment"}
               </button>
               {!isConceptMode && (
                 <button
@@ -665,34 +703,38 @@ export const StudentAssessmentPage = () => {
         ) : phase === "finishing" ? (
           <p className="student-empty-state">Submitting your assessment...</p>
         ) : (
-          <section className="student-concept-practice-panel">
-            <div className="student-concept-practice-head">
-              <span>Question {activeIndex + 1} of {totalQuestions}</span>
-              <p>
-                <small>{activeItem.marks} mark{activeItem.marks === 1 ? "" : "s"}</small>
-              </p>
+          <section
+            className={`student-concept-practice-panel ${phase === "feedback" ? "has-feedback-split" : ""}`}
+          >
+            <div className="student-concept-practice-question">
+              <div className="student-concept-practice-head">
+                <span>Question {activeIndex + 1} of {totalQuestions}</span>
+                <p>
+                  <small>{activeItem.marks} mark{activeItem.marks === 1 ? "" : "s"}</small>
+                </p>
+              </div>
+              <h2>{activeItem.question}</h2>
+
+              {renderInteraction()}
+
+              {phase === "question" && (
+                <>
+                  {error && <p className="error-text">{error}</p>}
+
+                  <button
+                    type="button"
+                    className="student-concept-practice-next"
+                    disabled={answering || !handler.isReady(answerState)}
+                    onClick={handleSubmitAnswer}
+                  >
+                    {answering ? "Submitting..." : "Submit"}
+                  </button>
+                </>
+              )}
             </div>
-            <h2>{activeItem.question}</h2>
-
-            {renderInteraction()}
-
-            {phase === "question" && (
-              <>
-                {error && <p className="error-text">{error}</p>}
-
-                <button
-                  type="button"
-                  className="student-concept-practice-next"
-                  disabled={answering || !handler.isReady(answerState)}
-                  onClick={handleSubmitAnswer}
-                >
-                  {answering ? "Submitting..." : "Submit"}
-                </button>
-              </>
-            )}
 
             {phase === "feedback" && feedback && (
-              <>
+              <div className="student-concept-practice-feedback-col">
                 <div className={`student-instant-feedback ${feedback.isCorrect ? "is-correct" : "is-incorrect"}`}>
                   <strong>{feedback.isCorrect ? "Correct!" : "Not quite"}</strong>
                   {!feedback.isCorrect && (
@@ -711,13 +753,11 @@ export const StudentAssessmentPage = () => {
                 <button type="button" className="student-concept-practice-next" onClick={handleNext}>
                   {activeIndex + 1 < totalQuestions ? "Next Question" : "See Result"}
                 </button>
-              </>
+              </div>
             )}
           </section>
         )}
-
-        <StudentBottomNav activeItem="chapters" />
-      </section>
-    </main>
+      </Wrapper>
+    </StudentPageShell>
   );
 };

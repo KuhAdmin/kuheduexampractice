@@ -114,6 +114,15 @@ export const startConceptAssessment = async (assessmentUnitId) =>
 export const getRecentConceptAssessmentAttempts = async (assessmentUnitId) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/assessment/attempts`);
 
+export const startChapterAssessment = async (chapterNumber) =>
+  apiRequest(`/user/chapters/${chapterNumber}/assessment/start`, { method: "POST" });
+
+export const restartChapterAssessment = async (chapterNumber) =>
+  apiRequest(`/user/chapters/${chapterNumber}/assessment/restart`, { method: "POST" });
+
+export const getRecentChapterAssessmentAttempts = async (chapterNumber) =>
+  apiRequest(`/user/chapters/${chapterNumber}/assessment/attempts`);
+
 export const submitAssessmentAnswer = async (attemptId, displayOrder, studentAnswer, timeTakenSeconds) =>
   apiRequest(`/user/attempts/${attemptId}/items/${displayOrder}/answer`, {
     method: "POST",

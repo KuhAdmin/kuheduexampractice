@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-const navItems = [
+export const navItems = [
   { id: "home", label: "Home", icon: "home", path: "/dashboard" },
   { id: "chapters", label: "Chapters", icon: "book", path: "/chapters" },
   { id: "practice", label: "Practice", icon: "spark" },
@@ -8,7 +8,7 @@ const navItems = [
   { id: "profile", label: "Profile", icon: "user", path: "/profile" },
 ];
 
-const StudentNavIcon = ({ type }) => {
+export const StudentNavIcon = ({ type }) => {
   const classes = "student-dashboard-icon";
 
   if (type === "book") {

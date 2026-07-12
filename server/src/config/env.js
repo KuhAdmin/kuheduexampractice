@@ -27,6 +27,8 @@ export const env = {
   serverUrl: process.env.SERVER_URL || "http://localhost:5005",
   port: Number(process.env.PORT || 5005),
   databaseUrl: process.env.DATABASE_URL,
+  productionDatabaseUrl: process.env.PRODUCTION_DATABASE_URL || "",
+  pgDumpPath: process.env.PG_DUMP_PATH || "pg_dump",
   jwtSecret: process.env.JWT_SECRET,
   sessionSecret: process.env.SESSION_SECRET,
   googleClientId: process.env.GOOGLE_CLIENT_ID,

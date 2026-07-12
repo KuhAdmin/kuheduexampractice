@@ -5,3 +5,5 @@ dist
 npm-debug.log*
 client/.env
 server/.env
+server/runtime/promotion-backups
+server/runtime/promotion-logs

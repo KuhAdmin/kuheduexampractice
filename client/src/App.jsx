@@ -17,6 +17,7 @@ import { AdminQuestionBankPage } from "./pages/AdminQuestionBankPage";
 import { AdminSettingsPage } from "./pages/AdminSettingsPage";
 import { AdminUsersPage } from "./pages/AdminUsersPage";
 import { ModeratorLayout } from "./components/ModeratorLayout";
+import { StudentLayout } from "./components/StudentLayout";
 import { ModeratorConsolePage } from "./pages/ModeratorConsolePage";
 import { ModeratorLayerReviewPage } from "./pages/ModeratorLayerReviewPage";
 import { useAuth } from "./context/AuthContext";
@@ -140,31 +141,6 @@ const App = () => {
           }
         />
         <Route
-          path="/dashboard"
-          element={
-            authPending || (isAuthenticated && dashboardLoading && !dashboard) ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentDashboardPage
-                    dashboard={dashboard}
-                    dashboardMode={location.state?.dashboardMode === "first-time" ? "first-time" : "returning"}
-                    user={user}
-                  />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/profile"
           element={
             authPending ? null : isAuthenticated ? (
               user?.role === "admin" ? (
@@ -175,303 +151,77 @@ const App = () => {
                 <Navigate replace to="/" state={{ resumeOnboarding: true }} />
               ) : (
                 <div className="app-shell dashboard-app-shell">
-                  <StudentProfilePage
-                    dashboard={dashboard}
-                    user={user}
-                    onLogout={handleLogout}
-                  />
+                  <StudentLayout user={user} onLogout={handleLogout} />
                 </div>
               )
             ) : (
               <Navigate replace to="/" />
             )
           }
-        />
-        <Route
-          path="/chapters"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentChaptersPage
-                    dashboard={dashboard}
-                    user={user}
-                  />
-                </div>
+        >
+          <Route
+            path="/dashboard"
+            element={
+              dashboardLoading && !dashboard ? null : (
+                <StudentDashboardPage
+                  dashboard={dashboard}
+                  dashboardMode={location.state?.dashboardMode === "first-time" ? "first-time" : "returning"}
+                  user={user}
+                />
               )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/goals"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentRemainingConceptsPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentChapterDetailPage
-                    dashboard={dashboard}
-                  />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId/book-questions"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentBookQuestionsPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId/sections/:sectionId"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentSectionDetailPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId/sections/:sectionId/concepts/:conceptId"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentConceptLearningPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId/sections/:sectionId/memory-booster"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentMemoryBoosterPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId/sections/:sectionId/flashcards"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentFlashcardsPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId/sections/:sectionId/diagrams"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentDiagramsPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId/sections/:sectionId/mind-map"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentMindMapPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId/sections/:sectionId/assessment"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentAssessmentPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId/sections/:sectionId/assessment/result/:attemptId"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentAssessmentResultPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId/sections/:sectionId/concepts/:conceptId/assessment"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentAssessmentPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
-        <Route
-          path="/chapters/:chapterId/sections/:sectionId/concepts/:conceptId/assessment/result/:attemptId"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
-              ) : !isStudentOnboardingComplete(user) ? (
-                <Navigate replace to="/" state={{ resumeOnboarding: true }} />
-              ) : (
-                <div className="app-shell dashboard-app-shell">
-                  <StudentAssessmentResultPage />
-                </div>
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        />
+            }
+          />
+          <Route
+            path="/profile"
+            element={<StudentProfilePage dashboard={dashboard} user={user} onLogout={handleLogout} />}
+          />
+          <Route path="/chapters" element={<StudentChaptersPage dashboard={dashboard} user={user} />} />
+          <Route path="/goals" element={<StudentRemainingConceptsPage />} />
+          <Route path="/chapters/:chapterId" element={<StudentChapterDetailPage dashboard={dashboard} />} />
+          <Route path="/chapters/:chapterId/book-questions" element={<StudentBookQuestionsPage />} />
+          <Route path="/chapters/:chapterId/assessment" element={<StudentAssessmentPage />} />
+          <Route
+            path="/chapters/:chapterId/assessment/result/:attemptId"
+            element={<StudentAssessmentResultPage />}
+          />
+          <Route path="/chapters/:chapterId/sections/:sectionId" element={<StudentSectionDetailPage />} />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/concepts/:conceptId"
+            element={<StudentConceptLearningPage />}
+          />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/memory-booster"
+            element={<StudentMemoryBoosterPage />}
+          />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/flashcards"
+            element={<StudentFlashcardsPage />}
+          />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/diagrams"
+            element={<StudentDiagramsPage />}
+          />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/mind-map"
+            element={<StudentMindMapPage />}
+          />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/assessment"
+            element={<StudentAssessmentPage />}
+          />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/assessment/result/:attemptId"
+            element={<StudentAssessmentResultPage />}
+          />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/concepts/:conceptId/assessment"
+            element={<StudentAssessmentPage />}
+          />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/concepts/:conceptId/assessment/result/:attemptId"
+            element={<StudentAssessmentResultPage />}
+          />
+        </Route>
         <Route
           path="/admin"
           element={

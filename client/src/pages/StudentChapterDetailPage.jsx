@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentDrilldownCard } from "../components/StudentDrilldownCard";
 import { getBookQuestions, getStudentSections } from "../api/client";
 
@@ -42,7 +42,6 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("sections");
   const [bookQuestions, setBookQuestions] = useState([]);
   const [bookQuestionsLoading, setBookQuestionsLoading] = useState(true);
   const [bookQuestionsError, setBookQuestionsError] = useState("");
@@ -120,8 +119,7 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
     : 0;
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-chapter-detail-phone">
+    <StudentPageShell pageClass="student-page--chapter-detail" legacyModifierClass="student-chapter-detail-phone">
         <header className="student-chapter-detail-header">
           <button
             type="button"
@@ -165,79 +163,47 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
           />
         </section>
 
-        <nav className="student-section-detail-tabs" aria-label="Chapter content">
-          <button
-            type="button"
-            className={`student-section-detail-tab ${activeTab === "sections" ? "is-active" : ""}`}
-            onClick={() => setActiveTab("sections")}
-          >
-            Sections ({sections.length})
-          </button>
-          <button
-            type="button"
-            className={`student-section-detail-tab ${activeTab === "bookQuestions" ? "is-active" : ""}`}
-            onClick={() => setActiveTab("bookQuestions")}
-          >
-            Book Questions ({bookQuestions.length})
-          </button>
-        </nav>
+        <section className="student-chapter-detail-section">
+          {loading ? (
+            <p className="student-empty-state">Loading sections...</p>
+          ) : error ? (
+            <p className="student-empty-state">{error}</p>
+          ) : sections.length === 0 ? (
+            <p className="student-empty-state">No sections found for this chapter yet.</p>
+          ) : (
+            <div className="student-chapter-detail-list">
+              {sections.map((section) => (
+                <StudentDrilldownCard
+                  key={section.sectionNumber}
+                  className={`student-chapter-detail-row ${!section.hasContent ? "is-disabled" : ""}`}
+                  onClick={() =>
+                    section.hasContent &&
+                    navigate(`/chapters/${chapterNumber}/sections/${section.sourceSectionId}`)
+                  }
+                  leading={<div className="student-chapter-detail-index">{section.sectionNumber}</div>}
+                  title={section.topicName || section.sectionNumber}
+                  subtitle={
+                    section.hasContent
+                      ? `${section.conceptCount} Concepts - ${section.progress}%`
+                      : "Not generated yet"
+                  }
+                >
+                </StudentDrilldownCard>
+              ))}
+              {!bookQuestionsLoading && !bookQuestionsError && (
+                <StudentDrilldownCard
+                  className="student-chapter-detail-row"
+                  onClick={() => navigate(`/chapters/${chapterNumber}/assessment`)}
+                  leading={<div className="student-chapter-detail-index">{totalConcepts}</div>}
+                  title={`Question Bank (${totalConcepts})`}
+                  subtitle="All chapter concepts, arranged randomly"
+                >
+                </StudentDrilldownCard>
+              )}
+            </div>
+          )}
+        </section>
 
-        {activeTab === "sections" ? (
-          <section className="student-chapter-detail-section">
-            {loading ? (
-              <p className="student-empty-state">Loading sections...</p>
-            ) : error ? (
-              <p className="student-empty-state">{error}</p>
-            ) : sections.length === 0 ? (
-              <p className="student-empty-state">No sections found for this chapter yet.</p>
-            ) : (
-              <div className="student-chapter-detail-list">
-                {sections.map((section) => (
-                  <StudentDrilldownCard
-                    key={section.sectionNumber}
-                    className={`student-chapter-detail-row ${!section.hasContent ? "is-disabled" : ""}`}
-                    onClick={() =>
-                      section.hasContent &&
-                      navigate(`/chapters/${chapterNumber}/sections/${section.sourceSectionId}`)
-                    }
-                    leading={<div className="student-chapter-detail-index">{section.sectionNumber}</div>}
-                    title={section.topicName || section.sectionNumber}
-                    subtitle={
-                      section.hasContent
-                        ? `${section.conceptCount} Concepts - ${section.progress}%`
-                        : "Not generated yet"
-                    }
-                  >
-                  </StudentDrilldownCard>
-                ))}
-              </div>
-            )}
-          </section>
-        ) : (
-          <section className="student-chapter-detail-section">
-            {bookQuestionsLoading ? (
-              <p className="student-empty-state">Loading book questions...</p>
-            ) : bookQuestionsError ? (
-              <p className="student-empty-state">{bookQuestionsError}</p>
-            ) : bookQuestions.length === 0 ? (
-              <p className="student-empty-state">
-                No chapter-end exercise questions have been added for this chapter yet.
-              </p>
-            ) : (
-              <StudentDrilldownCard
-                className="student-chapter-detail-row"
-                onClick={() => navigate(`/chapters/${chapterNumber}/book-questions`)}
-                leading={<div className="student-chapter-detail-index">{bookQuestions.length}</div>}
-                title="Chapter-end exercise questions"
-                subtitle={`${bookQuestionsAnsweredCount}/${bookQuestions.length} Answered - ${bookQuestionsProgress}%`}
-              >
-              </StudentDrilldownCard>
-            )}
-          </section>
-        )}
-
-        <StudentBottomNav activeItem="chapters" />
-      </section>
-    </main>
+    </StudentPageShell>
   );
 };

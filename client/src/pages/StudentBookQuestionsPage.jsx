@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentCameraCapture } from "../components/StudentCameraCapture";
 import { getBookQuestions, ocrHandwrittenNote, submitBookQuestionResponse } from "../api/client";
 
@@ -405,8 +405,7 @@ export const StudentBookQuestionsPage = () => {
   };
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-assessment-phone">
+    <StudentPageShell pageClass="student-page--book-questions" legacyModifierClass="student-assessment-phone">
         <header className="student-section-detail-header">
           <button
             type="button"
@@ -499,8 +498,6 @@ export const StudentBookQuestionsPage = () => {
           </section>
         )}
 
-        <StudentBottomNav activeItem="chapters" />
-      </section>
-    </main>
+    </StudentPageShell>
   );
 };

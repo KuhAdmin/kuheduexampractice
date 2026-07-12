@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { getStudentMindMap } from "../api/client";
 
 const BackIcon = () => (
@@ -114,8 +114,7 @@ export const StudentMindMapPage = () => {
   };
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-mindmap-phone">
+    <StudentPageShell pageClass="student-page--mindmap" legacyModifierClass="student-mindmap-phone">
         <header className="student-section-detail-header">
           <button
             type="button"
@@ -168,8 +167,6 @@ export const StudentMindMapPage = () => {
           </>
         )}
 
-        <StudentBottomNav activeItem="chapters" />
-      </section>
-    </main>
+    </StudentPageShell>
   );
 };

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentDrilldownCard } from "../components/StudentDrilldownCard";
 import { buildChapterRows, toTitleLabel } from "./studentChapterData";
 
@@ -65,8 +65,7 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
   const chapters = buildChapterRows(Array.isArray(dashboard?.chapters) ? dashboard.chapters : []);
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-chapters-phone">
+    <StudentPageShell pageClass="student-page--chapters" legacyModifierClass="student-chapters-phone">
         <header className="student-chapters-header">
           <button type="button" className="student-chapters-filter" aria-label="Selected class and subject">
             <span>{`${classLabel} - ${subjectLabel}`}</span>
@@ -98,8 +97,6 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
           )}
         </section>
 
-        <StudentBottomNav activeItem="chapters" />
-      </section>
-    </main>
+    </StudentPageShell>
   );
 };

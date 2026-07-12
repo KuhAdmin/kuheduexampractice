@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { getStudentDiagrams } from "../api/client";
 
 const BackIcon = () => (
@@ -65,8 +65,7 @@ export const StudentDiagramsPage = () => {
   };
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-diagrams-phone">
+    <StudentPageShell pageClass="student-page--diagrams" legacyModifierClass="student-diagrams-phone">
         <header className="student-section-detail-header">
           <button
             type="button"
@@ -137,8 +136,6 @@ export const StudentDiagramsPage = () => {
           </div>
         )}
 
-        <StudentBottomNav activeItem="chapters" />
-      </section>
-    </main>
+    </StudentPageShell>
   );
 };

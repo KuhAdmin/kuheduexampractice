@@ -1,14 +1,25 @@
 import {
   getAssessmentResult,
   getMindMapForSection,
+  listRecentAttemptsForChapter,
   listRecentAttemptsForConcept,
   listRecentAttemptsForSection,
   restartAssessment,
+  restartChapterAssessment,
   startOrResumeAssessment,
+  startOrResumeChapterAssessment,
   startOrResumeConceptAssessment,
   submitAnswer,
   submitAssessment,
 } from "../services/studentPracticeService.js";
+
+const chapterAssessmentContext = (req) => ({
+  board: req.user.board,
+  studentClass: req.user.studentClass,
+  subject: req.user.subject,
+  chapterNumber: req.params.chapterNumber,
+  userId: req.user.id,
+});
 
 export const startAssessment = async (req, res, next) => {
   try {
@@ -51,6 +62,39 @@ export const restartAssessmentHandler = async (req, res, next) => {
     if (error.statusCode) {
       return res.status(error.statusCode).json({ message: error.message });
     }
+    return next(error);
+  }
+};
+
+export const startChapterAssessment = async (req, res, next) => {
+  try {
+    const result = await startOrResumeChapterAssessment(chapterAssessmentContext(req));
+    return res.json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const restartChapterAssessmentHandler = async (req, res, next) => {
+  try {
+    const result = await restartChapterAssessment(chapterAssessmentContext(req));
+    return res.json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const getRecentChapterAttempts = async (req, res, next) => {
+  try {
+    const result = await listRecentAttemptsForChapter(chapterAssessmentContext(req));
+    return res.json(result);
+  } catch (error) {
     return next(error);
   }
 };

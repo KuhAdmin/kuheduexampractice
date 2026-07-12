@@ -12,6 +12,10 @@
   --teal: #146c94;
   --green: #2c6e49;
   --shadow: 0 24px 60px rgba(78, 56, 38, 0.16);
+  /* Layout tier reference (custom properties aren't readable inside @media,
+     so every @media rule below hardcodes these literally — keep in sync). */
+  --bp-tablet: 640px;
+  --bp-desktop: 920px;
 }
 
 * {
@@ -325,6 +329,7 @@ a {
   border: 1px solid rgba(72, 95, 62, 0.14);
   border-radius: 34px;
   background:
+    radial-gradient(ellipse 90% 40% at 50% 8%, rgba(20, 108, 148, 0.14), rgba(255, 255, 255, 0) 60%),
     linear-gradient(180deg, #fffefb 0%, #22853b 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
@@ -337,83 +342,60 @@ a {
     0 34px 70px rgba(63, 125, 57, 0.16);
 }
 
-.splash-screen {
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: clamp(16px, 2vh, 22px);
-  padding: clamp(28px, 4vh, 48px) 30px clamp(24px, 3vh, 36px);
-}
-
-.home-splash-brand {
-  position: absolute;
-  top: 22px;
-  left: 22px;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: #000000;
-  font-size: 0.96rem;
-  font-weight: 700;
-}
-
-.home-splash-brand-logo {
-  width: 34px;
-  height: 34px;
-  object-fit: contain;
-  flex: 0 0 auto;
-}
-
-.home-splash-glow {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 30% 20%, rgba(198, 219, 176, 0.3), transparent 28%),
-    radial-gradient(circle at 75% 24%, rgba(217, 233, 198, 0.35), transparent 22%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent 40%);
-}
-
-.home-splash-copy {
+/* Splash: a single uninterruptible full-viewport video, identical at every
+   breakpoint (see HomePage.jsx's activeScreen.kind === "splash" branch,
+   which renders this instead of either the phone-mockup or desktop hero). */
+.home-splash-video-page {
   position: relative;
-  text-align: center;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #000000;
 }
 
-.home-splash-copy h1 {
-  margin: 0;
-  color: #ffffff;
-  font-size: clamp(2.3rem, 8vw, 3rem);
-  letter-spacing: -0.04em;
-}
-
-.home-splash-note {
-  display: block;
-  margin-top: 6px;
-  color: #ffffff;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.home-splash-copy p {
-  margin: 8px 0 0;
-  color: #ffffff;
-  font-size: 0.98rem;
-}
-
-.home-splash-progress {
-  position: relative;
-  width: 120px;
-  height: 7px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
-}
-
-.home-splash-progress span {
-  display: block;
-  width: 78%;
+.home-splash-video {
+  width: 100%;
   height: 100%;
-  border-radius: inherit;
-  background: #ffffff;
+  /* cover was cropping the video (its aspect ratio doesn't exactly match
+     every viewport) -- contain guarantees the full frame is always
+     visible at every breakpoint, letterboxed rather than truncated. */
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Mobile gets its own 9:16 file (splash_video_mobile.mp4) close enough to
+   phone viewport ratios that cover crops only slightly left/right instead
+   of leaving the top/bottom letterbox bars contain would produce here. */
+@media (max-width: 640px) {
+  .home-splash-video {
+    object-fit: cover;
+  }
+}
+
+.home-splash-mute-toggle {
+  position: absolute;
+  right: 20px;
+  bottom: 24px;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  backdrop-filter: blur(6px);
+}
+
+.home-splash-mute-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.home-splash-mute-toggle:hover {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .onboarding-screen {
@@ -651,6 +633,71 @@ a {
 .onboarding-screen.is-welcome .home-screen-copy,
 .onboarding-screen.is-auth-screen .home-screen-copy {
   margin-top: 8px;
+}
+
+/* Onboarding-1/2/3, welcome, and sign-in/sign-up slides: logo+wordmark top
+   bar (replaces the plain spacer other screens use) and a copyright footer
+   matching the desktop hero's, mirroring
+   .home-desktop-navbar-brand/.home-desktop-footer. White text because the
+   phone frame's background is a light-to-dark-green gradient
+   (.home-phone-screen) -- the footer sits in the dark end of it, where the
+   original dark low-opacity color was nearly invisible. */
+.home-onboarding-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  min-height: 28px;
+}
+
+.home-onboarding-topbar img {
+  width: 24px;
+  height: 24px;
+}
+
+.home-onboarding-topbar span {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #1c241e;
+}
+
+/* Sign-in/sign-up already pack a multi-field form into the fixed-height
+   phone frame (no internal scroll) -- trim the top bar's margin here so it
+   doesn't push form content past the frame's overflow: hidden edge. */
+.onboarding-screen.is-auth-screen .home-onboarding-topbar {
+  margin-top: 4px;
+}
+
+/* Sticky footer: the form's own content height varies (login is short,
+   register is long), so pin the copyright line to the bottom of the flex
+   column instead of letting it float right after wherever the form ends --
+   same margin-top: auto pattern .home-screen-footer/.home-screen-actions
+   already use for the dots/CTA row on the other slides. */
+.onboarding-screen.is-auth-screen .home-onboarding-copyright {
+  margin-top: auto;
+  padding-top: 8px;
+  padding-bottom: 12px;
+  color: #ffffff;
+}
+
+.home-onboarding-copyright {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 0.68rem;
+  color: #ffffff;
+}
+
+/* No illustration on these slides -- let the title/subtitle fill and
+   center within the space between the top bar and the dots/Continue row
+   (which stays pinned to the bottom via .home-screen-footer's
+   margin-top: auto) instead of sitting at the top like before. */
+.onboarding-screen.is-onboarding-slide .home-screen-copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 0;
 }
 
 .onboarding-screen.is-auth-screen {
@@ -1118,10 +1165,23 @@ a {
     width: 100%;
   }
 
+  /* Full-viewport native mobile view: no surrounding margin, no phone-mockup
+     chrome (that treatment is desktop-only, simulating a phone silhouette
+     on a large screen -- redundant on an actual phone viewport). */
+  .home-gallery-shell {
+    padding: 0;
+  }
+
+  .home-gallery-stage,
   .home-phone-screen {
-    height: calc(98dvh - 20px);
     width: 100%;
-    border-radius: 30px;
+  }
+
+  .home-phone-screen {
+    height: 100dvh;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .home-screen-copy h2 {
@@ -1166,6 +1226,184 @@ a {
   .home-screen-topline button {
     font-size: 0.78rem;
   }
+}
+
+/* Re-assert full-bleed mobile after the max-height:760px block above, since
+   real phones commonly match both queries and it would otherwise win by
+   appearing later in the file. */
+@media (max-width: 640px) and (max-height: 760px) {
+  .home-gallery-shell {
+    padding: 0;
+  }
+
+  .home-phone-screen {
+    height: 100dvh;
+  }
+}
+
+/* ============================================================
+   DESKTOP/TABLET LANDING PAGE (HomePage.jsx, tier !== "mobile")
+   Only ever rendered by React when non-mobile (see DesktopHomeScreen /
+   HomePage's isMobile branch) -- no phone-mockup card, no splash/onboarding
+   carousel, just a wide centered hero + a plain card for auth screens.
+   ============================================================ */
+
+.home-desktop-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 38%, rgba(47, 158, 68, 0.14), rgba(251, 250, 247, 0) 70%),
+    radial-gradient(ellipse 60% 50% at 85% 15%, rgba(20, 108, 148, 0.08), rgba(251, 250, 247, 0) 70%),
+    #fbfaf7;
+}
+
+.home-desktop-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 40px;
+}
+
+.home-desktop-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-desktop-navbar-brand img {
+  width: 28px;
+  height: 28px;
+}
+
+.home-desktop-navbar-brand span {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.home-desktop-navbar-cta {
+  padding: 10px 22px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(47, 158, 68, 0.14);
+  color: #1e5e22;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.home-desktop-navbar-cta:hover {
+  background: rgba(47, 158, 68, 0.22);
+}
+
+.home-desktop-shell {
+  flex: 1;
+  min-height: calc(100vh - 140px);
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.home-desktop-footer {
+  padding: 16px 40px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.home-desktop-hero {
+  display: grid;
+  justify-items: center;
+  width: min(92vw, 1100px);
+  text-align: center;
+}
+
+.home-desktop-hero h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: #14231a;
+  white-space: pre-line;
+}
+
+.home-desktop-hero p {
+  margin: 22px 0 0;
+  max-width: 100%;
+  white-space: nowrap;
+  font-size: clamp(0.85rem, 1.6vw, 1.4rem);
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.home-desktop-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 36px;
+}
+
+.home-desktop-note {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.home-desktop-carousel-nav {
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+  margin-top: 36px;
+}
+
+/* .home-dots defaults to white dots for the dark phone-card background;
+   this light desktop page needs a dark-on-light version instead. */
+.home-desktop-hero .home-dots span {
+  background: rgba(20, 35, 26, 0.2);
+}
+
+.home-desktop-hero .home-dots span.is-active {
+  background: #2f7d33;
+}
+
+.home-desktop-hero .home-primary-cta,
+.home-desktop-hero .home-secondary-cta {
+  min-width: 160px;
+  min-height: 52px;
+  padding: 0 28px;
+  border-radius: 999px;
+}
+
+.home-desktop-auth-card {
+  width: min(100%, 420px);
+  padding: 36px 32px;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  box-shadow: 0 24px 60px rgba(20, 35, 26, 0.08);
+  text-align: center;
+}
+
+.home-desktop-auth-card h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #14231a;
+}
+
+.home-desktop-auth-card > p {
+  margin: 8px 0 24px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.home-desktop-auth-card .home-auth-stack {
+  text-align: left;
 }
 
 .hero-support-copy span {
@@ -1660,28 +1898,286 @@ a {
   width: 100%;
   max-width: none;
   min-height: 100vh;
-  padding: 14px 0 20px;
+  padding: 0;
 }
 
+@media (min-width: 640px) {
+  .dashboard-app-shell {
+    width: min(1600px, 80%);
+    margin: 0 auto;
+    padding: 14px 0 20px;
+  }
+}
+
+/* Mobile (<640px): full-viewport native app view, not a simulated phone
+   mockup -- no card border/shadow/radius/max-width, no outer gap. Tablet
+   and desktop never use these two classes at all (StudentPageShell renders
+   a plain .student-page instead once tier !== "mobile"). */
 .student-dashboard-shell {
   display: grid;
-  place-items: center;
-  min-height: calc(100vh - 34px);
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 .student-dashboard-phone {
   display: flex;
   flex-direction: column;
-  width: min(100%, 392px);
-  min-height: min(812px, calc(100vh - 28px));
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
   padding: 24px 18px 18px;
-  border: 1px solid rgba(72, 95, 62, 0.14);
-  border-radius: 34px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 245, 0.96));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.96),
-    0 24px 55px rgba(82, 72, 51, 0.14);
+  /* Defensive backstop: a descendant (e.g. a <video> with min-width: auto
+     resisting shrink below its intrinsic size) forcing this column wider
+     than the viewport should never manifest as page-level horizontal
+     scroll/clipping -- fix the actual shrink-to-fit issue at its source
+     (see .student-memory-booster-card) and keep this as a safety net, not
+     the primary fix. Any element that intentionally needs its own
+     horizontal scroll (e.g. .student-memory-booster-tabs) still scrolls
+     internally -- overflow here doesn't affect a descendant's own overflow.
+  */
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   STUDENT RESPONSIVE LAYOUT (tablet/desktop) — UI-refactor-for-non-mobile
+   Mobile (<640px): unchanged, uses .student-dashboard-shell/-phone above,
+     rendered by StudentPageShell (client/src/components/StudentPageShell.jsx).
+   Tablet (640-919px) / Desktop (>=920px): StudentPageShell instead renders
+     a plain `.student-page` div (no phone card) inside StudentLayout's
+     sidebar chrome. New overrides below are grouped by page and scoped
+     inside min-width queries so mobile inherits nothing from this section.
+   ============================================================ */
+
+.student-page {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  /* Consistent spacing between a page's top-level blocks (header, section,
+     etc.) now that they're no longer inside the flex-column phone card. */
+  .student-page {
+    display: grid;
+    gap: 24px;
+  }
+
+  /* Default for pages not yet given a bespoke desktop layout: stay narrow
+     and centered, just without the phone-card chrome/border/shadow. */
+  .student-page {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .student-page.student-page--assessment,
+  .student-page.student-page--flashcards,
+  .student-page.student-page--concept-learning,
+  .student-page.student-page--chapter-detail,
+  .student-page.student-page--section-detail,
+  .student-page.student-page--assessment-result,
+  .student-page.student-page--dashboard,
+  .student-page.student-page--chapters,
+  .student-page.student-page--memory-booster {
+    max-width: none;
+    margin: 0;
+  }
+
+  /* Guaranteed-equal left/right inset for this content, independent of
+     whatever spacing exists upstream (sidebar gap, outer shell margin). */
+  .student-page.student-page--memory-booster {
+    padding: 0 24px;
+  }
+
+  /* Scoped under .student-page--chapters (2 classes) so these reliably
+     beat the base .student-chapters-section/-list rules (1 class each)
+     that appear later in this file, regardless of source order. */
+  .student-page--chapters .student-chapters-section {
+    gap: 24px;
+  }
+
+  .student-page--chapters .student-chapters-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  /* FocusLayout: deliberate narrow/centered escape hatch from the
+     responsive grid, used by flashcards + simple assessment questions.
+     Same card treatment as .student-dashboard-phone, applied at tablet
+     and desktop only (mobile gets it for free via StudentPageShell). */
+  .focus-layout {
+    display: flex;
+    justify-content: center;
+  }
+
+  .focus-layout-card {
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 392px);
+    padding: 24px 18px 18px;
+    border: 1px solid rgba(72, 95, 62, 0.14);
+    border-radius: 34px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 245, 0.96));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.96),
+      0 24px 55px rgba(82, 72, 51, 0.14);
+  }
+
+  /* Ordering/matching questions: roomier than FocusLayout's 392px card, but
+     still contained (not full-bleed) so the drag/tap targets stay reachable. */
+  .student-assessment-wide {
+    max-width: 760px;
+    margin: 0 auto;
+    display: grid;
+    gap: 44px;
+  }
+}
+
+@media (min-width: 920px) {
+  .student-assessment-wide {
+    max-width: 960px;
+  }
+
+  /* Assessment instructions: stats/rules/CTA beside recent attempts
+     instead of stacked, now that the screen isn't FocusLayout-narrow. */
+  .student-assessment-wide .student-assessment-instructions {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 20px 32px;
+    align-items: start;
+  }
+
+  .student-assessment-wide .student-assessment-instructions-stats,
+  .student-assessment-wide .student-assessment-instructions-list,
+  .student-assessment-wide .student-assessment-cta-row {
+    grid-column: 1;
+  }
+
+  .student-assessment-wide .student-assessment-history {
+    grid-column: 2;
+    grid-row: 1 / 4;
+  }
+
+  /* One row per attempt: give the row more room to breathe and stop the
+     stat pills from wrapping onto a second line. */
+  .student-assessment-wide .student-assessment-history-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .student-assessment-wide .student-assessment-history-stats {
+    flex-wrap: nowrap;
+    gap: 14px;
+  }
+
+  .student-assessment-wide .student-assessment-history-stats span {
+    white-space: nowrap;
+  }
+
+  .student-assessment-wide .student-assessment-history-date {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  /* Feedback split: the question stays on the left, feedback appears in a
+     second column with a vertical rule between them, once submitted. */
+  .student-assessment-wide .student-concept-practice-panel.has-feedback-split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .student-assessment-wide .student-concept-practice-feedback-col {
+    position: relative;
+    padding-left: 28px;
+  }
+
+  .student-assessment-wide .student-concept-practice-feedback-col::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(47, 125, 51, 0.18);
+  }
+
+  /* Dashboard density target: stacked cards, single column, just without
+     the phone-card chrome/width cap of the default .student-page. */
+  .student-page--dashboard {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  /* Chapter/Section reading-hub density target: the drilldown row list
+     (sections within a chapter, concepts within a section) becomes a
+     multi-column card grid instead of one narrow scrolling column.
+     Scoped under the page class (2 classes) to reliably beat the base
+     .student-chapter-detail-list/-section-detail-list rules (1 class
+     each) that appear later in this file, regardless of source order. */
+  .student-page--chapter-detail .student-chapter-detail-list,
+  .student-page--section-detail .student-section-detail-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  .student-page--section-detail .student-section-detail-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  /* Results density target: score/counts beside the topic breakdown
+     instead of stacked. */
+  .student-page--assessment-result {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 20px 24px;
+  }
+
+  .student-page--assessment-result > .student-section-detail-header {
+    grid-column: 1 / -1;
+  }
+
+  .student-page--assessment-result > .student-result-score-ring {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .student-page--assessment-result > .student-result-counts {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .student-page--assessment-result > .student-result-topics {
+    grid-column: 2;
+    grid-row: 2 / 4;
+  }
+
+  .student-page--assessment-result > .student-result-actions {
+    grid-column: 1 / -1;
+  }
+
+  /* Explore tab: collapsible section cards go 2-up instead of stacking
+     full-width. Accordion expansion only grows that item's own grid row. */
+  .student-explore-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-items: start;
+  }
+
+  /* Prose width cap: reading content stays a comfortable line length even
+     though its surrounding chrome (.student-page--concept-learning) is
+     unconstrained/full-bleed. */
+  .student-concept-learning-copy {
+    max-width: 760px;
+  }
 }
 
 .student-dashboard-header {
@@ -2467,33 +2963,33 @@ a {
 .student-section-detail-tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  border-bottom: 1px solid rgba(88, 112, 93, 0.12);
+  gap: 6px;
+  padding: 6px;
+  border-radius: 18px;
+  background: rgba(88, 112, 93, 0.1);
 }
 
 .student-section-detail-tab {
   position: relative;
-  padding: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 13px;
   background: transparent;
-  color: #7a847b;
-  font-size: 0.86rem;
+  color: #58705d;
+  font-size: 0.88rem;
   font-weight: 700;
   text-align: center;
+  transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.student-section-detail-tab:focus-visible {
+  outline: 2px solid #2f9e44;
+  outline-offset: 2px;
 }
 
 .student-section-detail-tab.is-active {
-  color: #1d241f;
-}
-
-.student-section-detail-tab.is-active::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 3px;
-  border-radius: 999px;
-  background: #2f9e44;
+  background: #1d241f;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(29, 36, 31, 0.18);
 }
 
 .student-section-detail-concepts {
@@ -2574,32 +3070,34 @@ a {
 .student-concept-learning-tabs {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  border-bottom: 1px solid rgba(88, 112, 93, 0.12);
+  gap: 6px;
+  padding: 6px;
+  border-radius: 18px;
+  background: rgba(88, 112, 93, 0.1);
+  align-self: start;
 }
 
 .student-concept-learning-tab {
   position: relative;
-  padding: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 13px;
   background: transparent;
-  color: #7a847b;
+  color: #58705d;
   font-size: 0.84rem;
   font-weight: 700;
+  text-align: center;
+  transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.student-concept-learning-tab:focus-visible {
+  outline: 2px solid #2f9e44;
+  outline-offset: 2px;
 }
 
 .student-concept-learning-tab.is-active {
-  color: #1d241f;
-}
-
-.student-concept-learning-tab.is-active::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 3px;
-  border-radius: 999px;
-  background: #2f9e44;
+  background: #1d241f;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(29, 36, 31, 0.18);
 }
 
 .student-concept-learning-card {
@@ -2660,12 +3158,341 @@ a {
   line-height: 1.6;
 }
 
+/* ============================================================
+   Concept learning page -- desktop/tablet chrome (breadcrumb, hero card,
+   underline tab bar, Explore step-rail). Mobile keeps the original
+   back-button header + pill tabs + accordion untouched; this section only
+   ever renders when StudentConceptLearningPage's isDesktop branch is
+   active. Palette/spacing reuse the existing .student-concept-learning-*
+   values above rather than introducing a new one.
+   ============================================================ */
+
+.student-concept-desktop {
+  display: grid;
+  gap: 20px;
+}
+
+.student-concept-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #58705d;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.student-concept-breadcrumb button {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  background: none;
+  border: none;
+  color: inherit;
+}
+
+.student-concept-breadcrumb button:hover {
+  color: #1d241f;
+}
+
+.student-concept-breadcrumb .student-dashboard-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.student-concept-breadcrumb .is-current {
+  color: #1d241f;
+  font-weight: 700;
+}
+
+.student-concept-hero {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(47, 125, 51, 0.14);
+  background: linear-gradient(135deg, rgba(47, 158, 68, 0.08), rgba(255, 255, 255, 0.94));
+}
+
+.student-concept-hero-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(57, 90, 53, 0.14);
+  color: #2f9e44;
+}
+
+.student-concept-hero-icon .student-dashboard-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.student-concept-hero-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.student-concept-hero-badge {
+  justify-self: start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(47, 158, 68, 0.16);
+  color: #1e5e22;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.student-concept-hero-copy h1 {
+  margin: 0;
+  color: #1d241f;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.student-concept-hero-copy p {
+  margin: 0;
+  max-width: 640px;
+  color: #2d372f;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.student-concept-tabbar {
+  display: flex;
+  gap: 28px;
+  border-bottom: 1px solid rgba(88, 112, 93, 0.16);
+}
+
+.student-concept-tabbar-tab {
+  position: relative;
+  padding: 10px 2px 14px;
+  background: none;
+  border: none;
+  color: #58705d;
+  font-size: 0.92rem;
+  font-weight: 700;
+  transition: color 140ms ease;
+}
+
+.student-concept-tabbar-tab:hover {
+  color: #1d241f;
+}
+
+.student-concept-tabbar-tab.is-active {
+  color: #1e5e22;
+}
+
+.student-concept-tabbar-tab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 999px;
+  background: #2f9e44;
+}
+
+.student-concept-desktop-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 1180px) {
+  .student-concept-desktop-body.has-rail {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+.student-concept-desktop-main {
+  min-width: 0;
+}
+
+.student-concept-step-card {
+  padding: 22px;
+}
+
+.student-concept-step-heading {
+  display: flex;
+  align-items: center;
+}
+
+.student-concept-step-index {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1d241f;
+}
+
+.student-concept-step-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+@media (min-width: 760px) {
+  .student-concept-step-split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.student-concept-step-media {
+  min-width: 0;
+}
+
+.student-concept-step-media .student-media-viewer-media {
+  max-height: none;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.student-concept-step-copy {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+}
+
+.student-concept-step-copy.is-full-width {
+  grid-column: 1 / -1;
+}
+
+.student-concept-step-copy h3 {
+  margin: 0;
+  color: #1e5e22;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.student-concept-step-copy p {
+  margin: 0;
+  color: #2d372f;
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+
+.student-concept-explore-rail {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 18px;
+  border: 1px solid rgba(47, 125, 51, 0.12);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(57, 90, 53, 0.08);
+}
+
+.student-concept-explore-rail h2 {
+  margin: 0;
+  color: #1e5e22;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.student-concept-explore-rail ol {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.student-concept-explore-rail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  transition: background-color 140ms ease;
+}
+
+.student-concept-explore-rail-item:hover {
+  background: rgba(47, 158, 68, 0.08);
+}
+
+.student-concept-explore-rail-item.is-active {
+  background: #1d241f;
+}
+
+.student-concept-explore-rail-index {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(88, 112, 93, 0.14);
+  color: #58705d;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.student-concept-explore-rail-index .student-dashboard-icon {
+  width: 14px;
+  height: 14px;
+  color: #2f9e44;
+}
+
+.student-concept-explore-rail-item.is-active .student-concept-explore-rail-index {
+  background: #2f9e44;
+  color: #ffffff;
+}
+
+.student-concept-explore-rail-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.student-concept-explore-rail-copy strong {
+  color: #1d241f;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.student-concept-explore-rail-item.is-active .student-concept-explore-rail-copy strong {
+  color: #ffffff;
+}
+
+.student-concept-explore-rail-copy span {
+  color: #58705d;
+  font-size: 0.76rem;
+  line-height: 1.3;
+}
+
+.student-concept-explore-rail-item.is-active .student-concept-explore-rail-copy span {
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .student-concept-learning-footer {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 12px;
   margin-top: auto;
+}
+
+/* Explore step footer: just Previous + Continue, no counter in between --
+   the 3-column auto/1fr/auto grid above put Continue in the middle
+   (flexible) column instead of the third one, stretching it. Two columns,
+   pushed to opposite ends, is what this actually needs. */
+.student-concept-learning-footer.is-two-up {
+  grid-template-columns: auto auto;
+  justify-content: space-between;
 }
 
 .student-concept-learning-nav {
@@ -2902,6 +3729,12 @@ a {
   background: #ffffff;
   box-shadow: 0 12px 32px rgba(57, 90, 53, 0.08);
   touch-action: pan-y;
+  /* Grid items default to min-width: auto, which lets a replaced element's
+     intrinsic size (the <video>'s native pixel width, before width: 100%
+     applies) push this card -- and everything above it in the flex column
+     -- wider than the viewport. min-width: 0 lets it actually shrink to fit
+     instead of just overflowing to the right. */
+  min-width: 0;
 }
 
 .student-memory-booster-card p,
@@ -2978,11 +3811,14 @@ a {
 
 .student-media-viewer {
   position: relative;
+  min-width: 0;
 }
 
 .student-media-viewer-media {
   display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   max-height: 220px;
   border-radius: 16px;
   object-fit: cover;
@@ -3374,6 +4210,13 @@ a {
   box-shadow: 0 12px 32px rgba(57, 90, 53, 0.08);
 }
 
+.student-concept-practice-question,
+.student-concept-practice-feedback-col {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
 .student-assessment-instructions {
   display: grid;
   gap: 18px;
@@ -3728,12 +4571,15 @@ a {
 
 .student-result-actions {
   display: flex;
+  align-items: center;
   gap: 10px;
 }
 
 .student-result-actions .ghost-button,
 .student-result-actions .student-concept-practice-next {
   flex: 1;
+  min-height: 52px;
+  margin-top: 0;
   text-align: center;
 }
 
@@ -4786,10 +5632,74 @@ a {
 }
 
 .admin-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 12px 14px;
   border-radius: 16px;
   color: var(--text);
   transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.admin-sidebar-link.is-disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Tablet icon-only collapse (student sidebar only — see .student-app-shell). */
+.admin-sidebar.is-collapsed {
+  width: 84px;
+  padding-left: 12px;
+  padding-right: 12px;
+  transition: width 160ms ease;
+}
+
+.admin-sidebar.is-collapsed:hover,
+.admin-sidebar.is-collapsed:focus-within {
+  width: 260px;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar-brand > div,
+.admin-sidebar.is-collapsed .admin-sidebar-link-label,
+.admin-sidebar.is-collapsed .admin-sidebar-footer p,
+.admin-sidebar.is-collapsed .admin-sidebar-footer span {
+  display: none;
+  white-space: nowrap;
+}
+
+.admin-sidebar.is-collapsed:hover .admin-sidebar-brand > div,
+.admin-sidebar.is-collapsed:hover .admin-sidebar-link-label,
+.admin-sidebar.is-collapsed:hover .admin-sidebar-footer p,
+.admin-sidebar.is-collapsed:hover .admin-sidebar-footer span,
+.admin-sidebar.is-collapsed:focus-within .admin-sidebar-brand > div,
+.admin-sidebar.is-collapsed:focus-within .admin-sidebar-link-label,
+.admin-sidebar.is-collapsed:focus-within .admin-sidebar-footer p,
+.admin-sidebar.is-collapsed:focus-within .admin-sidebar-footer span {
+  display: block;
+}
+
+/* The shared @media (max-width: 920px) block further down turns
+   .admin-sidebar into an off-canvas drawer and collapses .admin-page to a
+   single column -- correct for admin/moderator (no tablet tier), but the
+   student sidebar's tablet tier (640-919px) needs to stay persistent and
+   icon-only instead. .admin-page--tablet-collapsed is only ever applied by
+   StudentLayout, so this doesn't affect admin/moderator. */
+@media (min-width: 640px) {
+  .admin-page.admin-page--tablet-collapsed {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+
+  .admin-page--tablet-collapsed .admin-sidebar {
+    position: sticky;
+    top: 16px;
+    transform: none;
+  }
+
+  .admin-page--tablet-collapsed .admin-mobile-topbar,
+  .admin-page--tablet-collapsed .admin-mobile-backdrop {
+    display: none;
+  }
 }
 
 .admin-sidebar-home {

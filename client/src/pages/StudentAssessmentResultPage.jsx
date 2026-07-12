@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { getAssessmentResult } from "../api/client";
 
 export const StudentAssessmentResultPage = () => {
   const navigate = useNavigate();
   const { chapterId: chapterNumber, sectionId: sourceSectionId, conceptId, attemptId } = useParams();
   const isConceptMode = Boolean(conceptId);
+  const isChapterMode = !sourceSectionId && !conceptId;
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,12 +34,15 @@ export const StudentAssessmentResultPage = () => {
   }, [attemptId]);
 
   const sectionPath = `/chapters/${chapterNumber}/sections/${sourceSectionId}`;
-  const basePath = isConceptMode ? `${sectionPath}/concepts/${conceptId}` : sectionPath;
+  const basePath = isChapterMode
+    ? `/chapters/${chapterNumber}`
+    : isConceptMode
+    ? `${sectionPath}/concepts/${conceptId}`
+    : sectionPath;
   const scorePercent = result?.score ?? 0;
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-assessment-result-phone">
+    <StudentPageShell pageClass="student-page--assessment-result" legacyModifierClass="student-assessment-result-phone">
         <header className="student-section-detail-header">
           <h1>Assessment Result</h1>
         </header>
@@ -103,8 +107,6 @@ export const StudentAssessmentResultPage = () => {
           </>
         )}
 
-        <StudentBottomNav activeItem="chapters" />
-      </section>
-    </main>
+    </StudentPageShell>
   );
 };

@@ -5125,7 +5125,7 @@ export const abortAssessmentStudioPipeline = (jobId) => {
 // Tables that carry a generation_id and must be cleared before their parent
 // generation_registry rows can be removed. Children (rows that reference a
 // layerN parent row) are listed first so intra-layer FKs resolve cleanly.
-const GENERATION_CHILD_TABLES = [
+export const GENERATION_CHILD_TABLES = [
   "layer1_structure_part",
   "layer1_process_input",
   "layer1_process_output",
@@ -5151,7 +5151,7 @@ const GENERATION_CHILD_TABLES = [
   "concept_alias",
 ];
 
-const GENERATION_PARENT_TABLES = [
+export const GENERATION_PARENT_TABLES = [
   "layer1_core_concept",
   "layer1_structure",
   "layer1_function",
@@ -5185,7 +5185,7 @@ const GENERATION_PARENT_TABLES = [
 // Nullable back-references from downstream/consumer tables into
 // generation_registry. These are RESTRICT/SET NULL and would otherwise block
 // deleting a generation, so they are cleared first.
-const GENERATION_BACKREF_UPDATES = [
+export const GENERATION_BACKREF_UPDATES = [
   "UPDATE layer_run SET parent_generation_id = NULL WHERE parent_generation_id = ANY($1)",
   "UPDATE layer_input_contract SET parent_generation_id = NULL WHERE parent_generation_id = ANY($1)",
   "UPDATE layer_output_contract SET parent_generation_id = NULL WHERE parent_generation_id = ANY($1)",

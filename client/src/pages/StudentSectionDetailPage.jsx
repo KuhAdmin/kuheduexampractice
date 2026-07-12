@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentDrilldownCard } from "../components/StudentDrilldownCard";
 import { getStudentSectionOverview } from "../api/client";
 
@@ -164,8 +164,7 @@ export const StudentSectionDetailPage = () => {
   const basePath = `/chapters/${chapterNumber}/sections/${sourceSectionId}`;
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-section-detail-phone">
+    <StudentPageShell pageClass="student-page--section-detail" legacyModifierClass="student-section-detail-phone">
         <header className="student-section-detail-header">
           <button
             type="button"
@@ -301,8 +300,6 @@ export const StudentSectionDetailPage = () => {
           </>
         )}
 
-        <StudentBottomNav activeItem="chapters" />
-      </section>
-    </main>
+    </StudentPageShell>
   );
 };

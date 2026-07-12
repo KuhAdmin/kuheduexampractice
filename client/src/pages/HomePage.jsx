@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useBreakpoint } from "../hooks/useBreakpoint";
 
 const GOOGLE_AUTH_URL =
  "/api/auth/google";
@@ -9,41 +10,37 @@ const homeScreens = [
   {
     id: "splash",
     kind: "splash",
-    title: "BIOLOGY",
-    note: "(for CBSE class XI-XII)",
-    subtitle: "Learn - Practice - Excel",
-    artClass: "is-splash",
   },
   {
     id: "onboarding-1",
     kind: "onboarding",
-    title: "Master Biology\nStep by Step",
+    title: "Master Every Subject,\nStep by Step",
     body:
-      "Concepts, practice, and assessments personalized for you.",
+      "Learn through concepts, practice, and personalized guidance designed for lasting understanding.",
     artClass: "is-cell",
   },
   {
     id: "onboarding-2",
     kind: "onboarding",
-    title: "Concepts that\nStick with you",
+    title: "Understand Once.\nRemember Longer.",
     body:
-      "Memory aids, stories and real-life examples make learning easy and lasting.",
+      "Stories, visuals, and real-life examples help every concept stay with you.",
     artClass: "is-plant",
   },
   {
     id: "onboarding-3",
     kind: "onboarding",
-    title: "Revise. Practice.\nAssess. Improve.",
+    title: "Practice. Improve.\nSucceed.",
     body:
-      "Track your progress, identify weak areas and improve with smart assessments.",
+      "Discover weak areas, strengthen your skills, and track your progress with smart assessments.",
     artClass: "is-clipboard",
   },
   {
     id: "welcome",
     kind: "welcome",
-    title: "Master Biology\nOne Concept at a Time.",
+    title: "One Concept at a Time.\nUnlimited Growth.",
     body:
-      "Join thousands of students learning better every day with guided Biology practice.",
+      "Build confidence every day with guided learning designed around your pace.",
     artClass: "is-book",
   },
   {
@@ -539,36 +536,28 @@ const HomeScreen = ({
 }) => {
   const isWelcome = screen.kind === "welcome";
   const isAuthScreen = ["register", "login", "google"].includes(screen.kind);
+  // Sign-In/Sign-Up get the brand top bar + copyright footer too, but keep
+  // their existing (faint, absolutely-positioned) illustration and form
+  // layout -- only onboarding-1/2/3 and welcome go illustration-free with
+  // the title/subtitle centered into the freed-up space.
+  const showBrandChrome =
+    screen.kind === "onboarding" || isWelcome || screen.kind === "register" || screen.kind === "login";
+  const hideIllustration = screen.kind === "onboarding" || isWelcome;
 
   return (
     <article className="home-gallery-panel">
       <div className="home-phone-frame is-active">
-        {screen.kind === "splash" ? (
-          <div className="home-phone-screen splash-screen">
-            <div className="home-splash-glow" />
-            <div className="home-splash-brand">
-              <img className="home-splash-brand-logo" src="/kuhedu-logo.png" alt="KUHEDU logo" />
-              <span>Kuhedu Examinations</span>
+        <div
+          className={`home-phone-screen onboarding-screen ${isWelcome ? "is-welcome" : ""} ${isAuthScreen ? "is-auth-screen" : ""} ${hideIllustration ? "is-onboarding-slide" : ""}`}
+        >
+          {showBrandChrome ? (
+            <div className="home-onboarding-topbar">
+              <img src="/kuhedu-logo.png" alt="KUHEDU logo" />
+              <span>KUHEDU MASTER</span>
             </div>
-            <Illustration variant={screen.artClass} />
-            <div className="home-splash-copy">
-              <h1>{screen.title}</h1>
-              {screen.note ? <span className="home-splash-note">{screen.note}</span> : null}
-            <p>{screen.subtitle}</p>
-          </div>
-            <div className="home-splash-progress">
-              <motion.span
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 6, ease: "linear" }}
-              />
-            </div>
-          </div>
-        ) : (
-          <div
-            className={`home-phone-screen onboarding-screen ${isWelcome ? "is-welcome" : ""} ${isAuthScreen ? "is-auth-screen" : ""}`}
-          >
+          ) : (
             <div className="home-screen-topline" aria-hidden="true" />
+          )}
             <div className="home-screen-copy">
               <h2>
                 {screen.kind === "register" && registerStep === "board"
@@ -589,24 +578,24 @@ const HomeScreen = ({
                   : screen.body}
               </p>
             </div>
-            <Illustration variant={screen.artClass} />
+            {!hideIllustration && <Illustration variant={screen.artClass} />}
 
             {isWelcome ? (
               <div className="home-screen-actions">
-                <button type="button" className="home-primary-cta" onClick={onChooseGetStarted}>
-                  {user ? "Go to Dashboard" : "Sign Up"}
-                </button>
-                {!user ? (
-                  <p className="home-auth-divider" aria-hidden="true">
-                    OR
-                  </p>
-                ) : null}
                 <button
                   type="button"
                   className="home-secondary-cta"
                   onClick={user ? onChooseLogout : onChooseSignIn}
                 >
                   {user ? "Logout" : "Sign In"}
+                </button>
+                {!user ? (
+                  <p className="home-auth-divider" aria-hidden="true">
+                    OR
+                  </p>
+                ) : null}
+                <button type="button" className="home-primary-cta" onClick={onChooseGetStarted}>
+                  {user ? "Go to Dashboard" : "Sign Up"}
                 </button>
               </div>
             ) : screen.kind === "register" ? (
@@ -648,10 +637,132 @@ const HomeScreen = ({
                 </button>
               </div>
             )}
+            {showBrandChrome && (
+              <p className="home-onboarding-copyright">
+                © 2026 Kuhedu Technologies (P) Ltd. All rights reserved.
+              </p>
+            )}
+          </div>
+        </div>
+    </article>
+  );
+};
+
+// Non-mobile landing page: same splash + onboarding-1/2/3 + welcome screens
+// as mobile, just without the phone-mockup frame -- a single, wide, centered
+// hero per screen, ChatGPT-landing-page style (big bold headline, generous
+// whitespace, flat CTAs), plus a plain centered card for the auth screens.
+const DesktopHomeScreen = ({
+  screen,
+  index,
+  registerForm,
+  registerStep,
+  loginForm,
+  authState,
+  onNext,
+  onChooseGetStarted,
+  onChooseSignIn,
+  onChooseLogout,
+  onRegisterFieldChange,
+  onLoginFieldChange,
+  onTogglePolicy,
+  onRegisterContinue,
+  onRegisterSubmit,
+  onLoginSubmit,
+  onRegisterGoogleAuth,
+  onLoginGoogleAuth,
+  onBackToWelcome,
+  onSwitchToLogin,
+  user,
+}) => {
+  if (screen.kind !== "register" && screen.kind !== "login" && screen.kind !== "google") {
+    const isWelcome = screen.kind === "welcome";
+
+    return (
+      <div className="home-desktop-hero">
+        <h1>{screen.title}</h1>
+        <p>{screen.body}</p>
+
+        {isWelcome ? (
+          <div className="home-desktop-actions">
+            <button
+              type="button"
+              className="home-secondary-cta"
+              onClick={user ? onChooseLogout : onChooseSignIn}
+            >
+              {user ? "Logout" : "Sign In"}
+            </button>
+            <button type="button" className="home-primary-cta" onClick={onChooseGetStarted}>
+              {user ? "Go to Dashboard" : "Sign Up"}
+            </button>
+          </div>
+        ) : (
+          <div className="home-desktop-carousel-nav">
+            <div className="home-dots" aria-hidden="true">
+              {homeScreens.slice(1, 5).map((item, dotIndex) => (
+                <span key={item.id} className={dotIndex === index - 1 ? "is-active" : ""} />
+              ))}
+            </div>
+            <button type="button" className="home-primary-cta" onClick={onNext}>
+              Continue
+            </button>
           </div>
         )}
       </div>
-    </article>
+    );
+  }
+
+  const heading =
+    screen.kind === "register" && registerStep === "board"
+      ? "Select Your Board"
+      : screen.kind === "register" && registerStep === "class"
+      ? "Select Your Class"
+      : screen.kind === "register" && registerStep === "subject"
+      ? "Select Subject"
+      : screen.title;
+
+  const subheading =
+    screen.kind === "register" && registerStep === "board"
+      ? "Choose your education board"
+      : screen.kind === "register" && registerStep === "class"
+      ? "Choose your class"
+      : screen.kind === "register" && registerStep === "subject"
+      ? "Choose a subject to start"
+      : screen.body;
+
+  return (
+    <div className="home-desktop-auth-card">
+      <h2>{heading}</h2>
+      <p>{subheading}</p>
+      {screen.kind === "register" ? (
+        <RegisterForm
+          form={registerForm}
+          step={registerStep}
+          error={authState.error}
+          submitting={authState.submitting}
+          onChange={onRegisterFieldChange}
+          onTogglePolicy={onTogglePolicy}
+          onContinue={onRegisterContinue}
+          onSubmit={onRegisterSubmit}
+          onGoogle={onRegisterGoogleAuth}
+          onBack={onBackToWelcome}
+          onStepBack={() => onRegisterContinue(null, true)}
+          onSwitchToLogin={onSwitchToLogin}
+        />
+      ) : screen.kind === "login" ? (
+        <LoginForm
+          form={loginForm}
+          error={authState.error}
+          submitting={authState.submitting}
+          onChange={onLoginFieldChange}
+          onSubmit={onLoginSubmit}
+          onGoogle={onLoginGoogleAuth}
+          onBack={onBackToWelcome}
+        />
+      ) : (
+        <GoogleScreen onGoogle={onLoginGoogleAuth} onBack={onBackToWelcome} />
+      )}
+    </div>
   );
 };
 
@@ -665,7 +776,10 @@ export const HomePage = ({
   resumeOnboarding = false,
   user,
 }) => {
+  const tier = useBreakpoint();
+  const isMobile = tier === "mobile";
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isSplashMuted, setIsSplashMuted] = useState(true);
   const [registerForm, setRegisterForm] = useState(initialRegisterForm);
   const [registerStep, setRegisterStep] = useState("details");
   const [loginForm, setLoginForm] = useState(initialLoginForm);
@@ -674,6 +788,10 @@ export const HomePage = ({
   const activeScreen = homeScreens[activeIndex];
   const isPostCreateOnboarding = emailOnboarding || googleOnboarding || resumeOnboarding;
 
+  // Primary advance is the video's own onEnded event (see the splash render
+  // branch below); this is only a safety net in case the video fails to
+  // fire onEnded (e.g. failed to load), so the splash screen never strands
+  // a student indefinitely.
   useEffect(() => {
     if (activeIndex !== 0) {
       return undefined;
@@ -681,7 +799,7 @@ export const HomePage = ({
 
     const timer = window.setTimeout(() => {
       setActiveIndex(1);
-    }, 6000);
+    }, 12000);
 
     return () => window.clearTimeout(timer);
   }, [activeIndex]);
@@ -877,6 +995,123 @@ export const HomePage = ({
     setLoginForm(initialLoginForm);
     setAuthState({ submitting: false, error: "" });
   };
+
+  // Splash is a single uninterruptible video -- no controls, no
+  // click/keyboard/context-menu interaction, no way to skip or pause. It
+  // starts muted (autoplay-with-sound is blocked by browsers until the user
+  // has interacted with the page) and advances itself via onEnded (with the
+  // 12s timer above as a fallback if the video never fires that event). The
+  // one exception to "no controls" is a small mute/unmute toggle -- it can
+  // only toggle sound, never pause/seek/skip the playback.
+  if (activeScreen.kind === "splash") {
+    return (
+      <main className="home-splash-video-page">
+        <video
+          className="home-splash-video"
+          src={tier === "desktop" ? "/splash_video.mp4" : "/splash_video_mobile.mp4"}
+          autoPlay
+          muted={isSplashMuted}
+          playsInline
+          disablePictureInPicture
+          controlsList="nodownload noplaybackrate nofullscreen"
+          onContextMenu={(event) => event.preventDefault()}
+          onEnded={() => setActiveIndex(1)}
+        />
+        <button
+          type="button"
+          className="home-splash-mute-toggle"
+          onClick={() => setIsSplashMuted((current) => !current)}
+          aria-label={isSplashMuted ? "Unmute video" : "Mute video"}
+        >
+          {isSplashMuted ? (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9.5v5h3.2L12 19V5L7.2 9.5H4Z" fill="currentColor" />
+              <path
+                d="m16 9 5 5m0-5-5 5"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="1.8"
+              />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9.5v5h3.2L12 19V5L7.2 9.5H4Z" fill="currentColor" />
+              <path
+                d="M16 8.5a5 5 0 0 1 0 7"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="1.7"
+              />
+              <path
+                d="M18.3 6.2a8.5 8.5 0 0 1 0 11.6"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="1.7"
+              />
+            </svg>
+          )}
+        </button>
+      </main>
+    );
+  }
+
+  if (!isMobile) {
+    return (
+      <main className="home-desktop-page">
+        <nav className="home-desktop-navbar">
+          <div className="home-desktop-navbar-brand">
+            <img src="/kuhedu-logo.png" alt="KUHEDU logo" />
+            <span>KUHEDU MASTER</span>
+          </div>
+        </nav>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeScreen.id}
+            className="home-desktop-shell"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            <DesktopHomeScreen
+              screen={activeScreen}
+              index={activeIndex}
+              registerForm={registerForm}
+              registerStep={registerStep}
+              loginForm={loginForm}
+              authState={authState}
+              onNext={() => setActiveIndex((current) => Math.min(current + 1, screenIndexById.welcome))}
+              onChooseGetStarted={handleContinue}
+              onChooseSignIn={() => goToScreen("login")}
+              onChooseLogout={onLogout}
+              onRegisterFieldChange={updateRegisterField}
+              onLoginFieldChange={updateLoginField}
+              onTogglePolicy={() =>
+                setRegisterForm((current) => ({
+                  ...current,
+                  acceptPolicy: !current.acceptPolicy,
+                }))
+              }
+              onRegisterContinue={handleRegisterContinue}
+              onRegisterSubmit={handleRegisterSubmit}
+              onLoginSubmit={handleLoginSubmit}
+              onRegisterGoogleAuth={() => openGoogleAuth("register")}
+              onLoginGoogleAuth={() => openGoogleAuth("login")}
+              onBackToWelcome={() => goToScreen("welcome")}
+              onSwitchToLogin={() => goToScreen("login")}
+              user={user}
+            />
+          </motion.div>
+        </AnimatePresence>
+        <footer className="home-desktop-footer">
+          © 2026 Kuhedu Technologies (P) Ltd. All rights reserved.
+        </footer>
+      </main>
+    );
+  }
 
   return (
     <main className="home-gallery-page">

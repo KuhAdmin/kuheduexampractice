@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentDrilldownCard } from "../components/StudentDrilldownCard";
 import { getRemainingConcepts } from "../api/client";
 
@@ -45,8 +45,7 @@ export const StudentRemainingConceptsPage = () => {
   }, []);
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-section-detail-phone">
+    <StudentPageShell pageClass="student-page--goals" legacyModifierClass="student-section-detail-phone">
         <header className="student-section-detail-header">
           <button
             type="button"
@@ -86,8 +85,6 @@ export const StudentRemainingConceptsPage = () => {
           </section>
         )}
 
-        <StudentBottomNav activeItem="home" />
-      </section>
-    </main>
+    </StudentPageShell>
   );
 };

@@ -5,6 +5,8 @@ import {
   getLayer7Support,
 } from "./assessmentStudioContextAssembler.js";
 import { createStructuredCompletion } from "./openAiService.js";
+import { resolveBookIdForChapter } from "./chapterExerciseService.js";
+import { listSectionsForChapter } from "./studentContentService.js";
 
 const MASTERY_COMPLETE_THRESHOLD = 0.8;
 const MASTERY_DEVELOPING_THRESHOLD = 0.5;
@@ -374,6 +376,76 @@ const materializePracticeSetForConcept = async (assessmentUnitId) =>
     return syncPracticeSetItems(client, practiceSetId, currentItems);
   });
 
+// Finds (or creates) the whole chapter's canonical practice_set, then syncs
+// it against every assessment unit in every section of the chapter. Reuses
+// the already-unused practice_set_code column (no schema change needed) as
+// the natural key, since a chapter has no single row of its own to hang a FK
+// off -- mst_chapter is actually one row per section (see the comment on
+// resolveBookIdForChapter), so "book + chapter number" is the closest stable
+// identity for "this chapter's content," same as chapterExerciseService.js
+// uses for book questions.
+const materializePracticeSetForChapter = async ({ board, studentClass, subject, chapterNumber, userId }) => {
+  const fkMstBookId = await resolveBookIdForChapter({ board, studentClass, subject, chapterNumber });
+  if (!fkMstBookId) {
+    return { practiceSetId: null, items: [] };
+  }
+
+  const { sections } = await listSectionsForChapter({ board, studentClass, subject, chapterNumber, userId });
+  const sourceSectionIds = sections
+    .filter((section) => section.hasContent && section.sourceSectionId)
+    .map((section) => section.sourceSectionId);
+
+  return withTransaction(async (client) => {
+    const practiceSetCode = `chapter:${fkMstBookId}:${chapterNumber}`;
+    const existingSet = await client.query(
+      "SELECT id FROM practice_set WHERE practice_set_code = $1",
+      [practiceSetCode]
+    );
+
+    let practiceSetId = existingSet.rows[0]?.id;
+    if (!practiceSetId) {
+      const inserted = await client.query(
+        `
+          INSERT INTO practice_set (practice_set_code, name, status)
+          VALUES ($1, $2, 'active')
+          RETURNING id
+        `,
+        [practiceSetCode, `Chapter ${chapterNumber} Assessment`]
+      );
+      practiceSetId = inserted.rows[0].id;
+    }
+
+    const currentItems = [];
+    for (const sourceSectionId of sourceSectionIds) {
+      const assessmentUnitIds = await getAssessmentUnitsForSourceSection(sourceSectionId);
+      for (const assessmentUnitId of assessmentUnitIds) {
+        const items = (await getLayer6Items(assessmentUnitId)).filter(hasSufficientOptions);
+        currentItems.push(...items);
+      }
+    }
+
+    return syncPracticeSetItems(client, practiceSetId, currentItems);
+  });
+};
+
+// Recovers the exact item order an attempt was originally presented in --
+// needed only for chapter assessments, where that order was randomized at
+// creation (see startOrResumeChapterAssessment) and must stay stable across
+// resumes. student_attempt_item has no "presentation position" column, but
+// createAttempt inserts one row per item in presentation order, so the rows'
+// own auto-increment id order reconstructs it without a schema change.
+const reorderItemsForAttempt = async ({ attemptId, items }) => {
+  const result = await pool.query(
+    "SELECT display_order FROM student_attempt_item WHERE student_attempt_id = $1 ORDER BY id ASC",
+    [attemptId]
+  );
+  const itemsByDisplayOrder = new Map(items.map((item) => [item.displayOrder, item]));
+  const ordered = result.rows
+    .map((row) => itemsByDisplayOrder.get(row.display_order))
+    .filter(Boolean);
+  return ordered.length === items.length ? ordered : items;
+};
+
 const findInProgressAttempt = async ({ userId, practiceSetId }) => {
   const result = await pool.query(
     `
@@ -647,6 +719,118 @@ export const listRecentAttemptsForConcept = async ({ assessmentUnitId, userId, l
   const practiceSetResult = await pool.query(
     "SELECT id FROM practice_set WHERE source_assessment_unit_id = $1",
     [assessmentUnitId]
+  );
+  const practiceSetId = practiceSetResult.rows[0]?.id;
+  if (!practiceSetId) {
+    return { attempts: [] };
+  }
+
+  const attemptsResult = await pool.query(
+    `
+      SELECT
+        sa.id,
+        sa.started_at,
+        sa.submitted_at,
+        sa.score,
+        COUNT(DISTINCT sai.id) AS total_count,
+        COUNT(DISTINCT sr.student_attempt_item_id) AS attempted_count,
+        COUNT(DISTINCT sr.student_attempt_item_id) FILTER (WHERE sr.is_correct) AS correct_count
+      FROM student_attempt sa
+      LEFT JOIN student_attempt_item sai ON sai.student_attempt_id = sa.id
+      LEFT JOIN student_response sr ON sr.student_attempt_item_id = sai.id
+      WHERE sa.user_id = $1 AND sa.practice_set_id = $2 AND sa.status = 'completed'
+      GROUP BY sa.id, sa.started_at, sa.submitted_at, sa.score
+      ORDER BY sa.started_at DESC
+      LIMIT $3
+    `,
+    [userId, practiceSetId, limit]
+  );
+
+  return {
+    attempts: attemptsResult.rows.map((row) => {
+      const attemptedCount = Number(row.attempted_count) || 0;
+      const correctCount = Number(row.correct_count) || 0;
+      return {
+        attemptId: row.id,
+        startedAt: row.started_at,
+        submittedAt: row.submitted_at,
+        score: row.score !== null ? Number(row.score) : null,
+        totalCount: Number(row.total_count) || 0,
+        attemptedCount,
+        correctCount,
+        incorrectCount: attemptedCount - correctCount,
+      };
+    }),
+  };
+};
+
+const getChapterDisplayMeta = async ({ board, studentClass, subject, chapterNumber, userId }) => {
+  const { chapterName } = await listSectionsForChapter({ board, studentClass, subject, chapterNumber, userId });
+  return { sectionNumber: null, topicName: chapterName };
+};
+
+export const startOrResumeChapterAssessment = async ({ board, studentClass, subject, chapterNumber, userId }) => {
+  const [{ practiceSetId, items }, displayMeta] = await Promise.all([
+    materializePracticeSetForChapter({ board, studentClass, subject, chapterNumber, userId }),
+    getChapterDisplayMeta({ board, studentClass, subject, chapterNumber, userId }),
+  ]);
+
+  if (!items.length) {
+    const error = new Error("This chapter has no generated assessment items yet.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Random order is chapter-assessment-specific -- only reshuffled when a
+  // new attempt is actually created; resuming an in-progress attempt
+  // recovers that same original order instead of reshuffling again.
+  let attempt = await findInProgressAttempt({ userId, practiceSetId });
+  let presentedItems;
+  if (attempt) {
+    presentedItems = await reorderItemsForAttempt({ attemptId: attempt.id, items });
+  } else {
+    presentedItems = shuffleInPlace([...items]);
+    attempt = await createAttempt({ userId, practiceSetId, items: presentedItems });
+  }
+
+  return buildAssessmentResponse({ attempt, items: presentedItems, displayMeta });
+};
+
+export const restartChapterAssessment = async ({ board, studentClass, subject, chapterNumber, userId }) => {
+  const [{ practiceSetId, items }, displayMeta] = await Promise.all([
+    materializePracticeSetForChapter({ board, studentClass, subject, chapterNumber, userId }),
+    getChapterDisplayMeta({ board, studentClass, subject, chapterNumber, userId }),
+  ]);
+
+  if (!items.length) {
+    const error = new Error("This chapter has no generated assessment items yet.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await pool.query(
+    "UPDATE student_attempt SET status = 'abandoned' WHERE user_id = $1 AND practice_set_id = $2 AND status = 'in_progress'",
+    [userId, practiceSetId]
+  );
+
+  const presentedItems = shuffleInPlace([...items]);
+  const attempt = await createAttempt({ userId, practiceSetId, items: presentedItems });
+
+  return buildAssessmentResponse({ attempt, items: presentedItems, displayMeta });
+};
+
+// Same as listRecentAttemptsForSection, but for a whole chapter's practice
+// set (see materializePracticeSetForChapter for why practice_set_code is the
+// lookup key here instead of a direct FK column).
+export const listRecentAttemptsForChapter = async ({ board, studentClass, subject, chapterNumber, userId, limit = 5 }) => {
+  const fkMstBookId = await resolveBookIdForChapter({ board, studentClass, subject, chapterNumber });
+  if (!fkMstBookId) {
+    return { attempts: [] };
+  }
+
+  const practiceSetResult = await pool.query(
+    "SELECT id FROM practice_set WHERE practice_set_code = $1",
+    [`chapter:${fkMstBookId}:${chapterNumber}`]
   );
   const practiceSetId = practiceSetResult.rows[0]?.id;
   if (!practiceSetId) {

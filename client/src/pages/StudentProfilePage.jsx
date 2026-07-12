@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StudentBottomNav } from "../components/StudentBottomNav";
+import { StudentPageShell } from "../components/StudentPageShell";
 import { EditProfileModal } from "../components/EditProfileModal";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { useAuth } from "../context/AuthContext";
@@ -349,8 +349,7 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
   ];
 
   return (
-    <main className="student-dashboard-shell">
-      <section className="student-dashboard-phone student-profile-phone">
+    <StudentPageShell pageClass="student-page--profile" legacyModifierClass="student-profile-phone">
         <header className="student-profile-header">
           <div className="student-profile-header-copy">
             <p className="student-profile-title">Profile</p>
@@ -489,9 +488,6 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
           </div>
         </section>
 
-        <StudentBottomNav activeItem="profile" />
-      </section>
-
       <EditProfileModal
         open={editProfileOpen}
         onClose={() => setEditProfileOpen(false)}
@@ -503,6 +499,6 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
         onClose={() => setChangePasswordOpen(false)}
         onSave={changePassword}
       />
-    </main>
+    </StudentPageShell>
   );
 };
