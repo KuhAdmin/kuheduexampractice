@@ -187,8 +187,9 @@ preview just that one unit.
 | Promoted | Not promoted (and why) |
 |---|---|
 | `source_document`, `source_section` (+ OCR/image/parse artifacts) | `question_bank_item`, `practice_set`, `practice_set_item` — these self-heal per environment via existing lazy-materialization logic; copying them would just create stale duplicates |
-| All layer 1–7 content tables (concepts, structures, assessment items, hints, etc.) | `layer_run`, `layer_input_contract`/`_output_contract`, `assessment_pipeline_run`(+`_layer`) — local pipeline-execution bookkeeping, never read by anything student-facing |
-| `assessment_unit` (upserted **in place** — never deleted, see §6) | `audit_event` — no stable identity, not reviewable content |
+| All layer 1–7 content tables (concepts, structures, assessment items, hints, etc.) | `layer_input_contract`/`_output_contract`, `assessment_pipeline_run`(+`_layer`) — local pipeline-execution bookkeeping, never read by anything student-facing |
+| `layer_run` — **not** just bookkeeping despite being pipeline-execution metadata; see §9, it's required for flashcards/diagrams/section-overview text to resolve at all | `audit_event` — no stable identity, not reviewable content |
+| `assessment_unit` (upserted **in place** — never deleted, see §6) | |
 | `memory_hook_media` (images **and** video — this is the media promotion, no separate asset step needed) | `content_update_event` rows aren't copied — the tool emits a **fresh** one per promoted section, timestamped at promotion time, so local iteration doesn't spam the student feed with backdated entries |
 
 **A unit is skipped** if its layer‑1 pipeline run isn't `status = 'completed'`
@@ -323,6 +324,35 @@ verified against the same test scenarios (idempotent rerun with real
 student data present, `text[]`/`jsonb` column fidelity, row counts matching
 row-for-row against the same dataset). If you ever notice them disagree on
 what gets promoted, that's a bug — not an expected difference.
+
+---
+
+## 9. Incident: flashcards/diagrams silently empty after promotion (fixed)
+
+**What happened:** `layer_run` was originally excluded from promotion as
+"local-only pipeline-execution bookkeeping, never read by student-facing
+code." That was wrong. `getLatestLayer1GenerationForSection()`
+(`assessmentStudioContextAssembler.js`) — the *only* path flashcards,
+diagrams, and section-overview text use to resolve which generation is
+currently active for a section — reads `layer_run` directly. With it never
+promoted, that lookup silently returned nothing in production, so those
+three features showed empty even though their actual content
+(`layer1_terminology`, `layer1_diagram`, `layer1_knowledge_contract`) had
+promoted correctly. Concept-level practice/assessment questions were **not**
+affected — that path resolves generations via `layer_generation_version`/
+`assessment_unit.generation_id`, which were always promoted correctly.
+
+**Fix:** `layer_run` is now promoted (both the CLI and the SQL stored
+procedure), with `pipeline_job_id`/`parent_generation_id`/`created_by`
+nulled out (those reference tables/identities that are still, deliberately,
+out of scope — see the table in §4).
+
+**If you promoted content before this fix:** just run promotion again
+(`--confirm`, no special flag needed). The fix isn't gated behind "did
+anything change" — a plain rerun backfills `layer_run` for every
+currently-selected generation, including ones that were already promoted
+and haven't changed since. This is exactly the idempotent-rerun-as-a-no-op
+property described in §6, just doing real (additive) work this one time.
 
 ---
 

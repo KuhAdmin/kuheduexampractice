@@ -244,3 +244,44 @@ export const insertGenerationContent = async ({
     });
   }
 };
+
+// layer_run is NOT part of GENERATION_PARENT_TABLES/CHILD_TABLES (it's the
+// app's own delete-order list for cascadeDeleteGenerations, deliberately
+// left untouched here to avoid affecting the unrelated admin
+// delete-generation feature) and was originally excluded from promotion
+// entirely as "local-only pipeline bookkeeping, never read by student-facing
+// code." That assumption was wrong: getLatestLayer1GenerationForSection()
+// (assessmentStudioContextAssembler.js) -- the sole path flashcards,
+// diagrams, and section-overview text use to find their active generation
+// -- reads layer_run directly. Without it promoted, those three features
+// silently return empty even though their actual content
+// (layer1_terminology/layer1_diagram/layer1_knowledge_contract) promoted
+// fine. Call this after source_document/source_section/chapter resolution
+// (Tier 1-3) so idMap already has what remapRow needs for
+// source_document_id/source_section_id/fk_mst_chapter_id.
+export const promoteLayerRunRows = async ({ localPool, prodClient, newGenerationIds, idMap }) => {
+  const ids = newGenerationIds.filter(Boolean);
+  if (!ids.length) return;
+
+  // Idempotent-rerun safety, same reasoning as clearGenerationContentTables:
+  // an unchanged generation_id may already have rows here from a prior
+  // promotion. Superseded generations don't need this -- layer_run.generation_id
+  // is ON DELETE CASCADE, so retireSupersededGenerations's generation_registry
+  // delete already takes care of those.
+  await prodClient.query("DELETE FROM layer_run WHERE generation_id = ANY($1)", [ids]);
+
+  const foreignKeys = await getForeignKeys(prodClient, "layer_run");
+  const { rows } = await localPool.query("SELECT * FROM layer_run WHERE generation_id = ANY($1)", [ids]);
+
+  for (const row of rows) {
+    // Null these BEFORE remapping, not after -- created_by is a bare-id FK
+    // to users(id) (users are never promoted, so idMap has no entry for it
+    // and remapRow would throw), and pipeline_job_id/parent_generation_id
+    // reference tables/generations outside promotion scope. remapRow already
+    // skips null values, so nulling first sidesteps all three instead of
+    // remapping them and overwriting afterwards.
+    const preparedRow = { ...row, pipeline_job_id: null, parent_generation_id: null, created_by: null };
+    const remapped = remapRow("layer_run", preparedRow, foreignKeys, idMap);
+    await insertRow(prodClient, "layer_run", remapped);
+  }
+};

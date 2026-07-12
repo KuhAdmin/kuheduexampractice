@@ -20,6 +20,7 @@ import {
   registerNewGenerations,
   clearGenerationContentTablesForReinsert,
   insertGenerationContent,
+  promoteLayerRunRows,
   retireSupersededGenerations,
   findGenerationIdsToRetire,
   GENERATION_PARENT_TABLES,
@@ -45,6 +46,7 @@ const getInScopeTableList = () => [
   "generation_registry",
   ...GENERATION_PARENT_TABLES,
   ...GENERATION_CHILD_TABLES,
+  "layer_run",
   "assessment_unit",
   "layer_generation_version",
   "memory_hook_media",
@@ -757,6 +759,9 @@ const main = async () => {
           }
         },
       });
+
+      logPhase(`Promoting layer_run row(s) (needed for flashcards/diagrams/section overview to resolve)...`);
+      await promoteLayerRunRows({ localPool, prodClient: client, newGenerationIds, idMap });
 
       logPhase(`Upserting ${approvedRows.length} layer_generation_version row(s)...`);
       for (const row of approvedRows) {

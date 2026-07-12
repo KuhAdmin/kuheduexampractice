@@ -296,6 +296,99 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- layer_run is NOT part of _promo_parent_tables()/_promo_child_tables()
+-- (that's the app's own delete-order list for cascadeDeleteGenerations,
+-- deliberately left untouched to avoid affecting the unrelated admin
+-- delete-generation feature) and was originally excluded from promotion
+-- entirely as "local-only pipeline bookkeeping, never read by student-facing
+-- code." That assumption was wrong: getLatestLayer1GenerationForSection()
+-- (assessmentStudioContextAssembler.js) -- the sole path flashcards,
+-- diagrams, and section-overview text use to find their active generation
+-- -- reads layer_run directly. Without it promoted, those three features
+-- silently return empty even though their actual content
+-- (layer1_terminology/layer1_diagram/layer1_knowledge_contract) promoted
+-- fine. Call this after source_document/source_section/chapter resolution
+-- so _promo_id_map already has what's needed for source_document_id/
+-- source_section_id/fk_mst_chapter_id.
+CREATE OR REPLACE FUNCTION _promo_promote_layer_run(p_conn text, p_generation_ids uuid[])
+RETURNS void AS $$
+DECLARE
+  v_ids_sql text;
+  v_columns text[];
+  v_col_list text;
+  v_quoted_expr text;
+  v_values text[];
+  v_col_idx int;
+  v_id bigint;
+  v_sql text;
+  v_fk record;
+  v_raw_fk_value bigint;
+  v_prod_fk_value bigint;
+BEGIN
+  IF p_generation_ids IS NULL OR array_length(p_generation_ids, 1) IS NULL THEN
+    RETURN;
+  END IF;
+
+  v_ids_sql := (SELECT string_agg(quote_literal(x), ',') FROM unnest(p_generation_ids) AS x);
+  -- Idempotent-rerun safety -- superseded generations already cascade-delete
+  -- their own layer_run rows via ON DELETE CASCADE when
+  -- _promo_retire_superseded_generations removes generation_registry.
+  PERFORM dblink_exec(p_conn, format('DELETE FROM layer_run WHERE generation_id = ANY(ARRAY[%s]::uuid[])', v_ids_sql));
+
+  v_columns := _promo_column_names('layer_run');
+  SELECT string_agg(quote_ident(c), ', ' ORDER BY ord) INTO v_col_list
+  FROM unnest(v_columns) WITH ORDINALITY AS u(c, ord);
+  SELECT string_agg(format('quote_nullable(%I)', c), ', ' ORDER BY ord) INTO v_quoted_expr
+  FROM unnest(v_columns) WITH ORDINALITY AS u(c, ord);
+
+  FOR v_id IN EXECUTE 'SELECT id FROM layer_run WHERE generation_id = ANY($1)' USING p_generation_ids
+  LOOP
+    EXECUTE format('SELECT ARRAY[%s]::text[] FROM layer_run WHERE id = $1', v_quoted_expr)
+    INTO v_values USING v_id;
+
+    -- created_by is the only ref_column='id' FK among the three columns
+    -- being nulled below (pipeline_job_id/parent_generation_id reference
+    -- job_id/generation_id, not id, so the ref_column filter already
+    -- excludes them) -- users are never promoted, so resolving it here
+    -- would always throw. Skip it explicitly rather than nulling v_values
+    -- afterward, since this loop re-reads the raw local value independent
+    -- of whatever v_values already holds.
+    FOR v_fk IN SELECT * FROM _promo_foreign_keys('layer_run') WHERE ref_column = 'id' AND column_name <> 'created_by' LOOP
+      v_col_idx := array_position(v_columns, v_fk.column_name);
+      IF v_col_idx IS NOT NULL THEN
+        EXECUTE format('SELECT %I FROM layer_run WHERE id = $1', v_fk.column_name)
+        INTO v_raw_fk_value USING v_id;
+
+        IF v_raw_fk_value IS NOT NULL THEN
+          SELECT prod_id INTO v_prod_fk_value FROM _promo_id_map
+          WHERE table_name = v_fk.ref_table AND local_id = v_raw_fk_value;
+
+          IF v_prod_fk_value IS NULL THEN
+            RAISE EXCEPTION 'Cannot promote layer_run.% -> %.id = %: no production id recorded yet',
+              v_fk.column_name, v_fk.ref_table, v_raw_fk_value;
+          END IF;
+
+          v_values[v_col_idx] := v_prod_fk_value::text;
+        END IF;
+      END IF;
+    END LOOP;
+
+    -- Pipeline-run bookkeeping and per-environment user identity are both
+    -- out of promotion scope -- null rather than remap to something that
+    -- doesn't exist in production.
+    v_col_idx := array_position(v_columns, 'pipeline_job_id');
+    IF v_col_idx IS NOT NULL THEN v_values[v_col_idx] := 'NULL'; END IF;
+    v_col_idx := array_position(v_columns, 'parent_generation_id');
+    IF v_col_idx IS NOT NULL THEN v_values[v_col_idx] := 'NULL'; END IF;
+    v_col_idx := array_position(v_columns, 'created_by');
+    IF v_col_idx IS NOT NULL THEN v_values[v_col_idx] := 'NULL'; END IF;
+
+    v_sql := format('INSERT INTO layer_run (%s) VALUES (%s)', v_col_list, array_to_string(v_values, ', '));
+    PERFORM dblink_exec(p_conn, v_sql);
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
 -- ----------------------------------------------------------------------------
 -- Business-key resolution + bespoke upserts (mirror promoteContent.js 1:1)
 -- ----------------------------------------------------------------------------
@@ -827,6 +920,7 @@ BEGIN
     PERFORM _promo_retire_superseded_generations(v_conn, v_old_gen_ids);
     PERFORM _promo_clear_generation_content(v_conn, v_all_new_gen_ids);
     PERFORM _promo_insert_generation_content(v_conn, v_all_new_gen_ids);
+    PERFORM _promo_promote_layer_run(v_conn, v_all_new_gen_ids);
 
     FOR v_rec IN
       SELECT lgv.assessment_unit_id, lgv.layer_number, lgv.generation_id
