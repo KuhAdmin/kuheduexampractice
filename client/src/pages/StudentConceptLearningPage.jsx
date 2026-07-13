@@ -1023,7 +1023,7 @@ export const StudentConceptLearningPage = () => {
               key={tab}
               type="button"
               className={`student-concept-learning-tab ${tab === activeTab ? "is-active" : ""}`}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => selectTab(tab)}
             >
               {tab}
             </button>

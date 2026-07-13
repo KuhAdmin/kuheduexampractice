@@ -27,38 +27,21 @@ const readFileAsDataUrl = (file) =>
     reader.readAsDataURL(file);
   });
 
-const SAMPLE_INTERVAL_MS = 150;
-const DOWNSCALE_WIDTH = 48;
-const DOWNSCALE_HEIGHT = 36;
-// Mean absolute luminance difference (0-255 scale) between consecutive
-// downscaled frames, below which the frame counts as "steady".
-const MOTION_THRESHOLD = 6;
-// How long the frame must stay steady before we auto-fire the capture.
-const STEADY_REQUIRED_MS = 900;
-// Ignore motion/steadiness for this long after the stream starts, so the
-// very first (often blank/dark, camera-still-focusing) frame can't
-// immediately read as "steady" and fire before the student raises the phone.
-const MIN_WARMUP_MS = 600;
-// Minimum luminance standard deviation across the sampled frame -- guards
-// against auto-firing on a blank wall/ceiling with no note in view.
-const MIN_CONTENT_VARIANCE = 12;
 const JPEG_QUALITY = 0.85;
 
 // Live camera capture for the "AI Feedback" handwritten-note workflow.
-// Opens the back camera and watches the live frame; once the frame has been
-// steady and in view (not blank) for STEADY_REQUIRED_MS, it captures
-// automatically -- no shutter tap required, though a manual shutter button
-// is always available as an override. Falls back to a plain camera-first
+// Opens the back camera and shows a live preview; capture only happens when
+// the student taps the shutter button. (Previously this also auto-fired
+// once the frame looked "steady" via a JS motion heuristic, but that
+// heuristic has no way to know whether the camera's own hardware
+// autofocus/exposure has actually settled -- it was firing on frames that
+// looked still to the low-res sampling but were still visually blurry.
+// Manual-only avoids that entirely.) Falls back to a plain camera-first
 // file input if getUserMedia is unavailable or permission is denied, so the
 // caller's onCapture(dataUrl) always eventually fires either way.
 export const StudentCameraCapture = ({ onCapture, onCancel }) => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
-  const sampleCanvasRef = useRef(null);
-  const previousFrameRef = useRef(null);
-  const steadyStartRef = useRef(null);
-  const streamStartedAtRef = useRef(null);
-  const intervalRef = useRef(null);
   const capturedRef = useRef(false);
 
   const [status, setStatus] = useState("requesting"); // requesting | live | capturing | unsupported
@@ -68,10 +51,6 @@ export const StudentCameraCapture = ({ onCapture, onCancel }) => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
-    }
-    if (intervalRef.current) {
-      window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
     }
   };
 
@@ -111,63 +90,7 @@ export const StudentCameraCapture = ({ onCapture, onCancel }) => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-        sampleCanvasRef.current = document.createElement("canvas");
-        sampleCanvasRef.current.width = DOWNSCALE_WIDTH;
-        sampleCanvasRef.current.height = DOWNSCALE_HEIGHT;
-        streamStartedAtRef.current = Date.now();
         setStatus("live");
-
-        intervalRef.current = window.setInterval(() => {
-          const video = videoRef.current;
-          if (!video || !video.videoWidth) return;
-
-          const canvas = sampleCanvasRef.current;
-          const context = canvas.getContext("2d", { willReadFrequently: true });
-          context.drawImage(video, 0, 0, DOWNSCALE_WIDTH, DOWNSCALE_HEIGHT);
-          const frame = context.getImageData(0, 0, DOWNSCALE_WIDTH, DOWNSCALE_HEIGHT).data;
-
-          const pixelCount = DOWNSCALE_WIDTH * DOWNSCALE_HEIGHT;
-          const luminances = new Array(pixelCount);
-          let sum = 0;
-          for (let i = 0, p = 0; i < frame.length; i += 4, p += 1) {
-            const luminance = 0.299 * frame[i] + 0.587 * frame[i + 1] + 0.114 * frame[i + 2];
-            luminances[p] = luminance;
-            sum += luminance;
-          }
-          const mean = sum / pixelCount;
-          const variance = luminances.reduce((acc, value) => acc + (value - mean) ** 2, 0) / pixelCount;
-          const stdDev = Math.sqrt(variance);
-
-          const previous = previousFrameRef.current;
-          previousFrameRef.current = luminances;
-
-          const warmedUp = Date.now() - streamStartedAtRef.current >= MIN_WARMUP_MS;
-
-          if (!previous || !warmedUp || stdDev < MIN_CONTENT_VARIANCE) {
-            steadyStartRef.current = null;
-            return;
-          }
-
-          let diffSum = 0;
-          for (let p = 0; p < pixelCount; p += 1) {
-            diffSum += Math.abs(luminances[p] - previous[p]);
-          }
-          const motionScore = diffSum / pixelCount;
-
-          if (motionScore > MOTION_THRESHOLD) {
-            steadyStartRef.current = null;
-            return;
-          }
-
-          if (steadyStartRef.current === null) {
-            steadyStartRef.current = Date.now();
-            return;
-          }
-
-          if (Date.now() - steadyStartRef.current >= STEADY_REQUIRED_MS) {
-            capturePhoto();
-          }
-        }, SAMPLE_INTERVAL_MS);
       })
       .catch((error) => {
         if (cancelled) return;
@@ -226,7 +149,7 @@ export const StudentCameraCapture = ({ onCapture, onCancel }) => {
           <video ref={videoRef} autoPlay playsInline muted className="student-camera-capture-video" />
           <div className="student-camera-capture-frame-guide" aria-hidden="true" />
           <div className="student-camera-capture-status">
-            {status === "capturing" ? "Capturing..." : "Hold your note steady in the frame..."}
+            {status === "capturing" ? "Capturing..." : "Line up your note, then tap the shutter to capture."}
           </div>
           <div className="student-camera-capture-actions">
             <button type="button" className="ghost-button" onClick={onCancel}>
