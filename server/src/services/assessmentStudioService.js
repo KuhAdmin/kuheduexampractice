@@ -17,6 +17,7 @@ import {
 } from "./assessmentStudioSubjectProfiles.js";
 import { runGated, getConcurrencyStats } from "./llm/concurrencyGate.js";
 import { resolveDashboardAcademicFilters } from "./catalogService.js";
+import * as conceptCardCache from "./conceptCardCache.js";
 import {
   buildPracticeDirectivesText,
   getPracticeTypeProfile,
@@ -3673,6 +3674,11 @@ const recordLayerGenerationVersion = async ({
   } finally {
     client.release();
   }
+
+  // This always flips which generation is_selected for this unit/layer, so
+  // the student-facing concept card cache (studentContentService.js) must
+  // not keep serving the previous version's content.
+  conceptCardCache.invalidate(assessmentUnitId);
 };
 
 const recordContentUpdateEvent = async ({ job, sourceRefs }) => {
@@ -5662,6 +5668,8 @@ export const selectAssessmentStudioLayerVersion = async ({
   } finally {
     client.release();
   }
+
+  conceptCardCache.invalidate(assessmentUnitId);
 
   return { assessmentUnitId, layerNumber: targetLayer, generationId };
 };

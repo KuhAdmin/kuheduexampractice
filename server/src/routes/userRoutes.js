@@ -10,6 +10,7 @@ import {
   getMicroActivityResponseHandler,
   getStudentBookQuestions,
   getStudentConceptCard,
+  getStudentConceptSectionMedia,
   getStudentDiagrams,
   getStudentFlashcards,
   getStudentLearningMap,
@@ -48,6 +49,7 @@ router.get("/sections/:sourceSectionId/flashcards", getStudentFlashcards);
 router.get("/sections/:sourceSectionId/diagrams", getStudentDiagrams);
 router.get("/sections/:sourceSectionId/mind-map", getMindMap);
 router.get("/concepts/:assessmentUnitId/card", getStudentConceptCard);
+router.get("/concepts/:assessmentUnitId/memory-hook-media/:sectionKey", getStudentConceptSectionMedia);
 router.get("/concepts/:assessmentUnitId/memory-booster", getStudentMemoryBoosterForUnit);
 router.get("/concepts/:assessmentUnitId/micro-activity/response", getMicroActivityResponseHandler);
 router.post("/concepts/:assessmentUnitId/micro-activity/respond", submitMicroActivityResponseHandler);

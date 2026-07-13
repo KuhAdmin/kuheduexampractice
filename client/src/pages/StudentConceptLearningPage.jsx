@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentMediaViewer } from "../components/StudentMediaViewer";
 import { StudentMicroActivityPanel } from "../components/StudentMicroActivityPanel";
 import { useBreakpoint } from "../hooks/useBreakpoint";
-import { getStudentConceptCard, getStudentSections } from "../api/client";
+import { getStudentConceptCard, getStudentConceptSectionMedia, getStudentSections } from "../api/client";
 
 const ConceptLearningIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -290,6 +290,16 @@ export const StudentConceptLearningPage = () => {
   const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", sectionNumber: "", topicName: "" });
   const [activeExploreStepKey, setActiveExploreStepKey] = useState(null);
   const [visitedExploreSteps, setVisitedExploreSteps] = useState(() => new Set());
+  // Memory-hook media (base64 image/video, up to ~20MB per section) is
+  // deliberately NOT part of the concept card payload -- it's fetched one
+  // section at a time, only for the section actually being viewed, keyed
+  // here by section key. Absent key = not fetched yet, null = fetched,
+  // confirmed no media for that section.
+  const [sectionMediaByKey, setSectionMediaByKey] = useState({});
+  // Tracks which section keys have already been fetched (or are in flight),
+  // synchronously, so a fast double-toggle/double-navigation can't fire the
+  // same request twice while the first one is still pending.
+  const requestedMediaKeysRef = useRef(new Set());
 
   const toggleSection = (sectionKey) => {
     setExpandedSections((current) => {
@@ -298,15 +308,33 @@ export const StudentConceptLearningPage = () => {
         next.delete(sectionKey);
       } else {
         next.add(sectionKey);
+        ensureSectionMedia(sectionKey);
       }
       return next;
     });
+  };
+
+  const ensureSectionMedia = (sectionKey) => {
+    if (requestedMediaKeysRef.current.has(sectionKey)) {
+      return;
+    }
+    requestedMediaKeysRef.current.add(sectionKey);
+
+    getStudentConceptSectionMedia(assessmentUnitId, sectionKey)
+      .then((result) => {
+        setSectionMediaByKey((current) => ({ ...current, [sectionKey]: result?.media || null }));
+      })
+      .catch(() => {
+        setSectionMediaByKey((current) => ({ ...current, [sectionKey]: null }));
+      });
   };
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError("");
+    setSectionMediaByKey({});
+    requestedMediaKeysRef.current = new Set();
 
     getStudentConceptCard(assessmentUnitId)
       .then((result) => {
@@ -362,14 +390,19 @@ export const StudentConceptLearningPage = () => {
   );
 
   useEffect(() => {
-    setActiveExploreStepKey(exploreSteps[0]?.key || null);
-    setVisitedExploreSteps(new Set(exploreSteps[0] ? [exploreSteps[0].key] : []));
+    const firstStepKey = exploreSteps[0]?.key || null;
+    setActiveExploreStepKey(firstStepKey);
+    setVisitedExploreSteps(new Set(firstStepKey ? [firstStepKey] : []));
+    if (firstStepKey) {
+      ensureSectionMedia(firstStepKey);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assessmentUnitId, exploreSteps.length]);
 
   const goToExploreStep = (key) => {
     setActiveExploreStepKey(key);
     setVisitedExploreSteps((current) => new Set(current).add(key));
+    ensureSectionMedia(key);
   };
 
   const activeExploreStepIndex = exploreSteps.findIndex((step) => step.key === activeExploreStepKey);
@@ -489,7 +522,7 @@ export const StudentConceptLearningPage = () => {
       );
     }
 
-    const media = card[`${step.key}Media`];
+    const media = sectionMediaByKey[step.key];
     const text = card[step.key];
 
     // Try This is an interactive task (photo/text + submit + feedback), not
@@ -517,7 +550,11 @@ export const StudentConceptLearningPage = () => {
     return (
       <div className="student-concept-step-split">
         <div className="student-concept-step-media">
-          {media ? (
+          {media === undefined ? (
+            <div className="student-memory-booster-media-placeholder">
+              <span>Loading visual...</span>
+            </div>
+          ) : media ? (
             <StudentMediaViewer
               mediaType={media.mediaType}
               src={media.mediaData}
@@ -607,10 +644,10 @@ export const StudentConceptLearningPage = () => {
             isExpanded={isExpanded("analogy")}
             onToggle={toggleSection}
           >
-            {card.analogyMedia && (
+            {sectionMediaByKey.analogy && (
               <StudentMediaViewer
-                mediaType={card.analogyMedia.mediaType}
-                src={card.analogyMedia.mediaData}
+                mediaType={sectionMediaByKey.analogy.mediaType}
+                src={sectionMediaByKey.analogy.mediaData}
                 alt="Analogy illustration"
                 speechText={card.analogy}
               />
@@ -627,10 +664,10 @@ export const StudentConceptLearningPage = () => {
             isExpanded={isExpanded("story")}
             onToggle={toggleSection}
           >
-            {card.storyMedia && (
+            {sectionMediaByKey.story && (
               <StudentMediaViewer
-                mediaType={card.storyMedia.mediaType}
-                src={card.storyMedia.mediaData}
+                mediaType={sectionMediaByKey.story.mediaType}
+                src={sectionMediaByKey.story.mediaData}
                 alt="Story"
                 speechText={card.story}
               />
@@ -647,10 +684,10 @@ export const StudentConceptLearningPage = () => {
             isExpanded={isExpanded("visualHook")}
             onToggle={toggleSection}
           >
-            {card.visualHookMedia && (
+            {sectionMediaByKey.visualHook && (
               <StudentMediaViewer
-                mediaType={card.visualHookMedia.mediaType}
-                src={card.visualHookMedia.mediaData}
+                mediaType={sectionMediaByKey.visualHook.mediaType}
+                src={sectionMediaByKey.visualHook.mediaData}
                 alt="Visual Hook illustration"
                 speechText={card.visualHook}
               />
@@ -667,10 +704,10 @@ export const StudentConceptLearningPage = () => {
             isExpanded={isExpanded("realWorldConnection")}
             onToggle={toggleSection}
           >
-            {card.realWorldConnectionMedia && (
+            {sectionMediaByKey.realWorldConnection && (
               <StudentMediaViewer
-                mediaType={card.realWorldConnectionMedia.mediaType}
-                src={card.realWorldConnectionMedia.mediaData}
+                mediaType={sectionMediaByKey.realWorldConnection.mediaType}
+                src={sectionMediaByKey.realWorldConnection.mediaData}
                 alt="Real World Connection"
                 speechText={card.realWorldConnection}
               />
@@ -687,10 +724,10 @@ export const StudentConceptLearningPage = () => {
             isExpanded={isExpanded("curiosityHook")}
             onToggle={toggleSection}
           >
-            {card.curiosityHookMedia && (
+            {sectionMediaByKey.curiosityHook && (
               <StudentMediaViewer
-                mediaType={card.curiosityHookMedia.mediaType}
-                src={card.curiosityHookMedia.mediaData}
+                mediaType={sectionMediaByKey.curiosityHook.mediaType}
+                src={sectionMediaByKey.curiosityHook.mediaData}
                 alt="Curiosity Hook illustration"
                 speechText={card.curiosityHook}
               />
@@ -707,10 +744,10 @@ export const StudentConceptLearningPage = () => {
             isExpanded={isExpanded("microActivity")}
             onToggle={toggleSection}
           >
-            {card.microActivityMedia && (
+            {sectionMediaByKey.microActivity && (
               <StudentMediaViewer
-                mediaType={card.microActivityMedia.mediaType}
-                src={card.microActivityMedia.mediaData}
+                mediaType={sectionMediaByKey.microActivity.mediaType}
+                src={sectionMediaByKey.microActivity.mediaData}
                 alt="Try This"
                 speechText={card.microActivity}
               />
@@ -727,10 +764,10 @@ export const StudentConceptLearningPage = () => {
             isExpanded={isExpanded("memoryTrick")}
             onToggle={toggleSection}
           >
-            {card.memoryTrickMedia && (
+            {sectionMediaByKey.memoryTrick && (
               <StudentMediaViewer
-                mediaType={card.memoryTrickMedia.mediaType}
-                src={card.memoryTrickMedia.mediaData}
+                mediaType={sectionMediaByKey.memoryTrick.mediaType}
+                src={sectionMediaByKey.memoryTrick.mediaData}
                 alt="Memory Trick illustration"
                 speechText={card.memoryTrick}
               />

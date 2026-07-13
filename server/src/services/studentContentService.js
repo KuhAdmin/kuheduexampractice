@@ -9,6 +9,7 @@ import {
   getTerminologyForSection,
 } from "./assessmentStudioContextAssembler.js";
 import { getMemoryHookMedia } from "./memoryHookImageService.js";
+import * as conceptCardCache from "./conceptCardCache.js";
 
 const MASTERY_COMPLETE_THRESHOLD = 0.8;
 
@@ -299,11 +300,21 @@ export const getLearningMap = async ({ sourceSectionId, userId }) => {
   };
 };
 
+// Media (analogyMedia/storyMedia/etc.) is deliberately NOT fetched here.
+// memory_hook_media.media_data is base64 image/video, up to ~20MB decoded per
+// section and up to 7 sections per concept -- fetching all of it on every
+// card load was measured at ~40MB/card in the worst real case, dominating
+// load time. The client fetches one section's media on demand (only the
+// section actually being viewed) via getStudentMemoryHookMediaForSection.
 export const getConceptCard = async ({ assessmentUnitId }) => {
-  const [context, memory, media] = await Promise.all([
+  const cached = conceptCardCache.get(assessmentUnitId);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const [context, memory] = await Promise.all([
     getLayer1Context(assessmentUnitId),
     getLayer2Memory(assessmentUnitId),
-    getMemoryHookMedia(assessmentUnitId),
   ]);
   if (!context) {
     return null;
@@ -311,7 +322,7 @@ export const getConceptCard = async ({ assessmentUnitId }) => {
 
   const memoryBooster = shapeMemoryBooster(memory);
 
-  return {
+  const card = {
     assessmentUnitId: context.assessment_unit.assessment_unit_id,
     primaryConcept: context.assessment_unit.primary_concept,
     learningObjective: context.assessment_unit.learning_objective,
@@ -335,14 +346,10 @@ export const getConceptCard = async ({ assessmentUnitId }) => {
     misconceptionAlert: memoryBooster?.misconceptionAlert || null,
     retrievalCues: memoryBooster?.retrievalCues || [],
     associatedConcepts: memoryBooster?.associatedConcepts || [],
-    analogyMedia: media.analogy,
-    visualHookMedia: media.visualHook,
-    curiosityHookMedia: media.curiosityHook,
-    memoryTrickMedia: media.memoryTrick,
-    storyMedia: media.story,
-    realWorldConnectionMedia: media.realWorldConnection,
-    microActivityMedia: media.microActivity,
   };
+
+  conceptCardCache.set(assessmentUnitId, card);
+  return card;
 };
 
 const shapeMemoryBooster = (memory) => {

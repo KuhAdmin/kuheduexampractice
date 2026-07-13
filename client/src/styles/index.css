@@ -5729,6 +5729,30 @@ a {
   box-shadow: 0 8px 20px rgba(47, 125, 51, 0.2);
 }
 
+.student-profile-install .student-profile-premium-mark-image {
+  width: 68%;
+  height: 68%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.student-profile-install .student-profile-premium-actions {
+  justify-content: flex-start;
+}
+
+.student-profile-install .student-profile-premium-cta:disabled {
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.student-profile-install-steps {
+  margin: 0;
+  padding-left: 18px;
+  color: #334334;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
 .student-profile-premium-trial {
   display: inline-flex;
   align-items: center;

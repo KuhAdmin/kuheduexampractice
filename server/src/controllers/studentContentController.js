@@ -8,6 +8,7 @@ import {
   getSectionOverview,
   listSectionsForChapter,
 } from "../services/studentContentService.js";
+import { getMemoryHookMediaForSection } from "../services/memoryHookImageService.js";
 import {
   getMostRecentMicroActivityResponse,
   gradeMicroActivityResponse,
@@ -79,6 +80,19 @@ export const getStudentConceptCard = async (req, res, next) => {
     }
 
     return res.json(result);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getStudentConceptSectionMedia = async (req, res, next) => {
+  try {
+    const media = await getMemoryHookMediaForSection(
+      req.params.assessmentUnitId,
+      req.params.sectionKey
+    );
+
+    return res.json({ media });
   } catch (error) {
     return next(error);
   }

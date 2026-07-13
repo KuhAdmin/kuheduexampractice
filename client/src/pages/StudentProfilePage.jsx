@@ -3,6 +3,8 @@ import { StudentPageShell } from "../components/StudentPageShell";
 import { EditProfileModal } from "../components/EditProfileModal";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { useAuth } from "../context/AuthContext";
+import { useBreakpoint } from "../hooks/useBreakpoint";
+import { useInstallPrompt } from "../hooks/useInstallPrompt";
 
 const firstNameFromUser = (name) => {
   if (!name) {
@@ -127,6 +129,29 @@ const ProfileIcon = ({ type, className = "" }) => {
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="1.7"
+        />
+      </svg>
+    );
+  }
+
+  if (type === "download") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M12 4v11m0 0 3.5-3.5M12 15l-3.5-3.5"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M5 16.5v1.7A1.8 1.8 0 0 0 6.8 20h10.4a1.8 1.8 0 0 0 1.8-1.8v-1.7"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
         />
       </svg>
     );
@@ -307,6 +332,8 @@ const AccountRow = ({ label, onClick, tone = "default", disabled = false, disabl
 
 export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
   const { updateProfile, changePassword } = useAuth();
+  const isMobile = useBreakpoint() === "mobile";
+  const { platform, canInstall, promptInstall } = useInstallPrompt();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const canChangePassword = user?.provider !== "google";
@@ -487,6 +514,41 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
             <AccountRow label="Logout" onClick={onLogout} tone="danger" />
           </div>
         </section>
+
+        {isMobile && (platform === "android" || platform === "ios") && (
+          <section className="student-profile-premium student-profile-install">
+            <div className="student-profile-premium-mark">
+              <img src="/icons/icon-192.png" alt="" className="student-profile-premium-mark-image" aria-hidden="true" />
+            </div>
+            <div className="student-profile-premium-copy">
+              <div className="student-profile-premium-head">
+                <div>
+                  <strong>Install KUHEDU MASTER</strong>
+                  <p>Add to your home screen for quick access</p>
+                </div>
+                <ProfileIcon type="download" />
+              </div>
+            </div>
+            <div className="student-profile-premium-actions">
+              {platform === "android" ? (
+                <button
+                  type="button"
+                  className="student-profile-premium-cta"
+                  onClick={promptInstall}
+                  disabled={!canInstall}
+                >
+                  Install App
+                </button>
+              ) : (
+                <ol className="student-profile-install-steps">
+                  <li>Tap the Share icon in Safari</li>
+                  <li>Scroll down and tap "Add to Home Screen"</li>
+                  <li>Tap "Add"</li>
+                </ol>
+              )}
+            </div>
+          </section>
+        )}
 
       <EditProfileModal
         open={editProfileOpen}

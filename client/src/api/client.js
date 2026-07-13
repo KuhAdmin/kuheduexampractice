@@ -99,6 +99,9 @@ export const getStudentDiagrams = async (sourceSectionId) =>
 export const getStudentConceptCard = async (assessmentUnitId) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/card`);
 
+export const getStudentConceptSectionMedia = async (assessmentUnitId, sectionKey) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/memory-hook-media/${sectionKey}`);
+
 export const getStudentMemoryBoosterForUnit = async (assessmentUnitId) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/memory-booster`);
 

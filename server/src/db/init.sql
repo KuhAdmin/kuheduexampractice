@@ -2233,6 +2233,33 @@ ON layer7_learning_support (assessment_unit_id);
 CREATE INDEX IF NOT EXISTS idx_student_response_au
 ON student_response (assessment_unit_id, created_at);
 
+-- Concept card load path (getConceptCard / getLayer1Context / getLayer2Memory)
+-- was doing sequential scans on these FK/filter columns -- confirmed via
+-- EXPLAIN ANALYZE before adding these.
+CREATE INDEX IF NOT EXISTS idx_assessment_unit_supporting_concept_au
+ON assessment_unit_supporting_concept (assessment_unit_id);
+
+CREATE INDEX IF NOT EXISTS idx_layer1_common_misconception_generation
+ON layer1_common_misconception (generation_id);
+
+CREATE INDEX IF NOT EXISTS idx_layer1_memory_hook_generation
+ON layer1_memory_hook (generation_id);
+
+CREATE INDEX IF NOT EXISTS idx_layer1_core_concept_generation
+ON layer1_core_concept (generation_id);
+
+CREATE INDEX IF NOT EXISTS idx_assessment_pipeline_run_section
+ON assessment_pipeline_run (source_section_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_layer2_concept_memory_supporting_concept_memory
+ON layer2_concept_memory_supporting_concept (layer2_concept_memory_id);
+
+CREATE INDEX IF NOT EXISTS idx_layer2_concept_memory_retrieval_cue_memory
+ON layer2_concept_memory_retrieval_cue (layer2_concept_memory_id);
+
+CREATE INDEX IF NOT EXISTS idx_layer2_concept_memory_associated_concept_memory
+ON layer2_concept_memory_associated_concept (layer2_concept_memory_id);
+
 DROP MATERIALIZED VIEW IF EXISTS mv_book_catalog;
 
 CREATE MATERIALIZED VIEW mv_book_catalog AS

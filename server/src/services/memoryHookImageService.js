@@ -301,3 +301,40 @@ export const getMemoryHookMedia = async (assessmentUnitId) => {
   }
   return bySection;
 };
+
+// Single-section variant for student-facing lazy loading -- the Concept
+// Learning page only ever displays one memory-hook section's media at a
+// time (the active Explore step / expanded accordion panel), so fetching
+// all 7 sections' base64 media_data up front (getMemoryHookMedia above,
+// still used by the admin workbench and the Memory Booster pages) wastes
+// most of the transfer on sections the student never opens.
+export const getMemoryHookMediaForSection = async (assessmentUnitId, sectionKey) => {
+  if (!ALL_SECTION_KEYS.includes(sectionKey)) {
+    return null;
+  }
+
+  const result = await pool.query(
+    `SELECT section_key, media_type, source, version_number, prompt_text, media_data,
+            mime_type, original_file_name, created_at
+     FROM memory_hook_media
+     WHERE assessment_unit_id = $1 AND section_key = $2 AND is_selected = TRUE
+     LIMIT 1`,
+    [assessmentUnitId, sectionKey]
+  );
+
+  const row = result.rows[0];
+  if (!row) {
+    return null;
+  }
+
+  return {
+    mediaType: row.media_type,
+    source: row.source,
+    versionNumber: row.version_number,
+    promptText: row.prompt_text,
+    mediaData: row.media_data,
+    mimeType: row.mime_type,
+    originalFileName: row.original_file_name,
+    createdAt: row.created_at,
+  };
+};

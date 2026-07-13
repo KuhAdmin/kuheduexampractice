@@ -10,6 +10,7 @@ import {
   getLayer7Support,
 } from "./assessmentStudioContextAssembler.js";
 import { getAssessmentStudioSections } from "./catalogService.js";
+import * as conceptCardCache from "./conceptCardCache.js";
 
 // Display-only labels; kept local rather than importing the (unexported)
 // pipelineDefinitions from assessmentStudioService.js.
@@ -336,6 +337,7 @@ export const submitModeratorDecision = async ({ reviewQueueId, moderatorUserId, 
         `,
         [assessmentUnitIds, task.layer_number]
       );
+      assessmentUnitIds.forEach((id) => conceptCardCache.invalidate(id));
     }
   }
 
@@ -383,6 +385,7 @@ export const submitAdminFinalDecision = async ({ reviewQueueId, adminUserId, dec
         `,
         [assessmentUnitIds, task.layer_number]
       );
+      assessmentUnitIds.forEach((id) => conceptCardCache.invalidate(id));
     }
   }
 
