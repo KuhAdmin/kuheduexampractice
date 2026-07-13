@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
-import { FocusLayout } from "../components/FocusLayout";
 import { StudentCameraCapture } from "../components/StudentCameraCapture";
+import { useBreakpoint } from "../hooks/useBreakpoint";
 import {
   getRecentAssessmentAttempts,
   getRecentChapterAssessmentAttempts,
   getRecentConceptAssessmentAttempts,
+  getStudentSections,
   ocrHandwrittenNote,
   restartChapterAssessment,
   restartSectionAssessment,
@@ -54,6 +55,56 @@ const CameraIcon = () => (
       strokeWidth="1.7"
     />
     <circle cx="12" cy="12.5" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.7" />
+  </svg>
+);
+
+// Same breadcrumb/hero icons as StudentConceptLearningPage's desktop chrome,
+// reused here so the assessment/practice screens share the exact same top
+// design instead of falling back to a bare back-chevron + title.
+const HomeIcon = () => (
+  <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
+    <path
+      d="m4 11 8-6.5L20 11v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.7"
+    />
+  </svg>
+);
+
+const ChevronRightIcon = () => (
+  <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
+    <path
+      d="m9.5 6 6 6-6 6"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.9"
+    />
+  </svg>
+);
+
+const BookIcon = () => (
+  <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
+    <path
+      d="M4 5.5c0-.83.67-1.5 1.5-1.5H12v16H5.5A1.5 1.5 0 0 0 4 21.5v-16Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.6"
+    />
+    <path
+      d="M20 5.5c0-.83-.67-1.5-1.5-1.5H12v16h6.5a1.5 1.5 0 0 1 1.5 1.5v-16Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.6"
+    />
   </svg>
 );
 
@@ -138,6 +189,8 @@ const parseCorrectPairs = (correctAnswer) =>
 
 export const StudentAssessmentPage = () => {
   const navigate = useNavigate();
+  const tier = useBreakpoint();
+  const isDesktop = tier !== "mobile";
   const { chapterId: chapterNumber, sectionId: sourceSectionId, conceptId } = useParams();
   const isConceptMode = Boolean(conceptId);
   const isChapterMode = !sourceSectionId && !conceptId;
@@ -157,6 +210,36 @@ export const StudentAssessmentPage = () => {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [recentAttempts, setRecentAttempts] = useState([]);
   const [restarting, setRestarting] = useState(false);
+  const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", sectionNumber: "", sectionTopicName: "" });
+
+  // Same breadcrumb data source as StudentConceptLearningPage's desktop
+  // chrome, extended to also resolve the section's own topic name (distinct
+  // from the concept's name) so concept-mode gets the identical four-level
+  // Home > Chapter > Section > Concept breadcrumb as the Concept Learning
+  // page it's reached from via the Practice tab.
+  useEffect(() => {
+    let cancelled = false;
+
+    getStudentSections(chapterNumber)
+      .then((result) => {
+        if (cancelled) return;
+        const section = (result?.sections || []).find(
+          (item) => String(item.sourceSectionId) === String(sourceSectionId)
+        );
+        setBreadcrumbMeta({
+          chapterName: result?.chapterName || "",
+          sectionNumber: section?.sectionNumber || "",
+          sectionTopicName: section?.topicName || "",
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setBreadcrumbMeta({ chapterName: "", sectionNumber: "", sectionTopicName: "" });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chapterNumber, sourceSectionId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -573,46 +656,92 @@ export const StudentAssessmentPage = () => {
     return renderFreeText();
   };
 
-  // Ordering/matching questions carry real multi-item content that benefits
-  // from desktop width; single_select/free_text stay in the narrow focus
-  // layout while still being answered, since that's a single, simple
-  // decision. The instructions screen (stats + rules + recent attempts) is
-  // overview content, not a single-task question, so it also gets the wide
-  // layout -- and once feedback is showing (any interaction type), the
-  // question sits beside its feedback in a second column, so that's wide too.
-  const isWideQuestion =
-    (phase === "question" || phase === "feedback") && (interactionType === "ordering" || interactionType === "matching");
-  const isWide = isWideQuestion || phase === "instructions" || phase === "feedback";
+  // Every phase now uses the same wide layout (mobile is unaffected --
+  // .student-assessment-wide only has rules inside min-width media queries,
+  // so it's visually a no-op below 640px). Previously only ordering/matching
+  // questions and the instructions/feedback screens got this width, which
+  // made the card visibly jump in size between the question and feedback
+  // steps for simple single_select/free_text questions.
+  const Wrapper = "div";
+  const wrapperProps = { className: "student-assessment-wide" };
 
-  const Wrapper = isWide ? "div" : FocusLayout;
-  const wrapperProps = isWide ? { className: "student-assessment-wide" } : {};
+  const assessmentTitle = isChapterMode
+    ? assessment?.topicName
+      ? `${assessment.topicName} Chapter Assessment`
+      : "Chapter Assessment"
+    : isConceptMode
+    ? assessment?.topicName
+      ? `${assessment.topicName} Practice`
+      : "Concept Practice"
+    : assessment?.sectionNumber
+    ? `${assessment.sectionNumber} Section Assessment`
+    : "Section Assessment";
 
+  // Breadcrumb is persistent chrome across every phase now (previously it
+  // only showed on the instructions screen, which meant it vanished the
+  // moment a question started -- the exact gap reported). The hero card
+  // (icon + badge + big title) stays instructions-only since it just
+  // repeats what the question card's own heading already shows once a
+  // question is on screen.
   return (
     <StudentPageShell pageClass="student-page--assessment" legacyModifierClass="student-assessment-phone">
       <Wrapper {...wrapperProps}>
-        <header className="student-section-detail-header">
-          <button
-            type="button"
-            className="student-chapter-detail-back"
-            aria-label="Back to section"
-            onClick={() => navigate(basePath)}
-          >
-            <BackIcon />
-          </button>
-          <h1>
-            {isChapterMode
-              ? assessment?.topicName
-                ? `${assessment.topicName} Chapter Assessment`
-                : "Chapter Assessment"
-              : isConceptMode
-              ? assessment?.topicName
-                ? `${assessment.topicName} Practice`
-                : "Concept Practice"
-              : assessment?.sectionNumber
-              ? `${assessment.sectionNumber} Section Assessment`
-              : "Section Assessment"}
-          </h1>
-        </header>
+        {isDesktop ? (
+          <div className="student-concept-desktop">
+            <nav className="student-concept-breadcrumb" aria-label="Breadcrumb">
+              <button type="button" onClick={() => navigate("/dashboard")} aria-label="Home">
+                <HomeIcon />
+              </button>
+              <ChevronRightIcon />
+              <button type="button" onClick={() => navigate(`/chapters/${chapterNumber}`)}>
+                {`Chapter ${chapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
+              </button>
+              {isConceptMode ? (
+                <>
+                  <ChevronRightIcon />
+                  <button type="button" onClick={() => navigate(`/chapters/${chapterNumber}/sections/${sourceSectionId}`)}>
+                    {breadcrumbMeta.sectionTopicName
+                      ? `${breadcrumbMeta.sectionNumber ? `${breadcrumbMeta.sectionNumber} ` : ""}${breadcrumbMeta.sectionTopicName}`
+                      : `Section ${sourceSectionId}`}
+                  </button>
+                  <ChevronRightIcon />
+                  <span className="is-current">
+                    {`${conceptId ? `${conceptId} ` : ""}${assessment?.topicName || ""}`}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <ChevronRightIcon />
+                  <span className="is-current">{assessmentTitle}</span>
+                </>
+              )}
+            </nav>
+
+            {phase === "instructions" && (
+              <header className="student-concept-hero">
+                <div className="student-concept-hero-icon">
+                  <BookIcon />
+                </div>
+                <div className="student-concept-hero-copy">
+                  <span className="student-concept-hero-badge">Chapter {chapterNumber}</span>
+                  <h1>{assessmentTitle}</h1>
+                </div>
+              </header>
+            )}
+          </div>
+        ) : (
+          <header className="student-section-detail-header">
+            <button
+              type="button"
+              className="student-chapter-detail-back"
+              aria-label="Back to section"
+              onClick={() => navigate(basePath)}
+            >
+              <BackIcon />
+            </button>
+            <h1>{assessmentTitle}</h1>
+          </header>
+        )}
 
         {loading ? (
           <p className="student-empty-state">Loading assessment...</p>
@@ -703,9 +832,7 @@ export const StudentAssessmentPage = () => {
         ) : phase === "finishing" ? (
           <p className="student-empty-state">Submitting your assessment...</p>
         ) : (
-          <section
-            className={`student-concept-practice-panel ${phase === "feedback" ? "has-feedback-split" : ""}`}
-          >
+          <section className="student-concept-practice-panel has-feedback-split">
             <div className="student-concept-practice-question">
               <div className="student-concept-practice-head">
                 <span>Question {activeIndex + 1} of {totalQuestions}</span>
@@ -733,7 +860,7 @@ export const StudentAssessmentPage = () => {
               )}
             </div>
 
-            {phase === "feedback" && feedback && (
+            {phase === "feedback" && feedback ? (
               <div className="student-concept-practice-feedback-col">
                 <div className={`student-instant-feedback ${feedback.isCorrect ? "is-correct" : "is-incorrect"}`}>
                   <strong>{feedback.isCorrect ? "Correct!" : "Not quite"}</strong>
@@ -753,6 +880,10 @@ export const StudentAssessmentPage = () => {
                 <button type="button" className="student-concept-practice-next" onClick={handleNext}>
                   {activeIndex + 1 < totalQuestions ? "Next Question" : "See Result"}
                 </button>
+              </div>
+            ) : (
+              <div className="student-concept-practice-feedback-col is-placeholder">
+                <p>Your feedback will appear here after you submit.</p>
               </div>
             )}
           </section>

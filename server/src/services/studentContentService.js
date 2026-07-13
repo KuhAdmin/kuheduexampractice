@@ -61,6 +61,31 @@ const getMasteryByAssessmentUnitId = async ({ userId, assessmentUnitIds }) => {
   );
 };
 
+// Same "has the student ever attempted this" signal Today's Goal uses
+// (studentDashboardService.js's latest_responses CTE) so a concept's status
+// here is computed the same way everywhere in the app: completed (mastery
+// over threshold), in progress (attempted but not yet mastered), or not
+// started (never attempted).
+const getLastActivityByAssessmentUnitId = async ({ userId, assessmentUnitIds }) => {
+  if (!userId || !assessmentUnitIds.length) {
+    return new Map();
+  }
+
+  const result = await pool.query(
+    `
+      SELECT sr.assessment_unit_id, MAX(sr.created_at) AS last_response_at
+      FROM student_response AS sr
+      JOIN student_attempt AS sa
+        ON sa.id = sr.student_attempt_id
+      WHERE sa.user_id = $1 AND sr.assessment_unit_id = ANY($2)
+      GROUP BY sr.assessment_unit_id
+    `,
+    [userId, assessmentUnitIds]
+  );
+
+  return new Map(result.rows.map((row) => [row.assessment_unit_id, row.last_response_at]));
+};
+
 const listAssessmentUnitsWithMeta = async (sourceSectionId) => {
   const result = await pool.query(
     `
@@ -224,10 +249,11 @@ export const getSectionOverview = async ({ sourceSectionId, userId }) => {
     return null;
   }
 
-  const masteryByUnit = await getMasteryByAssessmentUnitId({
-    userId,
-    assessmentUnitIds: units.map((unit) => unit.assessmentUnitId),
-  });
+  const assessmentUnitIds = units.map((unit) => unit.assessmentUnitId);
+  const [masteryByUnit, lastActivityByUnit] = await Promise.all([
+    getMasteryByAssessmentUnitId({ userId, assessmentUnitIds }),
+    getLastActivityByAssessmentUnitId({ userId, assessmentUnitIds }),
+  ]);
   const masteredCount = units.filter(
     (unit) => (masteryByUnit.get(unit.assessmentUnitId) || 0) >= MASTERY_COMPLETE_THRESHOLD
   ).length;
@@ -239,12 +265,22 @@ export const getSectionOverview = async ({ sourceSectionId, userId }) => {
     overview: overview || "",
     conceptCount: units.length,
     progress: Math.round((masteredCount / units.length) * 100),
-    concepts: units.map((unit) => ({
-      assessmentUnitId: unit.assessmentUnitId,
-      title: unit.primaryConcept,
-      curriculumImportance: unit.curriculumImportance,
-      completed: (masteryByUnit.get(unit.assessmentUnitId) || 0) >= MASTERY_COMPLETE_THRESHOLD,
-    })),
+    concepts: units.map((unit) => {
+      const isMastered = (masteryByUnit.get(unit.assessmentUnitId) || 0) >= MASTERY_COMPLETE_THRESHOLD;
+      const status = isMastered
+        ? "completed"
+        : lastActivityByUnit.has(unit.assessmentUnitId)
+        ? "inProgress"
+        : "notStarted";
+
+      return {
+        assessmentUnitId: unit.assessmentUnitId,
+        title: unit.primaryConcept,
+        curriculumImportance: unit.curriculumImportance,
+        completed: isMastered,
+        status,
+      };
+    }),
   };
 };
 

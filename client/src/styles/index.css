@@ -1977,7 +1977,8 @@ a {
   .student-page.student-page--assessment-result,
   .student-page.student-page--dashboard,
   .student-page.student-page--chapters,
-  .student-page.student-page--memory-booster {
+  .student-page.student-page--memory-booster,
+  .student-page.student-page--goals {
     max-width: none;
     margin: 0;
   }
@@ -2081,8 +2082,10 @@ a {
     white-space: nowrap;
   }
 
-  /* Feedback split: the question stays on the left, feedback appears in a
-     second column with a vertical rule between them, once submitted. */
+  /* Feedback split: the question stays on the left, the right column is
+     reserved from the moment a question loads (not just after submit) so
+     the card doesn't change width/shape when feedback appears -- it just
+     fills in a placeholder that already occupied that space. */
   .student-assessment-wide .student-concept-practice-panel.has-feedback-split {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: start;
@@ -2101,6 +2104,21 @@ a {
     bottom: 0;
     width: 1px;
     background: rgba(47, 125, 51, 0.18);
+  }
+
+  .student-assessment-wide .student-concept-practice-feedback-col.is-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+    text-align: center;
+  }
+
+  .student-assessment-wide .student-concept-practice-feedback-col.is-placeholder p {
+    margin: 0;
+    color: #8a978c;
+    font-size: 0.86rem;
+    font-weight: 600;
   }
 
   /* Dashboard density target: stacked cards, single column, just without
@@ -2140,8 +2158,21 @@ a {
     gap: 20px 24px;
   }
 
-  .student-page--assessment-result > .student-section-detail-header {
+  .student-page--assessment-result > .student-section-detail-header,
+  .student-page--assessment-result > .student-assessment-result-topbar {
     grid-column: 1 / -1;
+  }
+
+  .student-assessment-result-topbar {
+    display: grid;
+    gap: 10px;
+  }
+
+  .student-assessment-result-heading {
+    margin: 0;
+    color: #1d241f;
+    font-size: 1.4rem;
+    font-weight: 800;
   }
 
   .student-page--assessment-result > .student-result-score-ring {
@@ -2693,6 +2724,27 @@ a {
   color: #9da79f;
 }
 
+/* All Chapters -- desktop/tablet only. Reuses the same .student-goals-stats
+   stat-card recipe as Today's Goal (same visual language across the app),
+   plus a dedicated chapter-card grid with a real progress bar. */
+.student-chapters-desktop {
+  display: grid;
+  gap: 20px;
+}
+
+.student-chapters-desktop-heading h1 {
+  margin: 0;
+  color: #1d241f;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.student-chapters-desktop-heading p {
+  margin: 4px 0 0;
+  color: #58705d;
+  font-size: 0.9rem;
+}
+
 .student-chapter-detail-phone {
   gap: 18px;
 }
@@ -2707,6 +2759,23 @@ a {
   margin: 0;
   font-size: 1.02rem;
   color: #1d241f;
+}
+
+/* Desktop-only: back button + two-line title/subtitle block, matching the
+   Today's Goal / All Chapters header treatment for consistency. */
+.student-chapters-desktop .student-chapter-detail-header {
+  align-items: flex-start;
+}
+
+.student-chapters-desktop .student-chapter-detail-header h1 {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.student-chapters-desktop .student-chapter-detail-header p {
+  margin: 4px 0 0;
+  color: #58705d;
+  font-size: 0.9rem;
 }
 
 .student-chapter-detail-back {
@@ -2931,6 +3000,14 @@ a {
   box-shadow: 0 12px 32px rgba(57, 90, 53, 0.08);
 }
 
+.student-section-detail-card.has-illustration {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px;
+}
+
 .student-section-detail-copy {
   width: 100%;
 }
@@ -2992,6 +3069,58 @@ a {
   box-shadow: 0 8px 18px rgba(29, 36, 31, 0.18);
 }
 
+/* Desktop-only iconic tab bar (Concepts / Deep Learn), matching the same
+   green-active/gray-inactive language as the stat cards on this page. */
+.student-section-detail-tabs.is-iconic {
+  display: inline-flex;
+  width: auto;
+  background: transparent;
+  padding: 0;
+  gap: 12px;
+}
+
+.student-section-detail-tabs.is-iconic .student-section-detail-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: rgba(109, 121, 110, 0.12);
+  color: #58705d;
+}
+
+.student-section-detail-tabs.is-iconic .student-section-detail-tab svg {
+  width: 16px;
+  height: 16px;
+}
+
+.student-section-detail-tabs.is-iconic .student-section-detail-tab.is-active {
+  background: #2f9e44;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(47, 158, 68, 0.24);
+}
+
+.student-section-detail-show-more {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+  width: fit-content;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 10px 20px;
+  border: 1px solid rgba(47, 125, 51, 0.16);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1e5e22;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.student-section-detail-show-more svg {
+  width: 16px;
+  height: 16px;
+}
+
 .student-section-detail-concepts {
   display: grid;
   gap: 12px;
@@ -3037,6 +3166,287 @@ a {
 .student-section-detail-actions {
   display: grid;
   gap: 12px;
+}
+
+/* Today's Goal -- desktop/tablet only. Mobile keeps the plain numbered
+   .student-section-detail-* list above, filtered client-side to remaining
+   (non-completed) concepts so its "what's left today" semantics don't
+   change even though the API now returns every topic with a status. */
+.student-goals-desktop {
+  display: grid;
+  gap: 20px;
+}
+
+.student-goals-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.student-goals-header-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.student-goals-header-title h1 {
+  margin: 0;
+  color: #1d241f;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.student-goals-header-title p {
+  margin: 4px 0 0;
+  color: #58705d;
+  font-size: 0.9rem;
+}
+
+.student-goals-progress-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(47, 158, 68, 0.14);
+  color: #1e5e22;
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.student-goals-progress-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.student-goals-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(47, 125, 51, 0.12);
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(57, 90, 53, 0.06);
+}
+
+/* Section Detail's stats row only has 3 real buckets (no "Total" card). */
+.student-goals-stats.student-goals-stats--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.student-goals-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(88, 112, 93, 0.07);
+}
+
+.student-goals-stat-card.is-completed {
+  background: rgba(47, 158, 68, 0.1);
+}
+
+.student-goals-stat-card.is-in-progress {
+  background: rgba(224, 138, 31, 0.1);
+}
+
+.student-goals-stat-card.is-not-started {
+  background: rgba(109, 121, 110, 0.09);
+}
+
+.student-goals-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgba(88, 112, 93, 0.12);
+  color: #58705d;
+}
+
+.student-goals-stat-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.student-goals-stat-icon.is-completed {
+  background: rgba(47, 158, 68, 0.16);
+  color: #1e5e22;
+}
+
+.student-goals-stat-icon.is-in-progress {
+  background: rgba(224, 138, 31, 0.16);
+  color: #b5690f;
+}
+
+.student-goals-stat-icon.is-not-started {
+  background: rgba(109, 121, 110, 0.14);
+  color: #6b7c6d;
+}
+
+.student-goals-stat-card strong {
+  display: block;
+  color: #1d241f;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.student-goals-stat-card span:last-child {
+  display: block;
+  margin-top: 2px;
+  color: #58705d;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.student-goals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.student-goals-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(47, 125, 51, 0.1);
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(57, 90, 53, 0.05);
+  text-align: left;
+  transition: box-shadow 140ms ease, transform 140ms ease;
+}
+
+.student-goals-row:hover {
+  box-shadow: 0 14px 30px rgba(57, 90, 53, 0.1);
+  transform: translateY(-1px);
+}
+
+.student-goals-row.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.student-goals-row-rail {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+}
+
+.student-goals-row:not(:last-child) .student-goals-row-rail::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: calc(100% + 10px);
+  background: rgba(109, 121, 110, 0.2);
+}
+
+.student-goals-row.is-completed:not(:last-child) .student-goals-row-rail::after {
+  background: rgba(47, 158, 68, 0.35);
+}
+
+.student-goals-row-circle {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(109, 121, 110, 0.3);
+  background: #ffffff;
+  color: #58705d;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.student-goals-row-circle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.student-goals-row.is-completed .student-goals-row-circle {
+  border-color: transparent;
+  background: #2f9e44;
+  color: #ffffff;
+}
+
+.student-goals-row.is-in-progress .student-goals-row-circle {
+  border-color: #e08a1f;
+  color: #b5690f;
+}
+
+.student-goals-row-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.student-goals-row-copy strong {
+  color: #1d241f;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.student-goals-row-copy small {
+  color: #6b7c6d;
+  font-size: 0.8rem;
+}
+
+.student-goals-row-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(109, 121, 110, 0.12);
+  color: #58705d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.student-goals-row-status svg {
+  width: 14px;
+  height: 14px;
+}
+
+.student-goals-row-status.is-completed {
+  background: rgba(47, 158, 68, 0.16);
+  color: #1e5e22;
+}
+
+.student-goals-row-status.is-in-progress {
+  background: rgba(224, 138, 31, 0.16);
+  color: #b5690f;
+}
+
+@media (max-width: 1180px) {
+  .student-goals-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-goals-row {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+  }
+
+  .student-goals-row-status {
+    display: none;
+  }
 }
 
 .student-concept-learning-phone {

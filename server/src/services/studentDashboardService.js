@@ -246,8 +246,18 @@ const getSyllabusRowsForUser = async ({ examGoalCode, levelCode, subjectCode, us
           TO_TIMESTAMP(0)
         ) AS "lastActivityAt"
       FROM assessment_unit AS au
+      JOIN source_section AS ss
+        ON ss.id = au.source_section_id
+      -- au.fk_mst_chapter_id is set imprecisely by the pipeline (same class of
+      -- bug already documented for source_section.fk_mst_chapter_id -- it can
+      -- end up pointing at one sibling section's mst_chapter row for every
+      -- assessment unit in a chapter). section_code (colon-separated
+      -- bookId, chapterNumber, sectionNumber) is the reliable key, so
+      -- resolve the catalog row through it instead.
       JOIN mv_chapter_catalog AS chapter
-        ON chapter.chapter_id = au.fk_mst_chapter_id
+        ON chapter.book_id = split_part(ss.section_code, ':', 1)::bigint
+       AND chapter.chapter_number = split_part(ss.section_code, ':', 2)
+       AND chapter.section_number = split_part(ss.section_code, ':', 3)
       LEFT JOIN student_mastery AS sm
         ON sm.assessment_unit_id = au.assessment_unit_id
        AND sm.user_id = $4
@@ -386,7 +396,6 @@ export const listRemainingConceptsForUser = async ({ userId, board, studentClass
   const syllabusRows = await getSyllabusRowsForUser({ examGoalCode, levelCode, subjectCode, userId });
 
   const concepts = syllabusRows
-    .filter((row) => row.masteryProbability < MASTERY_COMPLETE_THRESHOLD)
     .sort((left, right) => {
       const displayOrderDelta = (Number(left.displayOrder) || 0) - (Number(right.displayOrder) || 0);
       if (displayOrderDelta !== 0) {
@@ -402,6 +411,12 @@ export const listRemainingConceptsForUser = async ({ userId, board, studentClass
       sectionNumber: row.sectionNumber,
       topicName: row.topicName,
       primaryConcept: row.primaryConcept,
+      status:
+        row.masteryProbability >= MASTERY_COMPLETE_THRESHOLD
+          ? "completed"
+          : row.lastActivityAt
+          ? "inProgress"
+          : "notStarted",
     }));
 
   return { concepts };

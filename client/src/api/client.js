@@ -1,5 +1,8 @@
 const API_ROOT = "/api";
 
+const GENERIC_SERVER_ERROR_MESSAGE =
+  "We're having trouble completing that right now. Please try again in a moment.";
+
 const readJson = async (response) => {
   if (response.status === 204) {
     return null;
@@ -13,6 +16,9 @@ const readJson = async (response) => {
   }
 
   if (!response.ok) {
+    if (response.status >= 500) {
+      throw new Error(GENERIC_SERVER_ERROR_MESSAGE);
+    }
     throw new Error(data?.message || `Request failed with status ${response.status}.`);
   }
 

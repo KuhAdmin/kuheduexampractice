@@ -287,7 +287,7 @@ export const StudentConceptLearningPage = () => {
   const [activeTab, setActiveTab] = useState(TABS[0]);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [expandedSections, setExpandedSections] = useState(() => new Set());
-  const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", topicName: "" });
+  const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", sectionNumber: "", topicName: "" });
   const [activeExploreStepKey, setActiveExploreStepKey] = useState(null);
   const [visitedExploreSteps, setVisitedExploreSteps] = useState(() => new Set());
 
@@ -324,9 +324,10 @@ export const StudentConceptLearningPage = () => {
     };
   }, [assessmentUnitId]);
 
-  // Breadcrumb only (chapter name + this section's topic name) -- same
-  // endpoint StudentChapterDetailPage already uses for its own header, so
-  // this doesn't add a new data source, just reuses an existing one.
+  // Breadcrumb chapter/section labels (the concept's own name for the
+  // current crumb comes from the concept card itself) -- same endpoint
+  // StudentChapterDetailPage already uses for its own header, so this
+  // doesn't add a new data source, just reuses an existing one.
   useEffect(() => {
     let cancelled = false;
 
@@ -338,11 +339,12 @@ export const StudentConceptLearningPage = () => {
         );
         setBreadcrumbMeta({
           chapterName: result?.chapterName || "",
+          sectionNumber: section?.sectionNumber || "",
           topicName: section?.topicName || section?.sectionNumber || "",
         });
       })
       .catch(() => {
-        if (!cancelled) setBreadcrumbMeta({ chapterName: "", topicName: "" });
+        if (!cancelled) setBreadcrumbMeta({ chapterName: "", sectionNumber: "", topicName: "" });
       });
 
     return () => {
@@ -833,6 +835,7 @@ export const StudentConceptLearningPage = () => {
   const renderComingSoon = (label) => (
     <section className="student-concept-learning-card">
       <div className="student-concept-learning-copy">
+        <h2>{label}</h2>
         <p>{label} is coming soon for this concept.</p>
       </div>
     </section>
@@ -854,10 +857,18 @@ export const StudentConceptLearningPage = () => {
             </button>
             <ConceptLearningIcon type="chevron-right" />
             <button type="button" onClick={() => navigate(`/chapters/${chapterNumber}`)}>
-              {breadcrumbMeta.chapterName || `Chapter ${chapterNumber}`}
+              {`Chapter ${chapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
             </button>
             <ConceptLearningIcon type="chevron-right" />
-            <span className="is-current">{breadcrumbMeta.topicName || card?.primaryConcept || ""}</span>
+            <button type="button" onClick={() => navigate(`/chapters/${chapterNumber}/sections/${sourceSectionId}`)}>
+              {breadcrumbMeta.topicName
+                ? `${breadcrumbMeta.sectionNumber ? `${breadcrumbMeta.sectionNumber} ` : ""}${breadcrumbMeta.topicName}`
+                : `Section ${sourceSectionId}`}
+            </button>
+            <ConceptLearningIcon type="chevron-right" />
+            <span className="is-current">
+              {`${assessmentUnitId ? `${assessmentUnitId} ` : ""}${card?.primaryConcept || ""}`}
+            </span>
           </nav>
 
           <header className="student-concept-hero">

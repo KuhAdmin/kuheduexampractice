@@ -1,16 +1,46 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
-import { getAssessmentResult } from "../api/client";
+import { useBreakpoint } from "../hooks/useBreakpoint";
+import { getAssessmentResult, getStudentSections } from "../api/client";
+
+const HomeIcon = () => (
+  <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
+    <path
+      d="m4 11 8-6.5L20 11v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.7"
+    />
+  </svg>
+);
+
+const ChevronRightIcon = () => (
+  <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
+    <path
+      d="m9.5 6 6 6-6 6"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.9"
+    />
+  </svg>
+);
 
 export const StudentAssessmentResultPage = () => {
   const navigate = useNavigate();
+  const tier = useBreakpoint();
+  const isDesktop = tier !== "mobile";
   const { chapterId: chapterNumber, sectionId: sourceSectionId, conceptId, attemptId } = useParams();
   const isConceptMode = Boolean(conceptId);
   const isChapterMode = !sourceSectionId && !conceptId;
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", sectionNumber: "", sectionTopicName: "" });
 
   useEffect(() => {
     let cancelled = false;
@@ -33,6 +63,33 @@ export const StudentAssessmentResultPage = () => {
     };
   }, [attemptId]);
 
+  // Same breadcrumb data source as StudentAssessmentPage -- this result
+  // screen is reached straight from there, so it needs the identical
+  // Home > Chapter > Section > Concept trail, not just a bare title.
+  useEffect(() => {
+    let cancelled = false;
+
+    getStudentSections(chapterNumber)
+      .then((sections) => {
+        if (cancelled) return;
+        const section = (sections?.sections || []).find(
+          (item) => String(item.sourceSectionId) === String(sourceSectionId)
+        );
+        setBreadcrumbMeta({
+          chapterName: sections?.chapterName || "",
+          sectionNumber: section?.sectionNumber || "",
+          sectionTopicName: section?.topicName || "",
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setBreadcrumbMeta({ chapterName: "", sectionNumber: "", sectionTopicName: "" });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chapterNumber, sourceSectionId]);
+
   const sectionPath = `/chapters/${chapterNumber}/sections/${sourceSectionId}`;
   const basePath = isChapterMode
     ? `/chapters/${chapterNumber}`
@@ -40,12 +97,60 @@ export const StudentAssessmentResultPage = () => {
     ? `${sectionPath}/concepts/${conceptId}`
     : sectionPath;
   const scorePercent = result?.score ?? 0;
+  const conceptName = result?.performanceByTopic?.[0]?.primaryConcept || "";
 
   return (
     <StudentPageShell pageClass="student-page--assessment-result" legacyModifierClass="student-assessment-result-phone">
-        <header className="student-section-detail-header">
-          <h1>Assessment Result</h1>
-        </header>
+        {isDesktop ? (
+          <div className="student-assessment-result-topbar">
+          <nav className="student-concept-breadcrumb" aria-label="Breadcrumb">
+            <button type="button" onClick={() => navigate("/dashboard")} aria-label="Home">
+              <HomeIcon />
+            </button>
+            {isChapterMode ? (
+              <>
+                <ChevronRightIcon />
+                <span className="is-current">
+                  {`Chapter ${chapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
+                </span>
+              </>
+            ) : (
+              <>
+                <ChevronRightIcon />
+                <button type="button" onClick={() => navigate(`/chapters/${chapterNumber}`)}>
+                  {`Chapter ${chapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
+                </button>
+                {isConceptMode ? (
+                  <>
+                    <ChevronRightIcon />
+                    <button type="button" onClick={() => navigate(sectionPath)}>
+                      {breadcrumbMeta.sectionTopicName
+                        ? `${breadcrumbMeta.sectionNumber ? `${breadcrumbMeta.sectionNumber} ` : ""}${breadcrumbMeta.sectionTopicName}`
+                        : `Section ${sourceSectionId}`}
+                    </button>
+                    <ChevronRightIcon />
+                    <span className="is-current">{`${conceptId ? `${conceptId} ` : ""}${conceptName}`}</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronRightIcon />
+                    <span className="is-current">
+                      {breadcrumbMeta.sectionTopicName
+                        ? `${breadcrumbMeta.sectionNumber ? `${breadcrumbMeta.sectionNumber} ` : ""}${breadcrumbMeta.sectionTopicName}`
+                        : `Section ${sourceSectionId}`}
+                    </span>
+                  </>
+                )}
+              </>
+            )}
+          </nav>
+          <h1 className="student-assessment-result-heading">Assessment Result</h1>
+          </div>
+        ) : (
+          <header className="student-section-detail-header">
+            <h1>Assessment Result</h1>
+          </header>
+        )}
 
         {loading ? (
           <p className="student-empty-state">Loading result...</p>
