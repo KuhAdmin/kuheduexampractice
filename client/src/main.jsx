@@ -1,3 +1,8 @@
+// Imported first and deliberately has a module-load side effect: attaches
+// the beforeinstallprompt listener before anything else runs, since that
+// event can fire very early and must not be missed (see the module for why
+// this can't just live inside the component that shows the install button).
+import "./lib/pwaInstall";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";

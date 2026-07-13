@@ -1901,8 +1901,28 @@ a {
   padding: 0;
 }
 
+/* Belt-and-suspenders: pin this with a compound selector (higher
+   specificity than either .app-shell or .dashboard-app-shell alone) so it
+   can never lose a cascade tie to .app-shell's own width/margin/padding
+   (line ~62), regardless of stylesheet edit order going forward. Without
+   this, the student area's outer shell can end up narrower than the
+   viewport on mobile with the body's background color visible around the
+   edges instead of filling it. */
+.app-shell.dashboard-app-shell {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
 @media (min-width: 640px) {
   .dashboard-app-shell {
+    width: min(1600px, 80%);
+    margin: 0 auto;
+    padding: 14px 0 20px;
+  }
+
+  .app-shell.dashboard-app-shell {
     width: min(1600px, 80%);
     margin: 0 auto;
     padding: 14px 0 20px;
@@ -1916,7 +1936,16 @@ a {
 .student-dashboard-shell {
   display: grid;
   min-height: 100vh;
-  overflow-x: hidden;
+  /* clip, not hidden: `overflow-x: hidden` forces the browser to compute
+     overflow-y as `auto` too (any hidden+visible axis pairing gets coerced
+     per spec), which silently turns this element into a "scroll container"
+     -- even though it never actually scrolls (min-height only grows, it
+     never clips real content) -- and that alone is enough to break
+     `position: sticky` on .student-dashboard-bottom-nav further down the
+     tree, since sticky positioning is computed relative to the nearest
+     scroll container. `clip` prevents horizontal overflow without creating
+     that scroll-container side effect. */
+  overflow-x: clip;
 }
 
 .student-dashboard-phone {
@@ -1936,8 +1965,16 @@ a {
      the primary fix. Any element that intentionally needs its own
      horizontal scroll (e.g. .student-memory-booster-tabs) still scrolls
      internally -- overflow here doesn't affect a descendant's own overflow.
+
+     clip, not hidden: this element is the direct flex parent of
+     .student-dashboard-bottom-nav (position: sticky; bottom: 0). `hidden`
+     forces overflow-y to the used value `auto` (the browser coerces any
+     hidden/visible axis pairing), which makes this the sticky nav's
+     "nearest scroll container" and breaks the sticky-to-viewport behavior
+     even though nothing here actually scrolls. `clip` blocks the same
+     horizontal overflow without that side effect.
   */
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ============================================================
