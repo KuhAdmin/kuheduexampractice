@@ -4,6 +4,46 @@ import {
   listDemoSubmissions,
   submitDemoAssessment,
 } from "../services/adminDemoService.js";
+import { listSubjects } from "../services/subjectService.js";
+import { listSelectableModels } from "../services/llm/modelRegistry.js";
+import {
+  getDemoModelSelection,
+  setDemoSubjectModelOverride,
+} from "../services/llm/demoModelSelectionService.js";
+
+export const getDemoModelSettings = async (_req, res, next) => {
+  try {
+    const [subjects, selection] = await Promise.all([listSubjects(), getDemoModelSelection()]);
+    const availableModels = listSelectableModels().filter(
+      (model) => model.provider !== "azure-openai-image"
+    );
+
+    return res.json({
+      subjects,
+      subjectOverrides: selection.subjectOverrides || {},
+      availableModels,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const putDemoSubjectModelOverride = async (req, res, next) => {
+  try {
+    const { ocrModelId, gradingModelId } = req.body || {};
+    const updated = await setDemoSubjectModelOverride(
+      req.params.subjectCode,
+      { ocrModelId: ocrModelId || null, gradingModelId: gradingModelId || null },
+      { updatedBy: req.user?.id || null }
+    );
+    return res.json({ subjectOverrides: updated.subjectOverrides || {} });
+  } catch (error) {
+    if (error.message?.startsWith("Unknown AI model id") || error.message?.includes("subject code")) {
+      return res.status(400).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
 
 export const getDemoSubmissions = async (_req, res, next) => {
   try {

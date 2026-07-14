@@ -7927,6 +7927,8 @@ a {
 
 .modal-panel {
   width: min(520px, 100%);
+  max-height: min(90vh, 880px);
+  overflow-y: auto;
   position: relative;
   padding: 30px;
   border-radius: 28px;
@@ -10935,12 +10937,72 @@ a {
   gap: 14px;
 }
 
+.admin-crop-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-crop-editor-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.admin-crop-editor-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.admin-crop-editor-zoom-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: inherit;
+  cursor: pointer;
+}
+
+.admin-crop-editor-zoom-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-crop-editor-zoom-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-crop-editor-zoom-level {
+  min-width: 3.4em;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.admin-crop-editor-viewport {
+  width: 100%;
+  max-height: 55vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
 .admin-crop-editor-canvas {
   position: relative;
   display: inline-block;
-  max-width: 100%;
   touch-action: none;
   line-height: 0;
+  cursor: crosshair;
 }
 
 .admin-crop-editor-canvas img {
@@ -10954,42 +11016,39 @@ a {
   position: absolute;
   border: 2px dashed #2f7d33;
   background: rgba(47, 125, 51, 0.14);
-  cursor: move;
-  touch-action: none;
+  pointer-events: none;
 }
 
-.admin-crop-editor-handle {
+.admin-crop-editor-pin {
   position: absolute;
-  width: 16px;
-  height: 16px;
-  background: #2f7d33;
-  border: 2px solid #fff;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  margin-top: -9px;
   border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  cursor: grab;
   touch-action: none;
 }
 
-.admin-crop-editor-handle.is-top-left {
-  top: -9px;
-  left: -9px;
-  cursor: nwse-resize;
+.admin-crop-editor-pin::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
 }
 
-.admin-crop-editor-handle.is-top-right {
-  top: -9px;
-  right: -9px;
-  cursor: nesw-resize;
+.admin-crop-editor-pin.is-red {
+  background: #e0303f;
 }
 
-.admin-crop-editor-handle.is-bottom-left {
-  bottom: -9px;
-  left: -9px;
-  cursor: nesw-resize;
-}
-
-.admin-crop-editor-handle.is-bottom-right {
-  bottom: -9px;
-  right: -9px;
-  cursor: nwse-resize;
+.admin-crop-editor-pin.is-blue {
+  background: #2563eb;
 }
 
 .admin-crop-editor-actions {
@@ -11152,4 +11211,266 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.admin-ai-demo-panel-in-modal {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+/* Deliberately NOT reusing .admin-exam-types-row-actions here -- that
+   class pairs display:flex with width:1% (a table-auto-layout shrink-
+   hack meant for a plain table-cell box), which doesn't reliably combine
+   with flex and left its two ghost-button pills rendering with no real
+   gap between them. .admin-bulk-pipeline-actions (flex + gap, no width
+   hack) is the already-proven pattern for ghost-buttons inside a table
+   cell elsewhere in this app -- mirrored here with justify-content added
+   for right-alignment. */
+.admin-ai-demo-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Responsive pass -- mobile (<=640px) and tablet (<=920px) --
+   for AdminAiAssessmentDemoPage.jsx and the shared
+   .admin-bulk-pipeline-header/-grid-shell/.admin-exam-types-table
+   classes it (and AdminBooksPage/AdminExamTypesPage/etc.) reuse.
+   This family of admin pages had no responsive treatment at all --
+   .admin-bulk-pipeline-header stayed a non-wrapping flex row at
+   every width, so on a phone the fixed-size CTA buttons squeezed
+   the h1's available width down to almost nothing, wrapping a
+   short title into 3+ ugly single-word lines. Sidebar collapse
+   itself is already handled elsewhere (.admin-page in the shared
+   920px block above), so these rules are purely about the content
+   column's own internal layout.
+   ============================================================ */
+
+@media (max-width: 920px) {
+  .admin-bulk-pipeline-header {
+    flex-wrap: wrap;
+  }
+
+  .admin-ai-demo-subject-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-bulk-pipeline-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .admin-bulk-pipeline-header h1 {
+    font-size: clamp(1.5rem, 8vw, 2rem);
+    line-height: 1.05;
+  }
+
+  .admin-bulk-pipeline-header p {
+    max-width: none;
+  }
+
+  .admin-bulk-pipeline-header-actions {
+    width: 100%;
+  }
+
+  .admin-bulk-pipeline-header-actions button {
+    flex: 1 1 0;
+    text-align: center;
+  }
+
+  .admin-ai-demo-page .admin-bulk-pipeline-grid-shell {
+    overflow-x: auto;
+  }
+
+  .admin-ai-demo-page .admin-exam-types-table {
+    min-width: 560px;
+  }
+
+  .admin-ai-demo-stepper {
+    gap: 6px;
+  }
+
+  .admin-ai-demo-step {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+
+  .admin-ai-demo-panel {
+    padding: 16px;
+  }
+
+  .admin-ai-demo-subject-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .admin-ai-demo-option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-crop-editor-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-crop-editor-zoom-controls {
+    justify-content: center;
+  }
+}
+
+/* ============================================================
+   Equation display + editor dialog (EquationDisplay.jsx,
+   MathEquationEditorDialog.jsx) -- replaces raw-LaTeX-visible
+   textarea/<p> + MathPreview pairs with a rendered-only view and
+   an optional "..." menu opening a toolbar-driven equation editor.
+   Used by AdminAiAssessmentDemoPage.jsx and
+   StudentMultiPageAnswerInput.jsx (and therefore every page that
+   reuses that component).
+   ============================================================ */
+
+.admin-equation-display {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 40px 12px 14px;
+  background: var(--surface, #fff);
+  min-height: 44px;
+}
+
+.admin-equation-display-content {
+  min-height: 20px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.admin-equation-display-placeholder {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.admin-equation-display-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.admin-equation-display-menu:hover {
+  background: rgba(31, 41, 51, 0.06);
+  color: var(--text);
+}
+
+.admin-equation-display-menu svg {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-equation-editor-preview {
+  min-height: 48px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(31, 41, 51, 0.03);
+  line-height: 1.6;
+}
+
+.admin-equation-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.admin-equation-editor-toolbar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-equation-editor-toolbar-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.admin-equation-editor-toolbar-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 260px;
+}
+
+.admin-equation-editor-button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface, #fff);
+  color: var(--text);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.admin-equation-editor-button:hover {
+  background: rgba(31, 41, 51, 0.06);
+}
+
+.admin-equation-editor-button.is-wide {
+  min-width: auto;
+  padding: 0 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.admin-equation-editor-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.admin-equation-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .admin-equation-editor-toolbar-buttons {
+    max-width: none;
+  }
+}
+
+.admin-equation-display.is-correct {
+  background: linear-gradient(180deg, #f7fcf6, #eef8ee);
+  border-color: rgba(47, 125, 51, 0.3);
+}
+
+.admin-equation-display.is-incorrect {
+  background: linear-gradient(180deg, #fdf4f4, #fbe9e9);
+  border-color: rgba(198, 60, 60, 0.3);
 }

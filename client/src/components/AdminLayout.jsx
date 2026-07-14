@@ -5,6 +5,7 @@ const adminMenu = [
   { label: "Practice Sets", to: "/admin/practice-sets" },
   { label: "AI Assessment Studio", to: "/admin/ai-assessment-studio" },
   { label: "AI Assessment Demo", to: "/admin/ai-assessment-studio/demo" },
+  { label: "Demo Model Settings", to: "/admin/ai-assessment-studio/demo-model-settings" },
   { label: "Bulk Pipeline", to: "/admin/ai-assessment-studio/bulk" },
   { label: "Source Builder", to: "/admin/ai-assessment-studio/source-builder" },
   { label: "Pipeline Runs", to: "/admin/ai-assessment-studio/runs" },

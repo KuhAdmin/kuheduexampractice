@@ -6,6 +6,7 @@ import { AdminAssessmentStudioPage } from "./pages/AdminAssessmentStudioPage";
 import { AdminBulkPipelinePage } from "./pages/AdminBulkPipelinePage";
 import { AdminSourceBuilderPage } from "./pages/AdminSourceBuilderPage";
 import { AdminAiAssessmentDemoPage } from "./pages/AdminAiAssessmentDemoPage";
+import { AdminDemoModelSettingsPage } from "./pages/AdminDemoModelSettingsPage";
 import { AdminPipelineRunsPage } from "./pages/AdminPipelineRunsPage";
 import { AdminChapterExerciseReviewPage } from "./pages/AdminChapterExerciseReviewPage";
 import { AdminAssessmentAuditPage } from "./pages/AdminAssessmentAuditPage";
@@ -275,6 +276,10 @@ const App = () => {
           <Route
             path="ai-assessment-studio/demo"
             element={<AdminAiAssessmentDemoPage />}
+          />
+          <Route
+            path="ai-assessment-studio/demo-model-settings"
+            element={<AdminDemoModelSettingsPage />}
           />
           <Route
             path="ai-assessment-studio/runs"

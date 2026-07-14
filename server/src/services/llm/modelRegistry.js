@@ -18,6 +18,15 @@ const AI_MODEL_REGISTRY = [
     isDefault: false,
   },
   {
+    id: "gemini-2-5-flash",
+    label: "Google Gemini 2.5 Flash",
+    provider: "openai-compatible",
+    baseUrl: env.geminiApiBaseUrl,
+    apiKeyEnvValue: env.geminiApiKey,
+    modelName: env.geminiModel,
+    isDefault: false,
+  },
+  {
     id: "azure-image-gpt-image-1",
     label: "Azure OpenAI — Image (gpt-image-1)",
     provider: "azure-openai-image",

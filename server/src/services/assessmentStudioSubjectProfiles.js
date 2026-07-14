@@ -263,6 +263,15 @@ const SUBJECT_FAMILY_MAP = {
   BEN: "language-arts",
 };
 
+// Used outside the pipeline too (OCR model routing). Deliberately narrower
+// than "the language-arts family" -- English (ENG) is in that family for
+// pipeline dimension-guidance purposes but is still Latin-script, so it
+// doesn't need a different OCR model the way Hindi/Bengali handwriting does.
+const NON_LATIN_SCRIPT_SUBJECT_CODES = new Set(["HIN", "BEN"]);
+
+export const isNonLatinScriptSubjectCode = (subjectCode) =>
+  NON_LATIN_SCRIPT_SUBJECT_CODES.has(String(subjectCode || "").toUpperCase().trim());
+
 const sanitizeAuPrefix = (subjectCode) => {
   const cleaned = String(subjectCode || "")
     .toUpperCase()

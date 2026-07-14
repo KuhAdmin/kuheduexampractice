@@ -91,4 +91,10 @@ export const env = {
   deepseekApiKey: process.env.DEEPSEEK_API_KEY || "",
   deepseekApiBaseUrl: process.env.DEEPSEEK_API_BASE_URL || "https://api.deepseek.com/v1",
   deepseekModel: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
+  // Note the .env key is GEMINIAPI_KEY (no underscore before API), not the
+  // more conventional GEMINI_API_KEY -- matching the key as it actually
+  // exists in .env rather than "fixing" the name and silently breaking it.
+  geminiApiKey: process.env.GEMINIAPI_KEY || "",
+  geminiApiBaseUrl: process.env.GEMINI_API_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai",
+  geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash",
 };

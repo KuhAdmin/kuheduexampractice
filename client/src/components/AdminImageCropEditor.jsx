@@ -1,129 +1,134 @@
 import { useRef, useState } from "react";
 
-// A minimal, dependency-free rectangle-crop tool: drag on the image to draw
-// a selection, drag inside it to move, drag a corner handle to resize.
-// Pointer Events (not separate mouse/touch handlers) so it works with mouse,
-// touch, and pen with one code path. Coordinates are tracked in on-screen
-// (rendered) pixels and converted to the image's natural pixel space only
-// when actually cropping, so this works regardless of how large the
-// preview is displayed.
+const ZoomInIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    <path
+      d="M15.6 15.6 21 21M10.5 7.5v6M7.5 10.5h6"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const ZoomOutIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    <path
+      d="M15.6 15.6 21 21M7.5 10.5h6"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const ZOOM_MIN = 100;
+const ZOOM_MAX = 400;
+const ZOOM_STEP = 25;
+
+// Two-pin crop tool: drop a red pin on one corner of the region and a blue
+// pin on the opposite corner; the rectangle is the bounding box between
+// them. Faster and less fiddly on a touchscreen than drag-to-draw-a-
+// rectangle (no resize handles to hit precisely), and the pins stay
+// draggable afterwards for fine adjustment. Pins are tracked in the
+// image's own natural pixel space (not on-screen/rendered pixels), so
+// zooming in/out never needs to remap them -- only their on-screen
+// position (computed from the current render scale) changes.
 export const AdminImageCropEditor = ({ imageDataUrl, initialCropRegion, onSave, onCancel, saving }) => {
   const imageRef = useRef(null);
-  const containerRef = useRef(null);
-  const dragStateRef = useRef(null);
+  const canvasRef = useRef(null);
+  const dragPinRef = useRef(null);
 
-  const [rect, setRect] = useState(null); // { x, y, width, height } in rendered (display) pixels
   const [naturalSize, setNaturalSize] = useState(null);
+  const [baseWidthPx, setBaseWidthPx] = useState(0);
+  const [zoomPercent, setZoomPercent] = useState(100);
+  const [pins, setPins] = useState(() =>
+    initialCropRegion
+      ? {
+          red: { x: initialCropRegion.x, y: initialCropRegion.y },
+          blue: {
+            x: initialCropRegion.x + initialCropRegion.width,
+            y: initialCropRegion.y + initialCropRegion.height,
+          },
+        }
+      : { red: null, blue: null }
+  );
+
+  const renderedWidth = baseWidthPx ? (baseWidthPx * zoomPercent) / 100 : 0;
+  const scale = naturalSize && renderedWidth ? renderedWidth / naturalSize.width : 0;
 
   const handleImageLoad = (event) => {
     const image = event.target;
     setNaturalSize({ width: image.naturalWidth, height: image.naturalHeight });
-    if (initialCropRegion && image.naturalWidth) {
-      const scale = image.clientWidth / image.naturalWidth;
-      setRect({
-        x: initialCropRegion.x * scale,
-        y: initialCropRegion.y * scale,
-        width: initialCropRegion.width * scale,
-        height: initialCropRegion.height * scale,
-      });
-    }
+    setBaseWidthPx(image.clientWidth);
   };
 
-  const getRelativePoint = (event) => {
-    const bounds = containerRef.current.getBoundingClientRect();
-    return {
-      x: Math.min(Math.max(event.clientX - bounds.left, 0), bounds.width),
-      y: Math.min(Math.max(event.clientY - bounds.top, 0), bounds.height),
-    };
+  const toScreen = (point) => (point && scale ? { x: point.x * scale, y: point.y * scale } : null);
+
+  const getRelativeNaturalPoint = (event) => {
+    const bounds = canvasRef.current.getBoundingClientRect();
+    const screenX = Math.min(Math.max(event.clientX - bounds.left, 0), bounds.width);
+    const screenY = Math.min(Math.max(event.clientY - bounds.top, 0), bounds.height);
+    const pointScale = naturalSize ? bounds.width / naturalSize.width : 0;
+    if (!pointScale) return { x: 0, y: 0 };
+    return { x: Math.round(screenX / pointScale), y: Math.round(screenY / pointScale) };
   };
 
-  const startNewRect = (event) => {
-    const point = getRelativePoint(event);
-    dragStateRef.current = { mode: "draw", startX: point.x, startY: point.y };
-    setRect({ x: point.x, y: point.y, width: 0, height: 0 });
-    event.target.setPointerCapture(event.pointerId);
+  const handleCanvasPointerDown = (event) => {
+    if (pins.red && pins.blue) return;
+    const point = getRelativeNaturalPoint(event);
+    setPins((current) => {
+      if (!current.red) return { ...current, red: point };
+      if (!current.blue) return { ...current, blue: point };
+      return current;
+    });
   };
 
-  const startMove = (event) => {
+  const startDragPin = (key) => (event) => {
     event.stopPropagation();
-    const point = getRelativePoint(event);
-    dragStateRef.current = { mode: "move", startX: point.x, startY: point.y, originRect: rect };
+    dragPinRef.current = key;
     event.target.setPointerCapture(event.pointerId);
   };
 
-  const startResize = (corner) => (event) => {
-    event.stopPropagation();
-    dragStateRef.current = { mode: "resize", corner, originRect: rect };
-    event.target.setPointerCapture(event.pointerId);
+  const handleCanvasPointerMove = (event) => {
+    if (!dragPinRef.current) return;
+    const point = getRelativeNaturalPoint(event);
+    setPins((current) => ({ ...current, [dragPinRef.current]: point }));
   };
 
-  const handlePointerMove = (event) => {
-    const drag = dragStateRef.current;
-    if (!drag) return;
-    const point = getRelativePoint(event);
-    const bounds = containerRef.current.getBoundingClientRect();
-
-    if (drag.mode === "draw") {
-      setRect({
-        x: Math.min(drag.startX, point.x),
-        y: Math.min(drag.startY, point.y),
-        width: Math.abs(point.x - drag.startX),
-        height: Math.abs(point.y - drag.startY),
-      });
-      return;
-    }
-
-    if (drag.mode === "move") {
-      const deltaX = point.x - drag.startX;
-      const deltaY = point.y - drag.startY;
-      const maxX = bounds.width - drag.originRect.width;
-      const maxY = bounds.height - drag.originRect.height;
-      setRect({
-        ...drag.originRect,
-        x: Math.min(Math.max(drag.originRect.x + deltaX, 0), Math.max(maxX, 0)),
-        y: Math.min(Math.max(drag.originRect.y + deltaY, 0), Math.max(maxY, 0)),
-      });
-      return;
-    }
-
-    if (drag.mode === "resize") {
-      const { originRect, corner } = drag;
-      const right = originRect.x + originRect.width;
-      const bottom = originRect.y + originRect.height;
-      let next = { ...originRect };
-
-      if (corner.includes("left")) {
-        next.x = Math.min(point.x, right - 10);
-        next.width = right - next.x;
-      }
-      if (corner.includes("right")) {
-        next.width = Math.max(point.x - originRect.x, 10);
-      }
-      if (corner.includes("top")) {
-        next.y = Math.min(point.y, bottom - 10);
-        next.height = bottom - next.y;
-      }
-      if (corner.includes("bottom")) {
-        next.height = Math.max(point.y - originRect.y, 10);
-      }
-      setRect(next);
-    }
+  const handleCanvasPointerUp = () => {
+    dragPinRef.current = null;
   };
 
-  const handlePointerUp = () => {
-    dragStateRef.current = null;
-  };
+  const resetPins = () => setPins({ red: null, blue: null });
+
+  const cropRegion =
+    pins.red && pins.blue
+      ? {
+          x: Math.round(Math.min(pins.red.x, pins.blue.x)),
+          y: Math.round(Math.min(pins.red.y, pins.blue.y)),
+          width: Math.round(Math.abs(pins.red.x - pins.blue.x)),
+          height: Math.round(Math.abs(pins.red.y - pins.blue.y)),
+        }
+      : null;
+
+  const redPinScreen = toScreen(pins.red);
+  const bluePinScreen = toScreen(pins.blue);
+
+  const overlayRect = (() => {
+    if (!cropRegion) return null;
+    const origin = toScreen({ x: cropRegion.x, y: cropRegion.y });
+    const size = toScreen({ x: cropRegion.width, y: cropRegion.height });
+    if (!origin || !size) return null;
+    return { left: origin.x, top: origin.y, width: size.x, height: size.y };
+  })();
 
   const handleSaveCrop = () => {
-    if (!rect || !naturalSize || rect.width < 4 || rect.height < 4) return;
-
-    const scale = naturalSize.width / imageRef.current.clientWidth;
-    const cropRegion = {
-      x: Math.round(rect.x * scale),
-      y: Math.round(rect.y * scale),
-      width: Math.round(rect.width * scale),
-      height: Math.round(rect.height * scale),
-    };
+    if (!cropRegion || cropRegion.width < 4 || cropRegion.height < 4) return;
 
     const canvas = document.createElement("canvas");
     canvas.width = cropRegion.width;
@@ -146,43 +151,78 @@ export const AdminImageCropEditor = ({ imageDataUrl, initialCropRegion, onSave, 
 
   return (
     <div className="admin-crop-editor">
-      <div
-        className="admin-crop-editor-canvas"
-        ref={containerRef}
-        onPointerDown={rect ? undefined : startNewRect}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        <img
-          ref={imageRef}
-          src={imageDataUrl}
-          alt="Page to crop"
-          onLoad={handleImageLoad}
-          draggable={false}
-        />
-        {rect && (
-          <div
-            className="admin-crop-editor-rect"
-            style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
-            onPointerDown={startMove}
+      <div className="admin-crop-editor-toolbar">
+        <p className="admin-crop-editor-hint">
+          {!pins.red
+            ? "Click the image to drop the red pin on one corner of the question."
+            : !pins.blue
+              ? "Now click to drop the blue pin on the opposite corner."
+              : "Drag either pin to fine-tune, or reset and start over."}
+        </p>
+        <div className="admin-crop-editor-zoom-controls">
+          <button
+            type="button"
+            className="admin-crop-editor-zoom-button"
+            aria-label="Zoom out"
+            disabled={zoomPercent <= ZOOM_MIN}
+            onClick={() => setZoomPercent((z) => Math.max(ZOOM_MIN, z - ZOOM_STEP))}
           >
-            {["top-left", "top-right", "bottom-left", "bottom-right"].map((corner) => (
-              <span
-                key={corner}
-                className={`admin-crop-editor-handle is-${corner}`}
-                onPointerDown={startResize(corner)}
-              />
-            ))}
-          </div>
-        )}
+            <ZoomOutIcon />
+          </button>
+          <span className="admin-crop-editor-zoom-level">{zoomPercent}%</span>
+          <button
+            type="button"
+            className="admin-crop-editor-zoom-button"
+            aria-label="Zoom in"
+            disabled={zoomPercent >= ZOOM_MAX}
+            onClick={() => setZoomPercent((z) => Math.min(ZOOM_MAX, z + ZOOM_STEP))}
+          >
+            <ZoomInIcon />
+          </button>
+        </div>
       </div>
+
+      <div className="admin-crop-editor-viewport">
+        <div
+          className="admin-crop-editor-canvas"
+          ref={canvasRef}
+          onPointerDown={handleCanvasPointerDown}
+          onPointerMove={handleCanvasPointerMove}
+          onPointerUp={handleCanvasPointerUp}
+        >
+          <img
+            ref={imageRef}
+            src={imageDataUrl}
+            alt="Page to crop"
+            onLoad={handleImageLoad}
+            draggable={false}
+            style={baseWidthPx ? { width: `${renderedWidth}px`, maxWidth: "none" } : undefined}
+          />
+          {overlayRect && <div className="admin-crop-editor-rect" style={overlayRect} />}
+          {redPinScreen && (
+            <span
+              className="admin-crop-editor-pin is-red"
+              style={{ left: redPinScreen.x, top: redPinScreen.y }}
+              onPointerDown={startDragPin("red")}
+            />
+          )}
+          {bluePinScreen && (
+            <span
+              className="admin-crop-editor-pin is-blue"
+              style={{ left: bluePinScreen.x, top: bluePinScreen.y }}
+              onPointerDown={startDragPin("blue")}
+            />
+          )}
+        </div>
+      </div>
+
       <div className="admin-crop-editor-actions">
         <button type="button" className="ghost-button" onClick={onCancel} disabled={saving}>
           Cancel
         </button>
-        {rect && (
-          <button type="button" className="ghost-button" onClick={() => setRect(null)} disabled={saving}>
-            Clear Selection
+        {(pins.red || pins.blue) && (
+          <button type="button" className="ghost-button" onClick={resetPins} disabled={saving}>
+            Reset Pins
           </button>
         )}
         <button
@@ -197,7 +237,7 @@ export const AdminImageCropEditor = ({ imageDataUrl, initialCropRegion, onSave, 
           type="button"
           className="primary-button"
           onClick={handleSaveCrop}
-          disabled={saving || !rect || rect.width < 4 || rect.height < 4}
+          disabled={saving || !cropRegion || cropRegion.width < 4 || cropRegion.height < 4}
         >
           {saving ? "Saving..." : "Save Crop"}
         </button>

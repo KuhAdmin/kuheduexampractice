@@ -147,10 +147,10 @@ export const submitAssessmentAnswer = async (
     body: JSON.stringify({ studentAnswer, timeTakenSeconds, sourcePageImages }),
   });
 
-export const ocrHandwrittenNote = async (imageDataUrl) =>
+export const ocrHandwrittenNote = async (imageDataUrl, subjectCode) =>
   apiRequest("/user/ocr/handwritten-note", {
     method: "POST",
-    body: JSON.stringify({ imageDataUrl }),
+    body: JSON.stringify({ imageDataUrl, subjectCode }),
   });
 
 export const getMicroActivityResponse = async (assessmentUnitId) =>
@@ -539,6 +539,14 @@ export const submitAdminDemoAssessment = async ({
 
 export const deleteAdminDemoSubmission = async (submissionId) =>
   apiRequest(`/admin/ai-demo/${submissionId}`, { method: "DELETE" });
+
+export const getDemoModelSettings = async () => apiRequest("/admin/ai-demo/model-settings");
+
+export const updateDemoSubjectModelOverride = async (subjectCode, { ocrModelId, gradingModelId }) =>
+  apiRequest(`/admin/ai-demo/model-settings/${subjectCode}`, {
+    method: "PUT",
+    body: JSON.stringify({ ocrModelId, gradingModelId }),
+  });
 
 export const downloadAssessmentStudioPipelineAudit = async (jobId) => {
   const token = localStorage.getItem("kuhedu_token");

@@ -6,7 +6,7 @@ import katex from "katex";
 // over reading a "$$" as two empty inline matches.
 const MATH_SEGMENT_REGEX = /\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g;
 
-const parseSegments = (text) => {
+export const parseMathSegments = (text) => {
   const segments = [];
   let lastIndex = 0;
   const regex = new RegExp(MATH_SEGMENT_REGEX);
@@ -37,6 +37,25 @@ const renderMathHtml = (expression, displayMode) => {
   }
 };
 
+// Shared by MathPreview (below) and EquationDisplay.jsx, so both render
+// $...$/$$...$$ segments identically instead of duplicating this mapping.
+export const renderMathSegments = (segments) =>
+  segments.map((segment, index) =>
+    segment.type === "text" ? (
+      <span key={index} className="student-math-preview-text">
+        {segment.value}
+      </span>
+    ) : (
+      <span
+        key={index}
+        className={segment.type === "block" ? "student-math-preview-block" : "student-math-preview-inline"}
+        // KaTeX's own deterministic output for the LaTeX we pass it --
+        // not raw user/OCR text.
+        dangerouslySetInnerHTML={{ __html: renderMathHtml(segment.value, segment.type === "block") }}
+      />
+    )
+  );
+
 // Live-renders any $...$/$$...$$ LaTeX spans in a page's OCR'd/typed text so
 // a student can visually confirm an equation reads correctly, without
 // replacing the plain textarea they're editing. Debounced so KaTeX doesn't
@@ -50,30 +69,12 @@ export const MathPreview = ({ text }) => {
     return () => clearTimeout(timer);
   }, [text]);
 
-  const segments = useMemo(() => parseSegments(debouncedText || ""), [debouncedText]);
+  const segments = useMemo(() => parseMathSegments(debouncedText || ""), [debouncedText]);
   const hasMath = segments.some((segment) => segment.type !== "text");
 
   if (!hasMath) {
     return null;
   }
 
-  return (
-    <div className="student-math-preview">
-      {segments.map((segment, index) =>
-        segment.type === "text" ? (
-          <span key={index} className="student-math-preview-text">
-            {segment.value}
-          </span>
-        ) : (
-          <span
-            key={index}
-            className={segment.type === "block" ? "student-math-preview-block" : "student-math-preview-inline"}
-            // KaTeX's own deterministic output for the LaTeX we pass it --
-            // not raw user/OCR text.
-            dangerouslySetInnerHTML={{ __html: renderMathHtml(segment.value, segment.type === "block") }}
-          />
-        )
-      )}
-    </div>
-  );
+  return <div className="student-math-preview">{renderMathSegments(segments)}</div>;
 };

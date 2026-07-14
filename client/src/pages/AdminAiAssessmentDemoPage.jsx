@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   deleteAdminDemoSubmission,
   getAdminDemoSubmissions,
@@ -11,7 +12,7 @@ import { AdminImageCropEditor } from "../components/AdminImageCropEditor";
 import { AdminPdfPageLightbox } from "../components/AdminPdfPageLightbox";
 import { StudentCameraCapture } from "../components/StudentCameraCapture";
 import { StudentMultiPageAnswerInput, extractSourcePageImages } from "../components/StudentMultiPageAnswerInput";
-import { MathPreview } from "../components/MathPreview";
+import { EquationDisplay } from "../components/EquationDisplay";
 
 const STEPS = ["subject", "capture", "review-question", "capture-answer", "review", "feedback"];
 const STEP_LABELS = {
@@ -32,6 +33,7 @@ const emptyWizardState = () => ({
   questionText: "",
   answerText: "",
   answerPages: [],
+  subjectCode: "",
 });
 
 const formatDateTime = (value) => {
@@ -121,7 +123,7 @@ export const AdminAiAssessmentDemoPage = () => {
 
     setOcrLoading(true);
     setOcrError("");
-    ocrHandwrittenNote(wizard.questionImageDataUrl)
+    ocrHandwrittenNote(wizard.questionImageDataUrl, wizard.subjectCode)
       .then((result) => {
         setWizard((current) => ({ ...current, questionText: result?.text || "" }));
         if (!result?.text) {
@@ -144,6 +146,39 @@ export const AdminAiAssessmentDemoPage = () => {
     ocrRequestedForRef.current = "";
     setSubmitError("");
     setSubmission(null);
+    setView("new");
+  };
+
+  // Reuses a completed demo's already-captured, already-OCR'd question --
+  // skips subject/capture/review-question entirely and drops straight into
+  // answer capture, so the same question can be re-demoed with a different
+  // answer without recapturing/rescanning it. "Back" from capture-answer
+  // still lands on review-question with the reused question pre-filled, so
+  // nothing is lost if the admin wants to double-check/edit it first.
+  const handleReuse = (row) => {
+    setWizard({
+      step: "capture-answer",
+      subjectId: row.subjectId,
+      subjectName: row.subjectName,
+      subjectCode: row.subjectCode,
+      captureMethod: row.captureMethod,
+      questionImageDataUrl: row.questionImageData,
+      questionText: row.questionText || "",
+      answerText: "",
+      answerPages: [],
+    });
+    setWizardKey((key) => key + 1);
+    setPdfPages([]);
+    setPdfFileName("");
+    setPdfError("");
+    setOcrError("");
+    // The question was already OCR'd when this demo was originally
+    // captured -- pre-arm the guard so backing into review-question
+    // doesn't fire a redundant re-OCR of the same image.
+    ocrRequestedForRef.current = row.questionImageData;
+    setSubmitError("");
+    setSubmission(null);
+    setViewingSubmission(null);
     setView("new");
   };
 
@@ -237,7 +272,8 @@ export const AdminAiAssessmentDemoPage = () => {
           <h1>AI Assessment Demo</h1>
           <p>
             Photograph or scan any question from any subject, capture a handwritten (or typed) answer, and
-            run a real, world-class AI assessment -- independent of the curriculum pipeline, for live demos.
+            run a real, world-class AI assessment -- independent of the curriculum pipeline, for live demos.{" "}
+            <Link to="/admin/ai-assessment-studio/demo-model-settings">Configure OCR/grading models per subject</Link>.
           </p>
         </div>
         <div className="admin-bulk-pipeline-header-actions">
@@ -289,7 +325,12 @@ export const AdminAiAssessmentDemoPage = () => {
                         wizard.subjectId === subject.id ? "is-selected" : ""
                       }`}
                       onClick={() =>
-                        setWizard((current) => ({ ...current, subjectId: subject.id, subjectName: subject.name }))
+                        setWizard((current) => ({
+                          ...current,
+                          subjectId: subject.id,
+                          subjectName: subject.name,
+                          subjectCode: subject.nameCode,
+                        }))
                       }
                     >
                       {subject.name}
@@ -381,16 +422,11 @@ export const AdminAiAssessmentDemoPage = () => {
                   ) : (
                     <>
                       {ocrError && <p className="error-text">{ocrError}</p>}
-                      <textarea
-                        rows={8}
-                        className="student-assessment-text-input"
+                      <EquationDisplay
                         value={wizard.questionText}
-                        onChange={(event) =>
-                          setWizard((current) => ({ ...current, questionText: event.target.value }))
-                        }
+                        onChange={(next) => setWizard((current) => ({ ...current, questionText: next }))}
                         placeholder="Question text (edit if OCR missed anything)"
                       />
-                      <MathPreview text={wizard.questionText} />
                     </>
                   )}
                 </div>
@@ -417,7 +453,12 @@ export const AdminAiAssessmentDemoPage = () => {
               <p className="admin-workbench-muted">
                 Type the answer, and/or capture up to 5 photo pages of a handwritten answer.
               </p>
-              <StudentMultiPageAnswerInput value={wizard.answerText} onChange={handleAnswerChange} resetKey={wizardKey} />
+              <StudentMultiPageAnswerInput
+                value={wizard.answerText}
+                onChange={handleAnswerChange}
+                resetKey={wizardKey}
+                subjectCode={wizard.subjectCode}
+              />
               <div className="admin-ai-demo-actions">
                 <button type="button" className="ghost-button" onClick={() => goToStep("review-question")}>
                   Back
@@ -445,14 +486,12 @@ export const AdminAiAssessmentDemoPage = () => {
                   <img src={wizard.questionImageDataUrl} alt="Question" className="admin-ai-demo-review-image" />
                   <div>
                     <strong>Question</strong>
-                    <p>{wizard.questionText || "(no transcribed text)"}</p>
-                    <MathPreview text={wizard.questionText} />
+                    <EquationDisplay value={wizard.questionText} placeholder="(no transcribed text)" />
                   </div>
                 </div>
                 <div>
                   <strong>Answer</strong>
-                  <p>{wizard.answerText || "(no transcribed text)"}</p>
-                  <MathPreview text={wizard.answerText} />
+                  <EquationDisplay value={wizard.answerText} placeholder="(no transcribed text)" />
                   {extractSourcePageImages(wizard.answerPages).length > 0 && (
                     <div className="admin-ai-demo-page-grid">
                       {extractSourcePageImages(wizard.answerPages).map((page) => (
@@ -486,13 +525,11 @@ export const AdminAiAssessmentDemoPage = () => {
               </span>
               <div className="admin-ai-demo-feedback-block">
                 <strong>Ideal answer</strong>
-                <p>{submission.aiIdealAnswer}</p>
-                <MathPreview text={submission.aiIdealAnswer} />
+                <EquationDisplay value={submission.aiIdealAnswer} />
               </div>
               <div className="admin-ai-demo-feedback-block">
                 <strong>Feedback</strong>
-                <p>{submission.aiFeedback}</p>
-                <MathPreview text={submission.aiFeedback} />
+                <EquationDisplay value={submission.aiFeedback} />
               </div>
               {submission.modelName && <p className="admin-workbench-muted">Model: {submission.modelName}</p>}
               <div className="admin-ai-demo-actions">
@@ -542,13 +579,16 @@ export const AdminAiAssessmentDemoPage = () => {
                         </span>
                       </td>
                       <td className="admin-pipeline-runs-datetime">{formatDateTime(row.createdAt)}</td>
-                      <td className="admin-exam-types-row-actions">
+                      <td className="admin-ai-demo-row-actions">
                         <button type="button" className="ghost-button is-compact" onClick={() => setViewingSubmission(row)}>
                           View
                         </button>
+                        <button type="button" className="ghost-button is-compact" onClick={() => handleReuse(row)}>
+                          Reuse
+                        </button>
                         <button
                           type="button"
-                          className="ghost-button admin-pipeline-runs-danger"
+                          className="ghost-button is-compact admin-pipeline-runs-danger"
                           disabled={deleteBusyId === row.id}
                           onClick={() => handleDelete(row.id)}
                         >
@@ -587,42 +627,45 @@ export const AdminAiAssessmentDemoPage = () => {
               &times;
             </button>
             <h2>{viewingSubmission.subjectName} demo</h2>
-            <span
-              className={`admin-bulk-pipeline-status-badge ${
-                viewingSubmission.aiIsCorrect ? "is-completed" : "is-failed"
-              }`}
-            >
-              {viewingSubmission.aiIsCorrect ? "Correct" : "Needs Work"}
-            </span>
-            <div className="admin-ai-demo-review-grid">
-              <img src={viewingSubmission.questionImageData} alt="Question" className="admin-ai-demo-review-image" />
-              <div>
-                <strong>Question</strong>
-                <p>{viewingSubmission.questionText || "(no transcribed text)"}</p>
-                <MathPreview text={viewingSubmission.questionText} />
+            <div className="admin-ai-demo-panel admin-ai-demo-panel-in-modal">
+              <div className="admin-ai-demo-actions">
+                <span
+                  className={`admin-bulk-pipeline-status-badge ${
+                    viewingSubmission.aiIsCorrect ? "is-completed" : "is-failed"
+                  }`}
+                >
+                  {viewingSubmission.aiIsCorrect ? "Correct" : "Needs Work"}
+                </span>
+                <button type="button" className="ghost-button is-compact" onClick={() => handleReuse(viewingSubmission)}>
+                  Reuse This Question
+                </button>
               </div>
-            </div>
-            <div className="admin-ai-demo-feedback-block">
-              <strong>Answer</strong>
-              <p>{viewingSubmission.answerText || "(no transcribed text)"}</p>
-              <MathPreview text={viewingSubmission.answerText} />
-              {(viewingSubmission.answerSourceImages || []).length > 0 && (
-                <div className="admin-ai-demo-page-grid">
-                  {viewingSubmission.answerSourceImages.map((page) => (
-                    <img key={page.order} src={page.imageData} alt={`Answer page ${page.order}`} />
-                  ))}
+              <div className="admin-ai-demo-review-grid">
+                <img src={viewingSubmission.questionImageData} alt="Question" className="admin-ai-demo-review-image" />
+                <div>
+                  <strong>Question</strong>
+                  <EquationDisplay value={viewingSubmission.questionText} placeholder="(no transcribed text)" />
                 </div>
-              )}
-            </div>
-            <div className="admin-ai-demo-feedback-block">
-              <strong>Ideal answer</strong>
-              <p>{viewingSubmission.aiIdealAnswer}</p>
-              <MathPreview text={viewingSubmission.aiIdealAnswer} />
-            </div>
-            <div className="admin-ai-demo-feedback-block">
-              <strong>Feedback</strong>
-              <p>{viewingSubmission.aiFeedback}</p>
-              <MathPreview text={viewingSubmission.aiFeedback} />
+              </div>
+              <div className="admin-ai-demo-feedback-block">
+                <strong>Answer</strong>
+                <EquationDisplay value={viewingSubmission.answerText} placeholder="(no transcribed text)" />
+                {(viewingSubmission.answerSourceImages || []).length > 0 && (
+                  <div className="admin-ai-demo-page-grid">
+                    {viewingSubmission.answerSourceImages.map((page) => (
+                      <img key={page.order} src={page.imageData} alt={`Answer page ${page.order}`} />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="admin-ai-demo-feedback-block">
+                <strong>Ideal answer</strong>
+                <EquationDisplay value={viewingSubmission.aiIdealAnswer} />
+              </div>
+              <div className="admin-ai-demo-feedback-block">
+                <strong>Feedback</strong>
+                <EquationDisplay value={viewingSubmission.aiFeedback} />
+              </div>
             </div>
           </div>
         </div>

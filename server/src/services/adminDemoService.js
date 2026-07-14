@@ -1,5 +1,6 @@
 import { pool } from "../db/pool.js";
 import { createStructuredCompletion } from "./openAiService.js";
+import { resolveGradingModelForSubject } from "./llm/demoModelSelectionService.js";
 
 const GRADING_INSTRUCTION_SYSTEM =
   "You are a world-class subject-matter expert and examiner, grading a single photographed " +
@@ -8,7 +9,13 @@ const GRADING_INSTRUCTION_SYSTEM =
   "answer against it. Judge by substance and reasoning, not exact wording or handwriting " +
   "neatness -- accept correct paraphrases, equivalent working, and partially-worded-but-" +
   "substantively-correct answers as correct. If the question includes a diagram or graph, " +
-  "reason about it visually from the image. Return only valid JSON matching the schema.";
+  "reason about it visually from the image. " +
+  "In idealAnswerSummary and feedback, write any mathematical equations, physics formulas, " +
+  "chemical formulas/equations, or other scientific notation as LaTeX instead of plain " +
+  "characters -- e.g. \\frac{a}{b}, x^2, H_2O, \\int, \\vec{r}, \\gg, \\rightarrow for reaction " +
+  "arrows. Wrap inline math in single dollar signs ($...$) and standalone/display equations in " +
+  "double dollar signs ($$...$$), and leave surrounding prose as plain text outside those " +
+  "delimiters. Return only valid JSON matching the schema.";
 
 // One fast multimodal call: the question image, every answer-page image, and
 // both OCR'd texts (kept as reference text alongside the images, same as
@@ -16,6 +23,7 @@ const GRADING_INSTRUCTION_SYSTEM =
 // codebase, but with images attached since there's no stored correct answer
 // to grade against -- the model must derive it from the actual photos).
 const gradeDemoSubmission = async ({
+  subjectCode,
   subjectName,
   questionText,
   questionImageDataUrl,
@@ -29,6 +37,9 @@ const gradeDemoSubmission = async ({
     "The first attached image is the question. Any further attached images are the student's " +
     "answer pages, in order. Work out the correct answer yourself, then grade the student's " +
     "answer against it.\n\n" +
+    "If either field needs a mathematical equation, physics formula, or chemical equation/formula, " +
+    "write that notation in LaTeX -- wrap inline notation in $...$ and standalone/display equations " +
+    'in $$...$$ (e.g. "$F = ma$", "$$2H_2 + O_2 \\rightarrow 2H_2O$$"). Do not LaTeX-wrap plain prose.\n\n' +
     "Schema:\n{\n" +
     '  "isCorrect": true or false,\n' +
     '  "idealAnswerSummary": "the correct answer/solution, 1-4 sentences",\n' +
@@ -44,11 +55,16 @@ const gradeDemoSubmission = async ({
     userContent.push({ type: "image_url", image_url: { url: image.imageData } });
   }
 
+  // Admin-configurable per subject (Admin > Demo Model Settings); falls
+  // back to the provider default when no override has been set.
+  const { modelId } = await resolveGradingModelForSubject(subjectCode);
+
   const { parsed, model } = await createStructuredCompletion({
     systemPrompt: GRADING_INSTRUCTION_SYSTEM,
     userPrompt: instructionText,
     userContent,
     responseFormatName: "admin_demo_grading",
+    modelId,
   });
 
   if (typeof parsed?.isCorrect !== "boolean") {
@@ -70,6 +86,7 @@ const mapSubmissionRow = (row) => ({
   id: row.id,
   subjectId: row.fk_mst_subject_id,
   subjectName: row.subject_name,
+  subjectCode: row.subject_code,
   captureMethod: row.capture_method,
   questionImageData: row.question_image_data,
   questionText: row.question_text,
@@ -83,9 +100,10 @@ const mapSubmissionRow = (row) => ({
 });
 
 const SUBMISSION_COLUMNS = `
-  s.id, s.fk_mst_subject_id, subj.name AS subject_name, s.capture_method,
-  s.question_image_data, s.question_text, s.answer_text, s.answer_source_images,
-  s.ai_is_correct, s.ai_ideal_answer, s.ai_feedback, s.model_name, s.created_at
+  s.id, s.fk_mst_subject_id, subj.name AS subject_name, subj.name_code AS subject_code,
+  s.capture_method, s.question_image_data, s.question_text, s.answer_text,
+  s.answer_source_images, s.ai_is_correct, s.ai_ideal_answer, s.ai_feedback,
+  s.model_name, s.created_at
 `;
 
 export const submitDemoAssessment = async ({
@@ -120,8 +138,12 @@ export const submitDemoAssessment = async ({
     throw error;
   }
 
-  const subjectResult = await pool.query("SELECT name FROM mst_subject WHERE id = $1", [subjectId]);
+  const subjectResult = await pool.query(
+    "SELECT name, name_code FROM mst_subject WHERE id = $1",
+    [subjectId]
+  );
   const subjectName = subjectResult.rows[0]?.name;
+  const subjectCode = subjectResult.rows[0]?.name_code;
   if (!subjectName) {
     const error = new Error("Subject not found.");
     error.statusCode = 404;
@@ -129,6 +151,7 @@ export const submitDemoAssessment = async ({
   }
 
   const grading = await gradeDemoSubmission({
+    subjectCode,
     subjectName,
     questionText,
     questionImageDataUrl,
@@ -165,6 +188,7 @@ export const submitDemoAssessment = async ({
     id: inserted.rows[0].id,
     subjectId,
     subjectName,
+    subjectCode,
     captureMethod,
     questionImageData: questionImageDataUrl,
     questionText: questionText || null,

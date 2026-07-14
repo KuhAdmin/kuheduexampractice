@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ocrHandwrittenNote } from "../api/client";
-import { MathPreview } from "./MathPreview";
+import { EquationDisplay } from "./EquationDisplay";
 import { StudentCameraCapture } from "./StudentCameraCapture";
 
 const CameraIcon = () => (
@@ -86,7 +86,7 @@ export const StudentMultiPageAnswerInput = ({
   disabled = false,
   statusClassName = "",
   placeholder = "Type your answer, or capture a photo of your handwritten answer above",
-  rows = 6,
+  subjectCode,
 }) => {
   const idCounterRef = useRef(0);
   const makeId = () => `page-${idCounterRef.current++}`;
@@ -143,13 +143,20 @@ export const StudentMultiPageAnswerInput = ({
     setOcrError("");
     setOcrLoading(true);
     try {
-      const result = await ocrHandwrittenNote(dataUrl);
+      const result = await ocrHandwrittenNote(dataUrl, subjectCode);
       if (!result?.text) {
         setOcrError("We couldn't find any text in that photo. Try a clearer photo, or type your answer instead.");
       }
       const compressedImage = await compressImageForStorage(dataUrl);
       const newPage = { id: makeId(), text: result?.text || "", imageDataUrl: compressedImage || undefined };
-      updatePages((current) => [...current, newPage]);
+      updatePages((current) => {
+        // If capturing is the very first action (the untouched starter page
+        // is still blank, no text and no photo), fill that slot instead of
+        // appending -- otherwise a photo-only answer always carries a
+        // permanent, pointless empty "Page 1" ahead of the real capture.
+        const isUntouchedStarterPage = current.length === 1 && !current[0].text.trim() && !current[0].imageDataUrl;
+        return isUntouchedStarterPage ? [newPage] : [...current, newPage];
+      });
       setOcrAppliedId(newPage.id);
     } catch (ocrFailure) {
       setOcrError(ocrFailure.message || "Failed to read that photo. Please try again or type your answer.");
@@ -161,14 +168,7 @@ export const StudentMultiPageAnswerInput = ({
   if (disabled) {
     return (
       <div className="student-ocr-pages-panel">
-        <textarea
-          rows={rows}
-          className={`student-assessment-text-input ${statusClassName}`}
-          value={value || ""}
-          readOnly
-          disabled
-        />
-        <MathPreview text={value || ""} />
+        <EquationDisplay value={value || ""} className={statusClassName} />
       </div>
     );
   }
@@ -237,14 +237,11 @@ export const StudentMultiPageAnswerInput = ({
                 </button>
               </div>
             </div>
-            <textarea
-              rows={rows}
-              className="student-assessment-text-input"
-              placeholder={pages.length === 1 ? placeholder : `Page ${index + 1}`}
+            <EquationDisplay
               value={page.text}
-              onChange={(event) => updatePageText(page.id, event.target.value)}
+              onChange={(next) => updatePageText(page.id, next)}
+              placeholder={pages.length === 1 ? placeholder : `Page ${index + 1}`}
             />
-            <MathPreview text={page.text} />
             {ocrAppliedId === page.id && (
               <p className="student-ocr-hint">
                 We've filled this in from your photo — please check it reads correctly and fix anything before
