@@ -9,6 +9,7 @@ import {
   listSectionsForChapter,
 } from "../services/studentContentService.js";
 import { getMemoryHookMediaForSection } from "../services/memoryHookImageService.js";
+import { getDiagramMedia } from "../services/diagramImageService.js";
 import {
   getMostRecentMicroActivityResponse,
   gradeMicroActivityResponse,
@@ -147,6 +148,15 @@ export const getStudentDiagrams = async (req, res, next) => {
   }
 };
 
+export const getStudentDiagramMedia = async (req, res, next) => {
+  try {
+    const media = await getDiagramMedia(req.params.diagramId);
+    return res.json({ media });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 export const getMicroActivityResponseHandler = async (req, res, next) => {
   try {
     const result = await getMostRecentMicroActivityResponse({
@@ -165,6 +175,7 @@ export const submitMicroActivityResponseHandler = async (req, res, next) => {
       assessmentUnitId: req.params.assessmentUnitId,
       userId: req.user.id,
       responseText: req.body?.responseText,
+      sourcePageImages: req.body?.sourcePageImages,
     });
     return res.json(result);
   } catch (error) {
@@ -194,6 +205,7 @@ export const submitStudentBookQuestionResponse = async (req, res, next) => {
       chapterNumber: String(req.params.chapterNumber || ""),
       questionId: req.params.questionId,
       studentAnswer: req.body?.studentAnswer,
+      sourcePageImages: req.body?.sourcePageImages,
     });
     return res.json(result);
   } catch (error) {

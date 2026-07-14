@@ -439,6 +439,9 @@ export const AdminBulkPipelinePage = () => {
           <p>Run the 7-layer pipeline across many sections in parallel and watch every layer live.</p>
         </div>
         <div className="admin-bulk-pipeline-header-actions">
+          <Link to="/admin/ai-assessment-studio/source-builder" className="ghost-button">
+            Upload Chapter PDF
+          </Link>
           <button type="button" className="primary-button" onClick={openDialog}>
             + New Pipeline
           </button>

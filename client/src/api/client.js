@@ -96,6 +96,9 @@ export const getStudentFlashcards = async (sourceSectionId) =>
 export const getStudentDiagrams = async (sourceSectionId) =>
   apiRequest(`/user/sections/${sourceSectionId}/diagrams`);
 
+export const getStudentDiagramMedia = async (diagramId) =>
+  apiRequest(`/user/diagrams/${diagramId}/media`);
+
 export const getStudentConceptCard = async (assessmentUnitId) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/card`);
 
@@ -132,10 +135,16 @@ export const restartChapterAssessment = async (chapterNumber) =>
 export const getRecentChapterAssessmentAttempts = async (chapterNumber) =>
   apiRequest(`/user/chapters/${chapterNumber}/assessment/attempts`);
 
-export const submitAssessmentAnswer = async (attemptId, displayOrder, studentAnswer, timeTakenSeconds) =>
+export const submitAssessmentAnswer = async (
+  attemptId,
+  displayOrder,
+  studentAnswer,
+  timeTakenSeconds,
+  sourcePageImages
+) =>
   apiRequest(`/user/attempts/${attemptId}/items/${displayOrder}/answer`, {
     method: "POST",
-    body: JSON.stringify({ studentAnswer, timeTakenSeconds }),
+    body: JSON.stringify({ studentAnswer, timeTakenSeconds, sourcePageImages }),
   });
 
 export const ocrHandwrittenNote = async (imageDataUrl) =>
@@ -147,10 +156,10 @@ export const ocrHandwrittenNote = async (imageDataUrl) =>
 export const getMicroActivityResponse = async (assessmentUnitId) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/micro-activity/response`);
 
-export const submitMicroActivityResponse = async (assessmentUnitId, responseText) =>
+export const submitMicroActivityResponse = async (assessmentUnitId, responseText, sourcePageImages) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/micro-activity/respond`, {
     method: "POST",
-    body: JSON.stringify({ responseText }),
+    body: JSON.stringify({ responseText, sourcePageImages }),
   });
 
 export const submitAssessment = async (attemptId) =>
@@ -168,6 +177,41 @@ export const getAssessmentStudioSections = async (params = {}) => {
   const query = buildQuery(params);
   return apiRequest(`/catalog/assessment-studio/sections${query ? `?${query}` : ""}`);
 };
+
+export const saveSourceSectionDraft = async (payload) =>
+  apiRequest("/assessment-studio/sections/draft", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+export const getSourceSectionDraft = async (sourceSectionId) =>
+  apiRequest(`/assessment-studio/sections/${sourceSectionId}`);
+
+export const updateSourceSection = async (sourceSectionId, { adminNotes, sectionOcrText }) =>
+  apiRequest(`/assessment-studio/sections/${sourceSectionId}`, {
+    method: "PUT",
+    body: JSON.stringify({ adminNotes, sectionOcrText }),
+  });
+
+export const addSourceSectionImage = async (sourceSectionId, image) =>
+  apiRequest(`/assessment-studio/sections/${sourceSectionId}/images`, {
+    method: "POST",
+    body: JSON.stringify(image),
+  });
+
+export const removeSourceSectionImage = async (sourceSectionId, imageId) =>
+  apiRequest(`/assessment-studio/sections/${sourceSectionId}/images/${imageId}`, {
+    method: "DELETE",
+  });
+
+export const saveSourceDocumentPdf = async (sourceDocumentId, { pdfDataUrl, fileName, pageCount }) =>
+  apiRequest(`/assessment-studio/documents/${sourceDocumentId}/pdf`, {
+    method: "POST",
+    body: JSON.stringify({ pdfDataUrl, fileName, pageCount }),
+  });
+
+export const getSourceDocumentPdf = async (sourceDocumentId) =>
+  apiRequest(`/assessment-studio/documents/${sourceDocumentId}/pdf`);
 
 export const runAssessmentStudioPipeline = async (payload) =>
   apiRequest("/assessment-studio/pipeline/run", {
@@ -236,6 +280,122 @@ export const updateAdminUserRole = async (userId, role) =>
     body: JSON.stringify({ role }),
   });
 
+export const getAdminExamTypes = async () => apiRequest("/admin/exam-types");
+
+export const createAdminExamType = async ({ typeId, name }) =>
+  apiRequest("/admin/exam-types", {
+    method: "POST",
+    body: JSON.stringify({ typeId, name }),
+  });
+
+export const updateAdminExamType = async (examTypeId, { typeId, name }) =>
+  apiRequest(`/admin/exam-types/${examTypeId}`, {
+    method: "PUT",
+    body: JSON.stringify({ typeId, name }),
+  });
+
+export const deleteAdminExamType = async (examTypeId) =>
+  apiRequest(`/admin/exam-types/${examTypeId}`, {
+    method: "DELETE",
+  });
+
+export const getAdminExamGoals = async () => apiRequest("/admin/exam-goals");
+
+export const getAdminExamGoalOptions = async () => apiRequest("/admin/exam-goals/options");
+
+export const createAdminExamGoal = async ({ goalId, name, examTypeId, stateId, isActive }) =>
+  apiRequest("/admin/exam-goals", {
+    method: "POST",
+    body: JSON.stringify({ goalId, name, examTypeId, stateId, isActive }),
+  });
+
+export const updateAdminExamGoal = async (examGoalId, { goalId, name, examTypeId, stateId, isActive }) =>
+  apiRequest(`/admin/exam-goals/${examGoalId}`, {
+    method: "PUT",
+    body: JSON.stringify({ goalId, name, examTypeId, stateId, isActive }),
+  });
+
+export const deleteAdminExamGoal = async (examGoalId) =>
+  apiRequest(`/admin/exam-goals/${examGoalId}`, {
+    method: "DELETE",
+  });
+
+export const getAdminLevels = async () => apiRequest("/admin/levels");
+
+export const createAdminLevel = async ({ nameCode, name, displayOrder }) =>
+  apiRequest("/admin/levels", {
+    method: "POST",
+    body: JSON.stringify({ nameCode, name, displayOrder }),
+  });
+
+export const updateAdminLevel = async (levelId, { nameCode, name, displayOrder }) =>
+  apiRequest(`/admin/levels/${levelId}`, {
+    method: "PUT",
+    body: JSON.stringify({ nameCode, name, displayOrder }),
+  });
+
+export const deleteAdminLevel = async (levelId) =>
+  apiRequest(`/admin/levels/${levelId}`, {
+    method: "DELETE",
+  });
+
+export const getAdminSubjects = async () => apiRequest("/admin/subjects");
+
+export const createAdminSubject = async ({ nameCode, name, displayOrder, isActive }) =>
+  apiRequest("/admin/subjects", {
+    method: "POST",
+    body: JSON.stringify({ nameCode, name, displayOrder, isActive }),
+  });
+
+export const updateAdminSubject = async (subjectId, { nameCode, name, displayOrder, isActive }) =>
+  apiRequest(`/admin/subjects/${subjectId}`, {
+    method: "PUT",
+    body: JSON.stringify({ nameCode, name, displayOrder, isActive }),
+  });
+
+export const deleteAdminSubject = async (subjectId) =>
+  apiRequest(`/admin/subjects/${subjectId}`, {
+    method: "DELETE",
+  });
+
+export const getAdminBooks = async () => apiRequest("/admin/books");
+
+export const getAdminBookOptions = async () => apiRequest("/admin/books/options");
+
+export const createAdminBook = async ({
+  nameCode,
+  name,
+  subjectId,
+  levelId,
+  examGoalId,
+  displayOrder,
+  isActive,
+}) =>
+  apiRequest("/admin/books", {
+    method: "POST",
+    body: JSON.stringify({ nameCode, name, subjectId, levelId, examGoalId, displayOrder, isActive }),
+  });
+
+export const updateAdminBook = async (
+  bookId,
+  { nameCode, name, subjectId, levelId, examGoalId, displayOrder, isActive }
+) =>
+  apiRequest(`/admin/books/${bookId}`, {
+    method: "PUT",
+    body: JSON.stringify({ nameCode, name, subjectId, levelId, examGoalId, displayOrder, isActive }),
+  });
+
+export const deleteAdminBook = async (bookId) =>
+  apiRequest(`/admin/books/${bookId}`, {
+    method: "DELETE",
+  });
+
+export const uploadAdminBooksBulk = async ({ fileName, dataUrl }) =>
+  apiRequest("/admin/books/bulk-upload", {
+    method: "POST",
+    body: JSON.stringify({ fileName, dataUrl }),
+  });
+
 export const assignModerationTask = async ({ sourceSectionId, layerNumber, moderatorUserId, dueAt }) =>
   apiRequest("/moderation/tasks", {
     method: "POST",
@@ -290,6 +450,24 @@ export const generateMemoryHookImage = async (assessmentUnitId, sectionKey, mode
     body: JSON.stringify({ modelId }),
   });
 
+export const getAssessmentUnitDiagrams = async (assessmentUnitId) =>
+  apiRequest(`/assessment-studio/assessment-units/${assessmentUnitId}/diagrams`);
+
+export const getDiagramMedia = async (diagramId) =>
+  apiRequest(`/assessment-studio/diagrams/${diagramId}/media`);
+
+export const uploadDiagramMedia = async (diagramId, dataUrl, fileName) =>
+  apiRequest(`/assessment-studio/diagrams/${diagramId}/media/upload`, {
+    method: "POST",
+    body: JSON.stringify({ dataUrl, fileName }),
+  });
+
+export const generateDiagramImage = async (diagramId, modelId = null) =>
+  apiRequest(`/assessment-studio/diagrams/${diagramId}/media/generate`, {
+    method: "POST",
+    body: JSON.stringify({ modelId }),
+  });
+
 export const generateAllMemoryHookImages = async (assessmentUnitId, modelId = null) =>
   apiRequest(`/assessment-studio/assessment-units/${assessmentUnitId}/memory-hook-images/generate-all`, {
     method: "POST",
@@ -314,10 +492,10 @@ export const reviewChapterExerciseQuestion = async (questionId, decision) =>
 export const getBookQuestions = async (chapterNumber) =>
   apiRequest(`/user/chapters/${chapterNumber}/book-questions`);
 
-export const submitBookQuestionResponse = async (chapterNumber, questionId, studentAnswer) =>
+export const submitBookQuestionResponse = async (chapterNumber, questionId, studentAnswer, sourcePageImages) =>
   apiRequest(`/user/chapters/${chapterNumber}/book-questions/${questionId}/respond`, {
     method: "POST",
-    body: JSON.stringify({ studentAnswer }),
+    body: JSON.stringify({ studentAnswer, sourcePageImages }),
   });
 
 export const getAiModelSettings = async () => apiRequest("/settings/ai-model");
@@ -333,6 +511,34 @@ export const updateLayerAiModelOverride = async (layerNumber, modelId) =>
     method: "PUT",
     body: JSON.stringify({ layerNumber, modelId }),
   });
+
+export const getAdminDemoSubmissions = async () => apiRequest("/admin/ai-demo");
+
+export const getAdminDemoSubmission = async (submissionId) =>
+  apiRequest(`/admin/ai-demo/${submissionId}`);
+
+export const submitAdminDemoAssessment = async ({
+  subjectId,
+  captureMethod,
+  questionImageDataUrl,
+  questionText,
+  answerText,
+  answerSourceImages,
+}) =>
+  apiRequest("/admin/ai-demo", {
+    method: "POST",
+    body: JSON.stringify({
+      subjectId,
+      captureMethod,
+      questionImageDataUrl,
+      questionText,
+      answerText,
+      answerSourceImages,
+    }),
+  });
+
+export const deleteAdminDemoSubmission = async (submissionId) =>
+  apiRequest(`/admin/ai-demo/${submissionId}`, { method: "DELETE" });
 
 export const downloadAssessmentStudioPipelineAudit = async (jobId) => {
   const token = localStorage.getItem("kuhedu_token");

@@ -301,6 +301,7 @@ const syncPracticeSetItems = async (client, practiceSetId, currentItems) => {
       assessmentUnitId: item.assessment_unit_id,
       question: item.question,
       options: item.options,
+      diagramInstruction: item.diagram_instruction || null,
       questionFamily: item.question_family,
       interactionType: item.interaction_type,
       interactionData: buildStudentSafeInteractionData(item),
@@ -876,7 +877,14 @@ export const listRecentAttemptsForChapter = async ({ board, studentClass, subjec
   };
 };
 
-export const submitAnswer = async ({ attemptId, displayOrder, studentAnswer, timeTakenSeconds, userId }) => {
+export const submitAnswer = async ({
+  attemptId,
+  displayOrder,
+  studentAnswer,
+  timeTakenSeconds,
+  userId,
+  sourcePageImages,
+}) => {
   const attemptResult = await pool.query(
     "SELECT id, user_id, status FROM student_attempt WHERE id = $1",
     [attemptId]
@@ -968,14 +976,19 @@ export const submitAnswer = async ({ attemptId, displayOrder, studentAnswer, tim
     });
   }
 
+  const sourcePageImagesJson =
+    Array.isArray(sourcePageImages) && sourcePageImages.length > 0
+      ? JSON.stringify(sourcePageImages)
+      : null;
+
   await withTransaction(async (client) => {
     await client.query(
       `
         INSERT INTO student_response (
           generation_id, student_attempt_id, student_attempt_item_id, assessment_unit_id,
-          student_answer, is_correct, time_taken_seconds
+          student_answer, is_correct, time_taken_seconds, source_page_images
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       `,
       [
         layer6Item.generation_id,
@@ -985,6 +998,7 @@ export const submitAnswer = async ({ attemptId, displayOrder, studentAnswer, tim
         studentAnswer,
         correct,
         Number(timeTakenSeconds || 0),
+        sourcePageImagesJson,
       ]
     );
     await client.query("UPDATE student_attempt_item SET marks_awarded = $1 WHERE id = $2", [

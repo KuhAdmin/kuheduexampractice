@@ -1,20 +1,6 @@
 import { useEffect, useState } from "react";
-import { getMicroActivityResponse, ocrHandwrittenNote, submitMicroActivityResponse } from "../api/client";
-import { StudentCameraCapture } from "./StudentCameraCapture";
-
-const CameraIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path
-      d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l.9-1.5A1.5 1.5 0 0 1 9.7 4.75h4.6a1.5 1.5 0 0 1 1.3.75L16.5 7h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-9Z"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.7"
-    />
-    <circle cx="12" cy="12.5" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.7" />
-  </svg>
-);
+import { getMicroActivityResponse, submitMicroActivityResponse } from "../api/client";
+import { extractSourcePageImages, StudentMultiPageAnswerInput } from "./StudentMultiPageAnswerInput";
 
 const SpeakerIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -50,21 +36,19 @@ const truncateToWordLimit = (text) => {
 };
 
 // Lets a student answer a Layer 2 "Try This" micro-activity prompt by typing
-// or uploading a photo of a handwritten answer (OCR'd into the same
-// textarea, still editable before submit), then get qualitative AI feedback.
-// Reused on both the section-level Memory Booster carousel and the
-// per-concept Explore tab -- same prompt, same interaction either place.
+// or capturing up to 5 photos of a handwritten answer (each OCR'd into its
+// own editable, reorderable page -- see StudentMultiPageAnswerInput), then
+// get qualitative AI feedback. Reused on both the section-level Memory
+// Booster carousel and the per-concept Explore tab -- same prompt, same
+// interaction either place.
 export const StudentMicroActivityPanel = ({ assessmentUnitId, prompt }) => {
   const [responseText, setResponseText] = useState("");
+  const [sourcePageImages, setSourcePageImages] = useState([]);
   const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrApplied, setOcrApplied] = useState(false);
-  const [ocrError, setOcrError] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [cameraOpen, setCameraOpen] = useState(false);
 
   const speakFeedback = (text) => {
     if (typeof window === "undefined" || !window.speechSynthesis || !text) return;
@@ -94,9 +78,8 @@ export const StudentMicroActivityPanel = ({ assessmentUnitId, prompt }) => {
     setLoading(true);
     setFeedback(null);
     setResponseText("");
+    setSourcePageImages([]);
     setSubmitError("");
-    setOcrApplied(false);
-    setOcrError("");
 
     getMicroActivityResponse(assessmentUnitId)
       .then((result) => {
@@ -119,32 +102,13 @@ export const StudentMicroActivityPanel = ({ assessmentUnitId, prompt }) => {
     };
   }, [assessmentUnitId]);
 
-  const handleCapturedPhoto = async (imageDataUrl) => {
-    setOcrError("");
-    setOcrApplied(false);
-    setOcrLoading(true);
-    try {
-      const result = await ocrHandwrittenNote(imageDataUrl);
-      if (result?.text) {
-        setResponseText(truncateToWordLimit(result.text));
-        setOcrApplied(true);
-      } else {
-        setOcrError("We couldn't find any text in that photo. Try a clearer photo, or type your answer instead.");
-      }
-    } catch (ocrFailure) {
-      setOcrError(ocrFailure.message || "Failed to read that photo. Please try again or type your answer.");
-    } finally {
-      setOcrLoading(false);
-    }
-  };
-
   const handleSubmit = async () => {
     if (!responseText.trim()) return;
 
     setSubmitting(true);
     setSubmitError("");
     try {
-      const result = await submitMicroActivityResponse(assessmentUnitId, responseText);
+      const result = await submitMicroActivityResponse(assessmentUnitId, responseText, sourcePageImages);
       setFeedback(result.feedback);
       speakFeedback(result.feedback);
     } catch (error) {
@@ -162,41 +126,16 @@ export const StudentMicroActivityPanel = ({ assessmentUnitId, prompt }) => {
     <div className="student-micro-activity-panel">
       {prompt && <p className="student-micro-activity-prompt">{prompt}</p>}
 
-      <button
-        type="button"
-        className={`student-ocr-upload-button ${ocrLoading ? "is-disabled" : ""}`}
-        disabled={ocrLoading}
-        onClick={() => setCameraOpen(true)}
-      >
-        <CameraIcon />
-        <span>{ocrLoading ? "Reading your photo..." : "Capture Photo"}</span>
-      </button>
-
-      {cameraOpen && (
-        <StudentCameraCapture
-          onCapture={(dataUrl) => {
-            setCameraOpen(false);
-            handleCapturedPhoto(dataUrl);
-          }}
-          onCancel={() => setCameraOpen(false)}
-        />
-      )}
-
-      <textarea
-        rows={6}
-        className="student-assessment-text-input"
-        placeholder="Type your answer, or upload a photo of your handwritten answer above"
+      <StudentMultiPageAnswerInput
         value={responseText}
-        onChange={(event) => setResponseText(truncateToWordLimit(event.target.value))}
+        onChange={(text, pages) => {
+          setResponseText(truncateToWordLimit(text));
+          setSourcePageImages(extractSourcePageImages(pages));
+        }}
+        resetKey={assessmentUnitId}
+        placeholder="Type your answer, or capture a photo of your handwritten answer above"
+        rows={6}
       />
-
-      {ocrApplied && (
-        <p className="student-ocr-hint">
-          We've filled this in from your photo — please check it reads correctly and fix anything before
-          submitting.
-        </p>
-      )}
-      {ocrError && <p className="error-text">{ocrError}</p>}
 
       <button
         type="button"

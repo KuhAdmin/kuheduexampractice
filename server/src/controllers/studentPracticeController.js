@@ -131,6 +131,7 @@ export const answerAssessmentItem = async (req, res, next) => {
       studentAnswer: req.body?.studentAnswer,
       timeTakenSeconds: req.body?.timeTakenSeconds,
       userId: req.user.id,
+      sourcePageImages: req.body?.sourcePageImages,
     });
 
     if (!result) {

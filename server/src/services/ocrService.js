@@ -5,7 +5,10 @@ import { createStructuredCompletion } from "./openAiService.js";
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 const OCR_INSTRUCTION =
-  'Extract all the text from this photo of a student\'s handwritten (or printed) answer. Transcribe it exactly as written, correcting only obvious OCR artifacts (e.g. stray marks misread as characters). Preserve line breaks where they carry meaning. If no legible text is present, return an empty string.\n\nSchema:\n{\n  "extractedText": ""\n}';
+  'Extract all the text from this photo of a student\'s handwritten (or printed) answer. Transcribe it exactly as written, correcting only obvious OCR artifacts (e.g. stray marks misread as characters). Preserve line breaks where they carry meaning. If no legible text is present, return an empty string.\n\n' +
+  'If the page contains mathematical equations, physics formulas, chemical formulas/equations, or other scientific notation, transcribe them as LaTeX instead of plain characters -- e.g. \\frac{a}{b}, x^2, H_2O, \\int, \\sum, \\rightarrow for reaction arrows. Wrap inline math in single dollar signs ($...$) and standalone/display equations in double dollar signs ($$...$$), and leave surrounding prose as plain text outside those delimiters.\n\n' +
+  'If the page contains a graph, diagram, or figure that cannot be transcribed as text or notation, do not attempt to redraw it -- instead insert a short bracketed description in its place, e.g. [Graph: parabola opening upward, vertex near origin].\n\n' +
+  'Schema:\n{\n  "extractedText": ""\n}';
 
 export const extractTextFromHandwrittenImage = async ({ imageDataUrl }) => {
   if (typeof imageDataUrl !== "string" || !imageDataUrl.startsWith("data:image/")) {

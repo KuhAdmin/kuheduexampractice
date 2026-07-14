@@ -1222,6 +1222,19 @@ CREATE TABLE IF NOT EXISTS source_document (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Durable storage for an admin-uploaded chapter PDF, split into pages
+-- client-side (no server-side PDF processing) -- kept so a completed
+-- pipeline run can later re-show the original document, not just its
+-- derived page images.
+ALTER TABLE IF EXISTS source_document
+ADD COLUMN IF NOT EXISTS pdf_data TEXT;
+
+ALTER TABLE IF EXISTS source_document
+ADD COLUMN IF NOT EXISTS original_file_name VARCHAR(255);
+
+ALTER TABLE IF EXISTS source_document
+ADD COLUMN IF NOT EXISTS page_count INTEGER;
+
 CREATE TABLE IF NOT EXISTS source_section (
   id BIGSERIAL PRIMARY KEY,
   source_document_id BIGINT NOT NULL REFERENCES source_document(id) ON DELETE CASCADE,
@@ -1236,6 +1249,12 @@ CREATE TABLE IF NOT EXISTS source_section (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (source_document_id, section_code)
 );
+
+-- Free-text admin instructions for this section, distinct from the source
+-- content itself -- surfaced in Layer 1's human-readable prompt directives,
+-- not just buried in the JSON context dump (see buildPracticeDirectivesForPrompt).
+ALTER TABLE IF EXISTS source_section
+ADD COLUMN IF NOT EXISTS admin_notes TEXT;
 
 CREATE TABLE IF NOT EXISTS content_update_event (
   id BIGSERIAL PRIMARY KEY,
@@ -1266,6 +1285,19 @@ CREATE TABLE IF NOT EXISTS source_section_image (
   height_px INTEGER,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- storage_path above was only ever a fake sha256-hash placeholder string,
+-- never real image storage -- media_data is the actual base64 data URL,
+-- same convention as memory_hook_media.media_data. source_page_number +
+-- crop_region_json let a crop be redone and the original page reconstructed.
+ALTER TABLE IF EXISTS source_section_image
+ADD COLUMN IF NOT EXISTS media_data TEXT;
+
+ALTER TABLE IF EXISTS source_section_image
+ADD COLUMN IF NOT EXISTS source_page_number INTEGER;
+
+ALTER TABLE IF EXISTS source_section_image
+ADD COLUMN IF NOT EXISTS crop_region_json JSONB;
 
 CREATE TABLE IF NOT EXISTS source_ocr_text (
   id BIGSERIAL PRIMARY KEY,
@@ -1621,6 +1653,30 @@ CREATE TABLE IF NOT EXISTS layer1_diagram_tested_label (
   display_order INTEGER NOT NULL DEFAULT 0
 );
 
+-- layer1_diagram itself only ever holds structured text (name/purpose/labels,
+-- see layer1_diagram_label above) -- no image or coordinate data. This table
+-- mirrors memory_hook_media's versioned-image pattern so a diagram can also
+-- have an actual generated/uploaded picture, one row selected at a time.
+CREATE TABLE IF NOT EXISTS layer1_diagram_media (
+  id BIGSERIAL PRIMARY KEY,
+  layer1_diagram_id BIGINT NOT NULL REFERENCES layer1_diagram(id) ON DELETE CASCADE,
+  source VARCHAR(10) NOT NULL CHECK (source IN ('generated', 'uploaded')),
+  version_number INTEGER NOT NULL,
+  is_selected BOOLEAN NOT NULL DEFAULT FALSE,
+  prompt_text TEXT,
+  aspect_ratio VARCHAR(10) DEFAULT '3:2',
+  media_data TEXT NOT NULL,
+  mime_type VARCHAR(60) NOT NULL,
+  original_file_name VARCHAR(255),
+  model_name VARCHAR(120),
+  created_by BIGINT REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (layer1_diagram_id, version_number)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_layer1_diagram_media_selected
+ON layer1_diagram_media (layer1_diagram_id) WHERE is_selected;
+
 CREATE TABLE IF NOT EXISTS layer1_terminology (
   id BIGSERIAL PRIMARY KEY,
   generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
@@ -1801,6 +1857,12 @@ CREATE TABLE IF NOT EXISTS micro_activity_response (
 CREATE INDEX IF NOT EXISTS idx_micro_activity_response_lookup
 ON micro_activity_response (user_id, assessment_unit_id, created_at DESC);
 
+-- Optional per-page source photos when the response was built from OCR'd
+-- handwritten-note captures: [{ "order": 1, "imageData": "data:image/..." }].
+-- NULL for typed-only answers, same as today.
+ALTER TABLE IF EXISTS micro_activity_response
+ADD COLUMN IF NOT EXISTS source_page_images JSONB;
+
 -- Chapter-end textbook exercise questions, extracted from an admin-uploaded
 -- photo of the exercise page. Keyed by (fk_mst_book_id, chapter_number) --
 -- NOT a single mst_chapter row, since mst_chapter is itself row-per-section
@@ -1857,6 +1919,12 @@ CREATE TABLE IF NOT EXISTS chapter_exercise_response (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, chapter_exercise_question_id)
 );
+
+-- Optional per-page source photos when the response was built from OCR'd
+-- handwritten-note captures: [{ "order": 1, "imageData": "data:image/..." }].
+-- NULL for typed-only or non-free-text answers, same as today.
+ALTER TABLE IF EXISTS chapter_exercise_response
+ADD COLUMN IF NOT EXISTS source_page_images JSONB;
 
 CREATE TABLE IF NOT EXISTS layer3_assessment_capability_contract (
   id BIGSERIAL PRIMARY KEY,
@@ -2156,6 +2224,12 @@ CREATE TABLE IF NOT EXISTS student_response (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Optional per-page source photos when the response was built from OCR'd
+-- handwritten-note captures: [{ "order": 1, "imageData": "data:image/..." }].
+-- NULL for typed-only or non-free-text answers, same as today.
+ALTER TABLE IF EXISTS student_response
+ADD COLUMN IF NOT EXISTS source_page_images JSONB;
+
 CREATE TABLE IF NOT EXISTS student_mastery (
   id BIGSERIAL PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -2259,6 +2333,31 @@ ON layer2_concept_memory_retrieval_cue (layer2_concept_memory_id);
 
 CREATE INDEX IF NOT EXISTS idx_layer2_concept_memory_associated_concept_memory
 ON layer2_concept_memory_associated_concept (layer2_concept_memory_id);
+
+-- Standalone admin demo tool: capture any question (PDF-page crop or camera
+-- photo) for any subject, capture a handwritten answer (up to 5 pages, same
+-- source_page_images-style JSONB shape as micro_activity_response), and run
+-- one fast multimodal AI grading call. Deliberately independent of the
+-- 7-layer pipeline / assessment_unit -- there's no curriculum anchor for an
+-- ad-hoc photographed question, so this has its own single-table history.
+CREATE TABLE IF NOT EXISTS admin_demo_submission (
+  id BIGSERIAL PRIMARY KEY,
+  fk_mst_subject_id BIGINT NOT NULL REFERENCES mst_subject(id),
+  capture_method VARCHAR(20) NOT NULL CHECK (capture_method IN ('pdf_page', 'camera_photo')),
+  question_image_data TEXT NOT NULL,
+  question_text TEXT,
+  answer_text TEXT,
+  answer_source_images JSONB,
+  ai_is_correct BOOLEAN,
+  ai_ideal_answer TEXT,
+  ai_feedback TEXT,
+  model_name VARCHAR(120),
+  created_by BIGINT REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_demo_submission_created
+ON admin_demo_submission (created_at DESC);
 
 DROP MATERIALIZED VIEW IF EXISTS mv_book_catalog;
 

@@ -19,7 +19,7 @@ export default defineConfig({
       ],
       manifest: {
         name: "KUHEDU MASTER",
-        short_name: "KUHEDU",
+        short_name: "KUHEDU MASTER",
         description: "Practice chapters, assessments, and flashcards for CBSE/board exam prep.",
         display: "standalone",
         start_url: "/",

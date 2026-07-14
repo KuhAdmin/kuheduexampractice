@@ -91,7 +91,8 @@ const FAMILY_PROFILES = {
 - "processes" = derivations, reactions, mechanisms, and experimental procedures.
 - "relationships" = quantitative or formula relationships between quantities (use relationship_type "proportionality" or "equivalence" for laws such as V=IR), and conceptual links.
 - "classifications" = groupings such as periodic families, compound classes, or force types.
-- "cause_effect" = physical/chemical causality.`,
+- "cause_effect" = physical/chemical causality.
+- "diagrams" = ray/force/free-body diagrams, apparatus setups, circuit schematics, and molecular/structural or titration-setup diagrams when the source has them -- do not leave this empty just because the subject is not electronics/graphics.`,
     hardRules: `- Treat formulas and laws as "relationships" (relationship_summary states the law in words), not as free-floating facts.
 - Do not fragment a single derivation or reaction mechanism into one assessment unit per step; make one objective for applying/deriving it and keep the steps in stages_sequences.
 - Numerical problem-solving objectives are valid assessment units (e.g. "Apply the kinematics equations to compute displacement").`,
@@ -109,7 +110,8 @@ const FAMILY_PROFILES = {
 - "structures" = mathematical objects/structures (sets, matrices, geometric figures); usually sparse.
 - "processes" and "stages_sequences" = solution procedures, algorithms, and proof steps.
 - "relationships" = theorems, identities, and formula relationships (relationship_type "equivalence" or "usage").
-- "cause_effect" = implications (if-then results, conditions -> conclusions).`,
+- "cause_effect" = implications (if-then results, conditions -> conclusions).
+- "diagrams" = function/graph plots, geometric figures, and coordinate-plane diagrams when the source has them -- do not leave this empty just because the subject is not graphics.`,
     hardRules: `- Treat theorems, identities, and formulas as "relationships" (relationship_summary states them in words), and treat solution methods as one "processes" or "stages_sequences" entry, not one assessment unit per step.
 - A worked-example type is not an assessment unit; the assessment unit is the general method or theorem it illustrates.
 - Numerical and algebraic problem-solving objectives are valid assessment units.`,

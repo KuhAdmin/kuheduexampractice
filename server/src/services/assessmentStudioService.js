@@ -2026,15 +2026,16 @@ Schema:
 }
 `.trim();
     },
-    buildUserContent: ({ inputContract, userPrompt, media }) => {
+    buildUserContent: ({ userPrompt, media }) => {
       const content = [{ type: "text", text: userPrompt }];
-      const imageDataUrl =
-        media?.sectionImageDataUrl || inputContract?.source_artifacts?.section_image?.data_url;
-      if (imageDataUrl) {
-        content.push({
-          type: "image_url",
-          image_url: { url: imageDataUrl },
-        });
+      // Every cropped/assigned page image for this section goes to the
+      // vision call, not just one -- a section can legitimately be built
+      // from several source pages now.
+      const sectionImages = Array.isArray(media?.sectionImages) ? media.sectionImages : [];
+      for (const imageDataUrl of sectionImages) {
+        if (imageDataUrl) {
+          content.push({ type: "image_url", image_url: { url: imageDataUrl } });
+        }
       }
       return content;
     },
@@ -2383,6 +2384,7 @@ Layer 2 purpose:
 - Do not mention Layer 3, Layer 4, Layer 5, Layer 6, or Layer 7.
 - Reuse assessment_unit_id exactly from the input.
 - Include canonical concept fields such as concept_id, concept_label, definition, relationships, examples, terms, and prerequisites when supported by the source.
+- If this concept has a verbatim mathematical formula, physics equation, or chemical equation (not just a law/theorem described in words), populate "formula" with it in LaTeX -- wrap inline notation in $...$ and standalone/display equations in $$...$$ (e.g. "$F = ma$", "$$2H_2 + O_2 \\rightarrow 2H_2O$$"). Leave "formula" empty for concepts with no such notation (most Biology/History/etc. concepts).
 - Include graph-ready fields that can later support concept maps, mind maps, tutoring, flashcards, semantic search, and prerequisite analysis.
 - Use input memory_hooks as source-grounded memory support candidates; refine them into story, analogy, visual hook, memory trick, retrieval cues, and flashcard-ready recall support.
 - Keep output compact, machine-readable, and reusable beyond assessment generation.
@@ -2529,6 +2531,10 @@ Schema:
         throw new Error(
           "Layer 2 validation failed: retrieval_cues must contain at least two compact retrieval cues."
         );
+      }
+
+      if (normalizedMemory.formula !== undefined && typeof normalizedMemory.formula !== "string") {
+        throw new Error('Layer 2 validation failed: "formula" must be a string when present.');
       }
 
       const associatedConcepts =
@@ -3098,7 +3104,9 @@ Rules:
 - "ordering" (student arranges items into the correct sequence): "options" lists the items to be arranged, in SHUFFLED (not correct) order; "interaction_data.sequence" is an array of those same option strings in the CORRECT order (every entry must exactly match one "options" entry, one-to-one, same count); "correct_answer" is the correct order joined with "; " for display.
 - "matching" (student pairs items from a left set with items from a right set): "options" must be [] (empty array); "interaction_data.pairs" is an array of {"left","right"} objects, one per correct pairing (3-5 pairs); "correct_answer" is "left -> right" pairs joined with "; " for display.
 - Only use "ordering" or "matching" when the question explicitly asks the student to arrange/sequence/order a list, or to match/pair items from two sets. Do not use "ordering" for a question about a single position in a ranked list (that is "single_select"). Default to "single_select" or "free_text" otherwise.
-- Every item needs: item_id, question_family, interaction_type, difficulty, blooms_level, assessment_dimension, learning_objective, question, options, correct_answer, acceptable_answers, interaction_data, marks, estimated_time_seconds.
+- If "question", any "options" entry, or "correct_answer" contains a mathematical equation, physics formula, or chemical equation/formula, write that notation in LaTeX -- wrap inline notation in $...$ and standalone/display equations in $$...$$ (e.g. "$v = u + at$", "$$2H_2 + O_2 \\rightarrow 2H_2O$$"). Do not LaTeX-wrap plain prose.
+- If the question genuinely requires the student to look at a diagram/figure/graph from the source material to answer it, describe what that diagram shows in "diagram_instruction" (e.g. "Refer to the circuit diagram showing a battery, resistor, and ammeter in series."), so it can be shown alongside the question. Leave "diagram_instruction" empty for every other question -- most questions have no diagram.
+- Every item needs: item_id, question_family, interaction_type, difficulty, blooms_level, assessment_dimension, learning_objective, question, options, correct_answer, acceptable_answers, interaction_data, diagram_instruction, marks, estimated_time_seconds.
 
 Schema:
 {
@@ -3116,6 +3124,7 @@ Schema:
       "correct_answer": "",
       "acceptable_answers": [],
       "interaction_data": {},
+      "diagram_instruction": "",
       "marks": 0,
       "estimated_time_seconds": 0
     }
@@ -3132,6 +3141,12 @@ Schema:
 
       parsed.assessment_items.forEach((item, index) => {
         const label = `Layer 6 validation failed (item ${index + 1})`;
+
+        const diagramInstruction = item?.diagram_instruction ?? item?.diagramInstruction;
+        if (diagramInstruction !== undefined && diagramInstruction !== null && typeof diagramInstruction !== "string") {
+          throw new Error(`${label}: "diagram_instruction" must be a string when present.`);
+        }
+
         const interactionType = item?.interaction_type || item?.interactionType;
 
         // Lenient when interaction_type is absent -- this field is new, and
@@ -3450,6 +3465,10 @@ const buildPracticeDirectivesForPrompt = (inputContract = {}, layerNumber = 1) =
     generationMode ? `Generation Mode: ${generationMode}` : null,
     directives.source_language ? `Source Language: ${directives.source_language}` : null,
     directives.output_language ? `Output Language: ${directives.output_language}` : null,
+    // Admin-authored instructions for this specific section -- surfaced
+    // here (not just buried in the raw JSON context dump) so the model
+    // actually reads it as a directive, the same gap blueprint_hint had.
+    inputContract.admin_notes ? `Admin Notes: ${inputContract.admin_notes}` : null,
   ].filter(Boolean);
 
   if (Array.isArray(targetOutcomes) && targetOutcomes.length > 0) {
@@ -3805,13 +3824,15 @@ const createSourceRecords = async (db, payload, userId) => {
         section_code,
         section_number,
         title,
+        admin_notes,
         review_status
       )
-      VALUES ($1, $2, $3, $4, $5, 'draft')
+      VALUES ($1, $2, $3, $4, $5, $6, 'draft')
       ON CONFLICT (source_document_id, section_code) DO UPDATE
       SET fk_mst_chapter_id = EXCLUDED.fk_mst_chapter_id,
           section_number = EXCLUDED.section_number,
           title = EXCLUDED.title,
+          admin_notes = COALESCE(EXCLUDED.admin_notes, source_section.admin_notes),
           updated_at = NOW()
       RETURNING id
     `,
@@ -3821,6 +3842,7 @@ const createSourceRecords = async (db, payload, userId) => {
       sectionCode,
       payload.sectionNumber || null,
       payload.chapter || "Section",
+      typeof payload.adminNotes === "string" ? payload.adminNotes.trim() || null : null,
     ]
   );
 
@@ -3829,6 +3851,40 @@ const createSourceRecords = async (db, payload, userId) => {
     sourceSectionId: sourceSectionResult.rows[0].id,
     fkMstChapterId,
   };
+};
+
+// Normalizes the two payload shapes that can carry section images: the
+// legacy single sectionImageDataUrl/sectionImageName/sectionImageMimeType
+// fields (still sent by the unchanged paste-a-textarea flow), or the newer
+// sectionImages array (one entry per page assigned/cropped in the PDF
+// authoring flow). Always returns an array so callers have one shape to
+// deal with.
+const normalizeSectionImagesPayload = (payload) => {
+  if (Array.isArray(payload.sectionImages) && payload.sectionImages.length > 0) {
+    return payload.sectionImages
+      .map((image) => ({
+        mediaData: toSafeText(image?.mediaData),
+        mimeType: image?.mimeType || null,
+        fileName: image?.fileName || null,
+        sourcePageNumber: Number.isInteger(image?.sourcePageNumber) ? image.sourcePageNumber : null,
+        cropRegion: image?.cropRegion || null,
+      }))
+      .filter((image) => Boolean(image.mediaData));
+  }
+
+  const legacyImageDataUrl = toSafeText(payload.sectionImageDataUrl);
+  if (!legacyImageDataUrl) {
+    return [];
+  }
+  return [
+    {
+      mediaData: legacyImageDataUrl,
+      mimeType: payload.sectionImageMimeType || null,
+      fileName: payload.sectionImageName || null,
+      sourcePageNumber: null,
+      cropRegion: null,
+    },
+  ];
 };
 
 const persistSourceArtifacts = async (db, payload, sourceRefs) => {
@@ -3856,37 +3912,43 @@ const persistSourceArtifacts = async (db, payload, sourceRefs) => {
     );
   }
 
-  const imageDataUrl = toSafeText(payload.sectionImageDataUrl);
-  if (imageDataUrl) {
-    const imageHash = crypto.createHash("sha256").update(imageDataUrl).digest("hex");
+  const sectionImages = normalizeSectionImagesPayload(payload);
+  for (const [index, image] of sectionImages.entries()) {
+    const imageHash = crypto.createHash("sha256").update(image.mediaData).digest("hex");
     await db.query(
       `
         INSERT INTO source_section_image (
           source_section_id,
           image_sequence,
           storage_path,
-          mime_type
+          mime_type,
+          media_data,
+          source_page_number,
+          crop_region_json
         )
-        VALUES ($1, 0, $2, $3)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
       `,
       [
         sourceRefs.sourceSectionId,
-        `inline://${imageHash}/${payload.sectionImageName || "section-image"}`,
-        payload.sectionImageMimeType || null,
+        index,
+        `inline://${imageHash}/${image.fileName || "section-image"}`,
+        image.mimeType,
+        image.mediaData,
+        image.sourcePageNumber,
+        image.cropRegion ? JSON.stringify(image.cropRegion) : null,
       ]
     );
   }
 };
 
 const loadSourceArtifacts = async (sourceSectionId) => {
-  const [imageResult, ocrResult] = await Promise.all([
+  const [imageResult, ocrResult, sectionResult] = await Promise.all([
     pool.query(
       `
-        SELECT storage_path, mime_type
+        SELECT id, storage_path, mime_type, media_data, source_page_number, crop_region_json
         FROM source_section_image
         WHERE source_section_id = $1
         ORDER BY image_sequence ASC, id ASC
-        LIMIT 1
       `,
       [sourceSectionId]
     ),
@@ -3900,17 +3962,19 @@ const loadSourceArtifacts = async (sourceSectionId) => {
       `,
       [sourceSectionId]
     ),
+    pool.query(`SELECT admin_notes FROM source_section WHERE id = $1`, [sourceSectionId]),
   ]);
 
   return {
-    sectionImageRecord: imageResult.rows[0] || null,
+    sectionImageRecords: imageResult.rows,
     sectionOcrRecord: ocrResult.rows[0] || null,
+    adminNotes: sectionResult.rows[0]?.admin_notes || null,
   };
 };
 
-const buildLayer1InputContract = async ({ payload, sourceRefs }) => {
+const buildLayer1InputContract = async ({ payload, sourceRefs, artifacts: preloadedArtifacts }) => {
   const metadata = buildSourceMetadataContext(payload);
-  const artifacts = await loadSourceArtifacts(sourceRefs.sourceSectionId);
+  const artifacts = preloadedArtifacts || (await loadSourceArtifacts(sourceRefs.sourceSectionId));
   const normalizedText =
     artifacts.sectionOcrRecord?.normalized_text || artifacts.sectionOcrRecord?.raw_text || "";
   const inferredSourceLanguage =
@@ -3920,9 +3984,6 @@ const buildLayer1InputContract = async ({ payload, sourceRefs }) => {
   const inferredOutputLanguage =
     normalizeLanguageCode(payload.outputLanguage || payload.output_language) ||
     inferredSourceLanguage;
-  const imageDigest = payload.sectionImageDataUrl
-    ? crypto.createHash("sha256").update(payload.sectionImageDataUrl).digest("hex")
-    : null;
 
   const sourceArtifacts = {
     section_text: {
@@ -3932,16 +3993,18 @@ const buildLayer1InputContract = async ({ payload, sourceRefs }) => {
     },
   };
 
-  if (payload.sectionImageDataUrl || artifacts.sectionImageRecord) {
-    sourceArtifacts.section_image = {
-      has_image: Boolean(payload.sectionImageDataUrl),
-      file_name: payload.sectionImageName || null,
-      mime_type:
-        payload.sectionImageMimeType || artifacts.sectionImageRecord?.mime_type || null,
-      storage_path: artifacts.sectionImageRecord?.storage_path || null,
-      image_digest: imageDigest,
-    };
+  if (artifacts.sectionImageRecords?.length > 0) {
+    sourceArtifacts.section_images = artifacts.sectionImageRecords.map((record) => ({
+      has_image: true,
+      mime_type: record.mime_type || null,
+      source_page_number: record.source_page_number || null,
+      image_digest: record.media_data
+        ? crypto.createHash("sha256").update(record.media_data).digest("hex")
+        : null,
+    }));
   }
+
+  const adminNotes = artifacts.adminNotes || payload.adminNotes || null;
 
   return {
     context: metadata,
@@ -3951,6 +4014,192 @@ const buildLayer1InputContract = async ({ payload, sourceRefs }) => {
       output_language: inferredOutputLanguage,
     },
     source_artifacts: sourceArtifacts,
+    admin_notes: adminNotes,
+  };
+};
+
+// --- PDF-driven source-content authoring (decoupled from starting a run) ---
+//
+// Everything below lets an admin build up a section's content (assign/crop
+// page images, add notes, paste text) and have it durably persist as they
+// go, independent of ever clicking Start -- unlike the inline-payload path
+// above, which only ever wrote source_section/source_section_image as a
+// side effect of a pipeline run actually starting.
+
+export const saveSourceSectionDraft = async ({ payload, userId }) => {
+  const sourceRefs = await createSourceRecords(pool, payload, userId);
+
+  if (typeof payload.sectionOcrText === "string") {
+    await pool.query(`DELETE FROM source_ocr_text WHERE source_section_id = $1`, [
+      sourceRefs.sourceSectionId,
+    ]);
+    const sectionText = toSafeText(payload.sectionOcrText);
+    if (sectionText) {
+      await pool.query(
+        `
+          INSERT INTO source_ocr_text (source_section_id, ocr_provider, raw_text, normalized_text)
+          VALUES ($1, 'admin_manual', $2, $2)
+        `,
+        [sourceRefs.sourceSectionId, sectionText]
+      );
+    }
+  }
+
+  return sourceRefs;
+};
+
+export const saveSourceDocumentPdf = async ({ sourceDocumentId, pdfDataUrl, fileName, pageCount }) => {
+  if (typeof pdfDataUrl !== "string" || !pdfDataUrl.startsWith("data:application/pdf")) {
+    const error = new Error("A valid PDF file is required.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await pool.query(
+    `
+      UPDATE source_document
+      SET pdf_data = $2, original_file_name = $3, page_count = $4, updated_at = NOW()
+      WHERE id = $1
+      RETURNING id
+    `,
+    [sourceDocumentId, pdfDataUrl, fileName || null, Number.isInteger(pageCount) ? pageCount : null]
+  );
+
+  if (!result.rows[0]) {
+    const error = new Error("Source document not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+};
+
+export const getSourceDocumentPdf = async (sourceDocumentId) => {
+  const result = await pool.query(
+    `SELECT pdf_data, original_file_name, page_count FROM source_document WHERE id = $1`,
+    [sourceDocumentId]
+  );
+  const row = result.rows[0];
+  if (!row?.pdf_data) {
+    return null;
+  }
+  return { pdfData: row.pdf_data, originalFileName: row.original_file_name, pageCount: row.page_count };
+};
+
+export const addSourceSectionImage = async ({
+  sourceSectionId,
+  mediaData,
+  mimeType,
+  fileName,
+  sourcePageNumber,
+  cropRegion,
+}) => {
+  if (typeof mediaData !== "string" || !mediaData.startsWith("data:image/")) {
+    const error = new Error("A valid image is required.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const seqResult = await pool.query(
+    `SELECT COALESCE(MAX(image_sequence), -1) + 1 AS next_seq FROM source_section_image WHERE source_section_id = $1`,
+    [sourceSectionId]
+  );
+  const nextSeq = seqResult.rows[0].next_seq;
+  const imageHash = crypto.createHash("sha256").update(mediaData).digest("hex");
+
+  const inserted = await pool.query(
+    `
+      INSERT INTO source_section_image (
+        source_section_id, image_sequence, storage_path, mime_type, media_data, source_page_number, crop_region_json
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id, image_sequence, mime_type, media_data, source_page_number, crop_region_json, created_at
+    `,
+    [
+      sourceSectionId,
+      nextSeq,
+      `inline://${imageHash}/${fileName || "section-image"}`,
+      mimeType || null,
+      mediaData,
+      Number.isInteger(sourcePageNumber) ? sourcePageNumber : null,
+      cropRegion ? JSON.stringify(cropRegion) : null,
+    ]
+  );
+
+  return inserted.rows[0];
+};
+
+export const removeSourceSectionImage = async ({ sourceSectionId, imageId }) => {
+  const result = await pool.query(
+    `DELETE FROM source_section_image WHERE id = $1 AND source_section_id = $2 RETURNING id`,
+    [imageId, sourceSectionId]
+  );
+  return Boolean(result.rows[0]);
+};
+
+export const updateSourceSection = async ({ sourceSectionId, adminNotes, sectionOcrText }) => {
+  if (typeof adminNotes === "string") {
+    await pool.query(`UPDATE source_section SET admin_notes = $2, updated_at = NOW() WHERE id = $1`, [
+      sourceSectionId,
+      adminNotes.trim() || null,
+    ]);
+  }
+
+  if (typeof sectionOcrText === "string") {
+    await pool.query(`DELETE FROM source_ocr_text WHERE source_section_id = $1`, [sourceSectionId]);
+    const sectionText = toSafeText(sectionOcrText);
+    if (sectionText) {
+      await pool.query(
+        `
+          INSERT INTO source_ocr_text (source_section_id, ocr_provider, raw_text, normalized_text)
+          VALUES ($1, 'admin_manual', $2, $2)
+        `,
+        [sourceSectionId, sectionText]
+      );
+    }
+  }
+};
+
+export const getSourceSectionDraft = async (sourceSectionId) => {
+  const sectionResult = await pool.query(
+    `SELECT id, source_document_id, title, section_number, admin_notes FROM source_section WHERE id = $1`,
+    [sourceSectionId]
+  );
+  const section = sectionResult.rows[0];
+  if (!section) {
+    return null;
+  }
+
+  const artifacts = await loadSourceArtifacts(sourceSectionId);
+  const documentResult = await pool.query(
+    `SELECT id, title, original_file_name, page_count, (pdf_data IS NOT NULL) AS has_pdf FROM source_document WHERE id = $1`,
+    [section.source_document_id]
+  );
+  const document = documentResult.rows[0];
+  const sectionText = artifacts.sectionOcrRecord?.normalized_text || artifacts.sectionOcrRecord?.raw_text || "";
+
+  return {
+    sourceSectionId: section.id,
+    sourceDocumentId: section.source_document_id,
+    title: section.title,
+    sectionNumber: section.section_number,
+    adminNotes: section.admin_notes,
+    sectionOcrText: sectionText,
+    images: artifacts.sectionImageRecords.map((record) => ({
+      id: record.id,
+      mimeType: record.mime_type,
+      mediaData: record.media_data,
+      sourcePageNumber: record.source_page_number,
+      cropRegion: record.crop_region_json,
+    })),
+    document: document
+      ? {
+          id: document.id,
+          title: document.title,
+          originalFileName: document.original_file_name,
+          pageCount: document.page_count,
+          hasPdf: document.has_pdf,
+        }
+      : null,
+    isReady: Boolean(sectionText.trim()) || artifacts.sectionImageRecords.length > 0,
   };
 };
 
@@ -4800,6 +5049,28 @@ const runPipelineJob = async (job) => {
     });
 
     const sourceRefs = await withTransaction(async (db) => {
+      // New flow: content was already authored/persisted via the PDF-
+      // authoring endpoints (draft-save, image add, notes update) -- don't
+      // re-upsert/delete-and-reinsert from inline fields, just resolve the
+      // already-saved section's parent document/chapter ids. Absent
+      // sourceSectionId means the unchanged paste-a-textarea flow, which
+      // still upserts fresh from the inline payload every run.
+      if (job.payload.sourceSectionId) {
+        const existingSection = await db.query(
+          `SELECT source_document_id, fk_mst_chapter_id FROM source_section WHERE id = $1`,
+          [job.payload.sourceSectionId]
+        );
+        const row = existingSection.rows[0];
+        if (!row) {
+          throw new Error(`sourceSectionId ${job.payload.sourceSectionId} was not found.`);
+        }
+        return {
+          sourceDocumentId: row.source_document_id,
+          sourceSectionId: Number(job.payload.sourceSectionId),
+          fkMstChapterId: row.fk_mst_chapter_id,
+        };
+      }
+
       const refs = await createSourceRecords(db, job.payload, job.userId);
       await persistSourceArtifacts(db, job.payload, refs);
       return refs;
@@ -4813,9 +5084,14 @@ const runPipelineJob = async (job) => {
       sourceSectionId: sourceRefs.sourceSectionId,
       fkMstChapterId: sourceRefs.fkMstChapterId,
     });
+
+    // Loaded once, shared by the prompt-building step and the vision-input
+    // media below, so both always agree on exactly which images exist.
+    const artifacts = await loadSourceArtifacts(sourceRefs.sourceSectionId);
     const layer1Input = await buildLayer1InputContract({
       payload: job.payload,
       sourceRefs,
+      artifacts,
     });
     const assessmentUnitState = {};
 
@@ -4829,7 +5105,9 @@ const runPipelineJob = async (job) => {
       layer: layer1,
       inputJson: layer1Input,
       media: {
-        sectionImageDataUrl: job.payload.sectionImageDataUrl || null,
+        sectionImages: (artifacts.sectionImageRecords || [])
+          .map((record) => record.media_data)
+          .filter(Boolean),
       },
       sourceRefs,
     });
@@ -5281,6 +5559,8 @@ export const listCompletedAssessmentStudioRuns = async () => {
         r.request_payload,
         r.created_at,
         r.updated_at,
+        r.source_document_id,
+        r.source_section_id,
         d.subject_name,
         d.class_name,
         d.chapter_name
@@ -5350,6 +5630,8 @@ export const listCompletedAssessmentStudioRuns = async () => {
         status: row.status,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        sourceDocumentId: row.source_document_id,
+        sourceSectionId: row.source_section_id,
         subject: row.subject_name || payload.subject || "",
         className: row.class_name || payload.className || "",
         chapter: row.chapter_name || payload.chapter || "",

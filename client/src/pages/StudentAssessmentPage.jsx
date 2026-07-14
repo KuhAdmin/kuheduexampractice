@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
-import { StudentCameraCapture } from "../components/StudentCameraCapture";
+import { extractSourcePageImages, StudentMultiPageAnswerInput } from "../components/StudentMultiPageAnswerInput";
+import { MathPreview } from "../components/MathPreview";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import {
   getRecentAssessmentAttempts,
   getRecentChapterAssessmentAttempts,
   getRecentConceptAssessmentAttempts,
   getStudentSections,
-  ocrHandwrittenNote,
   restartChapterAssessment,
   restartSectionAssessment,
   startChapterAssessment,
@@ -41,20 +41,6 @@ const MoveIcon = ({ direction }) => (
       strokeLinejoin="round"
       strokeWidth="1.9"
     />
-  </svg>
-);
-
-const CameraIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path
-      d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l.9-1.5A1.5 1.5 0 0 1 9.7 4.75h4.6a1.5 1.5 0 0 1 1.3.75L16.5 7h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-9Z"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.7"
-    />
-    <circle cx="12" cy="12.5" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.7" />
   </svg>
 );
 
@@ -201,13 +187,10 @@ export const StudentAssessmentPage = () => {
   const [phase, setPhase] = useState("instructions"); // instructions | question | feedback | finishing
   const [activeIndex, setActiveIndex] = useState(0);
   const [answerState, setAnswerState] = useState(null);
+  const [sourcePageImages, setSourcePageImages] = useState([]);
   const [feedback, setFeedback] = useState(null);
   const [answering, setAnswering] = useState(false);
   const [startedAt, setStartedAt] = useState(null);
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrApplied, setOcrApplied] = useState(false);
-  const [ocrError, setOcrError] = useState("");
-  const [cameraOpen, setCameraOpen] = useState(false);
   const [recentAttempts, setRecentAttempts] = useState([]);
   const [restarting, setRestarting] = useState(false);
   const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", sectionNumber: "", sectionTopicName: "" });
@@ -304,8 +287,7 @@ export const StudentAssessmentPage = () => {
   useEffect(() => {
     if (!activeItem) return;
     setAnswerState(INTERACTION_HANDLERS[resolveInteractionType(activeItem)].initialState(activeItem));
-    setOcrApplied(false);
-    setOcrError("");
+    setSourcePageImages([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeItem?.itemId]);
 
@@ -369,7 +351,8 @@ export const StudentAssessmentPage = () => {
         assessment.attemptId,
         activeItem.displayOrder,
         answer,
-        timeTakenSeconds
+        timeTakenSeconds,
+        sourcePageImages
       );
       setFeedback(result);
       setPhase("feedback");
@@ -429,25 +412,6 @@ export const StudentAssessmentPage = () => {
     });
   };
 
-  const handleCapturedPhoto = async (imageDataUrl) => {
-    setOcrError("");
-    setOcrApplied(false);
-    setOcrLoading(true);
-    try {
-      const result = await ocrHandwrittenNote(imageDataUrl);
-      if (result?.text) {
-        setAnswerState(result.text);
-        setOcrApplied(true);
-      } else {
-        setOcrError("We couldn't find any text in that photo. Try a clearer photo, or type your answer instead.");
-      }
-    } catch (ocrFailure) {
-      setOcrError(ocrFailure.message || "Failed to read that photo. Please try again or type your answer.");
-    } finally {
-      setOcrLoading(false);
-    }
-  };
-
   const totalQuestions = items.length;
 
   const renderSingleSelect = () => (
@@ -479,7 +443,10 @@ export const StudentAssessmentPage = () => {
             onClick={() => phase === "question" && setAnswerState(option)}
           >
             <span className="student-concept-practice-badge">{optionId}</span>
-            <span className="student-concept-practice-text">{option}</span>
+            <span className="student-concept-practice-text">
+              {option}
+              <MathPreview text={option} />
+            </span>
             <span className="student-concept-practice-radio" aria-hidden="true" />
           </button>
         );
@@ -489,47 +456,18 @@ export const StudentAssessmentPage = () => {
 
   const renderFreeText = () => (
     <div className="student-free-text-panel">
-      {phase === "question" && (
-        <button
-          type="button"
-          className={`student-ocr-upload-button ${ocrLoading ? "is-disabled" : ""}`}
-          disabled={ocrLoading}
-          onClick={() => setCameraOpen(true)}
-        >
-          <CameraIcon />
-          <span>{ocrLoading ? "Reading your photo..." : "Capture Photo"}</span>
-        </button>
-      )}
-
-      {cameraOpen && (
-        <StudentCameraCapture
-          onCapture={(dataUrl) => {
-            setCameraOpen(false);
-            handleCapturedPhoto(dataUrl);
-          }}
-          onCancel={() => setCameraOpen(false)}
-        />
-      )}
-
-      <textarea
-        rows={8}
-        className={`student-assessment-text-input ${
-          phase === "feedback" ? (feedback?.isCorrect ? "is-correct" : "is-incorrect") : ""
-        }`}
-        placeholder="Type your answer, or upload a photo of your handwritten answer above"
+      <StudentMultiPageAnswerInput
         value={answerState || ""}
-        onChange={(event) => setAnswerState(event.target.value)}
-        readOnly={phase === "feedback"}
+        onChange={(text, pages) => {
+          setAnswerState(text);
+          setSourcePageImages(extractSourcePageImages(pages));
+        }}
+        resetKey={activeItem?.itemId}
         disabled={phase === "feedback"}
+        statusClassName={phase === "feedback" ? (feedback?.isCorrect ? "is-correct" : "is-incorrect") : ""}
+        placeholder="Type your answer, or capture a photo of your handwritten answer above"
+        rows={8}
       />
-
-      {ocrApplied && phase === "question" && (
-        <p className="student-ocr-hint">
-          We've filled this in from your photo — please check it reads correctly and fix anything before
-          submitting.
-        </p>
-      )}
-      {ocrError && phase === "question" && <p className="error-text">{ocrError}</p>}
     </div>
   );
 
@@ -557,7 +495,10 @@ export const StudentAssessmentPage = () => {
           return (
             <li key={value} className={className}>
               <span className="student-concept-practice-badge">{index + 1}</span>
-              <span className="student-concept-practice-text">{value}</span>
+              <span className="student-concept-practice-text">
+                {value}
+                <MathPreview text={value} />
+              </span>
               <div className="student-ordering-controls">
                 <button
                   type="button"
@@ -622,6 +563,7 @@ export const StudentAssessmentPage = () => {
                 >
                   {leftValue}
                   {assignedRight ? ` → ${assignedRight}` : ""}
+                  <MathPreview text={leftValue} />
                 </button>
               </li>
             );
@@ -639,6 +581,7 @@ export const StudentAssessmentPage = () => {
                   onClick={() => assignMatchingPair(rightValue)}
                 >
                   {rightValue}
+                  <MathPreview text={rightValue} />
                 </button>
               </li>
             );
@@ -841,6 +784,10 @@ export const StudentAssessmentPage = () => {
                 </p>
               </div>
               <h2>{activeItem.question}</h2>
+              <MathPreview text={activeItem.question} />
+              {activeItem.diagramInstruction && (
+                <p className="student-diagram-instruction">{activeItem.diagramInstruction}</p>
+              )}
 
               {renderInteraction()}
 
@@ -865,11 +812,19 @@ export const StudentAssessmentPage = () => {
                 <div className={`student-instant-feedback ${feedback.isCorrect ? "is-correct" : "is-incorrect"}`}>
                   <strong>{feedback.isCorrect ? "Correct!" : "Not quite"}</strong>
                   {!feedback.isCorrect && (
-                    <p className="student-instant-feedback-answer">
-                      Correct answer: {feedback.correctAnswer}
-                    </p>
+                    <>
+                      <p className="student-instant-feedback-answer">
+                        Correct answer: {feedback.correctAnswer}
+                      </p>
+                      <MathPreview text={feedback.correctAnswer} />
+                    </>
                   )}
-                  {feedback.explanation && <p>{feedback.explanation}</p>}
+                  {feedback.explanation && (
+                    <>
+                      <p>{feedback.explanation}</p>
+                      <MathPreview text={feedback.explanation} />
+                    </>
+                  )}
                   {feedback.relatedConcept && (
                     <p className="student-instant-feedback-related">
                       Related concept: {feedback.relatedConcept}

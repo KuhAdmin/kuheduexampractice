@@ -269,7 +269,7 @@ const buildFreeTextFeedback = async ({ questionText, correctAnswer, studentAnswe
   }
 };
 
-export const submitChapterExerciseResponse = async ({ questionId, userId, studentAnswer }) => {
+export const submitChapterExerciseResponse = async ({ questionId, userId, studentAnswer, sourcePageImages }) => {
   if (!studentAnswer || !String(studentAnswer).trim()) {
     const error = new Error("Please provide an answer first.");
     error.statusCode = 422;
@@ -310,15 +310,21 @@ export const submitChapterExerciseResponse = async ({ questionId, userId, studen
     }
   }
 
+  const sourcePageImagesJson =
+    Array.isArray(sourcePageImages) && sourcePageImages.length > 0
+      ? JSON.stringify(sourcePageImages)
+      : null;
+
   await pool.query(
-    `INSERT INTO chapter_exercise_response (user_id, chapter_exercise_question_id, student_answer, is_correct, feedback_text)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO chapter_exercise_response (user_id, chapter_exercise_question_id, student_answer, is_correct, feedback_text, source_page_images)
+     VALUES ($1, $2, $3, $4, $5, $6)
      ON CONFLICT (user_id, chapter_exercise_question_id) DO UPDATE
      SET student_answer = EXCLUDED.student_answer,
          is_correct = EXCLUDED.is_correct,
          feedback_text = EXCLUDED.feedback_text,
+         source_page_images = EXCLUDED.source_page_images,
          created_at = NOW()`,
-    [userId, questionId, studentAnswer, isCorrect, feedback]
+    [userId, questionId, studentAnswer, isCorrect, feedback, sourcePageImagesJson]
   );
 
   return { isCorrect, feedback, correctAnswer: question.correct_answer };
@@ -373,6 +379,7 @@ export const submitBookQuestionResponseForStudent = async ({
   questionId,
   userId,
   studentAnswer,
+  sourcePageImages,
 }) => {
   const fkMstBookId = await resolveBookIdForChapter({ board, studentClass, subject, chapterNumber });
   if (!fkMstBookId) {
@@ -381,7 +388,7 @@ export const submitBookQuestionResponseForStudent = async ({
     throw error;
   }
 
-  return submitChapterExerciseResponse({ questionId, userId, studentAnswer });
+  return submitChapterExerciseResponse({ questionId, userId, studentAnswer, sourcePageImages });
 };
 
 export const getChapterExerciseProgressForUser = async ({ userId, fkMstBookId, chapterNumber }) => {

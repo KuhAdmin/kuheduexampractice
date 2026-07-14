@@ -11,6 +11,7 @@ import {
   getStudentBookQuestions,
   getStudentConceptCard,
   getStudentConceptSectionMedia,
+  getStudentDiagramMedia,
   getStudentDiagrams,
   getStudentFlashcards,
   getStudentLearningMap,
@@ -47,6 +48,7 @@ router.get("/sections/:sourceSectionId/learning-map", getStudentLearningMap);
 router.get("/sections/:sourceSectionId/memory-booster", getStudentMemoryBoosterForSection);
 router.get("/sections/:sourceSectionId/flashcards", getStudentFlashcards);
 router.get("/sections/:sourceSectionId/diagrams", getStudentDiagrams);
+router.get("/diagrams/:diagramId/media", getStudentDiagramMedia);
 router.get("/sections/:sourceSectionId/mind-map", getMindMap);
 router.get("/concepts/:assessmentUnitId/card", getStudentConceptCard);
 router.get("/concepts/:assessmentUnitId/memory-hook-media/:sectionKey", getStudentConceptSectionMedia);

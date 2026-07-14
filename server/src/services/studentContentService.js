@@ -336,6 +336,7 @@ export const getConceptCard = async ({ assessmentUnitId }) => {
     processes: context.knowledge.processes,
     memoryHooks: context.knowledge.memory_hooks,
     misconceptions: context.knowledge.misconceptions,
+    formula: memoryBooster?.formula || null,
     analogy: memoryBooster?.analogy || null,
     story: memoryBooster?.story || null,
     visualHook: memoryBooster?.visualHook || null,
@@ -360,6 +361,7 @@ const shapeMemoryBooster = (memory) => {
   return {
     assessmentUnitId: memory.assessment_unit_id,
     primaryConcept: memory.primary_concept,
+    formula: memory.formula || null,
     story: memory.story,
     analogy: memory.analogy,
     visualHook: memory.visual_hook,
@@ -431,6 +433,7 @@ export const getFlashcardsForSection = async ({ sourceSectionId }) => {
 export const getDiagramsForSourceSection = async ({ sourceSectionId }) => {
   const diagrams = await getDiagramsForSection(sourceSectionId);
   return diagrams.map((diagram) => ({
+    diagramId: diagram.id,
     diagramName: diagram.diagramName,
     purpose: diagram.purpose,
     labels: diagram.labels,

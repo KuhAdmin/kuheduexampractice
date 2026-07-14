@@ -386,23 +386,27 @@ const RegisterForm = ({
         <button type="submit" className="home-primary-cta" disabled={submitting}>
           Continue
         </button>
-        <p className="home-auth-divider" aria-hidden="true">
-          OR
-        </p>
-        <button type="button" className="home-google-cta" onClick={onGoogle}>
-          <span className="home-google-mark">G</span>
-          <span>Create with Google</span>
-        </button>
-        <button type="button" className="home-secondary-cta" onClick={onBack}>
-          Back
-        </button>
-        <p className="home-auth-switch">
-          <span>Already have an account?</span>
-          <button type="button" onClick={onSwitchToLogin}>
-            Sign In
-          </button>
-        </p>
         </form>
+      ) : null}
+      {step === "details" ? (
+        <div className="home-auth-secondary">
+          <p className="home-auth-divider" aria-hidden="true">
+            OR
+          </p>
+          <button type="button" className="home-google-cta" onClick={onGoogle}>
+            <span className="home-google-mark">G</span>
+            <span>Create with Google</span>
+          </button>
+          <button type="button" className="home-secondary-cta" onClick={onBack}>
+            Back
+          </button>
+          <p className="home-auth-switch">
+            <span>Already have an account?</span>
+            <button type="button" onClick={onSwitchToLogin}>
+              Sign In
+            </button>
+          </p>
+        </div>
       ) : (
         <form
           className="home-auth-form is-register-board-form"
@@ -474,6 +478,8 @@ const LoginForm = ({ form, error, submitting, onChange, onSubmit, onGoogle, onBa
       <button type="submit" className="home-primary-cta" disabled={submitting}>
         {submitting ? "Signing in..." : "Sign In"}
       </button>
+    </form>
+    <div className="home-auth-secondary">
       <p className="home-auth-divider" aria-hidden="true">
         OR
       </p>
@@ -489,7 +495,7 @@ const LoginForm = ({ form, error, submitting, onChange, onSubmit, onGoogle, onBa
           Forgot password?
         </button>
       </p>
-    </form>
+    </div>
   </div>
 );
 
@@ -746,10 +752,15 @@ const DesktopHomeScreen = ({
       ? "Choose a subject to start"
       : screen.body;
 
+  const isWideAuthCard =
+    screen.kind === "login" || (screen.kind === "register" && registerStep === "details");
+
   return (
-    <div className="home-desktop-auth-card">
-      <h2>{heading}</h2>
-      <p>{subheading}</p>
+    <div className={`home-desktop-auth-card ${isWideAuthCard ? "is-wide-two-col" : ""}`}>
+      <div className="home-desktop-auth-card-header">
+        <h2>{heading}</h2>
+        <p>{subheading}</p>
+      </div>
       {screen.kind === "register" ? (
         <RegisterForm
           form={registerForm}

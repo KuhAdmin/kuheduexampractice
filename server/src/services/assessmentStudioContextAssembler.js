@@ -766,6 +766,7 @@ export const getDiagramsForSection = async (sourceSectionId) => {
     ]);
 
     diagrams.push({
+      id: diagram.id,
       diagramName: diagram.diagram_name,
       purpose: diagram.purpose,
       labels: labelsResult.rows.map((row) => row.label_name),

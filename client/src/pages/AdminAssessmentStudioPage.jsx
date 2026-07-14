@@ -1142,6 +1142,11 @@ export const AdminAssessmentStudioPage = () => {
                 <option value="bn">Bengali</option>
               </select>
             </label>
+            <p className="admin-studio-field admin-studio-field-wide admin-workbench-muted">
+              Working from a scanned/photographed chapter instead? Use the{" "}
+              <Link to="/admin/ai-assessment-studio/source-builder">Source Builder</Link> to upload a
+              PDF, split it into pages, and assign/crop them per section.
+            </p>
             <label className="admin-studio-field admin-studio-field-wide">
               <span>Section Image</span>
               <label className="admin-studio-file-upload">

@@ -3,10 +3,26 @@ import { Link } from "react-router-dom";
 import {
   deleteAssessmentStudioPipelineRun,
   getCompletedAssessmentStudioRuns,
+  getSourceDocumentPdf,
+  getSourceSectionDraft,
   initializeAssessmentStudioDatabase,
   uploadChapterExercise,
 } from "../api/client";
 import { LayerVersionsModal } from "../components/LayerVersionsModal";
+import { AdminPdfPageLightbox } from "../components/AdminPdfPageLightbox";
+
+const openDataUrlInNewTab = (dataUrl) => {
+  const [, base64] = dataUrl.split(",");
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  const blob = new Blob([bytes], { type: "application/pdf" });
+  const blobUrl = URL.createObjectURL(blob);
+  window.open(blobUrl, "_blank", "noopener");
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+};
 
 const formatDateTime = (value) => {
   if (!value) return "-";
@@ -37,6 +53,29 @@ export const AdminPipelineRunsPage = () => {
   const [exerciseModalBusy, setExerciseModalBusy] = useState(false);
   const [exerciseModalError, setExerciseModalError] = useState("");
   const [exerciseResults, setExerciseResults] = useState({});
+  const [sourceModalRun, setSourceModalRun] = useState(null);
+  const [sourceModalData, setSourceModalData] = useState(null);
+  const [sourceModalLoading, setSourceModalLoading] = useState(false);
+  const [sourceModalError, setSourceModalError] = useState("");
+  const [sourceLightboxImage, setSourceLightboxImage] = useState(null);
+
+  const openSourceModal = async (run) => {
+    setSourceModalRun(run);
+    setSourceModalData(null);
+    setSourceModalError("");
+    setSourceModalLoading(true);
+    try {
+      const [draft, pdf] = await Promise.all([
+        getSourceSectionDraft(run.sourceSectionId),
+        run.sourceDocumentId ? getSourceDocumentPdf(run.sourceDocumentId).catch(() => null) : Promise.resolve(null),
+      ]);
+      setSourceModalData({ draft, pdf: pdf?.pdf || null });
+    } catch (error) {
+      setSourceModalError(error.message || "Failed to load the source content for this run.");
+    } finally {
+      setSourceModalLoading(false);
+    }
+  };
 
   const loadRuns = useCallback(async () => {
     setLoading(true);
@@ -287,6 +326,19 @@ export const AdminPipelineRunsPage = () => {
                       <button
                         type="button"
                         className="ghost-button"
+                        disabled={!run.sourceSectionId}
+                        title={
+                          run.sourceSectionId
+                            ? "View the original PDF/images used for this run"
+                            : "No source section is linked to this run"
+                        }
+                        onClick={() => openSourceModal(run)}
+                      >
+                        View Source
+                      </button>
+                      <button
+                        type="button"
+                        className="ghost-button"
                         disabled={!run.chapterKey}
                         title={
                           run.chapterKey
@@ -385,6 +437,74 @@ export const AdminPipelineRunsPage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {sourceModalRun && (
+        <div className="modal-backdrop" onClick={() => setSourceModalRun(null)}>
+          <div className="modal-panel is-wide" onClick={(event) => event.stopPropagation()}>
+            <button className="close-button" onClick={() => setSourceModalRun(null)}>
+              x
+            </button>
+            <p className="eyebrow">Source Content</p>
+            <h2>{sourceModalRun.chapter || "This run"}'s original PDF/images</h2>
+
+            {sourceModalLoading && <p className="admin-empty-state">Loading source content...</p>}
+            {sourceModalError && <p className="error-text">{sourceModalError}</p>}
+
+            {sourceModalData && (
+              <div className="admin-workbench-stack">
+                {sourceModalData.pdf ? (
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => openDataUrlInNewTab(sourceModalData.pdf.pdfData)}
+                  >
+                    Open {sourceModalData.pdf.originalFileName || "original PDF"} (
+                    {sourceModalData.pdf.pageCount || "?"} pages)
+                  </button>
+                ) : (
+                  <p className="admin-workbench-muted">
+                    No original PDF was uploaded for this section (it may have used the paste-text flow
+                    instead).
+                  </p>
+                )}
+
+                {sourceModalData.draft?.adminNotes && (
+                  <p>
+                    <strong>Admin notes:</strong> {sourceModalData.draft.adminNotes}
+                  </p>
+                )}
+
+                {sourceModalData.draft?.images?.length > 0 ? (
+                  <div className="admin-source-builder-section-images">
+                    {sourceModalData.draft.images.map((image) => (
+                      <button
+                        key={image.id}
+                        type="button"
+                        className="admin-source-builder-assigned-thumb"
+                        onClick={() =>
+                          setSourceLightboxImage({ pageNumber: image.sourcePageNumber, dataUrl: image.mediaData })
+                        }
+                      >
+                        <img src={image.mediaData} alt={`Page ${image.sourcePageNumber || ""}`} />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="admin-workbench-muted">No page images were attached to this section.</p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {sourceLightboxImage && (
+        <AdminPdfPageLightbox
+          pageNumber={sourceLightboxImage.pageNumber}
+          dataUrl={sourceLightboxImage.dataUrl}
+          onClose={() => setSourceLightboxImage(null)}
+        />
       )}
     </section>
   );

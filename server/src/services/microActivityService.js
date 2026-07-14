@@ -44,7 +44,12 @@ const buildMicroActivityFeedback = async ({ primaryConcept, prompt, responseText
   return feedback || "Thanks for giving it a try!";
 };
 
-export const gradeMicroActivityResponse = async ({ assessmentUnitId, userId, responseText }) => {
+export const gradeMicroActivityResponse = async ({
+  assessmentUnitId,
+  userId,
+  responseText,
+  sourcePageImages,
+}) => {
   if (!responseText || !responseText.trim()) {
     const error = new Error("Please write or upload a response first.");
     error.statusCode = 422;
@@ -75,11 +80,16 @@ export const gradeMicroActivityResponse = async ({ assessmentUnitId, userId, res
     responseText: truncatedResponseText,
   });
 
+  const sourcePageImagesJson =
+    Array.isArray(sourcePageImages) && sourcePageImages.length > 0
+      ? JSON.stringify(sourcePageImages)
+      : null;
+
   const inserted = await pool.query(
-    `INSERT INTO micro_activity_response (user_id, assessment_unit_id, response_text, feedback_text)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO micro_activity_response (user_id, assessment_unit_id, response_text, feedback_text, source_page_images)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING created_at`,
-    [userId, assessmentUnitId, truncatedResponseText, feedback]
+    [userId, assessmentUnitId, truncatedResponseText, feedback, sourcePageImagesJson]
   );
 
   return { feedback, createdAt: inserted.rows[0].created_at };

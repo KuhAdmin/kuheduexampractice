@@ -4,6 +4,8 @@ import { AdminLayout } from "./components/AdminLayout";
 import { apiRequest } from "./api/client";
 import { AdminAssessmentStudioPage } from "./pages/AdminAssessmentStudioPage";
 import { AdminBulkPipelinePage } from "./pages/AdminBulkPipelinePage";
+import { AdminSourceBuilderPage } from "./pages/AdminSourceBuilderPage";
+import { AdminAiAssessmentDemoPage } from "./pages/AdminAiAssessmentDemoPage";
 import { AdminPipelineRunsPage } from "./pages/AdminPipelineRunsPage";
 import { AdminChapterExerciseReviewPage } from "./pages/AdminChapterExerciseReviewPage";
 import { AdminAssessmentAuditPage } from "./pages/AdminAssessmentAuditPage";
@@ -16,6 +18,11 @@ import { AdminPerformanceInsightsPage } from "./pages/AdminPerformanceInsightsPa
 import { AdminQuestionBankPage } from "./pages/AdminQuestionBankPage";
 import { AdminSettingsPage } from "./pages/AdminSettingsPage";
 import { AdminUsersPage } from "./pages/AdminUsersPage";
+import { AdminExamTypesPage } from "./pages/AdminExamTypesPage";
+import { AdminExamGoalsPage } from "./pages/AdminExamGoalsPage";
+import { AdminLevelsPage } from "./pages/AdminLevelsPage";
+import { AdminSubjectsPage } from "./pages/AdminSubjectsPage";
+import { AdminBooksPage } from "./pages/AdminBooksPage";
 import { ModeratorLayout } from "./components/ModeratorLayout";
 import { StudentLayout } from "./components/StudentLayout";
 import { ModeratorConsolePage } from "./pages/ModeratorConsolePage";
@@ -262,6 +269,14 @@ const App = () => {
             element={<AdminBulkPipelinePage />}
           />
           <Route
+            path="ai-assessment-studio/source-builder"
+            element={<AdminSourceBuilderPage />}
+          />
+          <Route
+            path="ai-assessment-studio/demo"
+            element={<AdminAiAssessmentDemoPage />}
+          />
+          <Route
             path="ai-assessment-studio/runs"
             element={<AdminPipelineRunsPage />}
           />
@@ -308,6 +323,26 @@ const App = () => {
           <Route
             path="users"
             element={<AdminUsersPage />}
+          />
+          <Route
+            path="exam-types"
+            element={<AdminExamTypesPage />}
+          />
+          <Route
+            path="exam-goals"
+            element={<AdminExamGoalsPage />}
+          />
+          <Route
+            path="levels"
+            element={<AdminLevelsPage />}
+          />
+          <Route
+            path="subjects"
+            element={<AdminSubjectsPage />}
+          />
+          <Route
+            path="books"
+            element={<AdminBooksPage />}
           />
           <Route
             path="settings"

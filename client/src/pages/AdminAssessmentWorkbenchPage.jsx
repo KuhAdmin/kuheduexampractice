@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { MathPreview } from "../components/MathPreview";
 import {
   generateAllMemoryHookImages,
+  generateDiagramImage,
   generateMemoryHookImage,
   getAssessmentStudioPipelineAudit,
+  getAssessmentUnitDiagrams,
+  getDiagramMedia,
   getMemoryHookMedia,
+  uploadDiagramMedia,
   uploadMemoryHookMedia,
 } from "../api/client";
 
@@ -847,6 +852,13 @@ export const AdminAssessmentWorkbenchPage = () => {
   const [bulkImageBusy, setBulkImageBusy] = useState(false);
   const [bulkImageNotice, setBulkImageNotice] = useState("");
 
+  const [diagrams, setDiagrams] = useState([]);
+  const [diagramMedia, setDiagramMedia] = useState({});
+  const [diagramGenerateBusyKey, setDiagramGenerateBusyKey] = useState("");
+  const [diagramGenerateErrors, setDiagramGenerateErrors] = useState({});
+  const [diagramUploadBusyKey, setDiagramUploadBusyKey] = useState("");
+  const [diagramUploadErrors, setDiagramUploadErrors] = useState({});
+
   const loadMemoryMedia = async (assessmentUnitId) => {
     if (!assessmentUnitId) {
       setMemoryMedia({});
@@ -860,11 +872,42 @@ export const AdminAssessmentWorkbenchPage = () => {
     }
   };
 
+  // Diagrams belong to the section a unit was extracted from, shared by
+  // every unit from that section -- fetch the list, then each diagram's own
+  // selected media (if any) alongside it.
+  const loadDiagrams = async (assessmentUnitId) => {
+    if (!assessmentUnitId) {
+      setDiagrams([]);
+      setDiagramMedia({});
+      return;
+    }
+    try {
+      const result = await getAssessmentUnitDiagrams(assessmentUnitId);
+      const nextDiagrams = result.diagrams || [];
+      setDiagrams(nextDiagrams);
+
+      const mediaEntries = await Promise.all(
+        nextDiagrams.map((diagram) =>
+          getDiagramMedia(diagram.id)
+            .then((mediaResult) => [diagram.id, mediaResult.media])
+            .catch(() => [diagram.id, null])
+        )
+      );
+      setDiagramMedia(Object.fromEntries(mediaEntries));
+    } catch {
+      setDiagrams([]);
+      setDiagramMedia({});
+    }
+  };
+
   useEffect(() => {
     loadMemoryMedia(selectedId);
+    loadDiagrams(selectedId);
     setGenerateErrors({});
     setUploadErrors({});
     setBulkImageNotice("");
+    setDiagramGenerateErrors({});
+    setDiagramUploadErrors({});
   }, [selectedId]);
 
   const handleGenerateImage = async (sectionKey) => {
@@ -942,6 +985,39 @@ export const AdminAssessmentWorkbenchPage = () => {
     }
   };
 
+  const handleGenerateDiagramImage = async (diagramId) => {
+    setDiagramGenerateBusyKey(diagramId);
+    setDiagramGenerateErrors((current) => ({ ...current, [diagramId]: "" }));
+    try {
+      const result = await generateDiagramImage(diagramId);
+      setDiagramMedia((current) => ({ ...current, [diagramId]: result }));
+    } catch (generateError) {
+      setDiagramGenerateErrors((current) => ({
+        ...current,
+        [diagramId]: generateError.message || "Failed to generate image.",
+      }));
+    } finally {
+      setDiagramGenerateBusyKey("");
+    }
+  };
+
+  const handleUploadDiagramMedia = async (diagramId, file) => {
+    setDiagramUploadBusyKey(diagramId);
+    setDiagramUploadErrors((current) => ({ ...current, [diagramId]: "" }));
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const result = await uploadDiagramMedia(diagramId, dataUrl, file.name);
+      setDiagramMedia((current) => ({ ...current, [diagramId]: result }));
+    } catch (uploadError) {
+      setDiagramUploadErrors((current) => ({
+        ...current,
+        [diagramId]: uploadError.message || "Failed to upload file.",
+      }));
+    } finally {
+      setDiagramUploadBusyKey("");
+    }
+  };
+
   const searchResults = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) {
@@ -994,6 +1070,31 @@ export const AdminAssessmentWorkbenchPage = () => {
               )}
             />
           </WorkbenchCard>
+          {diagrams.length > 0 && (
+            <WorkbenchCard title="Diagrams (shared by this unit's source section)">
+              <div className="admin-workbench-stack">
+                {diagrams.map((diagram) => (
+                  <MemoryHookMediaCard
+                    key={diagram.id}
+                    title={diagram.diagramName}
+                    sectionKey={diagram.id}
+                    mediaType="image"
+                    canGenerate
+                    media={diagramMedia[diagram.id]}
+                    onGenerate={handleGenerateDiagramImage}
+                    generateBusy={diagramGenerateBusyKey === diagram.id}
+                    generateError={diagramGenerateErrors[diagram.id]}
+                    onUpload={handleUploadDiagramMedia}
+                    uploadBusy={diagramUploadBusyKey === diagram.id}
+                    uploadError={diagramUploadErrors[diagram.id]}
+                  >
+                    <p>{diagram.purpose || "No purpose recorded."}</p>
+                    <ChipList items={diagram.labels} />
+                  </MemoryHookMediaCard>
+                ))}
+              </div>
+            </WorkbenchCard>
+          )}
         </div>
       );
     }
@@ -1354,6 +1455,7 @@ export const AdminAssessmentWorkbenchPage = () => {
                       {summary.estimatedTime ? <span>{summary.estimatedTime}s</span> : null}
                     </div>
                     <p className="admin-student-question">{summary.text || "Question text pending."}</p>
+                    <MathPreview text={summary.text || ""} />
 
                     {interactionType === "ordering" && orderingSequence.length > 0 ? (
                       <ol className="admin-student-sequence-list">
@@ -1400,7 +1502,10 @@ export const AdminAssessmentWorkbenchPage = () => {
                               }
                             >
                               <strong>{optionKey}</strong>
-                              <span>{option.text || "Option text pending."}</span>
+                              <span>
+                                {option.text || "Option text pending."}
+                                <MathPreview text={option.text || ""} />
+                              </span>
                             </button>
                           );
                         })}

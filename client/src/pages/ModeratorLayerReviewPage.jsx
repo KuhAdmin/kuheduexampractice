@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getModerationTaskDetail, submitModeratorDecision } from "../api/client";
+import { MathPreview } from "../components/MathPreview";
 
 // Renders a per-layer honest completeness signal (real counts of what's
 // present, not a fabricated quality percentage) plus the actual content, so a
@@ -20,6 +21,7 @@ const renderUnitContent = (layerNumber, content) => {
           {knowledge.context_summary ? "present" : "missing"}
         </p>
         <p>{knowledge.context_summary}</p>
+        <MathPreview text={knowledge.context_summary || ""} />
         {knowledge.core_concepts?.length > 0 && (
           <ul>
             {knowledge.core_concepts.map((concept) => (
@@ -39,6 +41,12 @@ const renderUnitContent = (layerNumber, content) => {
         <p className="admin-bulk-pipeline-hint">
           {presentCount}/{fields.length} memory fields present · {content.retrievalCues?.length || 0} retrieval cues
         </p>
+        {content.formula && (
+          <p>
+            <strong>Formula:</strong> {content.formula}
+            <MathPreview text={content.formula} />
+          </p>
+        )}
         {content.story && <p><strong>Story:</strong> {content.story}</p>}
         {content.analogy && <p><strong>Analogy:</strong> {content.analogy}</p>}
         {content.memoryTrick && <p><strong>Memory trick:</strong> {content.memoryTrick}</p>}
@@ -81,6 +89,10 @@ const renderUnitContent = (layerNumber, content) => {
         {items.map((item) => (
           <div key={item.item_id} className="moderation-item-card">
             <strong>{item.question || "(no question text)"}</strong>
+            <MathPreview text={item.question || ""} />
+            {item.diagram_instruction && (
+              <p className="student-diagram-instruction">{item.diagram_instruction}</p>
+            )}
             {item.interaction_type === "ordering" && item.interaction_data?.sequence?.length > 0 ? (
               <ol>
                 {item.interaction_data.sequence.map((value, index) => (
@@ -103,6 +115,7 @@ const renderUnitContent = (layerNumber, content) => {
                   {item.options.map((option) => (
                     <li key={option} className={option === item.correct_answer ? "is-correct" : ""}>
                       {option}
+                      <MathPreview text={option} />
                     </li>
                   ))}
                 </ul>
@@ -121,8 +134,18 @@ const renderUnitContent = (layerNumber, content) => {
           Explanation: {content.conceptExplanation ? "present" : "missing"} · Distractors:{" "}
           {content.distractorAnalysis?.length || 0} · Hints: {content.progressiveHints?.length || 0}
         </p>
-        {content.conceptExplanation && <p>{content.conceptExplanation}</p>}
-        {content.correctAnswerReasoning && <p><strong>Why correct:</strong> {content.correctAnswerReasoning}</p>}
+        {content.conceptExplanation && (
+          <>
+            <p>{content.conceptExplanation}</p>
+            <MathPreview text={content.conceptExplanation} />
+          </>
+        )}
+        {content.correctAnswerReasoning && (
+          <>
+            <p><strong>Why correct:</strong> {content.correctAnswerReasoning}</p>
+            <MathPreview text={content.correctAnswerReasoning} />
+          </>
+        )}
       </>
     );
   }

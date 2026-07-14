@@ -1,15 +1,22 @@
 import {
   abortAssessmentStudioPipeline,
+  addSourceSectionImage,
   deleteAssessmentStudioPipelineRun,
   getAssessmentStudioPipelineConcurrency,
   getAssessmentStudioPipelineNavigator,
   getAssessmentStudioPipelineStatus,
   getAssessmentStudioPipelineStatusBatch,
+  getSourceDocumentPdf,
+  getSourceSectionDraft,
   listAssessmentStudioLayerVersions,
   listCompletedAssessmentStudioRuns,
+  removeSourceSectionImage,
   rerunAssessmentStudioPipelineLayer,
+  saveSourceDocumentPdf,
+  saveSourceSectionDraft,
   selectAssessmentStudioLayerVersion,
   startAssessmentStudioPipeline,
+  updateSourceSection,
 } from "../services/assessmentStudioService.js";
 import {
   exportAssessmentStudioAuditText,
@@ -23,10 +30,116 @@ import {
   uploadMemoryHookMedia,
 } from "../services/memoryHookImageService.js";
 import {
+  generateDiagramImage,
+  getDiagramMedia,
+  getDiagramsForAssessmentUnit,
+  uploadDiagramMedia,
+} from "../services/diagramImageService.js";
+import {
   extractChapterExerciseQuestions,
   listPendingChapterExerciseQuestions,
   reviewChapterExerciseQuestion,
 } from "../services/chapterExerciseService.js";
+
+export const saveSourceSectionDraftHandler = async (req, res, next) => {
+  try {
+    const result = await saveSourceSectionDraft({ payload: req.body, userId: req.user?.id || null });
+    return res.json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const getSourceSectionDraftHandler = async (req, res, next) => {
+  try {
+    const result = await getSourceSectionDraft(req.params.sourceSectionId);
+    if (!result) {
+      return res.status(404).json({ message: "Section not found." });
+    }
+    return res.json(result);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const updateSourceSectionHandler = async (req, res, next) => {
+  try {
+    await updateSourceSection({
+      sourceSectionId: req.params.sourceSectionId,
+      adminNotes: req.body?.adminNotes,
+      sectionOcrText: req.body?.sectionOcrText,
+    });
+    return res.status(204).send();
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const saveSourceDocumentPdfHandler = async (req, res, next) => {
+  try {
+    await saveSourceDocumentPdf({
+      sourceDocumentId: req.params.sourceDocumentId,
+      pdfDataUrl: req.body?.pdfDataUrl,
+      fileName: req.body?.fileName || null,
+      pageCount: req.body?.pageCount,
+    });
+    return res.status(204).send();
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const getSourceDocumentPdfHandler = async (req, res, next) => {
+  try {
+    const result = await getSourceDocumentPdf(req.params.sourceDocumentId);
+    return res.json({ pdf: result });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const addSourceSectionImageHandler = async (req, res, next) => {
+  try {
+    const result = await addSourceSectionImage({
+      sourceSectionId: req.params.sourceSectionId,
+      mediaData: req.body?.mediaData,
+      mimeType: req.body?.mimeType,
+      fileName: req.body?.fileName,
+      sourcePageNumber: req.body?.sourcePageNumber,
+      cropRegion: req.body?.cropRegion,
+    });
+    return res.status(201).json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const removeSourceSectionImageHandler = async (req, res, next) => {
+  try {
+    const removed = await removeSourceSectionImage({
+      sourceSectionId: req.params.sourceSectionId,
+      imageId: req.params.imageId,
+    });
+    if (!removed) {
+      return res.status(404).json({ message: "Image not found." });
+    }
+    return res.status(204).send();
+  } catch (error) {
+    return next(error);
+  }
+};
 
 export const runAssessmentStudioPipeline = async (req, res, next) => {
   try {
@@ -255,6 +368,57 @@ export const generateAllMemoryHookImagesHandler = async (req, res, next) => {
   try {
     const result = await generateAllMemoryHookImages({
       assessmentUnitId: req.params.assessmentUnitId,
+      userId: req.user?.id || null,
+      modelId: req.body?.modelId || null,
+    });
+    return res.json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const getAssessmentUnitDiagramsHandler = async (req, res, next) => {
+  try {
+    const result = await getDiagramsForAssessmentUnit(req.params.assessmentUnitId);
+    return res.json({ diagrams: result });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getDiagramMediaHandler = async (req, res, next) => {
+  try {
+    const result = await getDiagramMedia(req.params.diagramId);
+    return res.json({ diagramId: req.params.diagramId, media: result });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const uploadDiagramMediaHandler = async (req, res, next) => {
+  try {
+    const result = await uploadDiagramMedia({
+      layer1DiagramId: req.params.diagramId,
+      dataUrl: req.body?.dataUrl,
+      fileName: req.body?.fileName || null,
+      userId: req.user?.id || null,
+    });
+    return res.json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const generateDiagramImageHandler = async (req, res, next) => {
+  try {
+    const result = await generateDiagramImage({
+      layer1DiagramId: req.params.diagramId,
       userId: req.user?.id || null,
       modelId: req.body?.modelId || null,
     });

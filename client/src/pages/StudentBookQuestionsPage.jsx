@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
-import { StudentCameraCapture } from "../components/StudentCameraCapture";
-import { getBookQuestions, ocrHandwrittenNote, submitBookQuestionResponse } from "../api/client";
+import { extractSourcePageImages, StudentMultiPageAnswerInput } from "../components/StudentMultiPageAnswerInput";
+import { MathPreview } from "../components/MathPreview";
+import { getBookQuestions, submitBookQuestionResponse } from "../api/client";
 
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
@@ -27,20 +28,6 @@ const ChevronIcon = ({ direction }) => (
       strokeLinejoin="round"
       strokeWidth="1.9"
     />
-  </svg>
-);
-
-const CameraIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path
-      d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l.9-1.5A1.5 1.5 0 0 1 9.7 4.75h4.6a1.5 1.5 0 0 1 1.3.75L16.5 7h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-9Z"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.7"
-    />
-    <circle cx="12" cy="12.5" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.7" />
   </svg>
 );
 
@@ -83,12 +70,9 @@ export const StudentBookQuestionsPage = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [editingIds, setEditingIds] = useState(() => new Set());
   const [draft, setDraft] = useState("");
+  const [sourcePageImages, setSourcePageImages] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrApplied, setOcrApplied] = useState(false);
-  const [ocrError, setOcrError] = useState("");
-  const [cameraOpen, setCameraOpen] = useState(false);
   const swipeStartX = useRef(null);
 
   useEffect(() => {
@@ -121,11 +105,10 @@ export const StudentBookQuestionsPage = () => {
 
   useEffect(() => {
     if (!activeQuestion) return;
-    setOcrApplied(false);
-    setOcrError("");
     setSubmitError("");
     if (activeQuestion.isCorrect === null) {
       setDraft(initialDraftForQuestion(activeQuestion));
+      setSourcePageImages([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeQuestion?.id]);
@@ -153,6 +136,7 @@ export const StudentBookQuestionsPage = () => {
   const handleAnswerAgain = () => {
     setEditingIds((current) => new Set(current).add(activeQuestion.id));
     setDraft(initialDraftForQuestion(activeQuestion));
+    setSourcePageImages([]);
     setSubmitError("");
   };
 
@@ -172,25 +156,6 @@ export const StudentBookQuestionsPage = () => {
         armedLeft: null,
       };
     });
-  };
-
-  const handleCapturedPhoto = async (imageDataUrl) => {
-    setOcrError("");
-    setOcrApplied(false);
-    setOcrLoading(true);
-    try {
-      const result = await ocrHandwrittenNote(imageDataUrl);
-      if (result?.text) {
-        setDraft(result.text);
-        setOcrApplied(true);
-      } else {
-        setOcrError("We couldn't find any text in that photo. Try a clearer photo, or type your answer instead.");
-      }
-    } catch (ocrFailure) {
-      setOcrError(ocrFailure.message || "Failed to read that photo. Please try again or type your answer.");
-    } finally {
-      setOcrLoading(false);
-    }
   };
 
   const isReadyToSubmit = () => {
@@ -217,7 +182,12 @@ export const StudentBookQuestionsPage = () => {
     setSubmitting(true);
     setSubmitError("");
     try {
-      const result = await submitBookQuestionResponse(chapterNumber, activeQuestion.id, serializedAnswer);
+      const result = await submitBookQuestionResponse(
+        chapterNumber,
+        activeQuestion.id,
+        serializedAnswer,
+        sourcePageImages
+      );
       const questionId = activeQuestion.id;
       setQuestions((current) =>
         current.map((question) =>
@@ -274,7 +244,10 @@ export const StudentBookQuestionsPage = () => {
             onClick={() => isEditing && setDraft(option)}
           >
             <span className="student-concept-practice-badge">{optionId}</span>
-            <span className="student-concept-practice-text">{option}</span>
+            <span className="student-concept-practice-text">
+              {option}
+              <MathPreview text={option} />
+            </span>
             <span className="student-concept-practice-radio" aria-hidden="true" />
           </button>
         );
@@ -284,47 +257,19 @@ export const StudentBookQuestionsPage = () => {
 
   const renderFreeText = () => (
     <div className="student-free-text-panel">
-      {isEditing && (
-        <button
-          type="button"
-          className={`student-ocr-upload-button ${ocrLoading ? "is-disabled" : ""}`}
-          disabled={ocrLoading}
-          onClick={() => setCameraOpen(true)}
-        >
-          <CameraIcon />
-          <span>{ocrLoading ? "Reading your photo..." : "Capture Photo"}</span>
-        </button>
-      )}
-
-      {cameraOpen && (
-        <StudentCameraCapture
-          onCapture={(dataUrl) => {
-            setCameraOpen(false);
-            handleCapturedPhoto(dataUrl);
-          }}
-          onCancel={() => setCameraOpen(false)}
-        />
-      )}
-
-      <textarea
-        rows={8}
-        className={`student-assessment-text-input ${
-          !isEditing ? (activeQuestion.isCorrect ? "is-correct" : "is-incorrect") : ""
-        }`}
-        placeholder="Type your answer, or upload a photo of your handwritten answer above"
+      <StudentMultiPageAnswerInput
         value={isEditing ? draft : activeQuestion.studentAnswer || ""}
-        onChange={(event) => isEditing && setDraft(event.target.value)}
-        readOnly={!isEditing}
+        onChange={(text, pages) => {
+          if (!isEditing) return;
+          setDraft(text);
+          setSourcePageImages(extractSourcePageImages(pages));
+        }}
+        resetKey={`${activeQuestion?.id}:${isEditing}`}
         disabled={!isEditing}
+        statusClassName={!isEditing ? (activeQuestion.isCorrect ? "is-correct" : "is-incorrect") : ""}
+        placeholder="Type your answer, or capture a photo of your handwritten answer above"
+        rows={8}
       />
-
-      {ocrApplied && isEditing && (
-        <p className="student-ocr-hint">
-          We've filled this in from your photo — please check it reads correctly and fix anything before
-          submitting.
-        </p>
-      )}
-      {ocrError && isEditing && <p className="error-text">{ocrError}</p>}
     </div>
   );
 
@@ -461,6 +406,7 @@ export const StudentBookQuestionsPage = () => {
             >
               <span>{activeQuestion.questionNumber ? `Q${activeQuestion.questionNumber}` : "Question"}</span>
               <h2>{activeQuestion.questionText}</h2>
+              <MathPreview text={activeQuestion.questionText} />
             </article>
 
             {renderInteraction()}
@@ -484,11 +430,19 @@ export const StudentBookQuestionsPage = () => {
                 >
                   <strong>{activeQuestion.isCorrect ? "Correct!" : "Not quite"}</strong>
                   {activeQuestion.correctAnswer && !activeQuestion.isCorrect && (
-                    <p className="student-instant-feedback-answer">
-                      Correct answer: {activeQuestion.correctAnswer}
-                    </p>
+                    <>
+                      <p className="student-instant-feedback-answer">
+                        Correct answer: {activeQuestion.correctAnswer}
+                      </p>
+                      <MathPreview text={activeQuestion.correctAnswer} />
+                    </>
                   )}
-                  {activeQuestion.feedback && <p>{activeQuestion.feedback}</p>}
+                  {activeQuestion.feedback && (
+                    <>
+                      <p>{activeQuestion.feedback}</p>
+                      <MathPreview text={activeQuestion.feedback} />
+                    </>
+                  )}
                 </div>
                 <button type="button" className="ghost-button" onClick={handleAnswerAgain}>
                   Answer Again

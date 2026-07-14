@@ -9,6 +9,7 @@ import { BrowserRouter } from "react-router-dom";
 import { registerSW } from "virtual:pwa-register";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
+import "katex/dist/katex.min.css";
 import "./styles/index.css";
 
 // No-op during `npm run dev` (devOptions.enabled: false in vite.config.js);

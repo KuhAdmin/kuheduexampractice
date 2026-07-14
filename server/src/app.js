@@ -12,6 +12,12 @@ import catalogRoutes from "./routes/catalogRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import adminUserRoutes from "./routes/adminUserRoutes.js";
+import adminExamTypeRoutes from "./routes/adminExamTypeRoutes.js";
+import adminExamGoalRoutes from "./routes/adminExamGoalRoutes.js";
+import adminLevelRoutes from "./routes/adminLevelRoutes.js";
+import adminSubjectRoutes from "./routes/adminSubjectRoutes.js";
+import adminBookRoutes from "./routes/adminBookRoutes.js";
+import adminDemoRoutes from "./routes/adminDemoRoutes.js";
 import moderationRoutes from "./routes/moderationRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -76,6 +82,12 @@ export const createApp = () => {
   app.use("/api/user", userRoutes);
   app.use("/api/settings", settingsRoutes);
   app.use("/api/admin/users", adminUserRoutes);
+  app.use("/api/admin/exam-types", adminExamTypeRoutes);
+  app.use("/api/admin/exam-goals", adminExamGoalRoutes);
+  app.use("/api/admin/levels", adminLevelRoutes);
+  app.use("/api/admin/subjects", adminSubjectRoutes);
+  app.use("/api/admin/books", adminBookRoutes);
+  app.use("/api/admin/ai-demo", adminDemoRoutes);
   app.use("/api/moderation", moderationRoutes);
 
   const clientDist = path.resolve(__dirname, "../../client/dist");

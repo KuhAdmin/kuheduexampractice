@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
-import { getStudentDiagrams } from "../api/client";
+import { StudentMediaViewer } from "../components/StudentMediaViewer";
+import { getStudentDiagramMedia, getStudentDiagrams } from "../api/client";
 
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
@@ -16,16 +17,18 @@ const BackIcon = () => (
   </svg>
 );
 
-// The pipeline extracts diagram structure (name, purpose, labeled parts, which
-// labels are commonly tested) but no image asset or label coordinates, so this
-// renders as a labeled-parts reference card rather than a clickable image
-// overlay. Each card is a flip card (same animation as StudentFlashcardsPage)
-// posing the diagram as a recall prompt on the front, with the labeled-parts
-// list revealed on the back -- active recall instead of just reading a list.
+// The pipeline extracts diagram structure (name, purpose, labeled parts,
+// which labels are commonly tested) with no coordinate/label-position data,
+// so tapping a labeled part still isn't a clickable image overlay -- but a
+// generated/uploaded picture (when one exists) now shows on the front face,
+// turning the flip card from "read a name, recall the labels" into "see the
+// actual diagram, recall the labels" (same flip-card animation as
+// StudentFlashcardsPage; labeled parts still revealed on the back).
 export const StudentDiagramsPage = () => {
   const navigate = useNavigate();
   const { chapterId: chapterNumber, sectionId: sourceSectionId } = useParams();
   const [diagrams, setDiagrams] = useState([]);
+  const [mediaByDiagramId, setMediaByDiagramId] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [flippedNames, setFlippedNames] = useState(() => new Set());
@@ -35,10 +38,22 @@ export const StudentDiagramsPage = () => {
     setLoading(true);
     setError("");
     setFlippedNames(new Set());
+    setMediaByDiagramId({});
 
     getStudentDiagrams(sourceSectionId)
-      .then((result) => {
-        if (!cancelled) setDiagrams(result?.diagrams || []);
+      .then(async (result) => {
+        if (cancelled) return;
+        const nextDiagrams = result?.diagrams || [];
+        setDiagrams(nextDiagrams);
+
+        const mediaEntries = await Promise.all(
+          nextDiagrams.map((diagram) =>
+            getStudentDiagramMedia(diagram.diagramId)
+              .then((mediaResult) => [diagram.diagramId, mediaResult?.media || null])
+              .catch(() => [diagram.diagramId, null])
+          )
+        );
+        if (!cancelled) setMediaByDiagramId(Object.fromEntries(mediaEntries));
       })
       .catch((fetchError) => {
         if (!cancelled) setError(fetchError.message || "Failed to load diagrams.");
@@ -88,8 +103,9 @@ export const StudentDiagramsPage = () => {
           <div className="student-diagrams-list">
             {diagrams.map((diagram) => {
               const isFlipped = flippedNames.has(diagram.diagramName);
+              const media = mediaByDiagramId[diagram.diagramId];
               return (
-                <div className="student-flashcard-viewport" key={diagram.diagramName}>
+                <div className="student-flashcard-viewport" key={diagram.diagramId || diagram.diagramName}>
                   <button
                     type="button"
                     className={`student-flashcard student-diagram-flip-card ${isFlipped ? "is-flipped" : ""}`}
@@ -99,6 +115,13 @@ export const StudentDiagramsPage = () => {
                     <div className="student-flashcard-inner">
                       <div className="student-flashcard-face student-flashcard-face-front">
                         <span className="student-flashcard-label">Diagram</span>
+                        {media && (
+                          <StudentMediaViewer
+                            mediaType="image"
+                            src={media.mediaData}
+                            alt={`${diagram.diagramName} illustration`}
+                          />
+                        )}
                         <p className="student-flashcard-text">{diagram.diagramName}</p>
                         {diagram.purpose && <p className="student-diagram-purpose">{diagram.purpose}</p>}
                         <span className="student-flashcard-hint">

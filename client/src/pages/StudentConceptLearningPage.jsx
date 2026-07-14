@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentMediaViewer } from "../components/StudentMediaViewer";
 import { StudentMicroActivityPanel } from "../components/StudentMicroActivityPanel";
+import { MathPreview } from "../components/MathPreview";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getStudentConceptCard, getStudentConceptSectionMedia, getStudentSections } from "../api/client";
 
@@ -238,9 +239,10 @@ const buildLearnSlides = (card) => {
   const slides = [];
 
   const introParagraphs = [card.contextSummary, card.learningObjective].filter(Boolean);
-  if (introParagraphs.length || card.coreConcepts?.length) {
+  if (introParagraphs.length || card.coreConcepts?.length || card.formula) {
     slides.push({
       heading: card.primaryConcept,
+      formula: card.formula,
       body: introParagraphs,
       list: card.coreConcepts,
     });
@@ -412,8 +414,12 @@ export const StudentConceptLearningPage = () => {
       <section className="student-concept-learning-card">
         <div className="student-concept-learning-copy">
           <h2>{activeSlide?.heading}</h2>
+          {activeSlide?.formula && <MathPreview text={activeSlide.formula} />}
           {(activeSlide?.body || []).map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
+            <div key={paragraph}>
+              <p>{paragraph}</p>
+              <MathPreview text={paragraph} />
+            </div>
           ))}
           {activeSlide?.list?.length > 0 && (
             <ul className="student-concept-learning-list">
@@ -470,7 +476,12 @@ export const StudentConceptLearningPage = () => {
       const misconceptionEntries = card.misconceptions?.length ? card.misconceptions : [];
       return (
         <div className="student-concept-step-copy is-full-width">
-          {card.misconceptionAlert && <p>{card.misconceptionAlert}</p>}
+          {card.misconceptionAlert && (
+            <>
+              <p>{card.misconceptionAlert}</p>
+              <MathPreview text={card.misconceptionAlert} />
+            </>
+          )}
           {misconceptionEntries.length > 0 && (
             <ul className="student-concept-learning-list">
               {misconceptionEntries.map((entry, index) => (
@@ -571,6 +582,7 @@ export const StudentConceptLearningPage = () => {
         <div className="student-concept-step-copy">
           <h3>{step.subtitle}</h3>
           <p>{text}</p>
+          <MathPreview text={text} />
         </div>
       </div>
     );
@@ -653,6 +665,7 @@ export const StudentConceptLearningPage = () => {
               />
             )}
             <p>{card.analogy}</p>
+            <MathPreview text={card.analogy} />
           </ExploreSection>
         )}
 
@@ -673,6 +686,7 @@ export const StudentConceptLearningPage = () => {
               />
             )}
             <p>{card.story}</p>
+            <MathPreview text={card.story} />
           </ExploreSection>
         )}
 
@@ -693,6 +707,7 @@ export const StudentConceptLearningPage = () => {
               />
             )}
             <p>{card.visualHook}</p>
+            <MathPreview text={card.visualHook} />
           </ExploreSection>
         )}
 
@@ -713,6 +728,7 @@ export const StudentConceptLearningPage = () => {
               />
             )}
             <p>{card.realWorldConnection}</p>
+            <MathPreview text={card.realWorldConnection} />
           </ExploreSection>
         )}
 
@@ -733,6 +749,7 @@ export const StudentConceptLearningPage = () => {
               />
             )}
             <p>{card.curiosityHook}</p>
+            <MathPreview text={card.curiosityHook} />
           </ExploreSection>
         )}
 
@@ -773,6 +790,7 @@ export const StudentConceptLearningPage = () => {
               />
             )}
             <p>{card.memoryTrick}</p>
+            <MathPreview text={card.memoryTrick} />
           </ExploreSection>
         )}
 
@@ -784,7 +802,12 @@ export const StudentConceptLearningPage = () => {
             isExpanded={isExpanded("misconceptions")}
             onToggle={toggleSection}
           >
-            {card.misconceptionAlert && <p>{card.misconceptionAlert}</p>}
+            {card.misconceptionAlert && (
+              <>
+                <p>{card.misconceptionAlert}</p>
+                <MathPreview text={card.misconceptionAlert} />
+              </>
+            )}
             {misconceptionEntries.length > 0 && (
               <ul className="student-concept-learning-list">
                 {misconceptionEntries.map((entry, index) => (
