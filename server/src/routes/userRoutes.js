@@ -48,6 +48,7 @@ import {
   postConceptPracticeQuestionCapture,
 } from "../controllers/conceptPracticeCaptureController.js";
 import { postEinsteinChallenge, postEinsteinRecognize } from "../controllers/einsteinModeController.js";
+import { postVivaFeedback, postVivaQuestions } from "../controllers/vivaController.js";
 
 const router = Router();
 
@@ -74,6 +75,8 @@ router.post("/concepts/:assessmentUnitId/practice-capture/answer", postConceptPr
 router.post("/concepts/:assessmentUnitId/practice-capture/grade", postConceptPracticeGrade);
 router.post("/concepts/:assessmentUnitId/einstein-mode/challenge", postEinsteinChallenge);
 router.post("/concepts/:assessmentUnitId/einstein-mode/recognize", postEinsteinRecognize);
+router.post("/concepts/:assessmentUnitId/viva/questions", postVivaQuestions);
+router.post("/concepts/:assessmentUnitId/viva/feedback", postVivaFeedback);
 router.get("/chapters/:chapterNumber/book-questions", getStudentBookQuestions);
 router.post("/chapters/:chapterNumber/book-questions/:questionId/respond", submitStudentBookQuestionResponse);
 

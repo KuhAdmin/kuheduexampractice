@@ -86,11 +86,13 @@ export const StudentConceptPracticeCapture = ({ assessmentUnitId }) => {
       </header>
 
       {state.stage === "intro" && (
-        <div className="admin-ai-demo-actions">
-          <button type="button" className="primary-button" onClick={() => set({ stage: "question-camera" })}>
-            Capture Question
-          </button>
-        </div>
+        <button
+          type="button"
+          className="student-concept-practice-capture-cta"
+          onClick={() => set({ stage: "question-camera" })}
+        >
+          Capture Question
+        </button>
       )}
 
       {state.stage === "question-camera" && (

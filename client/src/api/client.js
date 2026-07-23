@@ -150,6 +150,15 @@ export const submitEinsteinRecognition = async (assessmentUnitId, { targetObject
     body: JSON.stringify({ targetObject, imageDataUrl }),
   });
 
+export const getVivaQuestions = async (assessmentUnitId) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/viva/questions`, { method: "POST" });
+
+export const getVivaFeedback = async (assessmentUnitId, { question, answerText }) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/viva/feedback`, {
+    method: "POST",
+    body: JSON.stringify({ question, answerText }),
+  });
+
 export const getStudentMindMap = async (sourceSectionId) =>
   apiRequest(`/user/sections/${sourceSectionId}/mind-map`);
 

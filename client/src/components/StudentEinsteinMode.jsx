@@ -84,7 +84,7 @@ export const StudentEinsteinMode = ({ assessmentUnitId }) => {
             <strong>Q:</strong> Identify a random concept-related object: <em>{state.object}</em>
           </p>
           <div className="admin-ai-demo-actions">
-            <button type="button" className="primary-button" onClick={() => set({ stage: "camera" })}>
+            <button type="button" className="student-einstein-mode-cta" onClick={() => set({ stage: "camera" })}>
               Open Camera
             </button>
             <button type="button" className="ghost-button" onClick={loadChallenge}>

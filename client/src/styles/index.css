@@ -5042,7 +5042,7 @@ a {
   font-size: 0.85rem;
 }
 
-/* Beneath AI Tutor on the concept Explore tab -- same card treatment, own
+/* Beneath AI Tutor on the concept AI Tutor tab -- same card treatment, own
    accent color to read as a distinct feature. Step content inside reuses
    .admin-ai-demo-* / .admin-crop-editor / .modal-panel etc. verbatim (those
    rules aren't actually admin-scoped, just admin-demo-authored). */
@@ -5054,6 +5054,42 @@ a {
   border-radius: 20px;
   background: #f6faf7;
   border: 1px solid rgba(44, 110, 73, 0.2);
+}
+
+/* Shared "featured CTA" look, matching .student-ai-tutor-coach-button --
+   a compact tinted pill instead of the app-wide heavy .primary-button, used
+   for the one headline action in each AI Tutor sub-section. */
+.student-concept-practice-capture-cta,
+.student-einstein-mode-cta,
+.student-viva-mode-cta {
+  justify-self: start;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.student-concept-practice-capture-cta:disabled,
+.student-einstein-mode-cta:disabled,
+.student-viva-mode-cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.student-concept-practice-capture-cta {
+  background: rgba(44, 110, 73, 0.15);
+  color: #1f6b3f;
+}
+
+.student-einstein-mode-cta {
+  background: rgba(200, 76, 9, 0.15);
+  color: var(--brand-dark);
+}
+
+.student-viva-mode-cta {
+  background: rgba(20, 108, 148, 0.15);
+  color: var(--teal);
 }
 
 .student-concept-practice-capture-blocked {
@@ -5080,6 +5116,89 @@ a {
 .student-einstein-mode-prompt em {
   font-style: normal;
   font-weight: 700;
+}
+
+/* Viva -- bottom-most section on the concept Explore tab. */
+.student-viva-mode {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #f2f7fd;
+  border: 1px solid rgba(20, 108, 148, 0.2);
+}
+
+.student-viva-progress {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted, #52606d);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.student-viva-question {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.student-viva-listening {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  text-align: center;
+}
+
+.student-viva-countdown {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(20, 108, 148, 0.12);
+  color: var(--teal, #146c94);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.student-viva-manual-form {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.student-viva-manual-form input {
+  flex: 1;
+  min-width: 0;
+}
+
+.student-viva-transcript {
+  margin: 0;
+  color: var(--muted, #52606d);
+}
+
+.student-viva-summary {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.student-viva-summary li {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.student-viva-summary em {
+  font-style: normal;
+  color: var(--muted, #52606d);
 }
 
 .student-ai-tutor-coach-button {

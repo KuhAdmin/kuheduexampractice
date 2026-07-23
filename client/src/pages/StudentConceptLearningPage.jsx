@@ -6,6 +6,7 @@ import { StudentMicroActivityPanel } from "../components/StudentMicroActivityPan
 import { StudentAiTutorPanel } from "../components/StudentAiTutorPanel";
 import { StudentConceptPracticeCapture } from "../components/StudentConceptPracticeCapture";
 import { StudentEinsteinMode } from "../components/StudentEinsteinMode";
+import { StudentVivaMode } from "../components/StudentVivaMode";
 import { MathPreview } from "../components/MathPreview";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getStudentConceptCard, getStudentConceptSectionMedia, getStudentSections } from "../api/client";
@@ -153,7 +154,7 @@ const ConceptLearningIcon = ({ type, className = "" }) => {
   );
 };
 
-const TABS = ["Learn", "Explore", "Practice", "Notes"];
+const TABS = ["Learn", "Explore", "Practice", "AI Tutor"];
 
 // Ordered, real fields only -- mirrors exactly what renderExploreMode's
 // accordion already checks for presence, just as a sequence instead of a
@@ -1018,19 +1019,19 @@ export const StudentConceptLearningPage = () => {
                       </div>
                     </section>
                   )
+                ) : activeTab === "AI Tutor" ? (
+                  <>
+                    <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
+                    <StudentConceptPracticeCapture assessmentUnitId={assessmentUnitId} />
+                    <StudentEinsteinMode assessmentUnitId={assessmentUnitId} />
+                    <StudentVivaMode assessmentUnitId={assessmentUnitId} />
+                  </>
                 ) : (
                   renderComingSoon(activeTab)
                 )}
               </div>
               {activeTab === "Explore" && exploreSteps.length > 0 && renderExploreRail()}
             </div>
-            {activeTab === "Explore" && card && (
-              <>
-                <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
-                <StudentConceptPracticeCapture assessmentUnitId={assessmentUnitId} />
-                <StudentEinsteinMode assessmentUnitId={assessmentUnitId} />
-              </>
-            )}
             </>
           )}
         </div>
@@ -1072,15 +1073,13 @@ export const StudentConceptLearningPage = () => {
         ) : activeTab === "Learn" ? (
           renderLearnMode()
         ) : activeTab === "Explore" ? (
+          renderExploreMode()
+        ) : activeTab === "AI Tutor" ? (
           <>
-            {renderExploreMode()}
-            {card && (
-              <>
-                <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
-                <StudentConceptPracticeCapture assessmentUnitId={assessmentUnitId} />
-                <StudentEinsteinMode assessmentUnitId={assessmentUnitId} />
-              </>
-            )}
+            <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
+            <StudentConceptPracticeCapture assessmentUnitId={assessmentUnitId} />
+            <StudentEinsteinMode assessmentUnitId={assessmentUnitId} />
+            <StudentVivaMode assessmentUnitId={assessmentUnitId} />
           </>
         ) : (
           renderComingSoon(activeTab)
