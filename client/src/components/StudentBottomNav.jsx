@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 export const navItems = [
   { id: "home", label: "Home", icon: "home", path: "/dashboard" },
   { id: "chapters", label: "Chapters", icon: "book", path: "/chapters" },
-  { id: "practice", label: "Practice", icon: "spark" },
+  { id: "practice", label: "Practice", icon: "spark", path: "/practice" },
   { id: "assessments", label: "Tests", icon: "clipboard" },
   { id: "profile", label: "Profile", icon: "user", path: "/profile" },
 ];

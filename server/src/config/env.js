@@ -91,12 +91,22 @@ export const env = {
   deepseekApiKey: process.env.DEEPSEEK_API_KEY || "",
   deepseekApiBaseUrl: process.env.DEEPSEEK_API_BASE_URL || "https://api.deepseek.com/v1",
   deepseekModel: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
+  // Grading model for the student concept-practice capture feature
+  // (StudentConceptPracticeCapture) -- deliberately separate from
+  // deepseekModel above so that feature's grading tier can be pinned
+  // independently of whatever the general-purpose DeepSeek default is.
+  deepseekModelPro: process.env.DEEPSEEK_MODEL_PRO || "",
   // Note the .env key is GEMINIAPI_KEY (no underscore before API), not the
   // more conventional GEMINI_API_KEY -- matching the key as it actually
   // exists in .env rather than "fixing" the name and silently breaking it.
   geminiApiKey: process.env.GEMINIAPI_KEY || "",
   geminiApiBaseUrl: process.env.GEMINI_API_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai",
   geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+  // Vision OCR model for the student concept-practice capture feature --
+  // must be a vision-capable Gemini model for this key. Deliberately
+  // separate from geminiModel above (used for other, admin-configurable
+  // OCR/grading calls) so this feature's model is pinned independently.
+  geminiVisionModel: process.env.GEMINI_VISION_MODEL || "",
   // AI Tutor live voice (Gemini Live API) -- reuses geminiApiKey above.
   // GEMINI_VOICE_MODEL must be a bidiGenerateContent-capable model for that
   // specific key (verify live via GET .../v1alpha/models?key=... rather than

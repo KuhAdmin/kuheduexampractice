@@ -123,6 +123,33 @@ export const getConceptTutorVoiceToken = async (assessmentUnitId, mode) =>
 export const getTutorAvatarToken = async () =>
   apiRequest(`/user/tutor/avatar-token`, { method: "POST" });
 
+export const captureConceptPracticeQuestion = async (assessmentUnitId, imageDataUrl) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/practice-capture/question`, {
+    method: "POST",
+    body: JSON.stringify({ imageDataUrl }),
+  });
+
+export const captureConceptPracticeAnswer = async (assessmentUnitId, imageDataUrl) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/practice-capture/answer`, {
+    method: "POST",
+    body: JSON.stringify({ imageDataUrl }),
+  });
+
+export const submitConceptPracticeGrading = async (assessmentUnitId, { questionText, answerText }) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/practice-capture/grade`, {
+    method: "POST",
+    body: JSON.stringify({ questionText, answerText }),
+  });
+
+export const getEinsteinChallenge = async (assessmentUnitId) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/einstein-mode/challenge`, { method: "POST" });
+
+export const submitEinsteinRecognition = async (assessmentUnitId, { targetObject, imageDataUrl }) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/einstein-mode/recognize`, {
+    method: "POST",
+    body: JSON.stringify({ targetObject, imageDataUrl }),
+  });
+
 export const getStudentMindMap = async (sourceSectionId) =>
   apiRequest(`/user/sections/${sourceSectionId}/mind-map`);
 

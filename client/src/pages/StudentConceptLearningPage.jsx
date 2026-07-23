@@ -4,6 +4,8 @@ import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentMediaViewer } from "../components/StudentMediaViewer";
 import { StudentMicroActivityPanel } from "../components/StudentMicroActivityPanel";
 import { StudentAiTutorPanel } from "../components/StudentAiTutorPanel";
+import { StudentConceptPracticeCapture } from "../components/StudentConceptPracticeCapture";
+import { StudentEinsteinMode } from "../components/StudentEinsteinMode";
 import { MathPreview } from "../components/MathPreview";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getStudentConceptCard, getStudentConceptSectionMedia, getStudentSections } from "../api/client";
@@ -1023,7 +1025,11 @@ export const StudentConceptLearningPage = () => {
               {activeTab === "Explore" && exploreSteps.length > 0 && renderExploreRail()}
             </div>
             {activeTab === "Explore" && card && (
-              <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
+              <>
+                <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
+                <StudentConceptPracticeCapture assessmentUnitId={assessmentUnitId} />
+                <StudentEinsteinMode assessmentUnitId={assessmentUnitId} />
+              </>
             )}
             </>
           )}
@@ -1068,7 +1074,13 @@ export const StudentConceptLearningPage = () => {
         ) : activeTab === "Explore" ? (
           <>
             {renderExploreMode()}
-            {card && <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />}
+            {card && (
+              <>
+                <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
+                <StudentConceptPracticeCapture assessmentUnitId={assessmentUnitId} />
+                <StudentEinsteinMode assessmentUnitId={assessmentUnitId} />
+              </>
+            )}
           </>
         ) : (
           renderComingSoon(activeTab)

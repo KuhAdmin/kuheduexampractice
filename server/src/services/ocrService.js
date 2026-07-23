@@ -14,7 +14,7 @@ const OCR_INSTRUCTION =
   'If the page contains a graph, diagram, or figure that cannot be transcribed as text or notation, do not attempt to redraw it -- instead insert a short bracketed description in its place, e.g. [Graph: parabola opening upward, vertex near origin].\n\n' +
   'Schema:\n{\n  "extractedText": ""\n}';
 
-export const extractTextFromHandwrittenImage = async ({ imageDataUrl, subjectCode }) => {
+export const extractTextFromHandwrittenImage = async ({ imageDataUrl, subjectCode, modelId: forcedModelId }) => {
   if (typeof imageDataUrl !== "string" || !imageDataUrl.startsWith("data:image/")) {
     const error = new Error("A valid image is required.");
     error.statusCode = 400;
@@ -30,8 +30,11 @@ export const extractTextFromHandwrittenImage = async ({ imageDataUrl, subjectCod
 
   // Admin-configurable per subject (Admin > Demo Model Settings); falls back
   // to the system default (Hindi/Bengali -> Gemini, else provider default)
-  // when no override has been set for this subject.
-  const { modelId } = await resolveOcrModelForSubject(subjectCode);
+  // when no override has been set for this subject. Callers that need a
+  // specific model regardless of subject/admin config (e.g. the student
+  // concept-practice capture feature, always Gemini Vision) pass modelId
+  // directly and skip this resolution entirely.
+  const { modelId } = forcedModelId ? { modelId: forcedModelId } : await resolveOcrModelForSubject(subjectCode);
 
   const { parsed } = await createStructuredCompletion({
     systemPrompt:

@@ -47,6 +47,7 @@ import { StudentFlashcardsPage } from "./pages/StudentFlashcardsPage";
 import { StudentMemoryBoosterPage } from "./pages/StudentMemoryBoosterPage";
 import { StudentMindMapPage } from "./pages/StudentMindMapPage";
 import { StudentProfilePage } from "./pages/StudentProfilePage";
+import { StudentPracticePage } from "./pages/StudentPracticePage";
 import { StudentSectionDetailPage } from "./pages/StudentSectionDetailPage";
 
 const isStudentOnboardingComplete = (user) => {
@@ -184,6 +185,7 @@ const App = () => {
             element={<StudentProfilePage dashboard={dashboard} user={user} onLogout={handleLogout} />}
           />
           <Route path="/chapters" element={<StudentChaptersPage dashboard={dashboard} user={user} />} />
+          <Route path="/practice" element={<StudentPracticePage />} />
           <Route path="/goals" element={<StudentRemainingConceptsPage />} />
           <Route path="/chapters/:chapterId" element={<StudentChapterDetailPage dashboard={dashboard} />} />
           <Route path="/chapters/:chapterId/book-questions" element={<StudentBookQuestionsPage />} />

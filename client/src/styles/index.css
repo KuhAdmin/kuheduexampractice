@@ -2066,6 +2066,18 @@ a {
   overflow-x: clip;
 }
 
+.student-practice-frame {
+  width: 100%;
+  border: none;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.student-dashboard-phone .student-practice-frame {
+  flex: 1;
+  min-height: 0;
+}
+
 /* ============================================================
    STUDENT RESPONSIVE LAYOUT (tablet/desktop) — UI-refactor-for-non-mobile
    Mobile (<640px): unchanged, uses .student-dashboard-shell/-phone above,
@@ -2104,9 +2116,15 @@ a {
   .student-page.student-page--dashboard,
   .student-page.student-page--chapters,
   .student-page.student-page--memory-booster,
-  .student-page.student-page--goals {
+  .student-page.student-page--goals,
+  .student-page.student-page--practice {
     max-width: none;
     margin: 0;
+  }
+
+  .student-practice-frame {
+    height: calc(100vh - 140px);
+    min-height: 480px;
   }
 
   /* Guaranteed-equal left/right inset for this content, independent of
@@ -5022,6 +5040,46 @@ a {
   margin: 2px 0 0;
   color: #5d6a5d;
   font-size: 0.85rem;
+}
+
+/* Beneath AI Tutor on the concept Explore tab -- same card treatment, own
+   accent color to read as a distinct feature. Step content inside reuses
+   .admin-ai-demo-* / .admin-crop-editor / .modal-panel etc. verbatim (those
+   rules aren't actually admin-scoped, just admin-demo-authored). */
+.student-concept-practice-capture {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #f6faf7;
+  border: 1px solid rgba(44, 110, 73, 0.2);
+}
+
+.student-concept-practice-capture-blocked {
+  border-color: rgba(200, 76, 9, 0.35);
+  background: rgba(200, 76, 9, 0.05);
+}
+
+/* Einstein Mode -- bottom-most section on the concept Explore tab, same
+   card treatment as the two sections above it, own accent color. */
+.student-einstein-mode {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #fdf8f2;
+  border: 1px solid rgba(200, 76, 9, 0.2);
+}
+
+.student-einstein-mode-prompt {
+  margin: 0;
+}
+
+.student-einstein-mode-prompt em {
+  font-style: normal;
+  font-weight: 700;
 }
 
 .student-ai-tutor-coach-button {
@@ -9853,6 +9911,11 @@ a {
     bottom: 0;
     width: min(320px, calc(100vw - 28px));
     z-index: 12;
+    /* Desktop rule sets align-self: start for the in-grid sticky sidebar;
+       left unreset here it stops the fixed box from stretching between
+       top/bottom, so it grows to content height and hangs off-screen with
+       nothing to scroll. */
+    align-self: stretch;
     padding: 20px 18px 24px;
     transform: translateX(calc(-100% - 16px));
     transition: transform 180ms ease;

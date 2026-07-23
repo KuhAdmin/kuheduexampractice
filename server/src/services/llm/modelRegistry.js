@@ -33,6 +33,24 @@ const AI_MODEL_REGISTRY = [
     modelName: env.azureOpenAiDeploymentImage || "gpt-image-1",
     isDefault: false,
   },
+  {
+    id: "gemini-vision",
+    label: "Google Gemini Vision",
+    provider: "openai-compatible",
+    baseUrl: env.geminiApiBaseUrl,
+    apiKeyEnvValue: env.geminiApiKey,
+    modelName: env.geminiVisionModel,
+    isDefault: false,
+  },
+  {
+    id: "deepseek-v4-pro",
+    label: "DeepSeek V4 Pro",
+    provider: "openai-compatible",
+    baseUrl: env.deepseekApiBaseUrl,
+    apiKeyEnvValue: env.deepseekApiKey,
+    modelName: env.deepseekModelPro,
+    isDefault: false,
+  },
 ];
 
 export const getModelRegistryEntry = (modelId) =>

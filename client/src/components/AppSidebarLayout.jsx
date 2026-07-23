@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 
@@ -17,10 +17,35 @@ export const AppSidebarLayout = ({
   const location = useLocation();
   const tier = useBreakpoint();
   const isTabletCollapsed = collapsible && tier === "tablet";
+  const menuButtonRef = useRef(null);
+  const navRef = useRef(null);
+  const wasOpenRef = useRef(false);
 
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
+
+  // Off-canvas drawer: on open, lock background scroll and move focus into
+  // the nav (it otherwise stays on the topbar toggle button, which sits
+  // outside the scrollable <aside> -- so arrow keys scroll the page behind
+  // the drawer instead of the menu). On close, restore both, returning
+  // focus to the toggle only if the drawer had actually been open.
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+      navRef.current?.querySelector("a, button")?.focus();
+      wasOpenRef.current = true;
+    } else {
+      document.body.style.overflow = "";
+      if (wasOpenRef.current) {
+        menuButtonRef.current?.focus();
+        wasOpenRef.current = false;
+      }
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [sidebarOpen]);
 
   return (
     <main
@@ -38,6 +63,7 @@ export const AppSidebarLayout = ({
         </div>
         <button
           type="button"
+          ref={menuButtonRef}
           className="admin-mobile-menu-button"
           onClick={() => setSidebarOpen((current) => !current)}
           aria-expanded={sidebarOpen}
@@ -64,7 +90,7 @@ export const AppSidebarLayout = ({
           </div>
         </div>
 
-        <nav className="admin-sidebar-nav" id="app-sidebar-nav" aria-label={ariaLabel}>
+        <nav className="admin-sidebar-nav" id="app-sidebar-nav" aria-label={ariaLabel} ref={navRef}>
           {homeLink && (
             <NavLink to={homeLink.to} end className="admin-sidebar-link admin-sidebar-home">
               {homeLink.icon}

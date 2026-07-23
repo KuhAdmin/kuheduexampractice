@@ -42,6 +42,12 @@ import {
   postConceptTutorVoiceToken,
   postTutorAvatarToken,
 } from "../controllers/studentTutorController.js";
+import {
+  postConceptPracticeAnswerCapture,
+  postConceptPracticeGrade,
+  postConceptPracticeQuestionCapture,
+} from "../controllers/conceptPracticeCaptureController.js";
+import { postEinsteinChallenge, postEinsteinRecognize } from "../controllers/einsteinModeController.js";
 
 const router = Router();
 
@@ -63,6 +69,11 @@ router.post("/concepts/:assessmentUnitId/micro-activity/respond", submitMicroAct
 router.post("/concepts/:assessmentUnitId/tutor", postConceptTutorMessage);
 router.post("/concepts/:assessmentUnitId/tutor/voice-token", postConceptTutorVoiceToken);
 router.post("/tutor/avatar-token", postTutorAvatarToken);
+router.post("/concepts/:assessmentUnitId/practice-capture/question", postConceptPracticeQuestionCapture);
+router.post("/concepts/:assessmentUnitId/practice-capture/answer", postConceptPracticeAnswerCapture);
+router.post("/concepts/:assessmentUnitId/practice-capture/grade", postConceptPracticeGrade);
+router.post("/concepts/:assessmentUnitId/einstein-mode/challenge", postEinsteinChallenge);
+router.post("/concepts/:assessmentUnitId/einstein-mode/recognize", postEinsteinRecognize);
 router.get("/chapters/:chapterNumber/book-questions", getStudentBookQuestions);
 router.post("/chapters/:chapterNumber/book-questions/:questionId/respond", submitStudentBookQuestionResponse);
 
