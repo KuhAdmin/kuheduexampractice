@@ -22,8 +22,8 @@ export default defineConfig({
         "icons/apple-touch-icon.png",
       ],
       manifest: {
-        name: "KUHEDU MASTER",
-        short_name: "KUHEDU MASTER",
+        name: "KUHEDU EXAM-BUDDY",
+        short_name: "KUHEDU EXAM-BUDDY",
         description: "Practice chapters, assessments, and flashcards for CBSE/board exam prep.",
         display: "standalone",
         start_url: "/",

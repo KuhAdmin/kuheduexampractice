@@ -32,7 +32,7 @@ export const StudentPageShell = ({ pageClass = "", legacyModifierClass = "", chi
         <section className={`student-dashboard-phone ${legacyModifierClass}`.trim()}>
           <div className="home-onboarding-topbar">
             <img src="/kuhedu-logo.png" alt="KUHEDU logo" />
-            <span>KUHEDU MASTER</span>
+            <span>KUHEDU EXAM-BUDDY</span>
           </div>
           {children}
           <StudentBottomNav activeItem={resolveActiveNavItem(location.pathname)} />

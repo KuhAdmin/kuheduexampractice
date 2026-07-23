@@ -523,7 +523,7 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
             <div className="student-profile-premium-copy">
               <div className="student-profile-premium-head">
                 <div>
-                  <strong>Install KUHEDU MASTER</strong>
+                  <strong>Install KUHEDU EXAM-BUDDY</strong>
                   <p>Add to your home screen for quick access</p>
                 </div>
                 <ProfileIcon type="download" />

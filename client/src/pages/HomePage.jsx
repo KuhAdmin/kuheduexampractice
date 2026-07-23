@@ -559,7 +559,7 @@ const HomeScreen = ({
           {showBrandChrome ? (
             <div className="home-onboarding-topbar">
               <img src="/kuhedu-logo.png" alt="KUHEDU logo" />
-              <span>KUHEDU MASTER</span>
+              <span>KUHEDU EXAM-BUDDY</span>
             </div>
           ) : (
             <div className="home-screen-topline" aria-hidden="true" />
@@ -1091,7 +1091,7 @@ export const HomePage = ({
         <nav className="home-desktop-navbar">
           <div className="home-desktop-navbar-brand">
             <img src="/kuhedu-logo.png" alt="KUHEDU logo" />
-            <span>KUHEDU MASTER</span>
+            <span>KUHEDU EXAM-BUDDY</span>
           </div>
         </nav>
         <AnimatePresence mode="wait">

@@ -25,7 +25,7 @@ export const StudentLayout = ({ user, onLogout }) => {
   return (
     <AiTutorAvatarProvider>
       <AppSidebarLayout
-        brandTitle="KUHEDU MASTER"
+        brandTitle="KUHEDU EXAM-BUDDY"
         brandSubtitle="Your learning workspace"
         menuItems={studentMenuItems}
         user={user}
