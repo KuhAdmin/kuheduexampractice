@@ -108,6 +108,21 @@ export const getStudentConceptSectionMedia = async (assessmentUnitId, sectionKey
 export const getStudentMemoryBoosterForUnit = async (assessmentUnitId) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/memory-booster`);
 
+export const askConceptTutor = async (assessmentUnitId, { mode, question }) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/tutor`, {
+    method: "POST",
+    body: JSON.stringify({ mode, question }),
+  });
+
+export const getConceptTutorVoiceToken = async (assessmentUnitId, mode) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/tutor/voice-token`, {
+    method: "POST",
+    body: JSON.stringify({ mode }),
+  });
+
+export const getTutorAvatarToken = async () =>
+  apiRequest(`/user/tutor/avatar-token`, { method: "POST" });
+
 export const getStudentMindMap = async (sourceSectionId) =>
   apiRequest(`/user/sections/${sourceSectionId}/mind-map`);
 

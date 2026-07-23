@@ -10,6 +10,7 @@
     "gen:icons": "node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
+    "@spatialwalk/avatarkit": "^1.0.0-beta.104",
     "framer-motion": "^11.11.17",
     "katex": "^0.17.0",
     "pdfjs-dist": "^6.1.200",

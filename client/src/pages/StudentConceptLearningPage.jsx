@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentMediaViewer } from "../components/StudentMediaViewer";
 import { StudentMicroActivityPanel } from "../components/StudentMicroActivityPanel";
+import { StudentAiTutorPanel } from "../components/StudentAiTutorPanel";
 import { MathPreview } from "../components/MathPreview";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getStudentConceptCard, getStudentConceptSectionMedia, getStudentSections } from "../api/client";
@@ -962,6 +963,7 @@ export const StudentConceptLearningPage = () => {
           ) : error || !card ? (
             <p className="student-empty-state">{error || "This concept has not been generated yet."}</p>
           ) : (
+            <>
             <div
               className={`student-concept-desktop-body ${
                 activeTab === "Explore" && exploreSteps.length > 0 ? "has-rail" : ""
@@ -1020,6 +1022,10 @@ export const StudentConceptLearningPage = () => {
               </div>
               {activeTab === "Explore" && exploreSteps.length > 0 && renderExploreRail()}
             </div>
+            {activeTab === "Explore" && card && (
+              <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
+            )}
+            </>
           )}
         </div>
       </StudentPageShell>
@@ -1060,7 +1066,10 @@ export const StudentConceptLearningPage = () => {
         ) : activeTab === "Learn" ? (
           renderLearnMode()
         ) : activeTab === "Explore" ? (
-          renderExploreMode()
+          <>
+            {renderExploreMode()}
+            {card && <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />}
+          </>
         ) : (
           renderComingSoon(activeTab)
         )}

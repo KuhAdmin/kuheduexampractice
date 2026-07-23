@@ -4999,6 +4999,219 @@ a {
   line-height: 1.5;
 }
 
+/* AI Tutor panel (Explore tab). Purple accent reused from
+   .student-instant-feedback.is-neutral / .student-instant-feedback-speak --
+   this codebase's existing visual language for AI-generated content. */
+.student-ai-tutor-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #f8f7fd;
+  border: 1px solid rgba(124, 92, 240, 0.2);
+}
+
+.student-ai-tutor-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #1d241f;
+}
+
+.student-ai-tutor-header p {
+  margin: 2px 0 0;
+  color: #5d6a5d;
+  font-size: 0.85rem;
+}
+
+.student-ai-tutor-coach-button {
+  justify-self: start;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(124, 92, 240, 0.15);
+  color: #4338ca;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.student-ai-tutor-coach-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.student-ai-tutor-ask-form {
+  display: flex;
+  gap: 8px;
+}
+
+.student-ai-tutor-ask-form input {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(47, 125, 51, 0.2);
+  background: #ffffff;
+  color: #1d241f;
+  font-size: 0.9rem;
+}
+
+.student-ai-tutor-ask-form input:disabled {
+  opacity: 0.6;
+}
+
+.student-ai-tutor-ask-form button {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 14px;
+  background: #4338ca;
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.student-ai-tutor-ask-form button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.student-ai-tutor-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.85rem;
+}
+
+.student-ai-tutor-history {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.student-ai-tutor-entry {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(124, 92, 240, 0.18);
+}
+
+.student-ai-tutor-entry-question {
+  margin: 0 0 6px;
+  color: #4338ca;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.student-ai-tutor-entry-answer {
+  margin: 0;
+  color: #2d372f;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.student-ai-tutor-voice {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px dashed rgba(124, 92, 240, 0.3);
+}
+
+.student-ai-tutor-voice-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.student-ai-tutor-voice-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1d241f;
+}
+
+.student-ai-tutor-voice-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #a3a9a4;
+}
+
+.student-ai-tutor-voice-dot.is-listening {
+  background: #2f9e44;
+}
+
+.student-ai-tutor-voice-dot.is-connecting {
+  background: #d97706;
+  animation: student-ai-tutor-pulse 1.2s ease-in-out infinite;
+}
+
+.student-ai-tutor-voice-dot.is-speaking {
+  background: #4338ca;
+  animation: student-ai-tutor-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes student-ai-tutor-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.student-ai-tutor-voice-start {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #4338ca;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.student-ai-tutor-voice-stop {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #b42318;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.student-ai-tutor-voice-label {
+  margin: 0;
+  color: #5d6a5d;
+  font-size: 0.78rem;
+}
+
+.student-ai-tutor-avatar-widget {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 50;
+  width: 160px;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #1d241f;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.student-ai-tutor-avatar-widget.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .student-instant-feedback strong {
   font-size: 1rem;
   color: #1d241f;

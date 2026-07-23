@@ -37,6 +37,11 @@ import {
   startConceptAssessment,
 } from "../controllers/studentPracticeController.js";
 import { postHandwrittenNoteOcr } from "../controllers/ocrController.js";
+import {
+  postConceptTutorMessage,
+  postConceptTutorVoiceToken,
+  postTutorAvatarToken,
+} from "../controllers/studentTutorController.js";
 
 const router = Router();
 
@@ -55,6 +60,9 @@ router.get("/concepts/:assessmentUnitId/memory-hook-media/:sectionKey", getStude
 router.get("/concepts/:assessmentUnitId/memory-booster", getStudentMemoryBoosterForUnit);
 router.get("/concepts/:assessmentUnitId/micro-activity/response", getMicroActivityResponseHandler);
 router.post("/concepts/:assessmentUnitId/micro-activity/respond", submitMicroActivityResponseHandler);
+router.post("/concepts/:assessmentUnitId/tutor", postConceptTutorMessage);
+router.post("/concepts/:assessmentUnitId/tutor/voice-token", postConceptTutorVoiceToken);
+router.post("/tutor/avatar-token", postTutorAvatarToken);
 router.get("/chapters/:chapterNumber/book-questions", getStudentBookQuestions);
 router.post("/chapters/:chapterNumber/book-questions/:questionId/respond", submitStudentBookQuestionResponse);
 

@@ -11,6 +11,10 @@ export default defineConfig({
       // stale-cache footgun with this plugin).
       devOptions: { enabled: false },
       registerType: "autoUpdate",
+      // Default 2 MiB limit is too small once the AI Tutor avatar
+      // (@spatialwalk/avatarkit, WASM-backed rendering) is in the bundle --
+      // raised to cover the main chunk's current size with headroom.
+      workbox: { maximumFileSizeToCacheInBytes: 4 * 1024 * 1024 },
       includeAssets: [
         "icons/icon-192.png",
         "icons/icon-512.png",

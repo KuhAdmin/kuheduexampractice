@@ -97,4 +97,17 @@ export const env = {
   geminiApiKey: process.env.GEMINIAPI_KEY || "",
   geminiApiBaseUrl: process.env.GEMINI_API_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai",
   geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+  // AI Tutor live voice (Gemini Live API) -- reuses geminiApiKey above.
+  // GEMINI_VOICE_MODEL must be a bidiGenerateContent-capable model for that
+  // specific key (verify live via GET .../v1alpha/models?key=... rather than
+  // assuming geminiModel above is Live-capable -- it likely isn't).
+  geminiVoiceModel: process.env.GEMINI_VOICE_MODEL || "",
+  geminiVoiceName: process.env.GEMINI_VOICE_NAME || "Achird",
+  geminiVoiceLanguage: process.env.GEMINI_VOICE_LANGUAGE || "",
+  // AI Tutor avatar face (SpatialReal, third-party vendor -- separate
+  // credentials required). Absent -- feature falls back to local audio.
+  spatialRealApiKey: process.env.SPATIALREAL_API_KEY || "",
+  spatialRealAppId: process.env.SPATIALREAL_APP_ID || "",
+  spatialRealAvatarId: process.env.SPATIALREAL_AVATAR_ID || "",
+  spatialRealRegion: process.env.SPATIALREAL_REGION || "ap-northeast",
 };
