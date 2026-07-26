@@ -7,18 +7,18 @@ import session from "express-session";
 import passport from "./config/passport.js";
 import { env } from "./config/env.js";
 import authRoutes from "./routes/authRoutes.js";
-import assessmentStudioRoutes from "./routes/assessmentStudioRoutes.js";
 import catalogRoutes from "./routes/catalogRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import settingsRoutes from "./routes/settingsRoutes.js";
 import adminUserRoutes from "./routes/adminUserRoutes.js";
 import adminExamTypeRoutes from "./routes/adminExamTypeRoutes.js";
 import adminExamGoalRoutes from "./routes/adminExamGoalRoutes.js";
 import adminLevelRoutes from "./routes/adminLevelRoutes.js";
 import adminSubjectRoutes from "./routes/adminSubjectRoutes.js";
 import adminBookRoutes from "./routes/adminBookRoutes.js";
+import adminConceptImportRoutes from "./routes/adminConceptImportRoutes.js";
 import adminDemoRoutes from "./routes/adminDemoRoutes.js";
-import moderationRoutes from "./routes/moderationRoutes.js";
+import chapterExerciseAdminRoutes from "./routes/chapterExerciseAdminRoutes.js";
+import mediaAdminRoutes from "./routes/mediaAdminRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,18 +77,18 @@ export const createApp = () => {
   });
 
   app.use("/api/auth", authRoutes);
-  app.use("/api/assessment-studio", assessmentStudioRoutes);
   app.use("/api/catalog", catalogRoutes);
   app.use("/api/user", userRoutes);
-  app.use("/api/settings", settingsRoutes);
   app.use("/api/admin/users", adminUserRoutes);
   app.use("/api/admin/exam-types", adminExamTypeRoutes);
   app.use("/api/admin/exam-goals", adminExamGoalRoutes);
   app.use("/api/admin/levels", adminLevelRoutes);
   app.use("/api/admin/subjects", adminSubjectRoutes);
   app.use("/api/admin/books", adminBookRoutes);
+  app.use("/api/admin/concept-import", adminConceptImportRoutes);
   app.use("/api/admin/ai-demo", adminDemoRoutes);
-  app.use("/api/moderation", moderationRoutes);
+  app.use("/api/admin/chapter-exercises", chapterExerciseAdminRoutes);
+  app.use("/api/admin/media", mediaAdminRoutes);
 
   const clientDist = path.resolve(__dirname, "../../client/dist");
   app.use(express.static(clientDist));

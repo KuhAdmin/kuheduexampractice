@@ -886,7 +886,7 @@ export const HomePage = ({
     }
 
     if (user?.role === "moderator") {
-      navigate("/moderator");
+      navigate("/admin");
       return;
     }
 

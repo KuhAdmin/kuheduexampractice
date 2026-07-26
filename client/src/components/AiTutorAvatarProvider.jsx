@@ -57,17 +57,28 @@ export const AiTutorAvatarProvider = ({ children }) => {
   useEffect(() => {
     const container = containerRef.current;
     if (!avatarEnabled || !container || viewPromiseRef.current) return;
-    viewPromiseRef.current = createAvatarView(container).then((view) => {
-      view.controller.onError = (error) => {
-        console.warn("[ai-tutor-avatar] AvatarError:", error.code, error.message);
-        if (error.code === ErrorCode.sessionTokenExpired || error.code === ErrorCode.sessionTokenInvalid) {
-          void refreshAvatarSessionToken();
-        }
-      };
-      return view;
-    });
+    viewPromiseRef.current = createAvatarView(container)
+      .then((view) => {
+        view.controller.onError = (error) => {
+          console.warn("[ai-tutor-avatar] AvatarError:", error.code, error.message);
+          if (error.code === ErrorCode.sessionTokenExpired || error.code === ErrorCode.sessionTokenInvalid) {
+            void refreshAvatarSessionToken();
+          }
+        };
+        return view;
+      })
+      .catch((error) => {
+        // SpatialReal isn't configured (or otherwise unreachable) -- this is
+        // the same "fall back to local audio" path bindSession already
+        // handles, just reached before any session exists to fall back
+        // from. Without this catch the rejection is never awaited in time
+        // and surfaces as an uncaught promise rejection instead.
+        console.warn("[ai-tutor-avatar] Failed to initialize avatar, falling back to local audio:", error);
+        knownBrokenRef.current = true;
+        return null;
+      });
     return () => {
-      void viewPromiseRef.current?.then((view) => view.dispose());
+      void viewPromiseRef.current?.then((view) => view?.dispose());
       viewPromiseRef.current = null;
       connectPromiseRef.current = null;
       knownBrokenRef.current = false;

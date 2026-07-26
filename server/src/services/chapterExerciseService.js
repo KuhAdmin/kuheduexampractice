@@ -335,7 +335,7 @@ export const submitChapterExerciseResponse = async ({ questionId, userId, studen
 // mv_chapter_catalog) so student-facing book-question routes never take a raw
 // bookId param, matching every other /user/... route's convention.
 export const resolveBookIdForChapter = async ({ board, studentClass, subject, chapterNumber }) => {
-  const { examGoalCode, levelCode, subjectCode, isValid } = resolveDashboardAcademicFilters({
+  const { examGoalCode, levelCode, subjectCode, isValid } = await resolveDashboardAcademicFilters({
     board,
     studentClass,
     subject,

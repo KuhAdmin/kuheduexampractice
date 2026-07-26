@@ -273,7 +273,7 @@ export const AdminAiAssessmentDemoPage = () => {
           <p>
             Photograph or scan any question from any subject, capture a handwritten (or typed) answer, and
             run a real, world-class AI assessment -- independent of the curriculum pipeline, for live demos.{" "}
-            <Link to="/admin/ai-assessment-studio/demo-model-settings">Configure OCR/grading models per subject</Link>.
+            <Link to="/admin/ai-demo/model-settings">Configure OCR/grading models per subject</Link>.
           </p>
         </div>
         <div className="admin-bulk-pipeline-header-actions">

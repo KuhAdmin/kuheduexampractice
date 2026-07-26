@@ -7,15 +7,16 @@ import {
   getLayer2Memory,
   getSectionKnowledgeSummary,
   getTerminologyForSection,
-} from "./assessmentStudioContextAssembler.js";
+  getVisualLearningCardsForSection,
+} from "./contentReadService.js";
 import { getMemoryHookMedia } from "./memoryHookImageService.js";
 import * as conceptCardCache from "./conceptCardCache.js";
 
-const MASTERY_COMPLETE_THRESHOLD = 0.8;
+export const MASTERY_COMPLETE_THRESHOLD = 0.8;
 
 // Student-facing read-only content service. Every function here reads
-// already-generated pipeline content (layer1/layer2 tables, via the shared
-// getters in assessmentStudioContextAssembler.js) and reshapes it into clean,
+// already-imported content (content_card/content_concept_memory tables, via
+// the shared getters in contentReadService.js) and reshapes it into clean,
 // camelCase student-facing payloads. Nothing here writes anything, and every
 // function returns null/empty (never fabricated content) when a section or
 // assessment unit hasn't been generated yet.
@@ -43,7 +44,7 @@ const resolveMostRecentSourceSectionId = async ({ bookId, chapterNumber, section
   return result.rows[0]?.id || null;
 };
 
-const getMasteryByAssessmentUnitId = async ({ userId, assessmentUnitIds }) => {
+export const getMasteryByAssessmentUnitId = async ({ userId, assessmentUnitIds }) => {
   if (!userId || !assessmentUnitIds.length) {
     return new Map();
   }
@@ -67,7 +68,7 @@ const getMasteryByAssessmentUnitId = async ({ userId, assessmentUnitIds }) => {
 // here is computed the same way everywhere in the app: completed (mastery
 // over threshold), in progress (attempted but not yet mastered), or not
 // started (never attempted).
-const getLastActivityByAssessmentUnitId = async ({ userId, assessmentUnitIds }) => {
+export const getLastActivityByAssessmentUnitId = async ({ userId, assessmentUnitIds }) => {
   if (!userId || !assessmentUnitIds.length) {
     return new Map();
   }
@@ -110,18 +111,27 @@ const listAssessmentUnitsWithMeta = async (sourceSectionId) => {
 // source_section (if any) backs it, plus mastery-based progress. Sections with
 // no generated content yet come back with sourceSectionId: null and an empty
 // concept list so the client can render an honest "not generated yet" state.
+//
+// examGoalCode/levelCode/subjectCode let a caller bypass the board/class/
+// subject-text resolution entirely and target an explicit catalog combo
+// directly -- used by the class/subject switcher on StudentChaptersPage.jsx
+// so a student can browse a chapter outside their own profile's subject
+// (board/studentClass/subject are only consulted when these three are absent,
+// so this stays fully backward compatible for every other caller).
 export const listSectionsForChapter = async ({
   board,
   studentClass,
   subject,
+  examGoalCode: explicitExamGoalCode,
+  levelCode: explicitLevelCode,
+  subjectCode: explicitSubjectCode,
   chapterNumber,
   userId,
 }) => {
-  const { examGoalCode, levelCode, subjectCode, isValid } = resolveDashboardAcademicFilters({
-    board,
-    studentClass,
-    subject,
-  });
+  const hasExplicitCodes = Boolean(explicitExamGoalCode && explicitLevelCode && explicitSubjectCode);
+  const { examGoalCode, levelCode, subjectCode, isValid } = hasExplicitCodes
+    ? { examGoalCode: explicitExamGoalCode, levelCode: explicitLevelCode, subjectCode: explicitSubjectCode, isValid: true }
+    : await resolveDashboardAcademicFilters({ board, studentClass, subject });
 
   if (!isValid || !chapterNumber) {
     return { chapterNumber: chapterNumber || null, chapterName: null, sections: [] };
@@ -300,6 +310,52 @@ export const getLearningMap = async ({ sourceSectionId, userId }) => {
   };
 };
 
+// teachme/explain/eli5/storymode/analogy/realworld narratives, imported via
+// conceptImportService.js as content_card rows (contentuitab='teaching') --
+// see buildLearnSlides in StudentConceptLearningPage.jsx, which appends one
+// Learn-tab slide per row returned here.
+const getTeachingNotesForUnit = async (assessmentUnitId) => {
+  const result = await pool.query(
+    `
+      SELECT processorkey AS mode, title, summary, details
+      FROM content_card
+      WHERE assessment_unit_id = $1 AND contentuitab = 'teaching'
+      ORDER BY processorkey ASC, sort_order ASC
+    `,
+    [assessmentUnitId]
+  );
+
+  return result.rows.map((row) => ({
+    mode: row.mode,
+    title: row.title,
+    summary: row.summary,
+    details: Array.isArray(row.details) ? row.details : [],
+  }));
+};
+
+// misconceptions/whychain narratives, imported as content_card rows
+// (contentuitab='deeplearning') -- fed to the Explore tab's "Deep Dive" step
+// the same way teaching notes feed Compare/Story/Simple/Real Life, just
+// without per-family filtering (both processorkeys are shown together).
+const getDeepLearningNotesForUnit = async (assessmentUnitId) => {
+  const result = await pool.query(
+    `
+      SELECT processorkey AS mode, title, summary, details
+      FROM content_card
+      WHERE assessment_unit_id = $1 AND contentuitab = 'deeplearning'
+      ORDER BY processorkey ASC, sort_order ASC
+    `,
+    [assessmentUnitId]
+  );
+
+  return result.rows.map((row) => ({
+    mode: row.mode,
+    title: row.title,
+    summary: row.summary,
+    details: Array.isArray(row.details) ? row.details : [],
+  }));
+};
+
 // Media (analogyMedia/storyMedia/etc.) is deliberately NOT fetched here.
 // memory_hook_media.media_data is base64 image/video, up to ~20MB decoded per
 // section and up to 7 sections per concept -- fetching all of it on every
@@ -312,9 +368,11 @@ export const getConceptCard = async ({ assessmentUnitId }) => {
     return cached;
   }
 
-  const [context, memory] = await Promise.all([
+  const [context, memory, teachingNotes, deepLearningNotes] = await Promise.all([
     getLayer1Context(assessmentUnitId),
     getLayer2Memory(assessmentUnitId),
+    getTeachingNotesForUnit(assessmentUnitId),
+    getDeepLearningNotesForUnit(assessmentUnitId),
   ]);
   if (!context) {
     return null;
@@ -347,6 +405,8 @@ export const getConceptCard = async ({ assessmentUnitId }) => {
     misconceptionAlert: memoryBooster?.misconceptionAlert || null,
     retrievalCues: memoryBooster?.retrievalCues || [],
     associatedConcepts: memoryBooster?.associatedConcepts || [],
+    teachingNotes,
+    deepLearningNotes,
   };
 
   conceptCardCache.set(assessmentUnitId, card);
@@ -430,13 +490,117 @@ export const getFlashcardsForSection = async ({ sourceSectionId }) => {
   }));
 };
 
+const shapeContentItemRows = (rows) =>
+  rows.map((row) => ({
+    mode: row.mode,
+    assessmentUnitId: row.assessmentUnitId,
+    title: row.title,
+    summary: row.summary,
+    details: Array.isArray(row.details) ? row.details : [],
+  }));
+
+// Revision content (cheatsheet/mnemonics/examnotes) imported via
+// conceptImportService.js as content_card rows (contentuitab='revision').
+// 'flashcards' cards are imported too but deliberately excluded here (same
+// as before this migration) -- StudentRevisionPage.jsx has no tab for them.
+// Empty for sections with no imported content.
+export const getRevisionForSection = async ({ sourceSectionId }) => {
+  const assessmentUnitIds = await getAssessmentUnitsForSourceSection(sourceSectionId);
+  if (!assessmentUnitIds.length) {
+    return [];
+  }
+
+  const result = await pool.query(
+    `
+      SELECT processorkey AS mode, assessment_unit_id AS "assessmentUnitId", title, summary, details
+      FROM content_card
+      WHERE contentuitab = 'revision' AND processorkey IN ('cheatsheet', 'mnemonics', 'examnotes')
+        AND assessment_unit_id = ANY($1)
+      ORDER BY assessment_unit_id ASC, sort_order ASC
+    `,
+    [assessmentUnitIds]
+  );
+
+  return shapeContentItemRows(result.rows);
+};
+
+// Tutor Notes content (coach/interview/viva/debate) imported via
+// conceptImportService.js as content_card rows (contentuitab='tutor').
+// Deliberately named "Tutor Notes" rather than "AI Tutor" -- the app already
+// has a live-chat "AI Tutor" tab (StudentAiTutorPanel.jsx) that is a
+// different, dynamic feature; this is static pre-generated content, not a
+// live conversation.
+export const getTutorNotesForSection = async ({ sourceSectionId }) => {
+  const assessmentUnitIds = await getAssessmentUnitsForSourceSection(sourceSectionId);
+  if (!assessmentUnitIds.length) {
+    return [];
+  }
+
+  const result = await pool.query(
+    `
+      SELECT processorkey AS mode, assessment_unit_id AS "assessmentUnitId", title, summary, details
+      FROM content_card
+      WHERE contentuitab = 'tutor' AND processorkey IN ('coach', 'interview', 'viva', 'debate')
+        AND assessment_unit_id = ANY($1)
+      ORDER BY assessment_unit_id ASC, sort_order ASC
+    `,
+    [assessmentUnitIds]
+  );
+
+  return shapeContentItemRows(result.rows);
+};
+
+// hotspot/casestudy/einsteinmode content imported via conceptImportService.js
+// as content_card rows (contentuitab='assessment') -- these don't fit
+// content_assessment_item's structured interaction_type model (no single
+// correct_answer, no marks for 2 of the 3 families), so they're grouped by
+// family and handed to the client as self-check "Challenges" rather than
+// scored practice-set items.
+export const getAssessmentExtraForUnit = async ({ assessmentUnitId }) => {
+  const result = await pool.query(
+    `
+      SELECT processorkey AS "questionFamily", title, summary, details
+      FROM content_card
+      WHERE assessment_unit_id = $1
+        AND contentuitab = 'assessment'
+        AND processorkey IN ('hotspot', 'casestudy', 'einsteinmode')
+      ORDER BY processorkey ASC, sort_order ASC
+    `,
+    [assessmentUnitId]
+  );
+
+  const grouped = { hotspot: [], casestudy: [], einsteinmode: [] };
+  for (const row of result.rows) {
+    if (!grouped[row.questionFamily]) continue;
+    grouped[row.questionFamily].push({
+      title: row.title || null,
+      summary: row.summary || null,
+      details: Array.isArray(row.details) ? row.details : [],
+    });
+  }
+  return grouped;
+};
+
+// visual/{mindmap,flowchart,infographics,notebooknotes,visualposter} cards
+// for a section -- feeds the Explore tab's "Visual Learning" step. Section-
+// scoped like the Diagrams page, but restricted to contentuitab='visual' so
+// the two features don't show the same cards twice.
+export const getVisualLearningItemsForSection = async ({ sourceSectionId }) => {
+  const cards = await getVisualLearningCardsForSection(sourceSectionId);
+  return cards.map((card) => ({
+    cardId: card.id,
+    mode: card.mode,
+    title: card.title,
+    summary: card.summary,
+    details: card.details,
+  }));
+};
+
 export const getDiagramsForSourceSection = async ({ sourceSectionId }) => {
   const diagrams = await getDiagramsForSection(sourceSectionId);
   return diagrams.map((diagram) => ({
     diagramId: diagram.id,
     diagramName: diagram.diagramName,
     purpose: diagram.purpose,
-    labels: diagram.labels,
-    testedLabels: diagram.testedLabels,
   }));
 };

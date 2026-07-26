@@ -2,21 +2,9 @@ import { useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AdminLayout } from "./components/AdminLayout";
 import { apiRequest } from "./api/client";
-import { AdminAssessmentStudioPage } from "./pages/AdminAssessmentStudioPage";
-import { AdminBulkPipelinePage } from "./pages/AdminBulkPipelinePage";
-import { AdminSourceBuilderPage } from "./pages/AdminSourceBuilderPage";
 import { AdminAiAssessmentDemoPage } from "./pages/AdminAiAssessmentDemoPage";
 import { AdminDemoModelSettingsPage } from "./pages/AdminDemoModelSettingsPage";
-import { AdminPipelineRunsPage } from "./pages/AdminPipelineRunsPage";
 import { AdminChapterExerciseReviewPage } from "./pages/AdminChapterExerciseReviewPage";
-import { AdminAssessmentAuditPage } from "./pages/AdminAssessmentAuditPage";
-import { AdminAssessmentManualPage } from "./pages/AdminAssessmentManualPage";
-import { AdminAssessmentWorkbenchPage } from "./pages/AdminAssessmentWorkbenchPage";
-import { AdminContentReviewPage } from "./pages/AdminContentReviewPage";
-import { AdminLearningAnalyticsPage } from "./pages/AdminLearningAnalyticsPage";
-import { AdminModerationPage } from "./pages/AdminModerationPage";
-import { AdminPerformanceInsightsPage } from "./pages/AdminPerformanceInsightsPage";
-import { AdminQuestionBankPage } from "./pages/AdminQuestionBankPage";
 import { AdminSettingsPage } from "./pages/AdminSettingsPage";
 import { AdminUsersPage } from "./pages/AdminUsersPage";
 import { AdminExamTypesPage } from "./pages/AdminExamTypesPage";
@@ -24,13 +12,10 @@ import { AdminExamGoalsPage } from "./pages/AdminExamGoalsPage";
 import { AdminLevelsPage } from "./pages/AdminLevelsPage";
 import { AdminSubjectsPage } from "./pages/AdminSubjectsPage";
 import { AdminBooksPage } from "./pages/AdminBooksPage";
-import { ModeratorLayout } from "./components/ModeratorLayout";
+import { AdminConceptImportPage } from "./pages/AdminConceptImportPage";
 import { StudentLayout } from "./components/StudentLayout";
-import { ModeratorConsolePage } from "./pages/ModeratorConsolePage";
-import { ModeratorLayerReviewPage } from "./pages/ModeratorLayerReviewPage";
 import { useAuth } from "./context/AuthContext";
 import { AdminOverviewPage } from "./pages/AdminOverviewPage";
-import { AdminPracticeSetsPage } from "./pages/AdminPracticeSetsPage";
 import { AdminSectionPage } from "./pages/AdminSectionPage";
 import { AuthSuccessPage } from "./pages/AuthSuccessPage";
 import { HomePage } from "./pages/HomePage";
@@ -44,6 +29,8 @@ import { StudentConceptLearningPage } from "./pages/StudentConceptLearningPage";
 import { StudentDashboardPage } from "./pages/StudentDashboardPage";
 import { StudentDiagramsPage } from "./pages/StudentDiagramsPage";
 import { StudentFlashcardsPage } from "./pages/StudentFlashcardsPage";
+import { StudentRevisionPage } from "./pages/StudentRevisionPage";
+import { StudentTutorNotesPage } from "./pages/StudentTutorNotesPage";
 import { StudentMemoryBoosterPage } from "./pages/StudentMemoryBoosterPage";
 import { StudentMindMapPage } from "./pages/StudentMindMapPage";
 import { StudentProfilePage } from "./pages/StudentProfilePage";
@@ -90,7 +77,7 @@ const App = () => {
     }
 
     if (data.user?.role === "moderator") {
-      navigate("/moderator");
+      navigate("/admin");
       return data;
     }
 
@@ -152,10 +139,8 @@ const App = () => {
         <Route
           element={
             authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
+              user?.role === "admin" || user?.role === "moderator" ? (
                 <Navigate replace to="/admin" />
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
               ) : !isStudentOnboardingComplete(user) ? (
                 <Navigate replace to="/" state={{ resumeOnboarding: true }} />
               ) : (
@@ -208,6 +193,14 @@ const App = () => {
             element={<StudentFlashcardsPage />}
           />
           <Route
+            path="/chapters/:chapterId/sections/:sectionId/revision"
+            element={<StudentRevisionPage />}
+          />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/tutor-notes"
+            element={<StudentTutorNotesPage />}
+          />
+          <Route
             path="/chapters/:chapterId/sections/:sectionId/diagrams"
             element={<StudentDiagramsPage />}
           />
@@ -236,12 +229,10 @@ const App = () => {
           path="/admin"
           element={
             authPending ? null : isAuthenticated ? (
-              user?.role === "admin" ? (
-                <div className="app-shell admin-app-shell">
+              user?.role === "admin" || user?.role === "moderator" ? (
+                <div className="app-shell admin-app-shell" data-theme="dawn">
                   <AdminLayout onLogout={handleLogout} user={user} />
                 </div>
-              ) : user?.role === "moderator" ? (
-                <Navigate replace to="/moderator" />
               ) : (
                 <Navigate replace to="/dashboard" />
               )
@@ -252,80 +243,16 @@ const App = () => {
         >
           <Route index element={<AdminOverviewPage />} />
           <Route
-            path="practice-sets"
-            element={<AdminPracticeSetsPage />}
-          />
-          <Route
-            path="ai-assessment-studio"
-            element={<AdminAssessmentStudioPage />}
-          />
-          <Route
-            path="ai-assessment-studio/audit/:jobId"
-            element={<AdminAssessmentAuditPage />}
-          />
-          <Route
-            path="ai-assessment-studio/workbench/:jobId"
-            element={<AdminAssessmentWorkbenchPage />}
-          />
-          <Route
-            path="ai-assessment-studio/bulk"
-            element={<AdminBulkPipelinePage />}
-          />
-          <Route
-            path="ai-assessment-studio/source-builder"
-            element={<AdminSourceBuilderPage />}
-          />
-          <Route
-            path="ai-assessment-studio/demo"
+            path="ai-demo"
             element={<AdminAiAssessmentDemoPage />}
           />
           <Route
-            path="ai-assessment-studio/demo-model-settings"
+            path="ai-demo/model-settings"
             element={<AdminDemoModelSettingsPage />}
           />
           <Route
-            path="ai-assessment-studio/runs"
-            element={<AdminPipelineRunsPage />}
-          />
-          <Route
-            path="ai-assessment-studio/chapter-exercises/:bookId/:chapterNumber"
+            path="chapter-exercises/:bookId/:chapterNumber"
             element={<AdminChapterExerciseReviewPage />}
-          />
-          <Route
-            path="assessment-studio"
-            element={<AdminAssessmentStudioPage />}
-          />
-          <Route
-            path="assessment-studio/audit/:jobId"
-            element={<AdminAssessmentAuditPage />}
-          />
-          <Route
-            path="assessment-studio/workbench/:jobId"
-            element={<AdminAssessmentWorkbenchPage />}
-          />
-          <Route
-            path="assessment-studio/manual"
-            element={<AdminAssessmentManualPage />}
-          />
-          <Route
-            path="question-bank"
-            element={<AdminQuestionBankPage />}
-          />
-          <Route
-            path="learning-analytics"
-            element={<AdminLearningAnalyticsPage />}
-          />
-          <Route
-            path="performance-insights"
-            element={<AdminPerformanceInsightsPage />}
-          />
-          <Route
-            path="content-review"
-            element={<AdminContentReviewPage />}
-          />
-          <Route
-            path="moderation"
-            element={<AdminModerationPage />}
           />
           <Route
             path="users"
@@ -352,30 +279,13 @@ const App = () => {
             element={<AdminBooksPage />}
           />
           <Route
+            path="concept-import"
+            element={<AdminConceptImportPage />}
+          />
+          <Route
             path="settings"
             element={<AdminSettingsPage />}
           />
-        </Route>
-        <Route
-          path="/moderator"
-          element={
-            authPending ? null : isAuthenticated ? (
-              user?.role === "moderator" ? (
-                <div className="app-shell admin-app-shell">
-                  <ModeratorLayout onLogout={handleLogout} user={user} />
-                </div>
-              ) : user?.role === "admin" ? (
-                <Navigate replace to="/admin" />
-              ) : (
-                <Navigate replace to="/dashboard" />
-              )
-            ) : (
-              <Navigate replace to="/" />
-            )
-          }
-        >
-          <Route index element={<ModeratorConsolePage />} />
-          <Route path="tasks/:reviewQueueId" element={<ModeratorLayerReviewPage />} />
         </Route>
       </Routes>
     </>

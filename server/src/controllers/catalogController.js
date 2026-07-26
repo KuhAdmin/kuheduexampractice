@@ -1,9 +1,4 @@
-import {
-  getAssessmentStudioBootstrap,
-  getAssessmentStudioChapters,
-  getAssessmentStudioSections,
-  listChapters,
-} from "../services/catalogService.js";
+import { listChapters } from "../services/catalogService.js";
 
 const parseBoolean = (value) => {
   if (value === undefined) {
@@ -40,51 +35,6 @@ export const getChapters = async (req, res, next) => {
     });
 
     return res.json({ chapters });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const getAssessmentStudioBootstrapOptions = async (req, res, next) => {
-  try {
-    const { levelCode } = req.query;
-    const catalog = await getAssessmentStudioBootstrap({
-      levelCode: levelCode || undefined,
-    });
-
-    return res.json(catalog);
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const getAssessmentStudioChapterOptions = async (req, res, next) => {
-  try {
-    const { levelCode, subjectCode, excludeCompleted, targetLayerNumber } = req.query;
-    const catalog = await getAssessmentStudioChapters({
-      levelCode: levelCode || undefined,
-      subjectCode: subjectCode || undefined,
-      excludeCompleted: excludeCompleted === "true",
-      targetLayerNumber: targetLayerNumber ? Number(targetLayerNumber) : undefined,
-    });
-
-    return res.json(catalog);
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const getAssessmentStudioSectionOptions = async (req, res, next) => {
-  try {
-    const { levelCode, subjectCode, chapterKey, targetLayerNumber } = req.query;
-    const catalog = await getAssessmentStudioSections({
-      levelCode: levelCode || undefined,
-      subjectCode: subjectCode || undefined,
-      chapterKey: chapterKey || undefined,
-      targetLayerNumber: targetLayerNumber ? Number(targetLayerNumber) : undefined,
-    });
-
-    return res.json(catalog);
   } catch (error) {
     return next(error);
   }

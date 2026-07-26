@@ -17,13 +17,10 @@ const BackIcon = () => (
   </svg>
 );
 
-// The pipeline extracts diagram structure (name, purpose, labeled parts,
-// which labels are commonly tested) with no coordinate/label-position data,
-// so tapping a labeled part still isn't a clickable image overlay -- but a
-// generated/uploaded picture (when one exists) now shows on the front face,
-// turning the flip card from "read a name, recall the labels" into "see the
-// actual diagram, recall the labels" (same flip-card animation as
-// StudentFlashcardsPage; labeled parts still revealed on the back).
+// Diagrams are imported as AI-image-generation prompts (title + description),
+// not interactive labeled parts -- there's no labeled-parts data to quiz on
+// anymore, so the flip card's back face just shows the fuller description
+// text instead (same flip-card animation as StudentFlashcardsPage).
 export const StudentDiagramsPage = () => {
   const navigate = useNavigate();
   const { chapterId: chapterNumber, sectionId: sourceSectionId } = useParams();
@@ -123,31 +120,14 @@ export const StudentDiagramsPage = () => {
                           />
                         )}
                         <p className="student-flashcard-text">{diagram.diagramName}</p>
-                        {diagram.purpose && <p className="student-diagram-purpose">{diagram.purpose}</p>}
-                        <span className="student-flashcard-hint">
-                          Tap to test yourself on the labeled parts
-                        </span>
+                        <span className="student-flashcard-hint">Tap to read more</span>
                       </div>
                       <div className="student-flashcard-face student-flashcard-face-back">
-                        <span className="student-flashcard-label">Labeled parts</span>
-                        {diagram.labels?.length > 0 ? (
-                          <div className="student-diagram-labels">
-                            <ul>
-                              {diagram.labels.map((label) => (
-                                <li
-                                  key={label}
-                                  className={diagram.testedLabels?.includes(label) ? "is-tested" : ""}
-                                >
-                                  {label}
-                                  {diagram.testedLabels?.includes(label) && (
-                                    <span className="student-diagram-tested-badge">Commonly tested</span>
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                        <span className="student-flashcard-label">About this diagram</span>
+                        {diagram.purpose ? (
+                          <p className="student-diagram-purpose">{diagram.purpose}</p>
                         ) : (
-                          <p className="student-empty-state">No labeled parts recorded for this diagram.</p>
+                          <p className="student-empty-state">No description recorded for this diagram.</p>
                         )}
                         <span className="student-flashcard-hint">Tap to flip back</span>
                       </div>

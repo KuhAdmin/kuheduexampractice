@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getAssessmentResult, getStudentSections } from "../api/client";
+import { decodeSelectionChapterId } from "./studentChapterData";
 
 const HomeIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
@@ -37,6 +38,8 @@ export const StudentAssessmentResultPage = () => {
   const { chapterId: chapterNumber, sectionId: sourceSectionId, conceptId, attemptId } = useParams();
   const isConceptMode = Boolean(conceptId);
   const isChapterMode = !sourceSectionId && !conceptId;
+  const selectionOverride = decodeSelectionChapterId(chapterNumber);
+  const displayChapterNumber = selectionOverride?.chapterNumber ?? chapterNumber;
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,7 +72,7 @@ export const StudentAssessmentResultPage = () => {
   useEffect(() => {
     let cancelled = false;
 
-    getStudentSections(chapterNumber)
+    getStudentSections(displayChapterNumber, selectionOverride || undefined)
       .then((sections) => {
         if (cancelled) return;
         const section = (sections?.sections || []).find(
@@ -88,6 +91,7 @@ export const StudentAssessmentResultPage = () => {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterNumber, sourceSectionId]);
 
   const sectionPath = `/chapters/${chapterNumber}/sections/${sourceSectionId}`;
@@ -111,14 +115,14 @@ export const StudentAssessmentResultPage = () => {
               <>
                 <ChevronRightIcon />
                 <span className="is-current">
-                  {`Chapter ${chapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
+                  {`Chapter ${displayChapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
                 </span>
               </>
             ) : (
               <>
                 <ChevronRightIcon />
                 <button type="button" onClick={() => navigate(`/chapters/${chapterNumber}`)}>
-                  {`Chapter ${chapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
+                  {`Chapter ${displayChapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
                 </button>
                 {isConceptMode ? (
                   <>

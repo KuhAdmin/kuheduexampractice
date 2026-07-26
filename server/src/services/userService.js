@@ -14,6 +14,7 @@ const mapUser = (row) => ({
   studentClass: row.student_class,
   subject: row.subject,
   onboardingCompletedAt: row.onboarding_completed_at,
+  theme: row.theme,
   createdAt: row.created_at,
 });
 
@@ -122,6 +123,15 @@ export const updateUserProfile = async ({ id, name, avatarUrl }) => {
       RETURNING *
     `,
     [id, name, avatarUrl || null]
+  );
+
+  return result.rows[0] ? mapUser(result.rows[0]) : null;
+};
+
+export const updateUserTheme = async ({ id, theme }) => {
+  const result = await pool.query(
+    `UPDATE users SET theme = $2, updated_at = NOW() WHERE id = $1 RETURNING *`,
+    [id, theme]
   );
 
   return result.rows[0] ? mapUser(result.rows[0]) : null;

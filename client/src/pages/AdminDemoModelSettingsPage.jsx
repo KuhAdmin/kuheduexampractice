@@ -60,7 +60,7 @@ export const AdminDemoModelSettingsPage = () => {
           <h1>Demo Model Settings</h1>
           <p>
             Choose which AI model handles OCR and which handles AI grading for each subject in the{" "}
-            <Link to="/admin/ai-assessment-studio/demo">AI Assessment Demo</Link>. Leave a subject on
+            <Link to="/admin/ai-demo">AI Assessment Demo</Link>. Leave a subject on
             "Use system default" to keep the built-in routing (Hindi/Bengali OCR uses Gemini; everything
             else uses the provider default).
           </p>

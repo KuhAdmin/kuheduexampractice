@@ -1,11 +1,10 @@
 import { pool } from "../db/pool.js";
-import { createStructuredCompletion, generateImage } from "./openAiService.js";
-import { getLayer2Memory } from "./assessmentStudioContextAssembler.js";
 
 // All 7 Layer 2 memory-hook fields, each with a fixed expected media type
 // (matches the image/video icon classification already established on the
-// student Explore tab). AI generation only exists for the 4 image-type
-// sections; manual upload covers all 7 (image for the 4, video for the 3).
+// student Explore tab). Manual upload covers all 7 (image for 4, video for
+// 3) -- AI generation for the 4 image-type sections was removed along with
+// the seven-layer pipeline's admin tooling.
 const SECTION_CONFIG = {
   analogy: { column: "analogy", label: "Analogy", mediaType: "image" },
   visualHook: { column: "visual_hook", label: "Visual Hook", mediaType: "image" },
@@ -16,37 +15,13 @@ const SECTION_CONFIG = {
   microActivity: { column: "micro_activity", label: "Try This", mediaType: "video" },
 };
 const ALL_SECTION_KEYS = Object.keys(SECTION_CONFIG);
-const IMAGE_SECTION_KEYS = ALL_SECTION_KEYS.filter((key) => SECTION_CONFIG[key].mediaType === "image");
 
-const IMAGE_SIZE = "1536x1024"; // 3:2 landscape
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // ~20MB decoded -- short mnemonic clips, not long-form video
 
-const buildMemoryHookImagePrompt = async ({ primaryConcept, sectionLabel, sectionText }) => {
-  const { parsed } = await createStructuredCompletion({
-    systemPrompt:
-      "You write single-scene, vivid image-generation prompts for a 3:2 landscape " +
-      "educational illustration aimed at school students. The prompt must describe " +
-      "ONE clear scene that visually captures the given concept text. Do NOT request " +
-      "any embedded text, labels, captions, numbers, or writing of any kind inside the " +
-      "image -- AI-generated in-image text is usually garbled and must never be " +
-      "requested. Return only valid JSON matching the schema.",
-    userPrompt:
-      `Concept: ${primaryConcept}\nSection: ${sectionLabel}\nContent: ${sectionText}\n\n` +
-      `Schema:\n{ "imagePrompt": "" }`,
-    responseFormatName: "memory_hook_image_prompt",
-  });
-
-  const imagePrompt = typeof parsed?.imagePrompt === "string" ? parsed.imagePrompt.trim() : "";
-  if (!imagePrompt) {
-    throw new Error("The prompt-generation step returned no usable image prompt.");
-  }
-  return imagePrompt;
-};
-
-// Version-increment + is_selected flip, in one transaction -- same shape as
-// recordLayerGenerationVersion (assessmentStudioService.js). Shared by both
-// AI generation and manual upload: whichever happens most recently becomes
-// the section's selected media, regardless of source.
+// Version-increment + is_selected flip, in one transaction -- same
+// version/is_selected pattern content_card_media uses for diagram uploads.
+// Only upload sources this now (AI generation was removed), but the schema
+// still supports both.
 const persistMemoryHookMedia = async ({
   assessmentUnitId,
   sectionKey,
@@ -106,96 +81,6 @@ const persistMemoryHookMedia = async ({
   } finally {
     client.release();
   }
-};
-
-export const generateMemoryHookImage = async ({ assessmentUnitId, sectionKey, userId, modelId }) => {
-  const config = SECTION_CONFIG[sectionKey];
-  if (!config || config.mediaType !== "image") {
-    const error = new Error(`Invalid section key for image generation: ${sectionKey}`);
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const memory = await getLayer2Memory(assessmentUnitId);
-  if (!memory) {
-    const error = new Error(
-      "Layer 2 (Concept Memory) has not been generated for this concept yet. Run the pipeline through Layer 2 first."
-    );
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const sectionText = memory[config.column];
-  if (!sectionText || !sectionText.trim()) {
-    const error = new Error(`${config.label} has no text content yet, so an image cannot be generated from it.`);
-    error.statusCode = 422;
-    throw error;
-  }
-
-  const promptText = await buildMemoryHookImagePrompt({
-    primaryConcept: memory.primary_concept,
-    sectionLabel: config.label,
-    sectionText,
-  });
-
-  const { imageDataUrl, mimeType, model } = await generateImage({
-    prompt: promptText,
-    size: IMAGE_SIZE,
-    modelId,
-  });
-
-  const saved = await persistMemoryHookMedia({
-    assessmentUnitId,
-    sectionKey,
-    mediaType: "image",
-    source: "generated",
-    promptText,
-    mediaDataUrl: imageDataUrl,
-    mimeType,
-    originalFileName: null,
-    modelName: model,
-    userId,
-  });
-
-  return {
-    sectionKey,
-    mediaType: "image",
-    source: "generated",
-    versionNumber: saved.version_number,
-    promptText,
-    mediaData: imageDataUrl,
-    mimeType,
-    createdAt: saved.created_at,
-  };
-};
-
-// Loops the 4 image-type sections sequentially, isolating each section's
-// failure -- one content-policy rejection or transient error never blocks
-// the other 3; partial success is the expected, normal outcome for this
-// bulk action. Video-type sections have no generation capability (upload
-// only), so they're excluded from this bulk action.
-export const generateAllMemoryHookImages = async ({ assessmentUnitId, userId, modelId }) => {
-  const results = [];
-  for (const sectionKey of IMAGE_SECTION_KEYS) {
-    try {
-      const result = await generateMemoryHookImage({ assessmentUnitId, sectionKey, userId, modelId });
-      results.push({ sectionKey, status: "success", ...result });
-    } catch (error) {
-      results.push({
-        sectionKey,
-        status: "error",
-        message: error.message,
-        isContentPolicyViolation: Boolean(error.isContentPolicyViolation),
-      });
-    }
-  }
-
-  return {
-    assessmentUnitId,
-    succeeded: results.filter((row) => row.status === "success").length,
-    failed: results.filter((row) => row.status === "error").length,
-    results,
-  };
 };
 
 // data:<mime>;base64,<payload> -- the same convention already used

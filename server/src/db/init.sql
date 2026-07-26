@@ -30,6 +30,9 @@ ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ;
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS last_notifications_seen_at TIMESTAMPTZ;
 
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS theme VARCHAR(10) NOT NULL DEFAULT 'dawn';
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 
@@ -90,23 +93,33 @@ CREATE TABLE IF NOT EXISTS mst_exam_goal (
   is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-INSERT INTO mst_exam_goal (goal_id, name, fk_mst_exam_type_id, fk_state_id, is_active)
-SELECT seed.goal_id, seed.name, exam_type.id, state.id, seed.is_active
+-- The board a student picks at signup (users.board, e.g. "CBSE") resolves to
+-- an exam goal through this column, not through goal_id/name -- goal_id is an
+-- exam-specific code (AISSCE, JEE-MAIN, ...) that doesn't itself read as a
+-- board. Nullable: only board-type exam goals need it, and only one per
+-- board is expected (resolveDashboardAcademicFilters in catalogService.js
+-- takes the first match).
+ALTER TABLE IF EXISTS mst_exam_goal
+ADD COLUMN IF NOT EXISTS board_code VARCHAR(60);
+
+INSERT INTO mst_exam_goal (goal_id, name, board_code, fk_mst_exam_type_id, fk_state_id, is_active)
+SELECT seed.goal_id, seed.name, seed.board_code, exam_type.id, state.id, seed.is_active
 FROM (
   VALUES
-    ('AISSCE', 'All India Senior School Certificate Examination', 'BOARD', 'Delhi', TRUE),
-    ('JEE-MAIN', 'IIT Joint Entrance Exam - Main', 'ENTRANCE', 'Delhi', TRUE),
-    ('JEE-ADVANCED', 'IIT Joint Entrance Exam - Advanced', 'ENTRANCE', 'Delhi', TRUE),
-    ('NEET', 'National Eligibility cum Entrance Test', 'ENTRANCE', 'Delhi', TRUE),
-    ('CUET', 'Common University Entrance Test', 'ENTRANCE', 'Delhi', TRUE),
-    ('Olympiad', 'Olympiad', 'COMPETITION', 'Delhi', TRUE)
-) AS seed(goal_id, name, exam_type_name, state_name, is_active)
+    ('AISSCE', 'All India Senior School Certificate Examination', 'CBSE', 'BOARD', 'Delhi', TRUE),
+    ('JEE-MAIN', 'IIT Joint Entrance Exam - Main', NULL, 'ENTRANCE', 'Delhi', TRUE),
+    ('JEE-ADVANCED', 'IIT Joint Entrance Exam - Advanced', NULL, 'ENTRANCE', 'Delhi', TRUE),
+    ('NEET', 'National Eligibility cum Entrance Test', NULL, 'ENTRANCE', 'Delhi', TRUE),
+    ('CUET', 'Common University Entrance Test', NULL, 'ENTRANCE', 'Delhi', TRUE),
+    ('Olympiad', 'Olympiad', NULL, 'COMPETITION', 'Delhi', TRUE)
+) AS seed(goal_id, name, board_code, exam_type_name, state_name, is_active)
 JOIN mst_exam_type AS exam_type
   ON exam_type.name = seed.exam_type_name
 JOIN mst_state AS state
   ON state.name = seed.state_name
 ON CONFLICT (goal_id) DO UPDATE
 SET name = EXCLUDED.name,
+    board_code = EXCLUDED.board_code,
     fk_mst_exam_type_id = EXCLUDED.fk_mst_exam_type_id,
     fk_state_id = EXCLUDED.fk_state_id,
     is_active = EXCLUDED.is_active;
@@ -1062,148 +1075,35 @@ DROP TABLE IF EXISTS student_mastery CASCADE;
 DROP TABLE IF EXISTS student_response CASCADE;
 DROP TABLE IF EXISTS student_attempt_item CASCADE;
 DROP TABLE IF EXISTS student_attempt CASCADE;
-DROP TABLE IF EXISTS audit_event CASCADE;
-DROP TABLE IF EXISTS editorial_comment CASCADE;
-DROP TABLE IF EXISTS review_decision CASCADE;
-DROP TABLE IF EXISTS review_queue CASCADE;
-DROP TABLE IF EXISTS publish_bundle CASCADE;
 DROP TABLE IF EXISTS practice_set_item CASCADE;
 DROP TABLE IF EXISTS practice_set CASCADE;
-DROP TABLE IF EXISTS question_bank_item_version CASCADE;
 DROP TABLE IF EXISTS question_bank_item CASCADE;
-DROP TABLE IF EXISTS layer7_learning_analytics CASCADE;
-DROP TABLE IF EXISTS layer7_adaptive_next_action CASCADE;
-DROP TABLE IF EXISTS layer7_performance_summary CASCADE;
-DROP TABLE IF EXISTS layer7_parent_note CASCADE;
-DROP TABLE IF EXISTS layer7_teacher_note CASCADE;
-DROP TABLE IF EXISTS layer7_revision_note CASCADE;
-DROP TABLE IF EXISTS layer7_adaptive_remediation CASCADE;
-DROP TABLE IF EXISTS layer7_misconception_feedback CASCADE;
-DROP TABLE IF EXISTS layer7_memory_reinforcement_retrieval_cue CASCADE;
-DROP TABLE IF EXISTS layer7_memory_reinforcement CASCADE;
-DROP TABLE IF EXISTS layer7_progressive_hint CASCADE;
-DROP TABLE IF EXISTS layer7_distractor_analysis CASCADE;
-DROP TABLE IF EXISTS layer7_learning_support CASCADE;
-DROP TABLE IF EXISTS layer7_learning_support_contract CASCADE;
-DROP TABLE IF EXISTS layer6_assessment_item_acceptable_answer CASCADE;
-DROP TABLE IF EXISTS layer6_assessment_item_option CASCADE;
-DROP TABLE IF EXISTS layer6_assessment_item CASCADE;
-DROP TABLE IF EXISTS layer6_assessment_item_contract CASCADE;
-DROP TABLE IF EXISTS layer5_blueprint_recommended_after_failure CASCADE;
-DROP TABLE IF EXISTS layer5_blueprint_concept_dependency CASCADE;
-DROP TABLE IF EXISTS layer5_blueprint_secondary_concept CASCADE;
-DROP TABLE IF EXISTS layer5_item_blueprint CASCADE;
-DROP TABLE IF EXISTS layer5_item_blueprint_contract CASCADE;
-DROP TABLE IF EXISTS layer4_strategy_generator_constraint CASCADE;
-DROP TABLE IF EXISTS layer4_strategy_remediation CASCADE;
-DROP TABLE IF EXISTS layer4_strategy_recommendation CASCADE;
-DROP TABLE IF EXISTS layer4_assessment_strategy CASCADE;
-DROP TABLE IF EXISTS layer4_assessment_strategy_contract CASCADE;
-DROP TABLE IF EXISTS layer3_capability_opportunity CASCADE;
-DROP TABLE IF EXISTS layer3_capability_dependency CASCADE;
-DROP TABLE IF EXISTS layer3_capability_dimension CASCADE;
-DROP TABLE IF EXISTS layer3_assessment_capability CASCADE;
-DROP TABLE IF EXISTS layer3_assessment_capability_contract CASCADE;
-DROP TABLE IF EXISTS layer2_concept_memory_associated_concept CASCADE;
-DROP TABLE IF EXISTS layer2_concept_memory_retrieval_cue CASCADE;
-DROP TABLE IF EXISTS layer2_concept_memory_supporting_concept CASCADE;
-DROP TABLE IF EXISTS layer2_concept_memory CASCADE;
-DROP TABLE IF EXISTS layer2_concept_memory_contract CASCADE;
-DROP TABLE IF EXISTS layer1_assessment_unit CASCADE;
-DROP TABLE IF EXISTS layer1_question_pattern CASCADE;
-DROP TABLE IF EXISTS layer1_memory_hook CASCADE;
-DROP TABLE IF EXISTS layer1_common_misconception CASCADE;
-DROP TABLE IF EXISTS layer1_exception CASCADE;
-DROP TABLE IF EXISTS layer1_terminology_related_concept CASCADE;
-DROP TABLE IF EXISTS layer1_terminology CASCADE;
-DROP TABLE IF EXISTS layer1_diagram_tested_label CASCADE;
-DROP TABLE IF EXISTS layer1_diagram_label CASCADE;
-DROP TABLE IF EXISTS layer1_diagram CASCADE;
-DROP TABLE IF EXISTS layer1_classification_group CASCADE;
-DROP TABLE IF EXISTS layer1_classification CASCADE;
-DROP TABLE IF EXISTS layer1_comparison_similarity CASCADE;
-DROP TABLE IF EXISTS layer1_comparison_difference CASCADE;
-DROP TABLE IF EXISTS layer1_comparison CASCADE;
-DROP TABLE IF EXISTS layer1_relationship CASCADE;
-DROP TABLE IF EXISTS layer1_cause_effect CASCADE;
-DROP TABLE IF EXISTS layer1_stage_sequence_stage CASCADE;
-DROP TABLE IF EXISTS layer1_stage_sequence CASCADE;
-DROP TABLE IF EXISTS layer1_process_step CASCADE;
-DROP TABLE IF EXISTS layer1_process_output CASCADE;
-DROP TABLE IF EXISTS layer1_process_input CASCADE;
-DROP TABLE IF EXISTS layer1_process CASCADE;
-DROP TABLE IF EXISTS layer1_function CASCADE;
-DROP TABLE IF EXISTS layer1_structure_part CASCADE;
-DROP TABLE IF EXISTS layer1_structure CASCADE;
-DROP TABLE IF EXISTS layer1_core_concept CASCADE;
-DROP TABLE IF EXISTS layer1_knowledge_contract CASCADE;
+DROP TABLE IF EXISTS content_assessment_item CASCADE;
+DROP TABLE IF EXISTS content_card_media CASCADE;
+DROP TABLE IF EXISTS content_card CASCADE;
+DROP TABLE IF EXISTS content_concept_memory CASCADE;
+DROP TABLE IF EXISTS content_sync_run CASCADE;
 DROP TABLE IF EXISTS concept_alias CASCADE;
 DROP TABLE IF EXISTS concept CASCADE;
 DROP TABLE IF EXISTS assessment_unit_dependency CASCADE;
 DROP TABLE IF EXISTS assessment_unit_supporting_concept CASCADE;
 DROP TABLE IF EXISTS assessment_unit CASCADE;
-DROP TABLE IF EXISTS layer_contract_dependency CASCADE;
-DROP TABLE IF EXISTS layer_output_contract CASCADE;
-DROP TABLE IF EXISTS layer_input_contract CASCADE;
-DROP TABLE IF EXISTS layer_run CASCADE;
-DROP TABLE IF EXISTS assessment_pipeline_run_layer CASCADE;
-DROP TABLE IF EXISTS assessment_pipeline_run CASCADE;
-DROP TABLE IF EXISTS source_parse_version CASCADE;
-DROP TABLE IF EXISTS source_ocr_text CASCADE;
 DROP TABLE IF EXISTS source_section_image CASCADE;
 DROP TABLE IF EXISTS source_section CASCADE;
 DROP TABLE IF EXISTS source_document CASCADE;
-DROP TABLE IF EXISTS generation_registry CASCADE;
-DROP TABLE IF EXISTS mst_section CASCADE;
 
-CREATE TABLE IF NOT EXISTS generation_registry (
+-- Replaces generation_registry+layer_run (seven-layer pipeline, removed) --
+-- one row per admin JSON-upload import, see conceptImportService.js.
+CREATE TABLE IF NOT EXISTS content_sync_run (
   id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-  pipeline_job_id UUID,
-  layer_number INTEGER NOT NULL,
-  layer_name VARCHAR(120) NOT NULL,
-  prompt_version VARCHAR(50) NOT NULL DEFAULT '1.0',
-  contract_schema_version VARCHAR(50) NOT NULL DEFAULT '1.0',
-  model_name VARCHAR(120),
-  openai_response_id VARCHAR(120),
-  cache_key TEXT,
-  source_hash TEXT,
-  status VARCHAR(40) NOT NULL DEFAULT 'draft',
+  content_key VARCHAR(160) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'completed',
   created_by BIGINT REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS assessment_pipeline_run (
-  id BIGSERIAL PRIMARY KEY,
-  job_id UUID NOT NULL UNIQUE,
-  source_document_id BIGINT,
-  source_section_id BIGINT,
-  fk_mst_chapter_id BIGINT,
-  request_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-  status VARCHAR(40) NOT NULL DEFAULT 'queued',
-  created_by BIGINT REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS assessment_pipeline_run_layer (
-  id BIGSERIAL PRIMARY KEY,
-  job_id UUID NOT NULL REFERENCES assessment_pipeline_run(job_id) ON DELETE CASCADE,
-  generation_id UUID REFERENCES generation_registry(generation_id) ON DELETE SET NULL,
-  layer_number INTEGER NOT NULL,
-  layer_name VARCHAR(120) NOT NULL,
-  source_section_id BIGINT,
-  assessment_unit_id VARCHAR(80),
-  prompt_version VARCHAR(50) NOT NULL DEFAULT '1.0',
-  model_name VARCHAR(120),
-  status VARCHAR(40) NOT NULL DEFAULT 'queued',
-  is_cached BOOLEAN NOT NULL DEFAULT FALSE,
-  token_input INTEGER NOT NULL DEFAULT 0,
-  token_output INTEGER NOT NULL DEFAULT 0,
-  openai_response_id VARCHAR(120),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+CREATE INDEX IF NOT EXISTS idx_content_sync_run_content_key
+ON content_sync_run (content_key, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS source_document (
   id BIGSERIAL PRIMARY KEY,
@@ -1268,7 +1168,14 @@ CREATE TABLE IF NOT EXISTS content_update_event (
   source_section_id BIGINT REFERENCES source_section(id) ON DELETE SET NULL,
   fk_mst_chapter_id BIGINT REFERENCES mst_chapter(id) ON DELETE SET NULL,
   target_layer_number INTEGER,
-  pipeline_job_id UUID REFERENCES assessment_pipeline_run(job_id) ON DELETE SET NULL,
+  -- Was a FK to assessment_pipeline_run(job_id) ON DELETE SET NULL -- that
+  -- table (the seven-layer pipeline's run tracker) was removed along with
+  -- the pipeline itself, so this is now a plain, always-null column. Kept
+  -- rather than dropped since nothing writes new content_update_event rows
+  -- anymore anyway (the sole writer was the same removed pipeline code) --
+  -- this table stays purely for studentDashboardService.js's
+  -- getNotificationsForUser to keep reading whatever history already exists.
+  pipeline_job_id UUID,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -1299,144 +1206,14 @@ ADD COLUMN IF NOT EXISTS source_page_number INTEGER;
 ALTER TABLE IF EXISTS source_section_image
 ADD COLUMN IF NOT EXISTS crop_region_json JSONB;
 
-CREATE TABLE IF NOT EXISTS source_ocr_text (
-  id BIGSERIAL PRIMARY KEY,
-  source_section_id BIGINT NOT NULL REFERENCES source_section(id) ON DELETE CASCADE,
-  ocr_provider VARCHAR(120),
-  ocr_confidence NUMERIC(5,4),
-  raw_text TEXT,
-  normalized_text TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS source_parse_version (
-  id BIGSERIAL PRIMARY KEY,
-  source_section_id BIGINT NOT NULL REFERENCES source_section(id) ON DELETE CASCADE,
-  pipeline_job_id UUID REFERENCES assessment_pipeline_run(job_id) ON DELETE SET NULL,
-  generation_id UUID REFERENCES generation_registry(generation_id),
-  parse_version VARCHAR(50) NOT NULL DEFAULT '1.0',
-  parser_name VARCHAR(120),
-  parse_status VARCHAR(40) NOT NULL DEFAULT 'draft',
-  parsed_text TEXT,
-  metadata_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS layer_run (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  pipeline_job_id UUID REFERENCES assessment_pipeline_run(job_id) ON DELETE SET NULL,
-  layer_number INTEGER NOT NULL,
-  layer_name VARCHAR(120) NOT NULL,
-  source_document_id BIGINT REFERENCES source_document(id),
-  source_section_id BIGINT REFERENCES source_section(id),
-  fk_mst_chapter_id BIGINT REFERENCES mst_chapter(id),
-  assessment_unit_id VARCHAR(80),
-  parent_generation_id UUID REFERENCES generation_registry(generation_id),
-  prompt_version VARCHAR(50) NOT NULL DEFAULT '1.0',
-  contract_schema_version VARCHAR(50) NOT NULL DEFAULT '1.0',
-  model_name VARCHAR(120),
-  openai_response_id VARCHAR(120),
-  cache_key TEXT,
-  source_hash TEXT,
-  status VARCHAR(40) NOT NULL DEFAULT 'draft',
-  token_input INTEGER NOT NULL DEFAULT 0,
-  token_output INTEGER NOT NULL DEFAULT 0,
-  latency_ms INTEGER NOT NULL DEFAULT 0,
-  created_by BIGINT REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS layer_input_contract (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  pipeline_job_id UUID REFERENCES assessment_pipeline_run(job_id) ON DELETE SET NULL,
-  layer_number INTEGER NOT NULL,
-  layer_name VARCHAR(120) NOT NULL,
-  source_document_id BIGINT REFERENCES source_document(id),
-  source_section_id BIGINT REFERENCES source_section(id),
-  fk_mst_chapter_id BIGINT REFERENCES mst_chapter(id),
-  assessment_unit_id VARCHAR(80),
-  parent_generation_id UUID REFERENCES generation_registry(generation_id),
-  prompt_version VARCHAR(50) NOT NULL DEFAULT '1.0',
-  contract_schema_version VARCHAR(50) NOT NULL DEFAULT '1.0',
-  model_name VARCHAR(120),
-  openai_response_id VARCHAR(120),
-  cache_key TEXT,
-  source_hash TEXT,
-  input_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-  status VARCHAR(40) NOT NULL DEFAULT 'draft',
-  token_input INTEGER NOT NULL DEFAULT 0,
-  created_by BIGINT REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS layer_output_contract (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  pipeline_job_id UUID REFERENCES assessment_pipeline_run(job_id) ON DELETE SET NULL,
-  layer_number INTEGER NOT NULL,
-  layer_name VARCHAR(120) NOT NULL,
-  source_document_id BIGINT REFERENCES source_document(id),
-  source_section_id BIGINT REFERENCES source_section(id),
-  fk_mst_chapter_id BIGINT REFERENCES mst_chapter(id),
-  assessment_unit_id VARCHAR(80),
-  parent_generation_id UUID REFERENCES generation_registry(generation_id),
-  prompt_version VARCHAR(50) NOT NULL DEFAULT '1.0',
-  contract_schema_version VARCHAR(50) NOT NULL DEFAULT '1.0',
-  model_name VARCHAR(120),
-  openai_response_id VARCHAR(120),
-  cache_key TEXT,
-  source_hash TEXT,
-  output_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-  status VARCHAR(40) NOT NULL DEFAULT 'draft',
-  token_output INTEGER NOT NULL DEFAULT 0,
-  latency_ms INTEGER NOT NULL DEFAULT 0,
-  created_by BIGINT REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS layer_contract_dependency (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  depends_on_generation_id UUID NOT NULL REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  dependency_role VARCHAR(80) NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (generation_id, depends_on_generation_id, dependency_role)
-);
-
-CREATE TABLE IF NOT EXISTS layer_generation_version (
-  id BIGSERIAL PRIMARY KEY,
-  assessment_unit_id VARCHAR(80) NOT NULL,
-  layer_number INTEGER NOT NULL,
-  generation_id UUID NOT NULL UNIQUE REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  pipeline_job_id UUID REFERENCES assessment_pipeline_run(job_id) ON DELETE SET NULL,
-  version_number INTEGER NOT NULL,
-  is_selected BOOLEAN NOT NULL DEFAULT FALSE,
-  token_input INTEGER NOT NULL DEFAULT 0,
-  token_output INTEGER NOT NULL DEFAULT 0,
-  created_by BIGINT REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (assessment_unit_id, layer_number, version_number)
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_layer_generation_version_selected
-  ON layer_generation_version (assessment_unit_id, layer_number)
-  WHERE is_selected;
-
-CREATE INDEX IF NOT EXISTS idx_layer_generation_version_lookup
-  ON layer_generation_version (assessment_unit_id, layer_number);
-
--- 'approved' | 'rejected' ('pending' reserved for a future moderator-triggered
--- regeneration flow). Defaults to 'approved' so existing/future admin-direct
--- pipeline generations keep their current visibility; only a moderator
--- "request changes"/"reject" decision ever moves a version to 'rejected'.
-ALTER TABLE layer_generation_version
-ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) NOT NULL DEFAULT 'approved';
-
 CREATE TABLE IF NOT EXISTS assessment_unit (
   id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
+  -- Was NOT NULL REFERENCES generation_registry(generation_id) -- that table
+  -- was removed along with the seven-layer pipeline. Repointed at
+  -- content_sync_run(id) and made nullable rather than backfilled, so
+  -- existing rows from before this migration are left untouched (stale
+  -- until re-imported) instead of destroyed -- see conceptImportService.js.
+  generation_id BIGINT REFERENCES content_sync_run(id),
   assessment_unit_id VARCHAR(80) NOT NULL UNIQUE,
   source_section_id BIGINT REFERENCES source_section(id),
   fk_mst_chapter_id BIGINT REFERENCES mst_chapter(id),
@@ -1451,7 +1228,7 @@ CREATE TABLE IF NOT EXISTS assessment_unit (
 
 CREATE TABLE IF NOT EXISTS assessment_unit_supporting_concept (
   id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
+  generation_id BIGINT REFERENCES content_sync_run(id),
   assessment_unit_id VARCHAR(80) NOT NULL REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
   supporting_concept VARCHAR(255) NOT NULL,
   display_order INTEGER NOT NULL DEFAULT 0
@@ -1459,7 +1236,7 @@ CREATE TABLE IF NOT EXISTS assessment_unit_supporting_concept (
 
 CREATE TABLE IF NOT EXISTS assessment_unit_dependency (
   id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
+  generation_id BIGINT REFERENCES content_sync_run(id),
   assessment_unit_id VARCHAR(80) NOT NULL REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
   depends_on_assessment_unit_id VARCHAR(80) NOT NULL REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
   dependency_type VARCHAR(80) NOT NULL DEFAULT 'prerequisite',
@@ -1468,7 +1245,7 @@ CREATE TABLE IF NOT EXISTS assessment_unit_dependency (
 
 CREATE TABLE IF NOT EXISTS concept (
   id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
+  generation_id BIGINT REFERENCES content_sync_run(id),
   source_section_id BIGINT REFERENCES source_section(id),
   fk_mst_chapter_id BIGINT REFERENCES mst_chapter(id),
   assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE SET NULL,
@@ -1479,340 +1256,105 @@ CREATE TABLE IF NOT EXISTS concept (
 
 CREATE TABLE IF NOT EXISTS concept_alias (
   id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
+  generation_id BIGINT REFERENCES content_sync_run(id),
   concept_id BIGINT NOT NULL REFERENCES concept(id) ON DELETE CASCADE,
   alias_name VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS layer1_knowledge_contract (
+-- Generic content card, mirroring the companion content app's
+-- content_processor_card shape (contentuitab/processorkey/parentCardkey/
+-- cardkey/title/summary/details) -- see conceptImportService.js. Replaces
+-- the entire layer1_*/layer2_concept_memory* schema plus the four
+-- concept_import_* tables. assessment_unit_id is set for concept-scoped
+-- cards (teaching/assessment/revision/tutor/deeplearning/extraction);
+-- source_section_id is set for section-scoped root cards (pdfassets/visual).
+CREATE TABLE IF NOT EXISTS content_card (
   id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL UNIQUE REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  source_section_id BIGINT REFERENCES source_section(id),
-  fk_mst_chapter_id BIGINT REFERENCES mst_chapter(id),
-  context_summary TEXT NOT NULL,
-  contract_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+  sync_run_id BIGINT REFERENCES content_sync_run(id) ON DELETE CASCADE,
+  assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
+  source_section_id BIGINT REFERENCES source_section(id) ON DELETE CASCADE,
+  content_key VARCHAR(160) NOT NULL,
+  contentuitab VARCHAR(40) NOT NULL,
+  processorkey VARCHAR(40) NOT NULL,
+  parent_cardkey VARCHAR(80) NOT NULL DEFAULT '',
+  cardkey VARCHAR(80) NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  title TEXT,
+  summary TEXT,
+  details JSONB NOT NULL DEFAULT '[]'::jsonb,
+  image_data_url TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (content_key, processorkey, parent_cardkey, cardkey)
+);
+
+CREATE INDEX IF NOT EXISTS idx_content_card_assessment_unit
+ON content_card (assessment_unit_id, contentuitab, processorkey);
+
+CREATE INDEX IF NOT EXISTS idx_content_card_source_section
+ON content_card (source_section_id, contentuitab, processorkey);
+
+-- Replaces layer2_concept_memory -- synthesized at import time from a
+-- concept's eli5/storymode/analogy/realworld content_card rows (same 3-of-6
+-- mapping conceptImportService.js's importConceptMemory always did). The old
+-- estimated_memory_strength heuristic is dropped -- confirmed unused by any
+-- client field.
+CREATE TABLE IF NOT EXISTS content_concept_memory (
+  assessment_unit_id VARCHAR(80) PRIMARY KEY REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
+  story TEXT,
+  analogy TEXT,
+  real_world_connection TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Structured assessment items (replaces layer6_assessment_item + its two
+-- child tables, and concept_import_assessment_item for the families that DO
+-- have a clean single_select/free_text shape -- hotspot/casestudy/
+-- einsteinmode stay in content_card only, no structured row here). Feeds
+-- grading (studentPracticeService.js) and question_bank_item sync.
+CREATE TABLE IF NOT EXISTS content_assessment_item (
+  id BIGSERIAL PRIMARY KEY,
+  sync_run_id BIGINT REFERENCES content_sync_run(id) ON DELETE CASCADE,
+  content_card_id BIGINT REFERENCES content_card(id) ON DELETE CASCADE,
+  assessment_unit_id VARCHAR(80) NOT NULL REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
+  item_id VARCHAR(160) NOT NULL UNIQUE,
+  question_family VARCHAR(40) NOT NULL,
+  interaction_type VARCHAR(20) NOT NULL,
+  question TEXT NOT NULL,
+  options JSONB NOT NULL DEFAULT '[]'::jsonb,
+  correct_answer TEXT,
+  answer_explanation TEXT,
+  difficulty VARCHAR(40),
+  blooms_level VARCHAR(80),
+  learning_objective TEXT,
+  hints JSONB NOT NULL DEFAULT '[]'::jsonb,
+  estimated_time_seconds INTEGER NOT NULL DEFAULT 0,
+  marks INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS layer1_core_concept (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  concept_name VARCHAR(255) NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
+CREATE INDEX IF NOT EXISTS idx_content_assessment_item_unit
+ON content_assessment_item (assessment_unit_id);
 
-CREATE TABLE IF NOT EXISTS layer1_structure (
+-- Admin-uploaded images for root-level pdfassets/visual content_card rows
+-- (diagrams, mind maps, etc.) -- same version_number + is_selected pattern as
+-- the untouched memory_hook_media, scoped to a content_card instead of an
+-- assessment_unit+section_key.
+CREATE TABLE IF NOT EXISTS content_card_media (
   id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  name VARCHAR(255) NOT NULL,
-  type VARCHAR(120),
-  location TEXT,
-  description TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layer1_structure_part (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer1_structure_id BIGINT NOT NULL REFERENCES layer1_structure(id) ON DELETE CASCADE,
-  important_part VARCHAR(255) NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer1_function (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  structure_name VARCHAR(255),
-  function_text TEXT NOT NULL,
-  importance TEXT,
-  related_process VARCHAR(255)
-);
-
-CREATE TABLE IF NOT EXISTS layer1_process (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  name VARCHAR(255) NOT NULL,
-  purpose TEXT,
-  location TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layer1_process_input (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer1_process_id BIGINT NOT NULL REFERENCES layer1_process(id) ON DELETE CASCADE,
-  input_value TEXT NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer1_process_output (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer1_process_id BIGINT NOT NULL REFERENCES layer1_process(id) ON DELETE CASCADE,
-  output_value TEXT NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer1_process_step (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer1_process_id BIGINT NOT NULL REFERENCES layer1_process(id) ON DELETE CASCADE,
-  step_text TEXT NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer1_stage_sequence (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  name VARCHAR(255) NOT NULL,
-  sequence_type VARCHAR(120),
-  important_notes TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layer1_stage_sequence_stage (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer1_stage_sequence_id BIGINT NOT NULL REFERENCES layer1_stage_sequence(id) ON DELETE CASCADE,
-  stage_name VARCHAR(255) NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer1_cause_effect (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  cause TEXT NOT NULL,
-  effect TEXT NOT NULL,
-  biological_reason TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layer1_relationship (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  relationship_name VARCHAR(255) NOT NULL,
-  relationship_type VARCHAR(100),
-  related_concepts TEXT[] NOT NULL DEFAULT '{}',
-  relationship_summary TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS layer1_comparison (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  entity_1 VARCHAR(255) NOT NULL,
-  entity_2 VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS layer1_comparison_difference (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer1_comparison_id BIGINT NOT NULL REFERENCES layer1_comparison(id) ON DELETE CASCADE,
-  difference_text TEXT NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer1_comparison_similarity (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer1_comparison_id BIGINT NOT NULL REFERENCES layer1_comparison(id) ON DELETE CASCADE,
-  similarity_text TEXT NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer1_classification (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  category VARCHAR(255) NOT NULL,
-  classification_basis TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layer1_classification_group (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer1_classification_id BIGINT NOT NULL REFERENCES layer1_classification(id) ON DELETE CASCADE,
-  group_name VARCHAR(255) NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer1_diagram (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  diagram_name VARCHAR(255) NOT NULL,
-  purpose TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layer1_diagram_label (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer1_diagram_id BIGINT NOT NULL REFERENCES layer1_diagram(id) ON DELETE CASCADE,
-  label_name VARCHAR(255) NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer1_diagram_tested_label (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer1_diagram_id BIGINT NOT NULL REFERENCES layer1_diagram(id) ON DELETE CASCADE,
-  label_name VARCHAR(255) NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
--- layer1_diagram itself only ever holds structured text (name/purpose/labels,
--- see layer1_diagram_label above) -- no image or coordinate data. This table
--- mirrors memory_hook_media's versioned-image pattern so a diagram can also
--- have an actual generated/uploaded picture, one row selected at a time.
-CREATE TABLE IF NOT EXISTS layer1_diagram_media (
-  id BIGSERIAL PRIMARY KEY,
-  layer1_diagram_id BIGINT NOT NULL REFERENCES layer1_diagram(id) ON DELETE CASCADE,
-  source VARCHAR(10) NOT NULL CHECK (source IN ('generated', 'uploaded')),
+  content_card_id BIGINT NOT NULL REFERENCES content_card(id) ON DELETE CASCADE,
   version_number INTEGER NOT NULL,
-  is_selected BOOLEAN NOT NULL DEFAULT FALSE,
-  prompt_text TEXT,
-  aspect_ratio VARCHAR(10) DEFAULT '3:2',
+  is_selected BOOLEAN NOT NULL DEFAULT TRUE,
   media_data TEXT NOT NULL,
   mime_type VARCHAR(60) NOT NULL,
   original_file_name VARCHAR(255),
-  model_name VARCHAR(120),
   created_by BIGINT REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (layer1_diagram_id, version_number)
+  UNIQUE (content_card_id, version_number)
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_layer1_diagram_media_selected
-ON layer1_diagram_media (layer1_diagram_id) WHERE is_selected;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_content_card_media_selected
+ON content_card_media (content_card_id) WHERE is_selected;
 
-CREATE TABLE IF NOT EXISTS layer1_terminology (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  term VARCHAR(255) NOT NULL,
-  definition TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layer1_terminology_related_concept (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer1_terminology_id BIGINT NOT NULL REFERENCES layer1_terminology(id) ON DELETE CASCADE,
-  related_concept VARCHAR(255) NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer1_exception (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  topic VARCHAR(255) NOT NULL,
-  exception_text TEXT NOT NULL,
-  reason TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layer1_common_misconception (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  concept VARCHAR(255),
-  misconception TEXT NOT NULL,
-  reason_for_confusion TEXT,
-  correction TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layer1_memory_hook (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  concept VARCHAR(255) NOT NULL,
-  memory_type VARCHAR(80),
-  memory_hook TEXT NOT NULL,
-  why_it_helps TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layer1_question_pattern (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  pattern_name VARCHAR(255) NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer1_assessment_unit (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  assessment_unit_id VARCHAR(80) NOT NULL,
-  primary_concept VARCHAR(255) NOT NULL,
-  learning_objective TEXT,
-  concept_category VARCHAR(80) NOT NULL,
-  curriculum_importance VARCHAR(40) NOT NULL,
-  UNIQUE (generation_id, assessment_unit_id)
-);
-
-ALTER TABLE IF EXISTS assessment_unit
-ADD COLUMN IF NOT EXISTS learning_objective TEXT;
-
-ALTER TABLE IF EXISTS layer1_assessment_unit
-ADD COLUMN IF NOT EXISTS learning_objective TEXT;
-
-CREATE TABLE IF NOT EXISTS layer2_concept_memory_contract (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL UNIQUE REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  contract_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS layer2_concept_memory (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  assessment_unit_id VARCHAR(80) NOT NULL REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
-  primary_concept VARCHAR(255) NOT NULL,
-  canonical_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-  story TEXT,
-  analogy TEXT,
-  visual_hook TEXT,
-  real_world_connection TEXT,
-  memory_trick TEXT,
-  curiosity_hook TEXT,
-  micro_activity TEXT,
-  misconception_alert TEXT,
-  memory_difficulty VARCHAR(40),
-  estimated_memory_strength NUMERIC(4,3) NOT NULL DEFAULT 0.000,
-  UNIQUE (generation_id, assessment_unit_id)
-);
-
-ALTER TABLE IF EXISTS layer2_concept_memory
-ADD COLUMN IF NOT EXISTS curiosity_hook TEXT;
-
-ALTER TABLE IF EXISTS layer2_concept_memory
-ADD COLUMN IF NOT EXISTS micro_activity TEXT;
-
-ALTER TABLE IF EXISTS layer2_concept_memory
-ADD COLUMN IF NOT EXISTS canonical_json JSONB NOT NULL DEFAULT '{}'::jsonb;
-
-CREATE TABLE IF NOT EXISTS layer2_concept_memory_supporting_concept (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer2_concept_memory_id BIGINT NOT NULL REFERENCES layer2_concept_memory(id) ON DELETE CASCADE,
-  supporting_concept VARCHAR(255) NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer2_concept_memory_retrieval_cue (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer2_concept_memory_id BIGINT NOT NULL REFERENCES layer2_concept_memory(id) ON DELETE CASCADE,
-  retrieval_cue VARCHAR(255) NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer2_concept_memory_associated_concept (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer2_concept_memory_id BIGINT NOT NULL REFERENCES layer2_concept_memory(id) ON DELETE CASCADE,
-  associated_concept VARCHAR(255) NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
--- Whatever media (image or video) is currently attached to one of the 7
--- Layer 2 memory-hook sections, run AFTER Layer 2 has already been
--- generated -- deliberately NOT wired into generation_registry/
--- layer_generation_version (those are keyed to real pipeline layers 1-7;
--- inventing a fictitious "layer 8" would misuse that idiom). Mirrors just
--- the version_number + is_selected + partial-unique-index pattern already
--- established there. Two ways to fill a section's media slot -- AI
--- generation (source='generated', image only) or a manual admin upload
--- (source='uploaded', image or video) -- share this same table and
--- versioning: whichever happened most recently is is_selected.
--- Supersedes the earlier image-only memory_hook_image table (left in place,
--- unused, per this file's additive-only convention).
 CREATE TABLE IF NOT EXISTS memory_hook_media (
   id BIGSERIAL PRIMARY KEY,
   assessment_unit_id VARCHAR(80) NOT NULL REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
@@ -1880,7 +1422,12 @@ CREATE TABLE IF NOT EXISTS chapter_exercise_upload (
   mime_type VARCHAR(60) NOT NULL,
   extraction_status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (extraction_status IN ('pending', 'completed', 'failed')),
   error_message TEXT,
-  pipeline_job_id UUID REFERENCES assessment_pipeline_run(job_id) ON DELETE SET NULL,
+  -- Was a FK to assessment_pipeline_run(job_id) ON DELETE SET NULL -- that
+  -- table was removed along with the seven-layer pipeline. Kept as a plain
+  -- column; chapterExerciseAdminController.js's uploadChapterExerciseHandler
+  -- still accepts an optional pipelineJobId field but nothing populates a
+  -- real one anymore.
+  pipeline_job_id UUID,
   created_by BIGINT REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -1926,151 +1473,17 @@ CREATE TABLE IF NOT EXISTS chapter_exercise_response (
 ALTER TABLE IF EXISTS chapter_exercise_response
 ADD COLUMN IF NOT EXISTS source_page_images JSONB;
 
-CREATE TABLE IF NOT EXISTS layer3_assessment_capability_contract (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL UNIQUE REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
-  output_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS layer4_assessment_strategy_contract (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL UNIQUE REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
-  output_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS layer5_item_blueprint_contract (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL UNIQUE REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
-  blueprint_id VARCHAR(80),
-  output_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS layer5_item_blueprint (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  blueprint_id VARCHAR(80) NOT NULL UNIQUE,
-  assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
-  question_family VARCHAR(120) NOT NULL,
-  interaction_type VARCHAR(120) NOT NULL,
-  expected_answer_type VARCHAR(120) NOT NULL,
-  blooms_level VARCHAR(80) NOT NULL,
-  difficulty VARCHAR(40) NOT NULL,
-  marks INTEGER NOT NULL DEFAULT 0,
-  estimated_time_seconds INTEGER NOT NULL DEFAULT 0,
-  common_misconception TEXT,
-  success_criteria TEXT,
-  memory_support JSONB NOT NULL DEFAULT '{}'::jsonb,
-  generator_constraints JSONB NOT NULL DEFAULT '{}'::jsonb
-);
-
-CREATE TABLE IF NOT EXISTS layer6_assessment_item_contract (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL UNIQUE REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  contract_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS layer6_assessment_item (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  item_id VARCHAR(80) NOT NULL UNIQUE,
-  blueprint_id VARCHAR(80) REFERENCES layer5_item_blueprint(blueprint_id) ON DELETE SET NULL,
-  assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE SET NULL,
-  question_family VARCHAR(120),
-  interaction_type VARCHAR(120),
-  difficulty VARCHAR(40),
-  blooms_level VARCHAR(80),
-  assessment_dimension VARCHAR(120),
-  learning_objective TEXT,
-  question TEXT NOT NULL,
-  correct_answer TEXT,
-  interaction_data JSONB NOT NULL DEFAULT '{}'::jsonb,
-  diagram_instruction TEXT,
-  marks INTEGER NOT NULL DEFAULT 0,
-  estimated_time_seconds INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer6_assessment_item_option (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer6_assessment_item_id BIGINT NOT NULL REFERENCES layer6_assessment_item(id) ON DELETE CASCADE,
-  option_text TEXT NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer6_assessment_item_acceptable_answer (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer6_assessment_item_id BIGINT NOT NULL REFERENCES layer6_assessment_item(id) ON DELETE CASCADE,
-  answer_text TEXT NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer7_learning_support_contract (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL UNIQUE REFERENCES generation_registry(generation_id) ON DELETE CASCADE,
-  assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
-  contract_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS layer7_learning_support (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
-  concept_explanation TEXT,
-  correct_answer_reasoning TEXT,
-  real_world_insight TEXT,
-  mastery_recommendation VARCHAR(80)
-);
-
-CREATE TABLE IF NOT EXISTS layer7_distractor_analysis (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer7_learning_support_id BIGINT NOT NULL REFERENCES layer7_learning_support(id) ON DELETE CASCADE,
-  option_text TEXT,
-  reason_selected TEXT,
-  why_incorrect TEXT,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer7_progressive_hint (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer7_learning_support_id BIGINT NOT NULL REFERENCES layer7_learning_support(id) ON DELETE CASCADE,
-  hint_text TEXT NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS layer7_misconception_feedback (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer7_learning_support_id BIGINT NOT NULL REFERENCES layer7_learning_support(id) ON DELETE CASCADE,
-  misconception TEXT,
-  reason TEXT,
-  correction TEXT
-);
-
-CREATE TABLE IF NOT EXISTS layer7_adaptive_remediation (
-  id BIGSERIAL PRIMARY KEY,
-  generation_id UUID NOT NULL REFERENCES generation_registry(generation_id),
-  layer7_learning_support_id BIGINT NOT NULL REFERENCES layer7_learning_support(id) ON DELETE CASCADE,
-  remediation_text TEXT NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
-);
-
+-- Materialized practice-bank snapshot, synced from content_assessment_item
+-- (studentPracticeService.js's syncPracticeSetItems) -- kept from the prior
+-- seven-layer-removal migration since practice_set/student_attempt already
+-- depend on it. question_bank_item_version (unused, zero readers/writers)
+-- and the old generation_registry/layer5_item_blueprint/layer6_assessment_item
+-- FKs are dropped along with the rest of the seven-layer schema.
 CREATE TABLE IF NOT EXISTS question_bank_item (
   id BIGSERIAL PRIMARY KEY,
-  generation_id UUID REFERENCES generation_registry(generation_id),
+  generation_id BIGINT REFERENCES content_sync_run(id),
   assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE SET NULL,
-  blueprint_id VARCHAR(80) REFERENCES layer5_item_blueprint(blueprint_id) ON DELETE SET NULL,
-  item_id VARCHAR(80) REFERENCES layer6_assessment_item(item_id) ON DELETE SET NULL,
+  item_id VARCHAR(160) REFERENCES content_assessment_item(item_id) ON DELETE SET NULL,
   status VARCHAR(40) NOT NULL DEFAULT 'draft',
   current_version_number INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -2079,18 +1492,6 @@ CREATE TABLE IF NOT EXISTS question_bank_item (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_question_bank_item_item_id
 ON question_bank_item (item_id) WHERE item_id IS NOT NULL;
-
-CREATE TABLE IF NOT EXISTS question_bank_item_version (
-  id BIGSERIAL PRIMARY KEY,
-  question_bank_item_id BIGINT NOT NULL REFERENCES question_bank_item(id) ON DELETE CASCADE,
-  version_number INTEGER NOT NULL,
-  generation_id UUID REFERENCES generation_registry(generation_id),
-  item_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-  review_status VARCHAR(40) NOT NULL DEFAULT 'draft',
-  created_by BIGINT REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (question_bank_item_id, version_number)
-);
 
 CREATE TABLE IF NOT EXISTS practice_set (
   id BIGSERIAL PRIMARY KEY,
@@ -2120,6 +1521,16 @@ ADD COLUMN IF NOT EXISTS source_assessment_unit_id VARCHAR(80) REFERENCES assess
 CREATE UNIQUE INDEX IF NOT EXISTS idx_practice_set_source_assessment_unit
 ON practice_set (source_assessment_unit_id) WHERE source_assessment_unit_id IS NOT NULL;
 
+-- Third practice_set identity, alongside source_section_id/source_assessment_unit_id above --
+-- a demo-mode "chapter" assessment aggregating every concept tagged with the same
+-- (demo_class_label, demo_subject_label, demo_chapter_label) triple (see
+-- materializePracticeSetForDemoChapter in studentPracticeService.js).
+ALTER TABLE practice_set
+ADD COLUMN IF NOT EXISTS source_demo_chapter_key VARCHAR(400);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_practice_set_source_demo_chapter
+ON practice_set (source_demo_chapter_key) WHERE source_demo_chapter_key IS NOT NULL;
+
 CREATE TABLE IF NOT EXISTS practice_set_item (
   id BIGSERIAL PRIMARY KEY,
   practice_set_id BIGINT NOT NULL REFERENCES practice_set(id) ON DELETE CASCADE,
@@ -2128,63 +1539,6 @@ CREATE TABLE IF NOT EXISTS practice_set_item (
   display_order INTEGER NOT NULL DEFAULT 0,
   publish_state VARCHAR(40) NOT NULL DEFAULT 'draft',
   UNIQUE (practice_set_id, question_bank_item_id)
-);
-
-CREATE TABLE IF NOT EXISTS publish_bundle (
-  id BIGSERIAL PRIMARY KEY,
-  bundle_code VARCHAR(80) UNIQUE,
-  practice_set_id BIGINT REFERENCES practice_set(id) ON DELETE CASCADE,
-  published_by BIGINT REFERENCES users(id),
-  publish_status VARCHAR(40) NOT NULL DEFAULT 'draft',
-  published_at TIMESTAMPTZ,
-  metadata_json JSONB NOT NULL DEFAULT '{}'::jsonb
-);
-
-CREATE TABLE IF NOT EXISTS review_queue (
-  id BIGSERIAL PRIMARY KEY,
-  entity_type VARCHAR(80) NOT NULL,
-  entity_id BIGINT NOT NULL,
-  status VARCHAR(40) NOT NULL DEFAULT 'pending',
-  assigned_to BIGINT REFERENCES users(id),
-  created_by BIGINT REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- entity_type = 'section_layer', entity_id = source_section.id: a moderation
--- task bundles review of one section's layer across all its assessment units.
-ALTER TABLE review_queue
-ADD COLUMN IF NOT EXISTS layer_number INTEGER;
-
-ALTER TABLE review_queue
-ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ;
-
-CREATE TABLE IF NOT EXISTS review_decision (
-  id BIGSERIAL PRIMARY KEY,
-  review_queue_id BIGINT NOT NULL REFERENCES review_queue(id) ON DELETE CASCADE,
-  decision VARCHAR(40) NOT NULL,
-  decision_notes TEXT,
-  decided_by BIGINT REFERENCES users(id),
-  decided_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS editorial_comment (
-  id BIGSERIAL PRIMARY KEY,
-  entity_type VARCHAR(80) NOT NULL,
-  entity_id BIGINT NOT NULL,
-  comment_text TEXT NOT NULL,
-  created_by BIGINT REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS audit_event (
-  id BIGSERIAL PRIMARY KEY,
-  entity_type VARCHAR(80) NOT NULL,
-  entity_id BIGINT NOT NULL,
-  event_type VARCHAR(80) NOT NULL,
-  event_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-  created_by BIGINT REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS student_attempt (
@@ -2204,7 +1558,7 @@ CREATE TABLE IF NOT EXISTS student_attempt_item (
   id BIGSERIAL PRIMARY KEY,
   student_attempt_id BIGINT NOT NULL REFERENCES student_attempt(id) ON DELETE CASCADE,
   question_bank_item_id BIGINT REFERENCES question_bank_item(id) ON DELETE SET NULL,
-  item_id VARCHAR(80) REFERENCES layer6_assessment_item(item_id) ON DELETE SET NULL,
+  item_id VARCHAR(160) REFERENCES content_assessment_item(item_id) ON DELETE SET NULL,
   display_order INTEGER NOT NULL DEFAULT 0,
   marks_awarded NUMERIC(8,2),
   UNIQUE (student_attempt_id, display_order)
@@ -2212,7 +1566,7 @@ CREATE TABLE IF NOT EXISTS student_attempt_item (
 
 CREATE TABLE IF NOT EXISTS student_response (
   id BIGSERIAL PRIMARY KEY,
-  generation_id UUID REFERENCES generation_registry(generation_id),
+  generation_id BIGINT REFERENCES content_sync_run(id),
   student_attempt_id BIGINT REFERENCES student_attempt(id) ON DELETE CASCADE,
   student_attempt_item_id BIGINT REFERENCES student_attempt_item(id) ON DELETE CASCADE,
   assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE SET NULL,
@@ -2236,7 +1590,7 @@ CREATE TABLE IF NOT EXISTS student_mastery (
   assessment_unit_id VARCHAR(80) NOT NULL REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
   mastery_level VARCHAR(40) NOT NULL DEFAULT 'Needs Practice',
   mastery_probability NUMERIC(4,3) NOT NULL DEFAULT 0.000,
-  last_generation_id UUID REFERENCES generation_registry(generation_id),
+  last_generation_id BIGINT REFERENCES content_sync_run(id),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, assessment_unit_id)
 );
@@ -2262,77 +1616,20 @@ CREATE TABLE IF NOT EXISTS teacher_feedback_note (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_generation_registry_layer
-ON generation_registry (layer_number, layer_name, status);
-
-CREATE INDEX IF NOT EXISTS idx_generation_registry_pipeline_job
-ON generation_registry (pipeline_job_id, layer_number, created_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_generation_registry_layer_cache
-ON generation_registry (layer_number, prompt_version, model_name, cache_key, status, created_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_assessment_pipeline_run_status
-ON assessment_pipeline_run (status, created_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_assessment_pipeline_run_layer_job
-ON assessment_pipeline_run_layer (job_id, layer_number, assessment_unit_id);
-
 CREATE INDEX IF NOT EXISTS idx_source_section_mst_chapter
 ON source_section (fk_mst_chapter_id);
-
-CREATE INDEX IF NOT EXISTS idx_layer_run_section
-ON layer_run (source_section_id, fk_mst_chapter_id, layer_number);
-
-CREATE INDEX IF NOT EXISTS idx_layer_output_contract_generation_status
-ON layer_output_contract (generation_id, status);
 
 CREATE INDEX IF NOT EXISTS idx_assessment_unit_section
 ON assessment_unit (source_section_id, fk_mst_chapter_id);
 
-CREATE INDEX IF NOT EXISTS idx_layer1_assessment_unit
-ON layer1_assessment_unit (assessment_unit_id);
-
-CREATE INDEX IF NOT EXISTS idx_layer2_concept_memory_au
-ON layer2_concept_memory (assessment_unit_id);
-
-CREATE INDEX IF NOT EXISTS idx_layer5_item_blueprint_au
-ON layer5_item_blueprint (assessment_unit_id);
-
-CREATE INDEX IF NOT EXISTS idx_layer6_assessment_item_au
-ON layer6_assessment_item (assessment_unit_id);
-
-CREATE INDEX IF NOT EXISTS idx_layer7_learning_support_au
-ON layer7_learning_support (assessment_unit_id);
-
 CREATE INDEX IF NOT EXISTS idx_student_response_au
 ON student_response (assessment_unit_id, created_at);
 
--- Concept card load path (getConceptCard / getLayer1Context / getLayer2Memory)
--- was doing sequential scans on these FK/filter columns -- confirmed via
--- EXPLAIN ANALYZE before adding these.
+-- Concept card load path (getConceptCard / contentReadService.js) was doing
+-- sequential scans on these FK/filter columns -- confirmed via EXPLAIN
+-- ANALYZE before adding these.
 CREATE INDEX IF NOT EXISTS idx_assessment_unit_supporting_concept_au
 ON assessment_unit_supporting_concept (assessment_unit_id);
-
-CREATE INDEX IF NOT EXISTS idx_layer1_common_misconception_generation
-ON layer1_common_misconception (generation_id);
-
-CREATE INDEX IF NOT EXISTS idx_layer1_memory_hook_generation
-ON layer1_memory_hook (generation_id);
-
-CREATE INDEX IF NOT EXISTS idx_layer1_core_concept_generation
-ON layer1_core_concept (generation_id);
-
-CREATE INDEX IF NOT EXISTS idx_assessment_pipeline_run_section
-ON assessment_pipeline_run (source_section_id, created_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_layer2_concept_memory_supporting_concept_memory
-ON layer2_concept_memory_supporting_concept (layer2_concept_memory_id);
-
-CREATE INDEX IF NOT EXISTS idx_layer2_concept_memory_retrieval_cue_memory
-ON layer2_concept_memory_retrieval_cue (layer2_concept_memory_id);
-
-CREATE INDEX IF NOT EXISTS idx_layer2_concept_memory_associated_concept_memory
-ON layer2_concept_memory_associated_concept (layer2_concept_memory_id);
 
 -- Standalone admin demo tool: capture any question (PDF-page crop or camera
 -- photo) for any subject, capture a handwritten answer (up to 5 pages, same

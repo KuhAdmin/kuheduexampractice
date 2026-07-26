@@ -6,6 +6,7 @@ import {
   startTransition,
 } from "react";
 import { apiRequest } from "../api/client";
+import { applyTheme } from "../lib/theme";
 
 const AuthContext = createContext(null);
 
@@ -18,7 +19,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem(storageKeys.user);
-      return stored ? JSON.parse(stored) : null;
+      const parsed = stored ? JSON.parse(stored) : null;
+      if (parsed?.theme) {
+        applyTheme(parsed.theme);
+      }
+      return parsed;
     } catch (_error) {
       localStorage.removeItem(storageKeys.user);
       localStorage.removeItem(storageKeys.token);
@@ -37,6 +42,7 @@ export const AuthProvider = ({ children }) => {
 
     apiRequest("/auth/me")
       .then((data) => {
+        applyTheme(data.user?.theme);
         startTransition(() => {
           setUser(data.user);
           localStorage.setItem(storageKeys.user, JSON.stringify(data.user));
@@ -53,11 +59,13 @@ export const AuthProvider = ({ children }) => {
   const persistAuth = ({ token, user: nextUser }) => {
     localStorage.setItem(storageKeys.token, token);
     localStorage.setItem(storageKeys.user, JSON.stringify(nextUser));
+    applyTheme(nextUser?.theme);
     setUser(nextUser);
   };
 
   const persistUser = (nextUser) => {
     localStorage.setItem(storageKeys.user, JSON.stringify(nextUser));
+    applyTheme(nextUser?.theme);
     setUser(nextUser);
   };
 
@@ -108,6 +116,21 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const setTheme = async (theme) => {
+    applyTheme(theme);
+    try {
+      const data = await apiRequest("/auth/theme", {
+        method: "PUT",
+        body: JSON.stringify({ theme }),
+      });
+      persistUser(data.user);
+      return data;
+    } catch (error) {
+      applyTheme(user?.theme);
+      throw error;
+    }
+  };
+
   const changePassword = async (payload) =>
     apiRequest("/auth/change-password", {
       method: "POST",
@@ -125,6 +148,7 @@ export const AuthProvider = ({ children }) => {
         completeGoogleLogin,
         completeOnboarding,
         updateProfile,
+        setTheme,
         changePassword,
         isAuthenticated: Boolean(user),
       }}

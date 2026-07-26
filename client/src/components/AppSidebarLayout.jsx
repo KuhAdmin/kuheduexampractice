@@ -2,6 +2,64 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 
+const ChevronDownIcon = () => (
+  <svg viewBox="0 0 24 24" className="admin-sidebar-group-chevron" aria-hidden="true">
+    <path
+      d="m6 9 6 6 6-6"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+  </svg>
+);
+
+// A group's children live under one parent label (e.g. "Masters" for Exam
+// Types/Exam Goals/Levels/Subjects/Books) instead of each being its own
+// top-level sidebar entry. Auto-opens whenever the current route matches one
+// of its children, so navigating there directly (not just via the toggle)
+// never hides the active link inside a collapsed group.
+const SidebarGroup = ({ item, isChildActive }) => {
+  const [open, setOpen] = useState(isChildActive);
+
+  useEffect(() => {
+    if (isChildActive) {
+      setOpen(true);
+    }
+  }, [isChildActive]);
+
+  return (
+    <div className={`admin-sidebar-group ${open ? "is-open" : ""}`}>
+      <button
+        type="button"
+        className={`admin-sidebar-link admin-sidebar-group-toggle ${isChildActive ? "is-active" : ""}`}
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        {item.icon}
+        <span className="admin-sidebar-link-label">{item.label}</span>
+        <ChevronDownIcon />
+      </button>
+      {open && (
+        <div className="admin-sidebar-submenu">
+          {item.children.map((child) => (
+            <NavLink
+              key={child.label}
+              to={child.to}
+              end={child.end}
+              className={({ isActive }) => `admin-sidebar-link admin-sidebar-sublink ${isActive ? "is-active" : ""}`}
+            >
+              {child.icon}
+              <span className="admin-sidebar-link-label">{child.label}</span>
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const AppSidebarLayout = ({
   brandTitle,
   brandSubtitle,
@@ -97,21 +155,29 @@ export const AppSidebarLayout = ({
               <span className="admin-sidebar-link-label">{homeLink.label}</span>
             </NavLink>
           )}
-          {menuItems.map((item) => (
-            <NavLink
-              key={item.label}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                `admin-sidebar-link ${isActive ? "is-active" : ""} ${item.disabled ? "is-disabled" : ""}`
-              }
-              onClick={item.disabled ? (event) => event.preventDefault() : undefined}
-              aria-disabled={item.disabled || undefined}
-            >
-              {item.icon}
-              <span className="admin-sidebar-link-label">{item.label}</span>
-            </NavLink>
-          ))}
+          {menuItems.map((item) =>
+            item.children ? (
+              <SidebarGroup
+                key={item.label}
+                item={item}
+                isChildActive={item.children.some((child) => location.pathname.startsWith(child.to))}
+              />
+            ) : (
+              <NavLink
+                key={item.label}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) =>
+                  `admin-sidebar-link ${isActive ? "is-active" : ""} ${item.disabled ? "is-disabled" : ""}`
+                }
+                onClick={item.disabled ? (event) => event.preventDefault() : undefined}
+                aria-disabled={item.disabled || undefined}
+              >
+                {item.icon}
+                <span className="admin-sidebar-link-label">{item.label}</span>
+              </NavLink>
+            )
+          )}
         </nav>
 
         <div className="admin-sidebar-footer">

@@ -1,9 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  getAiModelSettings,
-  updateActiveAiModel,
-  updateLayerAiModelOverride,
-} from "../api/client";
+import { useMemo, useState } from "react";
 
 const initialSettings = {
   defaultBoard: "CBSE",
@@ -25,107 +20,12 @@ const activityFeed = [
   "Publishing review is enabled for all new practice sets.",
   "Google sign-in is active for learners and admins.",
   "Weekly analytics summary is sent every Monday morning.",
-  "AI-assisted recommendations are currently enabled in Assessment Studio.",
+  "AI-assisted recommendations are currently enabled.",
 ];
 
 export const AdminSettingsPage = () => {
   const [settings, setSettings] = useState(initialSettings);
   const [savedMessage, setSavedMessage] = useState("Settings synced just now");
-
-  const [aiModelState, setAiModelState] = useState({
-    availableModels: [],
-    activeModelId: "",
-    layerOverrides: {},
-    layers: [],
-    loading: true,
-    error: "",
-    updating: false,
-    updatingLayer: null,
-  });
-
-  useEffect(() => {
-    let isMounted = true;
-
-    getAiModelSettings()
-      .then((data) => {
-        if (!isMounted) return;
-        setAiModelState((current) => ({
-          ...current,
-          availableModels: data?.availableModels || [],
-          activeModelId: data?.activeModelId || "",
-          layerOverrides: data?.layerOverrides || {},
-          layers: data?.layers || [],
-          loading: false,
-        }));
-      })
-      .catch((error) => {
-        if (!isMounted) return;
-        setAiModelState((current) => ({
-          ...current,
-          loading: false,
-          error: error.message || "Failed to load AI model settings.",
-        }));
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const handleAiModelChange = async (event) => {
-    const modelId = event.target.value;
-    const previousModelId = aiModelState.activeModelId;
-
-    setAiModelState((current) => ({ ...current, activeModelId: modelId, updating: true, error: "" }));
-
-    try {
-      const updated = await updateActiveAiModel(modelId);
-      setAiModelState((current) => ({
-        ...current,
-        activeModelId: updated?.activeModelId || modelId,
-        updating: false,
-      }));
-    } catch (error) {
-      setAiModelState((current) => ({
-        ...current,
-        activeModelId: previousModelId,
-        updating: false,
-        error: error.message || "Failed to update the active AI model.",
-      }));
-    }
-  };
-
-  const handleLayerOverrideChange = async (layerNumber, event) => {
-    const modelId = event.target.value || null;
-    const previousOverrides = aiModelState.layerOverrides;
-
-    setAiModelState((current) => ({
-      ...current,
-      layerOverrides: { ...current.layerOverrides, [layerNumber]: modelId || undefined },
-      updatingLayer: layerNumber,
-      error: "",
-    }));
-
-    try {
-      const updated = await updateLayerAiModelOverride(layerNumber, modelId);
-      setAiModelState((current) => ({
-        ...current,
-        layerOverrides: updated?.layerOverrides || current.layerOverrides,
-        updatingLayer: null,
-      }));
-    } catch (error) {
-      setAiModelState((current) => ({
-        ...current,
-        layerOverrides: previousOverrides,
-        updatingLayer: null,
-        error: error.message || "Failed to update the layer model override.",
-      }));
-    }
-  };
-
-  const activeModel = aiModelState.availableModels.find(
-    (model) => model.id === aiModelState.activeModelId,
-  );
 
   const summary = useMemo(
     () => ({
@@ -231,72 +131,6 @@ export const AdminSettingsPage = () => {
 
           <section className="admin-panel admin-settings-panel">
             <div className="admin-panel-head">
-              <h2>AI model provider</h2>
-              <span>Choose which model powers Assessment Studio's AI pipeline</span>
-            </div>
-
-            <div className="admin-settings-form-grid">
-              <label className="admin-settings-field">
-                <span>Active model</span>
-                <select
-                  value={aiModelState.activeModelId}
-                  disabled={aiModelState.loading || aiModelState.updating}
-                  onChange={handleAiModelChange}
-                >
-                  {aiModelState.availableModels.map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            {aiModelState.loading && <p>Loading available models…</p>}
-            {aiModelState.updating && <p>Switching active model…</p>}
-            {aiModelState.error && <p className="error-text">{aiModelState.error}</p>}
-
-            {!aiModelState.loading && aiModelState.layers.length > 0 && (
-              <div className="admin-settings-layer-overrides">
-                <h3>Per-layer overrides</h3>
-                <p>Route individual pipeline layers to a different model than the active default.</p>
-                <table className="admin-settings-layer-table">
-                  <thead>
-                    <tr>
-                      <th>Layer</th>
-                      <th>Model</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {aiModelState.layers.map((layer) => (
-                      <tr key={layer.layerNumber}>
-                        <td>
-                          {layer.layerNumber}. {layer.layerName}
-                        </td>
-                        <td>
-                          <select
-                            value={aiModelState.layerOverrides?.[layer.layerNumber] || ""}
-                            disabled={aiModelState.updatingLayer === layer.layerNumber}
-                            onChange={(event) => handleLayerOverrideChange(layer.layerNumber, event)}
-                          >
-                            <option value="">Use active default</option>
-                            {aiModelState.availableModels.map((model) => (
-                              <option key={model.id} value={model.id}>
-                                {model.label}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          <section className="admin-panel admin-settings-panel">
-            <div className="admin-panel-head">
               <h2>Publishing and workflow</h2>
               <span>Decide how creation, review, and AI support should behave</span>
             </div>
@@ -305,7 +139,7 @@ export const AdminSettingsPage = () => {
               <label className="admin-settings-toggle">
                 <div>
                   <strong>Auto-save drafts</strong>
-                  <p>Save changes continuously while admins work in Assessment Studio.</p>
+                  <p>Save changes continuously while admins work.</p>
                 </div>
                 <input
                   type="checkbox"
@@ -430,10 +264,6 @@ export const AdminSettingsPage = () => {
             </div>
 
             <div className="admin-settings-keyvalue-list">
-              <div className="admin-settings-keyvalue-row">
-                <span>AI model</span>
-                <strong>{activeModel?.label || "Not configured"}</strong>
-              </div>
               <div className="admin-settings-keyvalue-row">
                 <span>Premium billing</span>
                 <strong>Rs. {settings.premiumPrice}/month</strong>

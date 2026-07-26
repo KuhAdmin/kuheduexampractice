@@ -1,5 +1,6 @@
 import { pool } from "../db/pool.js";
 import {
+  getDashboardCatalogForCodes,
   getDashboardCatalogForUser,
   resolveDashboardAcademicFilters,
 } from "./catalogService.js";
@@ -280,6 +281,27 @@ const getSyllabusRowsForUser = async ({ examGoalCode, levelCode, subjectCode, us
   }));
 };
 
+// Powers the class/subject switcher on StudentChaptersPage.jsx -- the same
+// mastery-enriched chapter list getReturningDashboardForUser builds for the
+// user's own board/class/subject, but for an explicitly chosen (exam goal,
+// level, subject) combo instead. Progress is still genuinely the requesting
+// user's own (student_mastery is keyed by user_id + assessment_unit_id
+// regardless of which subject the assessment unit belongs to), so switching
+// subjects here shows real per-student progress, not someone else's.
+export const getChaptersForClassSubjectSelection = async ({ userId, examGoalCode, levelCode, subjectCode }) => {
+  if (!examGoalCode || !levelCode || !subjectCode) {
+    return { chapters: [] };
+  }
+
+  const [syllabusRows, catalogFallback] = await Promise.all([
+    getSyllabusRowsForUser({ examGoalCode, levelCode, subjectCode, userId }),
+    getDashboardCatalogForCodes({ examGoalCode, levelCode, subjectCode }),
+  ]);
+
+  const { chapters } = buildChapterProgress(syllabusRows, catalogFallback.chapters);
+  return { chapters };
+};
+
 const toLocalDateKey = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
     date.getDate()
@@ -312,7 +334,7 @@ export const getReturningDashboardForUser = async ({
   studentClass,
   subject,
 }) => {
-  const { examGoalCode, levelCode, subjectCode, isValid } = resolveDashboardAcademicFilters({
+  const { examGoalCode, levelCode, subjectCode, isValid } = await resolveDashboardAcademicFilters({
     board,
     studentClass,
     subject,
@@ -383,7 +405,7 @@ export const getReturningDashboardForUser = async ({
 };
 
 export const listRemainingConceptsForUser = async ({ userId, board, studentClass, subject }) => {
-  const { examGoalCode, levelCode, subjectCode, isValid } = resolveDashboardAcademicFilters({
+  const { examGoalCode, levelCode, subjectCode, isValid } = await resolveDashboardAcademicFilters({
     board,
     studentClass,
     subject,
@@ -425,7 +447,7 @@ export const listRemainingConceptsForUser = async ({ userId, board, studentClass
 const NOTIFICATION_LIST_LIMIT = 20;
 
 export const getNotificationsForUser = async ({ userId, board, studentClass, subject }) => {
-  const { examGoalCode, levelCode, subjectCode, isValid } = resolveDashboardAcademicFilters({
+  const { examGoalCode, levelCode, subjectCode, isValid } = await resolveDashboardAcademicFilters({
     board,
     studentClass,
     subject,

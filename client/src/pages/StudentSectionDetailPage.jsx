@@ -4,6 +4,7 @@ import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentDrilldownCard } from "../components/StudentDrilldownCard";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getStudentSectionOverview, getStudentSections } from "../api/client";
+import { decodeSelectionChapterId } from "./studentChapterData";
 
 const SectionDetailIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -110,6 +111,45 @@ const SectionDetailIcon = ({ type, className = "" }) => {
           strokeLinecap="round"
           strokeWidth="1.8"
         />
+      </svg>
+    );
+  }
+
+  if (type === "revision") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M6 4.5h9l3 3V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.7"
+        />
+        <path
+          d="M8 9.5h8M8 13h8M8 16.5h5"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="1.6"
+        />
+      </svg>
+    );
+  }
+
+  if (type === "tutor") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M12 4.5c-3.6 0-6.5 2.6-6.5 5.8 0 1.9 1 3.6 2.6 4.7-.1.9-.5 1.7-1.2 2.4a.5.5 0 0 0 .4.9c1.4-.2 2.6-.7 3.6-1.5.7.2 1.4.3 2.1.3 3.6 0 6.5-2.6 6.5-5.8s-2.9-5.8-6.5-5.8Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.7"
+        />
+        <circle cx="9.3" cy="10.3" r="0.9" fill="currentColor" />
+        <circle cx="14.7" cy="10.3" r="0.9" fill="currentColor" />
       </svg>
     );
   }
@@ -281,6 +321,13 @@ export const StudentSectionDetailPage = () => {
   const tier = useBreakpoint();
   const isDesktop = tier !== "mobile";
   const { chapterId: chapterNumber, sectionId: sourceSectionId } = useParams();
+  // Chapters browsed via the real class/subject switcher outside the
+  // student's own profile subject carry (examGoalCode, levelCode,
+  // subjectCode) encoded into the route param -- see
+  // StudentChapterDetailPage.jsx/studentChapterData.js for the same pattern.
+  const selectionOverride = decodeSelectionChapterId(chapterNumber);
+  const displayChapterNumber = selectionOverride?.chapterNumber ?? chapterNumber;
+
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -313,11 +360,11 @@ export const StudentSectionDetailPage = () => {
 
   // Breadcrumb needs just the chapter's own name (one level up) -- same
   // endpoint StudentChapterDetailPage/StudentConceptLearningPage already use
-  // for this, so it's not a new data source.
+  // for this.
   useEffect(() => {
     let cancelled = false;
 
-    getStudentSections(chapterNumber)
+    getStudentSections(displayChapterNumber, selectionOverride || undefined)
       .then((result) => {
         if (!cancelled) setChapterName(result?.chapterName || "");
       })
@@ -328,6 +375,7 @@ export const StudentSectionDetailPage = () => {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterNumber]);
 
   const basePath = `/chapters/${chapterNumber}/sections/${sourceSectionId}`;
@@ -373,6 +421,26 @@ export const StudentSectionDetailPage = () => {
         </span>
         <SectionDetailIcon type="chevron" />
       </button>
+      <button type="button" className="student-chapter-detail-action is-rose" onClick={() => navigate(`${basePath}/revision`)}>
+        <span className="student-chapter-detail-action-mark is-rose">
+          <SectionDetailIcon type="revision" />
+        </span>
+        <span className="student-chapter-detail-action-copy">
+          <strong>Revision</strong>
+          <small>Cheat sheets, mnemonics &amp; exam notes</small>
+        </span>
+        <SectionDetailIcon type="chevron" />
+      </button>
+      <button type="button" className="student-chapter-detail-action is-teal" onClick={() => navigate(`${basePath}/tutor-notes`)}>
+        <span className="student-chapter-detail-action-mark is-teal">
+          <SectionDetailIcon type="tutor" />
+        </span>
+        <span className="student-chapter-detail-action-copy">
+          <strong>Tutor Notes</strong>
+          <small>Coach, interview &amp; viva prep</small>
+        </span>
+        <SectionDetailIcon type="chevron" />
+      </button>
       <button type="button" className="student-chapter-detail-action is-green" onClick={() => navigate(`${basePath}/diagrams`)}>
         <span className="student-chapter-detail-action-mark is-green">
           <SectionDetailIcon type="diagram" />
@@ -409,7 +477,7 @@ export const StudentSectionDetailPage = () => {
             </button>
             <SectionDetailIcon />
             <button type="button" onClick={() => navigate(`/chapters/${chapterNumber}`)}>
-              {`Chapter ${chapterNumber}${chapterName ? `. ${chapterName}` : ""}`}
+              {`Chapter ${displayChapterNumber}${chapterName ? `. ${chapterName}` : ""}`}
             </button>
             <SectionDetailIcon />
             <span className="is-current">
@@ -423,48 +491,50 @@ export const StudentSectionDetailPage = () => {
             <p className="student-empty-state">{error || "This section has not been generated yet."}</p>
           ) : (
             <>
-              <section className="student-section-detail-card has-illustration">
+              <section className="student-section-detail-card">
                 <div className="student-section-detail-copy">
                   <span>Overview</span>
                   <p>{detail.overview}</p>
                 </div>
-                <img src="/plant.png" alt="" className="student-chapter-detail-illustration" aria-hidden="true" />
               </section>
 
               <section className="student-chapter-detail-card">
-                <div className="student-chapter-detail-progress-copy">
-                  <span>Overall Progress</span>
-                  <strong>{detail.progress}%</strong>
-                  <p>
-                    {summary.completed} of {detail.conceptCount} concepts completed
-                  </p>
-                  <div className="student-chapter-detail-progress-bar" aria-hidden="true">
-                    <span style={{ width: `${detail.progress}%` }} />
+                <div className="student-chapter-detail-summary-row">
+                  <div className="student-chapter-detail-progress-copy">
+                    <span>Overall Progress</span>
+                    <strong>{detail.progress}%</strong>
+                    <p>
+                      {summary.completed} of {detail.conceptCount} concepts completed
+                    </p>
+                  </div>
+
+                  <div className="student-goals-stats student-goals-stats--three student-goals-stats--embedded">
+                    <div className="student-goals-stat-card is-not-started">
+                      <span className="student-goals-stat-icon is-not-started">
+                        <SectionDetailIcon type="circle-outline" />
+                      </span>
+                      <strong>{summary.notStarted}</strong>
+                      <span>Not Started</span>
+                    </div>
+                    <div className="student-goals-stat-card is-in-progress">
+                      <span className="student-goals-stat-icon is-in-progress">
+                        <SectionDetailIcon type="clock" />
+                      </span>
+                      <strong>{summary.inProgress}</strong>
+                      <span>In Progress</span>
+                    </div>
+                    <div className="student-goals-stat-card is-completed">
+                      <span className="student-goals-stat-icon is-completed">
+                        <SectionDetailIcon type="check" />
+                      </span>
+                      <strong>{summary.completed}</strong>
+                      <span>Completed</span>
+                    </div>
                   </div>
                 </div>
-              </section>
 
-              <section className="student-goals-stats student-goals-stats--three">
-                <div className="student-goals-stat-card is-not-started">
-                  <span className="student-goals-stat-icon is-not-started">
-                    <SectionDetailIcon type="circle-outline" />
-                  </span>
-                  <strong>{summary.notStarted}</strong>
-                  <span>Not Started</span>
-                </div>
-                <div className="student-goals-stat-card is-in-progress">
-                  <span className="student-goals-stat-icon is-in-progress">
-                    <SectionDetailIcon type="clock" />
-                  </span>
-                  <strong>{summary.inProgress}</strong>
-                  <span>In Progress</span>
-                </div>
-                <div className="student-goals-stat-card is-completed">
-                  <span className="student-goals-stat-icon is-completed">
-                    <SectionDetailIcon type="check" />
-                  </span>
-                  <strong>{summary.completed}</strong>
-                  <span>Completed</span>
+                <div className="student-chapter-detail-progress-bar" aria-hidden="true">
+                  <span style={{ width: `${detail.progress}%` }} />
                 </div>
               </section>
 

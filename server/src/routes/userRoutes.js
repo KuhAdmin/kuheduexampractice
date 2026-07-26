@@ -1,15 +1,18 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/authMiddleware.js";
 import {
+  getChaptersForClassSubjectSelection,
   getNotificationsForUser,
   getReturningDashboardForUser,
   listRemainingConceptsForUser,
   markNotificationsSeen,
 } from "../services/studentDashboardService.js";
+import { listClassSubjectOptionsWithContent } from "../services/catalogService.js";
 import {
   getMicroActivityResponseHandler,
   getStudentBookQuestions,
   getStudentConceptCard,
+  getStudentConceptChallenges,
   getStudentConceptSectionMedia,
   getStudentDiagramMedia,
   getStudentDiagrams,
@@ -17,8 +20,11 @@ import {
   getStudentLearningMap,
   getStudentMemoryBoosterForSection,
   getStudentMemoryBoosterForUnit,
+  getStudentRevision,
   getStudentSectionOverview,
   getStudentSections,
+  getStudentTutorNotes,
+  getStudentVisualLearningItems,
   submitMicroActivityResponseHandler,
   submitStudentBookQuestionResponse,
 } from "../controllers/studentContentController.js";
@@ -32,6 +38,7 @@ import {
   getRecentConceptAttempts,
   restartAssessmentHandler,
   restartChapterAssessmentHandler,
+  restartConceptAssessmentHandler,
   startAssessment,
   startChapterAssessment,
   startConceptAssessment,
@@ -59,10 +66,14 @@ router.get("/sections/:sourceSectionId/overview", getStudentSectionOverview);
 router.get("/sections/:sourceSectionId/learning-map", getStudentLearningMap);
 router.get("/sections/:sourceSectionId/memory-booster", getStudentMemoryBoosterForSection);
 router.get("/sections/:sourceSectionId/flashcards", getStudentFlashcards);
+router.get("/sections/:sourceSectionId/revision", getStudentRevision);
+router.get("/sections/:sourceSectionId/tutor-notes", getStudentTutorNotes);
 router.get("/sections/:sourceSectionId/diagrams", getStudentDiagrams);
+router.get("/sections/:sourceSectionId/visual-learning", getStudentVisualLearningItems);
 router.get("/diagrams/:diagramId/media", getStudentDiagramMedia);
 router.get("/sections/:sourceSectionId/mind-map", getMindMap);
 router.get("/concepts/:assessmentUnitId/card", getStudentConceptCard);
+router.get("/concepts/:assessmentUnitId/challenges", getStudentConceptChallenges);
 router.get("/concepts/:assessmentUnitId/memory-hook-media/:sectionKey", getStudentConceptSectionMedia);
 router.get("/concepts/:assessmentUnitId/memory-booster", getStudentMemoryBoosterForUnit);
 router.get("/concepts/:assessmentUnitId/micro-activity/response", getMicroActivityResponseHandler);
@@ -84,6 +95,7 @@ router.post("/sections/:sourceSectionId/assessment/start", startAssessment);
 router.post("/sections/:sourceSectionId/assessment/restart", restartAssessmentHandler);
 router.get("/sections/:sourceSectionId/assessment/attempts", getRecentAttempts);
 router.post("/concepts/:assessmentUnitId/assessment/start", startConceptAssessment);
+router.post("/concepts/:assessmentUnitId/assessment/restart", restartConceptAssessmentHandler);
 router.get("/concepts/:assessmentUnitId/assessment/attempts", getRecentConceptAttempts);
 router.post("/chapters/:chapterNumber/assessment/start", startChapterAssessment);
 router.post("/chapters/:chapterNumber/assessment/restart", restartChapterAssessmentHandler);
@@ -108,6 +120,33 @@ router.get("/dashboard", async (req, res, next) => {
       greeting: `Hi, ${firstName}`,
       ...dashboard,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Powers the class/subject switcher on StudentChaptersPage.jsx -- lists
+// every board/class/subject combo that actually has content, independent of
+// the requesting student's own profile.
+router.get("/class-subject-options", async (req, res, next) => {
+  try {
+    const options = await listClassSubjectOptionsWithContent();
+    res.json({ options });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/chapters-for-selection", async (req, res, next) => {
+  try {
+    const result = await getChaptersForClassSubjectSelection({
+      userId: req.user.id,
+      examGoalCode: req.query.examGoalCode,
+      levelCode: req.query.levelCode,
+      subjectCode: req.query.subjectCode,
+    });
+
+    res.json(result);
   } catch (error) {
     next(error);
   }

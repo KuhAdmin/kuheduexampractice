@@ -7,9 +7,18 @@ import { StudentAiTutorPanel } from "../components/StudentAiTutorPanel";
 import { StudentConceptPracticeCapture } from "../components/StudentConceptPracticeCapture";
 import { StudentEinsteinMode } from "../components/StudentEinsteinMode";
 import { StudentVivaMode } from "../components/StudentVivaMode";
+import { StudentDetailCard } from "../components/StudentDetailCard";
+import { StudentChallengesTab } from "../components/StudentChallengesTab";
 import { MathPreview } from "../components/MathPreview";
 import { useBreakpoint } from "../hooks/useBreakpoint";
-import { getStudentConceptCard, getStudentConceptSectionMedia, getStudentSections } from "../api/client";
+import {
+  getStudentConceptCard,
+  getStudentConceptSectionMedia,
+  getStudentDiagramMedia,
+  getStudentSections,
+  getStudentVisualLearningItems,
+} from "../api/client";
+import { decodeSelectionChapterId } from "./studentChapterData";
 
 const ConceptLearningIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -140,6 +149,35 @@ const ConceptLearningIcon = ({ type, className = "" }) => {
     );
   }
 
+  if (type === "maximize") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M9 4H5a1 1 0 0 0-1 1v4M15 4h4a1 1 0 0 1 1 1v4M9 20H5a1 1 0 0 1-1-1v-4M15 20h4a1 1 0 0 0 1-1v-4"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.9"
+        />
+      </svg>
+    );
+  }
+
+  if (type === "close") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="m6 6 12 12M18 6 6 18"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="1.9"
+        />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
       <path
@@ -154,22 +192,75 @@ const ConceptLearningIcon = ({ type, className = "" }) => {
   );
 };
 
-const TABS = ["Learn", "Explore", "Practice", "AI Tutor"];
+const TABS = ["Learn", "Explore", "Practice", "AI Tutor", "Challenges"];
 
 // Ordered, real fields only -- mirrors exactly what renderExploreMode's
 // accordion already checks for presence, just as a sequence instead of a
 // grid, so the step rail and the old accordion never drift apart on what
 // counts as "this concept has X".
+//
+// Compare/Story/Simple/Real Life read card.teachingNotes (the same
+// multi-item, per-concept source LEARN_MODE_DISPLAY's pages use) instead of
+// the single synthesized card.analogy/story/realWorldConnection strings --
+// these four used to be their own Learn-tab pages; moved here so Learn only
+// keeps "Learn"/"Understand", with the fuller (possibly multi-slide, see
+// getTeachingSlidesForMode) content intact rather than the one-line summary.
+// "Simple" (eli5) has no equivalent memory_hook_media section key, so it
+// never attempts a media fetch (see hasMediaSlot).
+// Order here drives the Explore tab's step rail (exploreSteps filters this
+// list down to whichever steps have content for the active concept,
+// preserving this relative order -- see the exploreSteps useMemo below).
 const EXPLORE_STEPS = [
-  { key: "analogy", label: "Analogy", subtitle: "Understand with comparison", hasContent: (c) => Boolean(c.analogy) },
-  { key: "story", label: "Story", subtitle: "A short story to connect", hasContent: (c) => Boolean(c.story) },
-  { key: "visualHook", label: "Visual Hook", subtitle: "See it to believe it", hasContent: (c) => Boolean(c.visualHook) },
+  {
+    key: "simple",
+    label: "Simple",
+    subtitle: "Easy explanation",
+    teachingMode: "eli5",
+    hasMediaSlot: false,
+    hasContent: (c) => Boolean(c.teachingNotes?.some((note) => note.mode === "eli5")),
+  },
+  {
+    key: "story",
+    label: "Story",
+    subtitle: "Learn through storytelling",
+    teachingMode: "storymode",
+    hasContent: (c) => Boolean(c.teachingNotes?.some((note) => note.mode === "storymode")),
+  },
+  {
+    key: "deepLearning",
+    label: "Deep Dive",
+    subtitle: "Common pitfalls and the reasoning behind them",
+    notesField: "deepLearningNotes",
+    hasMediaSlot: false,
+    hasContent: (c) => Boolean(c.deepLearningNotes?.length),
+  },
+  {
+    key: "analogy",
+    label: "Compare",
+    subtitle: "Learn using familiar comparisons",
+    teachingMode: "analogy",
+    hasContent: (c) => Boolean(c.teachingNotes?.some((note) => note.mode === "analogy")),
+  },
+  // Unlike every other step, this one's content isn't part of the concept
+  // card at all -- mind maps/flowcharts/etc are section-scoped, not
+  // per-concept (see getVisualLearningItemsForSection), so hasContent below
+  // is never actually consulted for it; exploreSteps filters it in/out by
+  // visualLearningItems length instead (see the exploreSteps useMemo).
+  {
+    key: "visualLearning",
+    label: "Visual Learning",
+    subtitle: "Mind maps, flowcharts & more",
+    hasMediaSlot: false,
+    hasContent: () => false,
+  },
   {
     key: "realWorldConnection",
-    label: "Real World Connection",
-    subtitle: "Where it matters",
-    hasContent: (c) => Boolean(c.realWorldConnection),
+    label: "Real Life Connection",
+    subtitle: "Connect to everyday applications",
+    teachingMode: "realworld",
+    hasContent: (c) => Boolean(c.teachingNotes?.some((note) => note.mode === "realworld")),
   },
+  { key: "visualHook", label: "Visual Hook", subtitle: "See it to believe it", hasContent: (c) => Boolean(c.visualHook) },
   {
     key: "curiosityHook",
     label: "Curiosity Hook",
@@ -214,6 +305,20 @@ const EXPLORE_STEPS = [
   },
 ];
 
+// Visual Learning items are tagged with a `mode` field (content_card.processorkey
+// server-side) matching one of these keys -- lets the step show a sub-section
+// pill bar (same visual language as the Visual/Read tabs) so students can jump
+// straight to the kind of visual aid they want instead of scrolling one long
+// mixed grid.
+const VISUAL_LEARNING_CATEGORIES = [
+  { key: "mindmap", label: "Mind Map" },
+  { key: "flowchart", label: "Flow Chart" },
+  { key: "diagram", label: "Diagram" },
+  { key: "visualposter", label: "Visual Poster" },
+  { key: "notebooknotes", label: "Notebook Notes" },
+  { key: "infographics", label: "Infographics" },
+];
+
 // Collapsible card for the Explore tab. mediaType ("image" | "video" | null)
 // hints at the kind of media a future admin authoring pass will attach to
 // this section -- the icon is purely indicative for now, no media is stored
@@ -239,7 +344,50 @@ const ExploreSection = ({ sectionKey, title, mediaType, isExpanded, onToggle, ch
 // Turns a concept card's knowledge fields into a slide sequence: the core
 // narrative first, then any relationships/processes/comparisons that exist,
 // skipping dimensions the pipeline left empty for this concept.
-const buildLearnSlides = (card) => {
+// The Learn tab's two selectable "pages". Simple/Story/Compare/Real Life
+// used to also be pages here -- moved to the Explore tab's step rail (see
+// EXPLORE_STEPS) so Learn stays focused on the core structured explanation,
+// and Explore is the single place for every other teaching angle. Fixed
+// canonical order + student-facing label/purpose, independent of whatever
+// order modes happen to appear in the DB. Real (non-imported) pipeline
+// content has no modes at all, so it never produces any pages here -- see
+// FALLBACK handling in buildLearnContent.
+const LEARN_MODE_DISPLAY = [
+  { mode: "teachme", label: "Learn", purpose: "Structured concept learning" },
+  { mode: "explain", label: "Understand", purpose: "Detailed classroom explanation" },
+];
+
+const noteToSlide = (note, card) => ({
+  heading: note.title || card.primaryConcept,
+  body: [note.summary].filter(Boolean),
+  details: note.details,
+});
+
+// Same source data as buildLearnContent's per-mode grouping, but for a
+// single mode on demand -- used by the Explore tab's Compare/Story/Simple/
+// Real Life steps (see EXPLORE_STEPS' teachingMode field) instead of
+// building the whole Learn-tab page map for just one mode's slides.
+const getTeachingSlidesForMode = (card, mode) =>
+  (card?.teachingNotes || [])
+    .filter((note) => note.mode === mode)
+    .map((note) => noteToSlide(note, card));
+
+// Deep Dive shows every deepLearningNotes item together (misconceptions +
+// whychain both, no per-family filtering) -- unlike Compare/Story/Simple/
+// Real Life there's no single processorkey to isolate per step.
+const getStepSlides = (card, step) => {
+  if (step.notesField) {
+    return (card?.[step.notesField] || []).map((note) => noteToSlide(note, card));
+  }
+  if (step.teachingMode) {
+    return getTeachingSlidesForMode(card, step.teachingMode);
+  }
+  return [];
+};
+
+// Fallback slide sequence for concepts with no imported teaching notes at
+// all (real pipeline output) -- unchanged from before mode pages existed.
+const buildFallbackSlides = (card) => {
   const slides = [];
 
   const introParagraphs = [card.contextSummary, card.learningObjective].filter(Boolean);
@@ -282,20 +430,76 @@ const buildLearnSlides = (card) => {
   return slides.length ? slides : [{ heading: card.primaryConcept, body: [card.learningObjective].filter(Boolean) }];
 };
 
+// eli5/storymode/analogy/realworld moved to the Explore tab's step rail (see
+// EXPLORE_STEPS) -- excluded here so they don't also fall through to the
+// "unknown mode" fallback below and end up shown twice.
+const MOVED_TO_EXPLORE_MODES = new Set(["eli5", "storymode", "analogy", "realworld"]);
+
+// Groups card.teachingNotes (one row per imported teachme/explain/eli5/
+// storymode/analogy/realworld item) into per-mode "pages" in the canonical
+// LEARN_MODE_DISPLAY order, each page holding its own slide sequence (a mode
+// can carry more than one item, e.g. two teachme entries, paginated with the
+// existing Prev/Next). A mode absent from this concept's import produces no
+// page at all, rather than an empty one. Any mode name outside the known set
+// (future content, or a not-yet-catalogued source field) still gets a page
+// -- appended after the known ones with a title-cased label -- so content is
+// never silently dropped for not matching the table.
+const buildLearnContent = (card) => {
+  const notesByMode = new Map();
+  (card.teachingNotes || []).forEach((note) => {
+    const key = note.mode || "";
+    if (!notesByMode.has(key)) notesByMode.set(key, []);
+    notesByMode.get(key).push(note);
+  });
+  MOVED_TO_EXPLORE_MODES.forEach((mode) => notesByMode.delete(mode));
+
+  const modePages = [];
+  LEARN_MODE_DISPLAY.forEach(({ mode, label, purpose }) => {
+    const notes = notesByMode.get(mode);
+    if (!notes?.length) return;
+    modePages.push({ mode, label, purpose, slides: notes.map((note) => noteToSlide(note, card)) });
+    notesByMode.delete(mode);
+  });
+  notesByMode.forEach((notes, mode) => {
+    modePages.push({
+      mode,
+      label: mode.charAt(0).toUpperCase() + mode.slice(1),
+      purpose: "",
+      slides: notes.map((note) => noteToSlide(note, card)),
+    });
+  });
+
+  return { modePages, fallbackSlides: modePages.length ? [] : buildFallbackSlides(card) };
+};
+
 export const StudentConceptLearningPage = () => {
   const navigate = useNavigate();
   const tier = useBreakpoint();
   const isDesktop = tier !== "mobile";
   const { chapterId: chapterNumber, sectionId: sourceSectionId, conceptId: assessmentUnitId } = useParams();
+  const selectionOverride = decodeSelectionChapterId(chapterNumber);
+  const displayChapterNumber = selectionOverride?.chapterNumber ?? chapterNumber;
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState(TABS[0]);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [activeLearnMode, setActiveLearnMode] = useState(null);
   const [expandedSections, setExpandedSections] = useState(() => new Set());
   const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", sectionNumber: "", topicName: "" });
   const [activeExploreStepKey, setActiveExploreStepKey] = useState(null);
   const [visitedExploreSteps, setVisitedExploreSteps] = useState(() => new Set());
+  // Only meaningful for teachingMode-driven steps (Compare/Story/Simple/Real
+  // Life), which -- like the Learn tab's own pages -- can carry more than one
+  // item per concept. Reset whenever the active step changes so paging
+  // through Compare's slides doesn't leave Story starting mid-sequence.
+  const [activeExploreSlideIndex, setActiveExploreSlideIndex] = useState(0);
+  // Visual/Read toggle for any Explore step with a media slot -- side-by-side
+  // columns looked odd once the "Read" side (Compare/Story/etc's fuller
+  // teaching content) grew much longer than a placeholder image box. Defaults
+  // to "read" since most concepts have no uploaded visual yet, so a first-time
+  // visitor lands on real content instead of a "Visual coming soon" tab.
+  const [activeStepView, setActiveStepView] = useState("read");
   // Memory-hook media (base64 image/video, up to ~20MB per section) is
   // deliberately NOT part of the concept card payload -- it's fetched one
   // section at a time, only for the section actually being viewed, keyed
@@ -306,6 +510,16 @@ export const StudentConceptLearningPage = () => {
   // synchronously, so a fast double-toggle/double-navigation can't fire the
   // same request twice while the first one is still pending.
   const requestedMediaKeysRef = useRef(new Set());
+  // Visual Learning (mind maps/flowcharts/etc) is section-scoped, not part of
+  // the concept card -- fetched once per section instead of once per concept,
+  // since every concept in the same section shares the same set of cards.
+  // null = not loaded yet, [] = loaded, confirmed empty.
+  const [visualLearningItems, setVisualLearningItems] = useState(null);
+  const [visualLearningMediaByCardId, setVisualLearningMediaByCardId] = useState({});
+  const [activeVisualLearningCategory, setActiveVisualLearningCategory] = useState(VISUAL_LEARNING_CATEGORIES[0].key);
+  // Visual Learning grid item opened via its maximize button -- full item
+  // (not just the media) so the lightbox can use item.title for alt text.
+  const [maximizedVisualItem, setMaximizedVisualItem] = useState(null);
 
   const toggleSection = (sectionKey) => {
     setExpandedSections((current) => {
@@ -365,7 +579,7 @@ export const StudentConceptLearningPage = () => {
   useEffect(() => {
     let cancelled = false;
 
-    getStudentSections(chapterNumber)
+    getStudentSections(displayChapterNumber, selectionOverride || undefined)
       .then((result) => {
         if (cancelled) return;
         const section = (result?.sections || []).find(
@@ -386,20 +600,85 @@ export const StudentConceptLearningPage = () => {
     };
   }, [chapterNumber, sourceSectionId]);
 
-  const slides = useMemo(() => (card ? buildLearnSlides(card) : []), [card]);
+  // Same section-scoped fetch-once pattern as breadcrumbMeta above -- keyed
+  // on sourceSectionId (not assessmentUnitId), so navigating between
+  // concepts within one section doesn't re-fetch this.
+  useEffect(() => {
+    let cancelled = false;
+    setVisualLearningItems(null);
+    setVisualLearningMediaByCardId({});
+
+    getStudentVisualLearningItems(sourceSectionId)
+      .then((result) => {
+        if (cancelled) return;
+        const items = result?.items || [];
+        setVisualLearningItems(items);
+        const firstPopulatedCategory = VISUAL_LEARNING_CATEGORIES.find((category) =>
+          items.some((item) => item.mode === category.key)
+        );
+        setActiveVisualLearningCategory(firstPopulatedCategory?.key || VISUAL_LEARNING_CATEGORIES[0].key);
+        Promise.all(
+          items.map((item) =>
+            getStudentDiagramMedia(item.cardId)
+              .then((mediaResult) => [item.cardId, mediaResult?.media || null])
+              .catch(() => [item.cardId, null])
+          )
+        ).then((entries) => {
+          if (cancelled) return;
+          setVisualLearningMediaByCardId(Object.fromEntries(entries));
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setVisualLearningItems([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceSectionId]);
+
+  const learnContent = useMemo(
+    () => (card ? buildLearnContent(card) : { modePages: [], fallbackSlides: [] }),
+    [card]
+  );
+  const activeModePage =
+    learnContent.modePages.find((page) => page.mode === activeLearnMode) || learnContent.modePages[0] || null;
+  const slides = activeModePage ? activeModePage.slides : learnContent.fallbackSlides;
   const totalSlides = slides.length;
   const activeSlide = slides[activeSlideIndex] || slides[0];
 
+  // Reset to the first available mode page (teachme/"Learn" when present,
+  // per LEARN_MODE_DISPLAY's order) and the first slide whenever the concept
+  // changes, so switching concepts never leaves a stale mode/slide selected
+  // from the previous one.
+  useEffect(() => {
+    setActiveLearnMode(learnContent.modePages[0]?.mode || null);
+    setActiveSlideIndex(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assessmentUnitId, learnContent.modePages.length]);
+
+  const selectLearnMode = (mode) => {
+    setActiveLearnMode(mode);
+    setActiveSlideIndex(0);
+  };
+
   const exploreSteps = useMemo(
-    () => (card ? EXPLORE_STEPS.filter((step) => step.hasContent(card)) : []),
-    [card]
+    () =>
+      card
+        ? EXPLORE_STEPS.filter((step) =>
+            step.key === "visualLearning" ? Boolean(visualLearningItems?.length) : step.hasContent(card)
+          )
+        : [],
+    [card, visualLearningItems]
   );
 
   useEffect(() => {
     const firstStepKey = exploreSteps[0]?.key || null;
     setActiveExploreStepKey(firstStepKey);
     setVisitedExploreSteps(new Set(firstStepKey ? [firstStepKey] : []));
-    if (firstStepKey) {
+    setActiveExploreSlideIndex(0);
+    setActiveStepView("read");
+    if (firstStepKey && exploreSteps[0]?.hasMediaSlot !== false) {
       ensureSectionMedia(firstStepKey);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -408,13 +687,35 @@ export const StudentConceptLearningPage = () => {
   const goToExploreStep = (key) => {
     setActiveExploreStepKey(key);
     setVisitedExploreSteps((current) => new Set(current).add(key));
-    ensureSectionMedia(key);
+    setActiveExploreSlideIndex(0);
+    setActiveStepView("read");
+    if (exploreSteps.find((step) => step.key === key)?.hasMediaSlot !== false) {
+      ensureSectionMedia(key);
+    }
   };
 
   const activeExploreStepIndex = exploreSteps.findIndex((step) => step.key === activeExploreStepKey);
 
   const renderLearnMode = () => (
     <>
+      {learnContent.modePages.length > 0 && (
+        <div className="student-learn-mode-tabs" role="tablist" aria-label="Learning style">
+          {learnContent.modePages.map((page) => (
+            <button
+              key={page.mode}
+              type="button"
+              role="tab"
+              aria-selected={page.mode === activeModePage?.mode}
+              className={`student-learn-mode-tab ${page.mode === activeModePage?.mode ? "is-active" : ""}`}
+              onClick={() => selectLearnMode(page.mode)}
+            >
+              <span className="student-learn-mode-tab-label">{page.label}</span>
+              {page.purpose && <span className="student-learn-mode-tab-subtitle">{page.purpose}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+
       <section className="student-concept-learning-card">
         <div className="student-concept-learning-copy">
           <h2>{activeSlide?.heading}</h2>
@@ -431,6 +732,9 @@ export const StudentConceptLearningPage = () => {
                 <li key={item}>{item}</li>
               ))}
             </ul>
+          )}
+          {activeSlide?.details?.length > 0 && (
+            <StudentDetailCard className="student-concept-learning-detail-card" details={activeSlide.details} />
           )}
         </div>
       </section>
@@ -468,13 +772,234 @@ export const StudentConceptLearningPage = () => {
     </>
   );
 
-  // Desktop/tablet step view: one field at a time, image/video on the left
-  // and text on the right (matching the reference layout), driven by the
-  // same real card fields the mobile accordion (renderExploreMode below)
-  // already reads -- no new data, just a different presentation of it.
+  // Shared between the desktop step view and the mobile accordion -- a list
+  // of section-scoped visual cards (mind maps/flowcharts/etc), each with its
+  // own optional image, rather than one media slot + one text block like
+  // every other Explore step.
+  const renderVisualLearningGrid = () => {
+    const categoryItems =
+      visualLearningItems?.filter((item) => item.mode === activeVisualLearningCategory) || [];
+    const activeCategoryLabel =
+      VISUAL_LEARNING_CATEGORIES.find((category) => category.key === activeVisualLearningCategory)?.label ||
+      "visual aids";
+    // Only offer categories this section actually has items for -- avoids a
+    // row of pills where most just dead-end in "No X recorded yet."
+    const populatedCategories = VISUAL_LEARNING_CATEGORIES.filter((category) =>
+      visualLearningItems?.some((item) => item.mode === category.key)
+    );
+
+    return (
+      <div className="student-concept-step-copy is-full-width">
+        {populatedCategories.length > 0 && (
+          <div
+            className="student-concept-step-view-tabs is-multi"
+            role="tablist"
+            aria-label="Visual learning category"
+          >
+            {populatedCategories.map((category) => (
+              <button
+                key={category.key}
+                type="button"
+                role="tab"
+                aria-selected={activeVisualLearningCategory === category.key}
+                className={`student-concept-step-view-tab ${
+                  activeVisualLearningCategory === category.key ? "is-active" : ""
+                }`}
+                onClick={() => setActiveVisualLearningCategory(category.key)}
+              >
+                {category.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {visualLearningItems === null ? (
+          <p>Loading visuals...</p>
+        ) : categoryItems.length === 0 ? (
+          <p>{`No ${activeCategoryLabel.toLowerCase()} recorded for this section yet.`}</p>
+        ) : (
+          <div className="student-concept-visual-learning-grid">
+            {categoryItems.map((item) => {
+              const media = visualLearningMediaByCardId[item.cardId];
+              return (
+                <div className="student-concept-visual-learning-card" key={item.cardId}>
+                  {media ? (
+                    <>
+                      <img src={media.mediaData} alt={item.title || "Visual aid"} />
+                      <button
+                        type="button"
+                        className="student-concept-visual-learning-maximize"
+                        aria-label="View full size"
+                        onClick={() => setMaximizedVisualItem(item)}
+                      >
+                        <ConceptLearningIcon type="maximize" />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="student-memory-booster-media-placeholder">
+                      <ConceptLearningIcon type="image" />
+                      <span>Visual coming soon</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {maximizedVisualItem && (
+          <div
+            className="student-concept-visual-learning-lightbox"
+            onClick={() => setMaximizedVisualItem(null)}
+          >
+            <button
+              type="button"
+              className="student-concept-visual-learning-lightbox-close"
+              aria-label="Close"
+              onClick={() => setMaximizedVisualItem(null)}
+            >
+              <ConceptLearningIcon type="close" />
+            </button>
+            <img
+              src={visualLearningMediaByCardId[maximizedVisualItem.cardId]?.mediaData}
+              alt={maximizedVisualItem.title || "Visual aid"}
+              onClick={(event) => event.stopPropagation()}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Visual/Read toggle for a step with a media slot -- replaces the old
+  // fixed two-column layout (see activeStepView above for why).
+  const renderStepViewTabs = () => (
+    <div className="student-concept-step-view-tabs" role="tablist" aria-label="View">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={activeStepView === "visual"}
+        className={`student-concept-step-view-tab ${activeStepView === "visual" ? "is-active" : ""}`}
+        onClick={() => setActiveStepView("visual")}
+      >
+        Visual
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={activeStepView === "read"}
+        className={`student-concept-step-view-tab ${activeStepView === "read" ? "is-active" : ""}`}
+        onClick={() => setActiveStepView("read")}
+      >
+        Read
+      </button>
+    </div>
+  );
+
+  // Condensed slide pager for a step with more than one slide -- lives in
+  // the step heading (top-right) instead of at the bottom of the step copy,
+  // so it reads as "paging this step's content" rather than competing with
+  // the Previous/Continue footer that pages between steps. Mirrors the same
+  // step/slides resolution renderExploreStepContent uses below, since this
+  // renders in a different part of the tree (the heading) but needs to know
+  // the same slide count/position.
+  const renderExploreSlideNav = () => {
+    const step = exploreSteps[activeExploreStepIndex];
+    if (!step || !(step.teachingMode || step.notesField)) return null;
+
+    const slides = getStepSlides(card, step);
+    if (slides.length <= 1) return null;
+
+    const showVisual = step.hasMediaSlot !== false && activeStepView === "visual";
+    if (showVisual) return null;
+
+    return (
+      <div className="student-concept-explore-slide-nav is-condensed">
+        <button
+          type="button"
+          className="student-concept-learning-nav is-previous"
+          aria-label="Previous slide"
+          disabled={activeExploreSlideIndex === 0}
+          onClick={() => setActiveExploreSlideIndex((current) => Math.max(current - 1, 0))}
+        >
+          <ConceptLearningIcon type="chevron-left" />
+        </button>
+        <span className="student-concept-learning-counter">
+          {activeExploreSlideIndex + 1}/{slides.length}
+        </span>
+        <button
+          type="button"
+          className="student-concept-learning-nav is-next"
+          aria-label="Next slide"
+          disabled={activeExploreSlideIndex === slides.length - 1}
+          onClick={() => setActiveExploreSlideIndex((current) => Math.min(current + 1, slides.length - 1))}
+        >
+          <ConceptLearningIcon type="chevron-right" />
+        </button>
+      </div>
+    );
+  };
+
+  // Desktop/tablet step view: media (when this step has a slot for it) or
+  // text, switched by renderStepViewTabs instead of shown side by side --
+  // driven by the same real card fields the mobile accordion
+  // (renderExploreMode below) already reads, no new data.
   const renderExploreStepContent = () => {
     const step = exploreSteps[activeExploreStepIndex];
     if (!step) return null;
+
+    if (step.teachingMode || step.notesField) {
+      const slides = getStepSlides(card, step);
+      const activeStepSlide = slides[activeExploreSlideIndex] || slides[0];
+      const media = step.hasMediaSlot === false ? null : sectionMediaByKey[step.key];
+      const speechText = [activeStepSlide?.heading, ...(activeStepSlide?.body || [])].filter(Boolean).join(". ");
+
+      const showVisual = step.hasMediaSlot !== false && activeStepView === "visual";
+
+      return (
+        <div className="student-concept-step-panel">
+          {step.hasMediaSlot !== false && renderStepViewTabs()}
+          {showVisual ? (
+            <div className="student-concept-step-media is-full-width">
+              {media === undefined ? (
+                <div className="student-memory-booster-media-placeholder">
+                  <span>Loading visual...</span>
+                </div>
+              ) : media ? (
+                <StudentMediaViewer
+                  mediaType={media.mediaType}
+                  src={media.mediaData}
+                  alt={`${step.label} illustration`}
+                  speechText={speechText}
+                />
+              ) : (
+                <div className="student-memory-booster-media-placeholder">
+                  <ConceptLearningIcon type="image" />
+                  <span>Visual coming soon</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="student-concept-step-copy is-full-width">
+              <h3>{step.subtitle}</h3>
+              {(activeStepSlide?.body || []).map((paragraph) => (
+                <div key={paragraph}>
+                  <p>{paragraph}</p>
+                  <MathPreview text={paragraph} />
+                </div>
+              ))}
+              {activeStepSlide?.details?.length > 0 && (
+                <StudentDetailCard className="student-concept-learning-detail-card" details={activeStepSlide.details} />
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (step.key === "visualLearning") {
+      return renderVisualLearningGrid();
+    }
 
     if (step.key === "misconceptions") {
       const misconceptionEntries = card.misconceptions?.length ? card.misconceptions : [];
@@ -563,31 +1088,35 @@ export const StudentConceptLearningPage = () => {
     }
 
     return (
-      <div className="student-concept-step-split">
-        <div className="student-concept-step-media">
-          {media === undefined ? (
-            <div className="student-memory-booster-media-placeholder">
-              <span>Loading visual...</span>
-            </div>
-          ) : media ? (
-            <StudentMediaViewer
-              mediaType={media.mediaType}
-              src={media.mediaData}
-              alt={`${step.label} illustration`}
-              speechText={text}
-            />
-          ) : (
-            <div className="student-memory-booster-media-placeholder">
-              <ConceptLearningIcon type="image" />
-              <span>Visual coming soon</span>
-            </div>
-          )}
-        </div>
-        <div className="student-concept-step-copy">
-          <h3>{step.subtitle}</h3>
-          <p>{text}</p>
-          <MathPreview text={text} />
-        </div>
+      <div className="student-concept-step-panel">
+        {renderStepViewTabs()}
+        {activeStepView === "visual" ? (
+          <div className="student-concept-step-media is-full-width">
+            {media === undefined ? (
+              <div className="student-memory-booster-media-placeholder">
+                <span>Loading visual...</span>
+              </div>
+            ) : media ? (
+              <StudentMediaViewer
+                mediaType={media.mediaType}
+                src={media.mediaData}
+                alt={`${step.label} illustration`}
+                speechText={text}
+              />
+            ) : (
+              <div className="student-memory-booster-media-placeholder">
+                <ConceptLearningIcon type="image" />
+                <span>Visual coming soon</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="student-concept-step-copy is-full-width">
+            <h3>{step.subtitle}</h3>
+            <p>{text}</p>
+            <MathPreview text={text} />
+          </div>
+        )}
       </div>
     );
   };
@@ -623,11 +1152,13 @@ export const StudentConceptLearningPage = () => {
 
   const renderExploreMode = () => {
     const misconceptionEntries = card?.misconceptions?.length ? card.misconceptions : [];
+    const hasTeachingMode = (mode) => Boolean(card?.teachingNotes?.some((note) => note.mode === mode));
     const hasAnyExploreContent =
-      card?.analogy ||
-      card?.story ||
+      hasTeachingMode("analogy") ||
+      hasTeachingMode("storymode") ||
+      hasTeachingMode("eli5") ||
+      hasTeachingMode("realworld") ||
       card?.visualHook ||
-      card?.realWorldConnection ||
       card?.curiosityHook ||
       card?.microActivity ||
       card?.memoryTrick ||
@@ -635,7 +1166,9 @@ export const StudentConceptLearningPage = () => {
       card?.misconceptionAlert ||
       card?.retrievalCues?.length > 0 ||
       card?.associatedConcepts?.length > 0 ||
-      card?.supportingConcepts?.length > 0;
+      card?.supportingConcepts?.length > 0 ||
+      card?.deepLearningNotes?.length > 0 ||
+      visualLearningItems?.length > 0;
 
     if (!hasAnyExploreContent) {
       return (
@@ -650,49 +1183,59 @@ export const StudentConceptLearningPage = () => {
 
     const isExpanded = (sectionKey) => expandedSections.has(sectionKey);
 
+    // Compare/Story/Simple/Real Life read the multi-item teachingNotes list
+    // (same source as the Learn tab's pages) rather than a single summary
+    // string -- stacked here (no pagination needed, the section already
+    // scrolls) instead of one paragraph per field.
+    const renderTeachingModeSection = ({ sectionKey, title, mediaType, teachingMode, notesField }) => {
+      const slides = notesField ? getStepSlides(card, { notesField }) : getTeachingSlidesForMode(card, teachingMode);
+      if (!slides.length) return null;
+      const media = mediaType ? sectionMediaByKey[sectionKey] : null;
+      const speechText = slides
+        .map((slide) => [slide.heading, ...(slide.body || [])].filter(Boolean).join(". "))
+        .join(" ");
+
+      return (
+        <ExploreSection
+          sectionKey={sectionKey}
+          title={title}
+          mediaType={mediaType}
+          isExpanded={isExpanded(sectionKey)}
+          onToggle={toggleSection}
+        >
+          {media && (
+            <StudentMediaViewer
+              mediaType={media.mediaType}
+              src={media.mediaData}
+              alt={`${title} illustration`}
+              speechText={speechText}
+            />
+          )}
+          {slides.map((slide, index) => (
+            <div key={`${slide.heading}-${index}`} className="student-explore-teaching-slide">
+              {slides.length > 1 && <h4>{slide.heading}</h4>}
+              {(slide.body || []).map((paragraph) => (
+                <div key={paragraph}>
+                  <p>{paragraph}</p>
+                  <MathPreview text={paragraph} />
+                </div>
+              ))}
+              {slide.details?.length > 0 && (
+                <StudentDetailCard className="student-concept-learning-detail-card" details={slide.details} />
+              )}
+            </div>
+          ))}
+        </ExploreSection>
+      );
+    };
+
     return (
       <div className="student-explore-grid">
-        {card.analogy && (
-          <ExploreSection
-            sectionKey="analogy"
-            title="Analogy"
-            mediaType="image"
-            isExpanded={isExpanded("analogy")}
-            onToggle={toggleSection}
-          >
-            {sectionMediaByKey.analogy && (
-              <StudentMediaViewer
-                mediaType={sectionMediaByKey.analogy.mediaType}
-                src={sectionMediaByKey.analogy.mediaData}
-                alt="Analogy illustration"
-                speechText={card.analogy}
-              />
-            )}
-            <p>{card.analogy}</p>
-            <MathPreview text={card.analogy} />
-          </ExploreSection>
-        )}
+        {renderTeachingModeSection({ sectionKey: "analogy", title: "Compare", mediaType: "image", teachingMode: "analogy" })}
 
-        {card.story && (
-          <ExploreSection
-            sectionKey="story"
-            title="Story"
-            mediaType="video"
-            isExpanded={isExpanded("story")}
-            onToggle={toggleSection}
-          >
-            {sectionMediaByKey.story && (
-              <StudentMediaViewer
-                mediaType={sectionMediaByKey.story.mediaType}
-                src={sectionMediaByKey.story.mediaData}
-                alt="Story"
-                speechText={card.story}
-              />
-            )}
-            <p>{card.story}</p>
-            <MathPreview text={card.story} />
-          </ExploreSection>
-        )}
+        {renderTeachingModeSection({ sectionKey: "story", title: "Story", mediaType: "video", teachingMode: "storymode" })}
+
+        {renderTeachingModeSection({ sectionKey: "simple", title: "Simple", mediaType: null, teachingMode: "eli5" })}
 
         {card.visualHook && (
           <ExploreSection
@@ -715,26 +1258,12 @@ export const StudentConceptLearningPage = () => {
           </ExploreSection>
         )}
 
-        {card.realWorldConnection && (
-          <ExploreSection
-            sectionKey="realWorldConnection"
-            title="Real World Connection"
-            mediaType="video"
-            isExpanded={isExpanded("realWorldConnection")}
-            onToggle={toggleSection}
-          >
-            {sectionMediaByKey.realWorldConnection && (
-              <StudentMediaViewer
-                mediaType={sectionMediaByKey.realWorldConnection.mediaType}
-                src={sectionMediaByKey.realWorldConnection.mediaData}
-                alt="Real World Connection"
-                speechText={card.realWorldConnection}
-              />
-            )}
-            <p>{card.realWorldConnection}</p>
-            <MathPreview text={card.realWorldConnection} />
-          </ExploreSection>
-        )}
+        {renderTeachingModeSection({
+          sectionKey: "realWorldConnection",
+          title: "Real Life Connection",
+          mediaType: "video",
+          teachingMode: "realworld",
+        })}
 
         {card.curiosityHook && (
           <ExploreSection
@@ -876,6 +1405,25 @@ export const StudentConceptLearningPage = () => {
             </div>
           </ExploreSection>
         )}
+
+        {renderTeachingModeSection({
+          sectionKey: "deepLearning",
+          title: "Deep Dive",
+          mediaType: null,
+          notesField: "deepLearningNotes",
+        })}
+
+        {visualLearningItems?.length > 0 && (
+          <ExploreSection
+            sectionKey="visualLearning"
+            title="Visual Learning"
+            mediaType="image"
+            isExpanded={isExpanded("visualLearning")}
+            onToggle={toggleSection}
+          >
+            {renderVisualLearningGrid()}
+          </ExploreSection>
+        )}
       </div>
     );
   };
@@ -921,17 +1469,20 @@ export const StudentConceptLearningPage = () => {
             </button>
             <ConceptLearningIcon type="chevron-right" />
             <button type="button" onClick={() => navigate(`/chapters/${chapterNumber}`)}>
-              {`Chapter ${chapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
+              {`Chapter ${displayChapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
             </button>
             <ConceptLearningIcon type="chevron-right" />
-            <button type="button" onClick={() => navigate(`/chapters/${chapterNumber}/sections/${sourceSectionId}`)}>
+            <button
+              type="button"
+              onClick={() => navigate(`/chapters/${chapterNumber}/sections/${sourceSectionId}`)}
+            >
               {breadcrumbMeta.topicName
                 ? `${breadcrumbMeta.sectionNumber ? `${breadcrumbMeta.sectionNumber} ` : ""}${breadcrumbMeta.topicName}`
                 : `Section ${sourceSectionId}`}
             </button>
             <ConceptLearningIcon type="chevron-right" />
             <span className="is-current">
-              {`${assessmentUnitId ? `${assessmentUnitId} ` : ""}${card?.primaryConcept || ""}`}
+              {card?.primaryConcept ? `Concept - ${card.primaryConcept}` : "Concept"}
             </span>
           </nav>
 
@@ -940,7 +1491,6 @@ export const StudentConceptLearningPage = () => {
               <ConceptLearningIcon type="book" />
             </div>
             <div className="student-concept-hero-copy">
-              <span className="student-concept-hero-badge">Chapter {chapterNumber}</span>
               <h1>{card?.primaryConcept || "Concept"}</h1>
               {(card?.learningObjective || card?.contextSummary) && (
                 <p>{card.learningObjective || card.contextSummary}</p>
@@ -982,6 +1532,7 @@ export const StudentConceptLearningPage = () => {
                         <span className="student-concept-step-index">
                           {activeExploreStepIndex + 1}. {exploreSteps[activeExploreStepIndex]?.label}
                         </span>
+                        {renderExploreSlideNav()}
                       </div>
                       {renderExploreStepContent()}
                       <footer className="student-concept-learning-footer is-two-up">
@@ -1026,6 +1577,8 @@ export const StudentConceptLearningPage = () => {
                     <StudentEinsteinMode assessmentUnitId={assessmentUnitId} />
                     <StudentVivaMode assessmentUnitId={assessmentUnitId} />
                   </>
+                ) : activeTab === "Challenges" ? (
+                  <StudentChallengesTab assessmentUnitId={assessmentUnitId} />
                 ) : (
                   renderComingSoon(activeTab)
                 )}
@@ -1081,6 +1634,8 @@ export const StudentConceptLearningPage = () => {
             <StudentEinsteinMode assessmentUnitId={assessmentUnitId} />
             <StudentVivaMode assessmentUnitId={assessmentUnitId} />
           </>
+        ) : activeTab === "Challenges" ? (
+          <StudentChallengesTab assessmentUnitId={assessmentUnitId} />
         ) : (
           renderComingSoon(activeTab)
         )}

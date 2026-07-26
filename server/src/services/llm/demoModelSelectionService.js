@@ -1,8 +1,15 @@
 import { getSetting, setSetting } from "../appSettingsService.js";
 import { getModelRegistryEntry } from "./modelRegistry.js";
-import { isNonLatinScriptSubjectCode } from "../assessmentStudioSubjectProfiles.js";
 
 const SETTING_KEY = "ai_demo_model_selection";
+
+// Relocated here (originally assessmentStudioSubjectProfiles.js, deleted
+// along with the seven-layer pipeline) since this is now the only consumer:
+// Hindi/Bengali handwriting needs a different OCR model than Latin-script
+// subjects, independent of anything pipeline-specific.
+const NON_LATIN_SCRIPT_SUBJECT_CODES = new Set(["HIN", "BEN"]);
+const isNonLatinScriptSubjectCode = (subjectCode) =>
+  NON_LATIN_SCRIPT_SUBJECT_CODES.has(String(subjectCode || "").toUpperCase().trim());
 
 // Mirrors modelSelectionService.js's shape exactly, keyed by subject code
 // instead of pipeline layer number.

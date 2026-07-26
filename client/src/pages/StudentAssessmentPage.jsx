@@ -10,6 +10,7 @@ import {
   getRecentConceptAssessmentAttempts,
   getStudentSections,
   restartChapterAssessment,
+  restartConceptAssessment,
   restartSectionAssessment,
   startChapterAssessment,
   startConceptAssessment,
@@ -17,6 +18,7 @@ import {
   submitAssessment,
   submitAssessmentAnswer,
 } from "../api/client";
+import { decodeSelectionChapterId } from "./studentChapterData";
 
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
@@ -180,6 +182,8 @@ export const StudentAssessmentPage = () => {
   const { chapterId: chapterNumber, sectionId: sourceSectionId, conceptId } = useParams();
   const isConceptMode = Boolean(conceptId);
   const isChapterMode = !sourceSectionId && !conceptId;
+  const selectionOverride = decodeSelectionChapterId(chapterNumber);
+  const displayChapterNumber = selectionOverride?.chapterNumber ?? chapterNumber;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -203,7 +207,7 @@ export const StudentAssessmentPage = () => {
   useEffect(() => {
     let cancelled = false;
 
-    getStudentSections(chapterNumber)
+    getStudentSections(displayChapterNumber, selectionOverride || undefined)
       .then((result) => {
         if (cancelled) return;
         const section = (result?.sections || []).find(
@@ -222,6 +226,7 @@ export const StudentAssessmentPage = () => {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterNumber, sourceSectionId]);
 
   useEffect(() => {
@@ -326,6 +331,8 @@ export const StudentAssessmentPage = () => {
     try {
       const result = isChapterMode
         ? await restartChapterAssessment(chapterNumber)
+        : isConceptMode
+        ? await restartConceptAssessment(conceptId)
         : await restartSectionAssessment(sourceSectionId);
       setAssessment(result);
       setActiveIndex(0);
@@ -618,6 +625,8 @@ export const StudentAssessmentPage = () => {
       : "Concept Practice"
     : assessment?.sectionNumber
     ? `${assessment.sectionNumber} Section Assessment`
+    : assessment?.topicName
+    ? `${assessment.topicName} Assessment`
     : "Section Assessment";
 
   // Breadcrumb is persistent chrome across every phase now (previously it
@@ -637,7 +646,7 @@ export const StudentAssessmentPage = () => {
               </button>
               <ChevronRightIcon />
               <button type="button" onClick={() => navigate(`/chapters/${chapterNumber}`)}>
-                {`Chapter ${chapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
+                {`Chapter ${displayChapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`}
               </button>
               {isConceptMode ? (
                 <>
@@ -649,7 +658,7 @@ export const StudentAssessmentPage = () => {
                   </button>
                   <ChevronRightIcon />
                   <span className="is-current">
-                    {`${conceptId ? `${conceptId} ` : ""}${assessment?.topicName || ""}`}
+                    {assessment?.topicName ? `Concept - ${assessment.topicName}` : "Concept"}
                   </span>
                 </>
               ) : (
@@ -666,7 +675,6 @@ export const StudentAssessmentPage = () => {
                   <BookIcon />
                 </div>
                 <div className="student-concept-hero-copy">
-                  <span className="student-concept-hero-badge">Chapter {chapterNumber}</span>
                   <h1>{assessmentTitle}</h1>
                 </div>
               </header>
@@ -727,16 +735,14 @@ export const StudentAssessmentPage = () => {
               >
                 {isConceptMode ? "Practice Concept" : "Continue Assessment"}
               </button>
-              {!isConceptMode && (
-                <button
-                  type="button"
-                  className="ghost-button student-assessment-restart"
-                  disabled={restarting}
-                  onClick={handleRestartAssessment}
-                >
-                  {restarting ? "Restarting..." : "Restart Assessment"}
-                </button>
-              )}
+              <button
+                type="button"
+                className="ghost-button student-assessment-restart"
+                disabled={restarting}
+                onClick={handleRestartAssessment}
+              >
+                {restarting ? "Restarting..." : "Restart Assessment"}
+              </button>
             </div>
 
             <div className="student-assessment-history">

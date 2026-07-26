@@ -1,21 +1,43 @@
 import { pool } from "../db/pool.js";
 
-const examGoalCodeByBoard = {
-  cbse: "AISSCE",
+// A couple of user-facing subject spellings that don't literally match any
+// mst_subject.name ("Math" vs. "Mathematics") -- everything else is resolved
+// straight off master data, so a new subject or board becomes usable here as
+// soon as it exists in mst_subject/mst_exam_goal, no code change required.
+const subjectNameAliases = {
+  math: "mathematics",
 };
 
-const subjectCodeByUserSubject = {
-  biology: "BIO",
-  physics: "PHY",
-  chemistry: "CHM",
-  mathematics: "MAT",
-  math: "MAT",
-};
-
-export const resolveDashboardAcademicFilters = ({ board, studentClass, subject }) => {
-  const examGoalCode = examGoalCodeByBoard[String(board || "").trim().toLowerCase()];
+// Resolves a student's free-text board/class/subject (users.board/
+// student_class/subject) against master data: board -> mst_exam_goal.board_code,
+// subject -> mst_subject.name (case-insensitive). studentClass is used as-is
+// since mst_level.name_code is already the plain class number/string. Returns
+// isValid: false (and no query results used) when board/subject don't match
+// any master-data row, so callers can render an honest empty state instead of
+// guessing.
+export const resolveDashboardAcademicFilters = async ({ board, studentClass, subject }) => {
+  const boardText = String(board || "").trim();
   const levelCode = String(studentClass || "").trim();
-  const subjectCode = subjectCodeByUserSubject[String(subject || "").trim().toLowerCase()];
+  const subjectText = String(subject || "").trim().toLowerCase();
+  const subjectLookupText = subjectNameAliases[subjectText] || subjectText;
+
+  const [examGoalResult, subjectResult] = await Promise.all([
+    boardText
+      ? pool.query(
+          "SELECT goal_id FROM mst_exam_goal WHERE lower(board_code) = lower($1) AND is_active = TRUE LIMIT 1",
+          [boardText]
+        )
+      : Promise.resolve({ rows: [] }),
+    subjectLookupText
+      ? pool.query(
+          "SELECT name_code FROM mst_subject WHERE lower(name) = $1 AND is_active = TRUE LIMIT 1",
+          [subjectLookupText]
+        )
+      : Promise.resolve({ rows: [] }),
+  ]);
+
+  const examGoalCode = examGoalResult.rows[0]?.goal_id || undefined;
+  const subjectCode = subjectResult.rows[0]?.name_code || undefined;
 
   return {
     examGoalCode,
@@ -80,230 +102,13 @@ export const listChapters = async ({
   return result.rows;
 };
 
-const buildAssessmentStudioFilters = ({ levelCode, subjectCode, chapterKey }) => {
-  const conditions = [`exam_goal_code = 'AISSCE'`, `book_is_active = TRUE`, `chapter_is_active = TRUE`];
-  const values = [];
-
-  if (levelCode) {
-    values.push(levelCode);
-    conditions.push(`level_code = $${values.length}`);
-  }
-
-  if (subjectCode) {
-    values.push(subjectCode);
-    conditions.push(`subject_code = $${values.length}`);
-  }
-
-  let selectedBookId;
-  let selectedChapterNumber;
-
-  if (chapterKey) {
-    [selectedBookId, selectedChapterNumber] = chapterKey.split(":");
-    if (selectedBookId) {
-      values.push(selectedBookId);
-      conditions.push(`book_id = $${values.length}`);
-    }
-    if (selectedChapterNumber) {
-      values.push(selectedChapterNumber);
-      conditions.push(`chapter_number = $${values.length}`);
-    }
-  }
-
-  return {
-    whereClause: `WHERE ${conditions.join(" AND ")}`,
-    values,
-  };
-};
-
-export const getAssessmentStudioBootstrap = async ({ levelCode }) => {
-  const [levelsResult, subjectsResult, practiceTypesResult] = await Promise.all([
-    pool.query(
-      `
-        SELECT DISTINCT level_code AS code, level_name AS name, level_id AS id
-        FROM mv_chapter_catalog
-        WHERE exam_goal_code = 'AISSCE' AND book_is_active = TRUE AND chapter_is_active = TRUE
-        ORDER BY level_code ASC
-      `
-    ),
-    pool.query(
-      `
-        SELECT DISTINCT subject_code AS code, subject_name AS name, subject_id AS id
-        FROM mv_chapter_catalog
-        WHERE exam_goal_code = 'AISSCE'
-          AND book_is_active = TRUE
-          AND chapter_is_active = TRUE
-          ${levelCode ? "AND level_code = $1" : ""}
-        ORDER BY subject_name ASC
-      `,
-      levelCode ? [levelCode] : []
-    ),
-    pool.query(
-      `
-        SELECT id, name_code AS code, name, display_order AS "displayOrder"
-        FROM mst_practice_type
-        WHERE is_active = TRUE
-        ORDER BY display_order ASC, name ASC
-      `
-    ),
-  ]);
-
-  return {
-    boards: [{ code: "CBSE", name: "CBSE" }],
-    levels: levelsResult.rows,
-    subjects: subjectsResult.rows,
-    practiceTypes: practiceTypesResult.rows,
-  };
-};
-
-const DEFAULT_COMPLETION_LAYER_NUMBER = 7;
-
-const getCompletedSectionKeySet = async (targetLayerNumber = DEFAULT_COMPLETION_LAYER_NUMBER) => {
-  const result = await pool.query(
-    `
-      SELECT DISTINCT
-        apr.request_payload->>'chapterKey' AS chapter_key,
-        apr.request_payload->>'sectionNumber' AS section_number
-      FROM assessment_pipeline_run apr
-      JOIN assessment_pipeline_run_layer aprl ON aprl.job_id = apr.job_id
-      WHERE apr.status = 'completed'
-        AND aprl.layer_number = $1
-        AND aprl.status = 'completed'
-    `,
-    [targetLayerNumber]
-  );
-
-  return new Set(
-    result.rows
-      .filter((row) => row.chapter_key && row.section_number)
-      .map((row) => `${row.chapter_key}|${row.section_number}`)
-  );
-};
-
-export const getAssessmentStudioChapters = async ({
-  levelCode,
-  subjectCode,
-  excludeCompleted,
-  targetLayerNumber,
-}) => {
-  const chapterFilters = buildAssessmentStudioFilters({ levelCode, subjectCode });
-  const result = await pool.query(
-    `
-      SELECT *
-      FROM (
-        SELECT DISTINCT ON (book_id, chapter_number)
-          CONCAT(book_id::text, ':', chapter_number) AS key,
-          book_id AS "bookId",
-          book_code AS "bookCode",
-          book_name AS "bookName",
-          chapter_number AS "chapterNumber",
-          chapter_name AS "chapterName",
-          chapter_display_order AS "displayOrder"
-        FROM mv_chapter_catalog
-        ${chapterFilters.whereClause}
-        ORDER BY book_id, chapter_number, chapter_display_order ASC
-      ) AS chapter_options
-      ORDER BY "displayOrder" ASC, "chapterNumber" ASC
-    `,
-    chapterFilters.values
-  );
-
-  let chapters = result.rows;
-
-  if (chapters.length > 0) {
-    const completedSectionKeys = await getCompletedSectionKeySet(targetLayerNumber);
-    const chapterSectionLists = await Promise.all(
-      chapters.map((chapter) =>
-        getAssessmentStudioSections({ levelCode, subjectCode, chapterKey: chapter.key })
-      )
-    );
-
-    chapters = chapters.map((chapter, index) => {
-      const sections = chapterSectionLists[index]?.sections || [];
-      const totalSections = sections.length;
-      const completedSections = sections.filter((section) =>
-        completedSectionKeys.has(`${chapter.key}|${section.sectionNumber}`)
-      ).length;
-
-      return {
-        ...chapter,
-        totalSections,
-        completedSections,
-        isFullyGenerated: totalSections > 0 && completedSections === totalSections,
-      };
-    });
-
-    if (excludeCompleted) {
-      chapters = chapters.filter((chapter) => !chapter.isFullyGenerated);
-    }
-  }
-
-  return {
-    chapters,
-    resolvedChapterKey: chapters[0]?.key || "",
-  };
-};
-
-export const getAssessmentStudioSections = async ({
-  levelCode,
-  subjectCode,
-  chapterKey,
-  targetLayerNumber,
-}) => {
-  if (!chapterKey) {
-    return { sections: [] };
-  }
-
-  const sectionFilters = buildAssessmentStudioFilters({
-    levelCode,
-    subjectCode,
-    chapterKey,
-  });
-
-  const result = await pool.query(
-    `
-      SELECT *
-      FROM (
-        SELECT DISTINCT ON (section_number)
-          section_number AS "sectionNumber",
-          topic_name AS "topicName",
-          chapter_display_order AS "displayOrder"
-        FROM mv_chapter_catalog
-        ${sectionFilters.whereClause}
-        ORDER BY section_number, chapter_display_order ASC
-      ) AS section_options
-      ORDER BY "displayOrder" ASC, "sectionNumber" ASC
-    `,
-    sectionFilters.values
-  );
-
-  if (targetLayerNumber === undefined) {
-    return { sections: result.rows };
-  }
-
-  const completedSectionKeys = await getCompletedSectionKeySet(targetLayerNumber);
-
-  return {
-    sections: result.rows.map((section) => ({
-      ...section,
-      completed: completedSectionKeys.has(`${chapterKey}|${section.sectionNumber}`),
-    })),
-  };
-};
-
-export const getDashboardCatalogForUser = async ({ board, studentClass, subject }) => {
-  const { examGoalCode, levelCode, subjectCode, isValid } = resolveDashboardAcademicFilters({
-    board,
-    studentClass,
-    subject,
-  });
-
-  if (!isValid) {
-    return {
-      continueCard: null,
-      chapters: [],
-    };
-  }
-
+// Split out from getDashboardCatalogForUser so a caller that already has
+// exam_goal_code/level_code/subject_code (e.g. picked directly off an
+// mv_chapter_catalog row, like the class/subject switcher on
+// StudentChaptersPage.jsx) can skip the board/class/subject-text ->
+// codes translation entirely, instead of forcing everything through
+// resolveDashboardAcademicFilters's free-text matching.
+export const getDashboardCatalogForCodes = async ({ examGoalCode, levelCode, subjectCode }) => {
   const [chapterRowsResult, continueCardResult] = await Promise.all([
     pool.query(
       `
@@ -369,4 +174,42 @@ export const getDashboardCatalogForUser = async ({ board, studentClass, subject 
     continueCard,
     chapters,
   };
+};
+
+export const getDashboardCatalogForUser = async ({ board, studentClass, subject }) => {
+  const { examGoalCode, levelCode, subjectCode, isValid } = await resolveDashboardAcademicFilters({
+    board,
+    studentClass,
+    subject,
+  });
+
+  if (!isValid) {
+    return {
+      continueCard: null,
+      chapters: [],
+    };
+  }
+
+  return getDashboardCatalogForCodes({ examGoalCode, levelCode, subjectCode });
+};
+
+// Powers the class/subject switcher on StudentChaptersPage.jsx -- every
+// (exam goal, level, subject) combination that has at least one active
+// chapter, regardless of which board/class/subject the requesting student's
+// own profile is set to. Unlike the rest of this file's student-facing
+// queries, this one is intentionally not scoped to a single user.
+export const listClassSubjectOptionsWithContent = async () => {
+  const result = await pool.query(`
+    SELECT DISTINCT
+      exam_goal_code AS "examGoalCode",
+      exam_goal_name AS "examGoalName",
+      level_code AS "levelCode",
+      level_name AS "levelName",
+      subject_code AS "subjectCode",
+      subject_name AS "subjectName"
+    FROM mv_chapter_catalog
+    WHERE book_is_active = TRUE AND chapter_is_active = TRUE
+    ORDER BY level_name ASC, subject_name ASC
+  `);
+  return result.rows;
 };

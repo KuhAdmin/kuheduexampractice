@@ -4,7 +4,7 @@ import {
   loginWithEmail,
   registerWithEmail,
 } from "../services/authService.js";
-import { updateUserOnboarding, updateUserProfile } from "../services/userService.js";
+import { updateUserOnboarding, updateUserProfile, updateUserTheme } from "../services/userService.js";
 import { env } from "../config/env.js";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -131,6 +131,21 @@ export const updateProfile = async (req, res, next) => {
       avatarUrl: avatarDataUrl,
     });
 
+    return res.json({ user });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const updateTheme = async (req, res, next) => {
+  try {
+    const theme = String(req.body?.theme || "").toLowerCase();
+
+    if (theme !== "dawn" && theme !== "dusk") {
+      return res.status(400).json({ message: "theme must be 'dawn' or 'dusk'." });
+    }
+
+    const user = await updateUserTheme({ id: req.user.id, theme });
     return res.json({ user });
   } catch (error) {
     return next(error);

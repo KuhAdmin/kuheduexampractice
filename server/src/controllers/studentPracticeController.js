@@ -6,6 +6,7 @@ import {
   listRecentAttemptsForSection,
   restartAssessment,
   restartChapterAssessment,
+  restartConceptAssessment,
   startOrResumeAssessment,
   startOrResumeChapterAssessment,
   startOrResumeConceptAssessment,
@@ -55,6 +56,21 @@ export const restartAssessmentHandler = async (req, res, next) => {
   try {
     const result = await restartAssessment({
       sourceSectionId: req.params.sourceSectionId,
+      userId: req.user.id,
+    });
+    return res.json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const restartConceptAssessmentHandler = async (req, res, next) => {
+  try {
+    const result = await restartConceptAssessment({
+      assessmentUnitId: req.params.assessmentUnitId,
       userId: req.user.id,
     });
     return res.json(result);

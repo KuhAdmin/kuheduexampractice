@@ -1,9 +1,5 @@
 import { pool } from "../db/pool.js";
-import {
-  getAssessmentUnitsForSourceSection,
-  getLayer6Items,
-  getLayer7Support,
-} from "./assessmentStudioContextAssembler.js";
+import { getAssessmentUnitsForSourceSection, getLayer6Items } from "./contentReadService.js";
 import { createStructuredCompletion } from "./openAiService.js";
 import { resolveBookIdForChapter } from "./chapterExerciseService.js";
 import { listSectionsForChapter } from "./studentContentService.js";
@@ -236,6 +232,23 @@ const hasSufficientOptions = (item) => {
   return minimumOptions ? toArray(item.options).length >= minimumOptions : true;
 };
 
+// A single_select/ordering item with no correct_answer on record can never be
+// graded correct (isSingleSelectOrFreeTextCorrect has nothing to match
+// against), so every attempt shows "Not quite" with a blank "Correct answer"
+// line no matter what the student picks -- confusing and unfair. free_text
+// items are exempt: gradeFreeTextAnswerWithAi already tolerates a missing
+// correctAnswer by judging from the question text alone.
+const hasCorrectAnswerOnRecord = (item) => {
+  const interactionType =
+    item.interaction_type || (toArray(item.options).length > 0 ? "single_select" : "free_text");
+  if (interactionType === "free_text") {
+    return true;
+  }
+  return Boolean(String(item.correct_answer ?? "").trim());
+};
+
+const isAnswerableItem = (item) => hasSufficientOptions(item) && hasCorrectAnswerOnRecord(item);
+
 // Shared tail of materializing any practice_set (section- or concept-scoped):
 // syncs question_bank_item / practice_set_item rows against whichever Layer
 // 5/6 generations are CURRENTLY SELECTED (getLayer6Items already resolves the
@@ -246,16 +259,15 @@ const syncPracticeSetItems = async (client, practiceSetId, currentItems) => {
   for (const item of currentItems) {
     const inserted = await client.query(
       `
-        INSERT INTO question_bank_item (generation_id, assessment_unit_id, blueprint_id, item_id, status)
-        VALUES ($1, $2, $3, $4, 'active')
+        INSERT INTO question_bank_item (generation_id, assessment_unit_id, item_id, status)
+        VALUES ($1, $2, $3, 'active')
         ON CONFLICT (item_id) WHERE item_id IS NOT NULL DO UPDATE
         SET generation_id = EXCLUDED.generation_id,
             assessment_unit_id = EXCLUDED.assessment_unit_id,
-            blueprint_id = EXCLUDED.blueprint_id,
             updated_at = NOW()
         RETURNING id
       `,
-      [item.generation_id, item.assessment_unit_id, item.blueprint_id, item.item_id]
+      [item.generation_id, item.assessment_unit_id, item.item_id]
     );
 
     questionBankEntries.push({ questionBankItemId: inserted.rows[0].id, item });
@@ -319,28 +331,27 @@ const syncPracticeSetItems = async (client, practiceSetId, currentItems) => {
 // against every assessment unit in the section.
 const materializePracticeSetForSection = async (sourceSectionId) =>
   withTransaction(async (client) => {
-    const existingSet = await client.query(
-      "SELECT id FROM practice_set WHERE source_section_id = $1",
-      [sourceSectionId]
+    // Upsert instead of select-then-insert: two concurrent first-visits to the
+    // same section (e.g. React StrictMode's double effect invocation in dev)
+    // previously raced two INSERTs against idx_practice_set_source_section,
+    // and the loser's unique-violation surfaced to the student as an
+    // unhandled 500. ON CONFLICT collapses both into the same row atomically.
+    const upserted = await client.query(
+      `
+        INSERT INTO practice_set (source_section_id, name, status)
+        VALUES ($1, $2, 'active')
+        ON CONFLICT (source_section_id) WHERE source_section_id IS NOT NULL
+        DO UPDATE SET updated_at = NOW()
+        RETURNING id
+      `,
+      [sourceSectionId, `Section ${sourceSectionId} Assessment`]
     );
-
-    let practiceSetId = existingSet.rows[0]?.id;
-    if (!practiceSetId) {
-      const inserted = await client.query(
-        `
-          INSERT INTO practice_set (source_section_id, name, status)
-          VALUES ($1, $2, 'active')
-          RETURNING id
-        `,
-        [sourceSectionId, `Section ${sourceSectionId} Assessment`]
-      );
-      practiceSetId = inserted.rows[0].id;
-    }
+    const practiceSetId = upserted.rows[0].id;
 
     const assessmentUnitIds = await getAssessmentUnitsForSourceSection(sourceSectionId);
     const currentItems = [];
     for (const assessmentUnitId of assessmentUnitIds) {
-      const items = (await getLayer6Items(assessmentUnitId)).filter(hasSufficientOptions);
+      const items = (await getLayer6Items(assessmentUnitId)).filter(isAnswerableItem);
       currentItems.push(...items);
     }
 
@@ -354,25 +365,22 @@ const materializePracticeSetForSection = async (sourceSectionId) =>
 // section.
 const materializePracticeSetForConcept = async (assessmentUnitId) =>
   withTransaction(async (client) => {
-    const existingSet = await client.query(
-      "SELECT id FROM practice_set WHERE source_assessment_unit_id = $1",
-      [assessmentUnitId]
+    // Upsert instead of select-then-insert -- see materializePracticeSetForSection's
+    // comment above; same race against idx_practice_set_source_assessment_unit
+    // on a concept's first-ever practice visit.
+    const upserted = await client.query(
+      `
+        INSERT INTO practice_set (source_assessment_unit_id, name, status)
+        VALUES ($1, $2, 'active')
+        ON CONFLICT (source_assessment_unit_id) WHERE source_assessment_unit_id IS NOT NULL
+        DO UPDATE SET updated_at = NOW()
+        RETURNING id
+      `,
+      [assessmentUnitId, `Concept ${assessmentUnitId} Practice`]
     );
+    const practiceSetId = upserted.rows[0].id;
 
-    let practiceSetId = existingSet.rows[0]?.id;
-    if (!practiceSetId) {
-      const inserted = await client.query(
-        `
-          INSERT INTO practice_set (source_assessment_unit_id, name, status)
-          VALUES ($1, $2, 'active')
-          RETURNING id
-        `,
-        [assessmentUnitId, `Concept ${assessmentUnitId} Practice`]
-      );
-      practiceSetId = inserted.rows[0].id;
-    }
-
-    const currentItems = (await getLayer6Items(assessmentUnitId)).filter(hasSufficientOptions);
+    const currentItems = (await getLayer6Items(assessmentUnitId)).filter(isAnswerableItem);
 
     return syncPracticeSetItems(client, practiceSetId, currentItems);
   });
@@ -397,30 +405,27 @@ const materializePracticeSetForChapter = async ({ board, studentClass, subject, 
     .map((section) => section.sourceSectionId);
 
   return withTransaction(async (client) => {
+    // Upsert instead of select-then-insert -- see materializePracticeSetForSection's
+    // comment above; same race against practice_set_code's UNIQUE constraint
+    // on a chapter's first-ever assessment visit.
     const practiceSetCode = `chapter:${fkMstBookId}:${chapterNumber}`;
-    const existingSet = await client.query(
-      "SELECT id FROM practice_set WHERE practice_set_code = $1",
-      [practiceSetCode]
+    const upserted = await client.query(
+      `
+        INSERT INTO practice_set (practice_set_code, name, status)
+        VALUES ($1, $2, 'active')
+        ON CONFLICT (practice_set_code)
+        DO UPDATE SET updated_at = NOW()
+        RETURNING id
+      `,
+      [practiceSetCode, `Chapter ${chapterNumber} Assessment`]
     );
-
-    let practiceSetId = existingSet.rows[0]?.id;
-    if (!practiceSetId) {
-      const inserted = await client.query(
-        `
-          INSERT INTO practice_set (practice_set_code, name, status)
-          VALUES ($1, $2, 'active')
-          RETURNING id
-        `,
-        [practiceSetCode, `Chapter ${chapterNumber} Assessment`]
-      );
-      practiceSetId = inserted.rows[0].id;
-    }
+    const practiceSetId = upserted.rows[0].id;
 
     const currentItems = [];
     for (const sourceSectionId of sourceSectionIds) {
       const assessmentUnitIds = await getAssessmentUnitsForSourceSection(sourceSectionId);
       for (const assessmentUnitId of assessmentUnitIds) {
-        const items = (await getLayer6Items(assessmentUnitId)).filter(hasSufficientOptions);
+        const items = (await getLayer6Items(assessmentUnitId)).filter(isAnswerableItem);
         currentItems.push(...items);
       }
     }
@@ -659,16 +664,43 @@ export const restartAssessment = async ({ sourceSectionId, userId }) => {
   return buildAssessmentResponse({ attempt, items, displayMeta });
 };
 
-// Most recent COMPLETED attempts for this section's practice set, with
-// attempted/correct/incorrect counts, for the "recent attempts" trail on the
-// assessment instructions screen. In-progress/abandoned attempts are excluded
-// -- they aren't a meaningful finished result to trend against.
-export const listRecentAttemptsForSection = async ({ sourceSectionId, userId, limit = 5 }) => {
-  const practiceSetResult = await pool.query(
-    "SELECT id FROM practice_set WHERE source_section_id = $1",
-    [sourceSectionId]
+// Same as restartAssessment, but for a single concept's practice set. Needed
+// as an escape hatch for attempts stuck referencing since-regenerated content
+// (student_attempt_item/question_bank_item's item_id gets nulled by
+// content_assessment_item's ON DELETE SET NULL FK when a concept's assessment
+// items are re-imported mid-attempt, which then makes submitAnswer's item_id
+// lookup fail with "Attempt or question not found") -- resuming the same
+// stuck attempt can never recover, so the student needs a way to abandon it
+// and start fresh against the current content, same as section/chapter mode.
+export const restartConceptAssessment = async ({ assessmentUnitId, userId }) => {
+  const [{ practiceSetId, items }, displayMeta] = await Promise.all([
+    materializePracticeSetForConcept(assessmentUnitId),
+    getConceptDisplayMeta(assessmentUnitId),
+  ]);
+
+  if (!items.length) {
+    const error = new Error("This concept has no generated assessment items yet.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await pool.query(
+    "UPDATE student_attempt SET status = 'abandoned' WHERE user_id = $1 AND practice_set_id = $2 AND status = 'in_progress'",
+    [userId, practiceSetId]
   );
-  const practiceSetId = practiceSetResult.rows[0]?.id;
+
+  const attempt = await createAttempt({ userId, practiceSetId, items });
+
+  return buildAssessmentResponse({ attempt, items, displayMeta });
+};
+
+// Shared tail of every "recent attempts" listing (section/concept/chapter
+// all just differ in how they resolve practiceSetId beforehand) --
+// most recent COMPLETED attempts for a practice set, with attempted/correct/
+// incorrect counts, for the "recent attempts" trail on the assessment
+// instructions screen. In-progress/abandoned attempts are excluded -- they
+// aren't a meaningful finished result to trend against.
+const fetchRecentAttemptsForPracticeSet = async ({ practiceSetId, userId, limit }) => {
   if (!practiceSetId) {
     return { attempts: [] };
   }
@@ -712,6 +744,14 @@ export const listRecentAttemptsForSection = async ({ sourceSectionId, userId, li
   };
 };
 
+export const listRecentAttemptsForSection = async ({ sourceSectionId, userId, limit = 5 }) => {
+  const practiceSetResult = await pool.query(
+    "SELECT id FROM practice_set WHERE source_section_id = $1",
+    [sourceSectionId]
+  );
+  return fetchRecentAttemptsForPracticeSet({ practiceSetId: practiceSetResult.rows[0]?.id, userId, limit });
+};
+
 // Same as listRecentAttemptsForSection, but for a single concept's practice
 // set -- gives the student a transparent trail of their own past attempts at
 // just this concept (date/time + score), matching the isolation the
@@ -721,48 +761,7 @@ export const listRecentAttemptsForConcept = async ({ assessmentUnitId, userId, l
     "SELECT id FROM practice_set WHERE source_assessment_unit_id = $1",
     [assessmentUnitId]
   );
-  const practiceSetId = practiceSetResult.rows[0]?.id;
-  if (!practiceSetId) {
-    return { attempts: [] };
-  }
-
-  const attemptsResult = await pool.query(
-    `
-      SELECT
-        sa.id,
-        sa.started_at,
-        sa.submitted_at,
-        sa.score,
-        COUNT(DISTINCT sai.id) AS total_count,
-        COUNT(DISTINCT sr.student_attempt_item_id) AS attempted_count,
-        COUNT(DISTINCT sr.student_attempt_item_id) FILTER (WHERE sr.is_correct) AS correct_count
-      FROM student_attempt sa
-      LEFT JOIN student_attempt_item sai ON sai.student_attempt_id = sa.id
-      LEFT JOIN student_response sr ON sr.student_attempt_item_id = sai.id
-      WHERE sa.user_id = $1 AND sa.practice_set_id = $2 AND sa.status = 'completed'
-      GROUP BY sa.id, sa.started_at, sa.submitted_at, sa.score
-      ORDER BY sa.started_at DESC
-      LIMIT $3
-    `,
-    [userId, practiceSetId, limit]
-  );
-
-  return {
-    attempts: attemptsResult.rows.map((row) => {
-      const attemptedCount = Number(row.attempted_count) || 0;
-      const correctCount = Number(row.correct_count) || 0;
-      return {
-        attemptId: row.id,
-        startedAt: row.started_at,
-        submittedAt: row.submitted_at,
-        score: row.score !== null ? Number(row.score) : null,
-        totalCount: Number(row.total_count) || 0,
-        attemptedCount,
-        correctCount,
-        incorrectCount: attemptedCount - correctCount,
-      };
-    }),
-  };
+  return fetchRecentAttemptsForPracticeSet({ practiceSetId: practiceSetResult.rows[0]?.id, userId, limit });
 };
 
 const getChapterDisplayMeta = async ({ board, studentClass, subject, chapterNumber, userId }) => {
@@ -833,47 +832,36 @@ export const listRecentAttemptsForChapter = async ({ board, studentClass, subjec
     "SELECT id FROM practice_set WHERE practice_set_code = $1",
     [`chapter:${fkMstBookId}:${chapterNumber}`]
   );
-  const practiceSetId = practiceSetResult.rows[0]?.id;
-  if (!practiceSetId) {
-    return { attempts: [] };
+  return fetchRecentAttemptsForPracticeSet({ practiceSetId: practiceSetResult.rows[0]?.id, userId, limit });
+};
+
+// getMindMapForSection's actual dependency is just a unit-id array (resolved
+// here via getAssessmentUnitsForSourceSection).
+const buildMindMapForAssessmentUnitIds = async (assessmentUnitIds) => {
+  if (!assessmentUnitIds.length) {
+    return { nodes: [], edges: [] };
   }
 
-  const attemptsResult = await pool.query(
-    `
-      SELECT
-        sa.id,
-        sa.started_at,
-        sa.submitted_at,
-        sa.score,
-        COUNT(DISTINCT sai.id) AS total_count,
-        COUNT(DISTINCT sr.student_attempt_item_id) AS attempted_count,
-        COUNT(DISTINCT sr.student_attempt_item_id) FILTER (WHERE sr.is_correct) AS correct_count
-      FROM student_attempt sa
-      LEFT JOIN student_attempt_item sai ON sai.student_attempt_id = sa.id
-      LEFT JOIN student_response sr ON sr.student_attempt_item_id = sai.id
-      WHERE sa.user_id = $1 AND sa.practice_set_id = $2 AND sa.status = 'completed'
-      GROUP BY sa.id, sa.started_at, sa.submitted_at, sa.score
-      ORDER BY sa.started_at DESC
-      LIMIT $3
-    `,
-    [userId, practiceSetId, limit]
-  );
+  const [nodesResult, edgesResult] = await Promise.all([
+    pool.query(
+      "SELECT assessment_unit_id, primary_concept FROM assessment_unit WHERE assessment_unit_id = ANY($1)",
+      [assessmentUnitIds]
+    ),
+    pool.query(
+      "SELECT assessment_unit_id, depends_on_assessment_unit_id FROM assessment_unit_dependency WHERE assessment_unit_id = ANY($1)",
+      [assessmentUnitIds]
+    ),
+  ]);
 
   return {
-    attempts: attemptsResult.rows.map((row) => {
-      const attemptedCount = Number(row.attempted_count) || 0;
-      const correctCount = Number(row.correct_count) || 0;
-      return {
-        attemptId: row.id,
-        startedAt: row.started_at,
-        submittedAt: row.submitted_at,
-        score: row.score !== null ? Number(row.score) : null,
-        totalCount: Number(row.total_count) || 0,
-        attemptedCount,
-        correctCount,
-        incorrectCount: attemptedCount - correctCount,
-      };
-    }),
+    nodes: nodesResult.rows.map((row) => ({
+      assessmentUnitId: row.assessment_unit_id,
+      primaryConcept: row.primary_concept,
+    })),
+    edges: edgesResult.rows.map((row) => ({
+      from: row.depends_on_assessment_unit_id,
+      to: row.assessment_unit_id,
+    })),
   };
 };
 
@@ -912,45 +900,34 @@ export const submitAnswer = async ({
     return null;
   }
 
-  const layer6Result = await pool.query(
+  const contentItemResult = await pool.query(
     `
-      SELECT id, assessment_unit_id, generation_id, correct_answer, marks, interaction_type, interaction_data, question
-      FROM layer6_assessment_item
+      SELECT sync_run_id AS generation_id, assessment_unit_id, correct_answer, answer_explanation,
+             marks, interaction_type, options, hints, question
+      FROM content_assessment_item
       WHERE item_id = $1
     `,
     [attemptItem.item_id]
   );
-  const layer6Item = layer6Result.rows[0];
-  if (!layer6Item) {
+  const contentItem = contentItemResult.rows[0];
+  if (!contentItem) {
     return null;
   }
-
-  const [acceptableResult, optionCountResult] = await Promise.all([
-    pool.query(
-      "SELECT answer_text FROM layer6_assessment_item_acceptable_answer WHERE layer6_assessment_item_id = $1",
-      [layer6Item.id]
-    ),
-    pool.query(
-      "SELECT COUNT(*)::int AS count FROM layer6_assessment_item_option WHERE layer6_assessment_item_id = $1",
-      [layer6Item.id]
-    ),
-  ]);
-  const acceptableAnswers = acceptableResult.rows.map((row) => row.answer_text);
 
   // Mirrors the client's resolveInteractionType fallback (StudentAssessmentPage.jsx)
   // so legacy items with no interaction_type are graded the same way they're
   // rendered: no options -> free_text, otherwise single_select.
   const resolvedInteractionType =
-    layer6Item.interaction_type || (optionCountResult.rows[0]?.count > 0 ? "single_select" : "free_text");
+    contentItem.interaction_type || (toArray(contentItem.options).length > 0 ? "single_select" : "free_text");
 
   let correct;
   let aiFeedback = null;
 
   if (resolvedInteractionType === "free_text") {
     const aiGrading = await gradeFreeTextAnswerWithAi({
-      question: layer6Item.question,
-      correctAnswer: layer6Item.correct_answer,
-      acceptableAnswers,
+      question: contentItem.question,
+      correctAnswer: contentItem.correct_answer,
+      acceptableAnswers: [],
       studentAnswer,
     });
 
@@ -960,18 +937,18 @@ export const submitAnswer = async ({
     } else {
       correct = isAnswerCorrect({
         interactionType: resolvedInteractionType,
-        correctAnswer: layer6Item.correct_answer,
-        interactionData: layer6Item.interaction_data,
-        acceptableAnswers,
+        correctAnswer: contentItem.correct_answer,
+        interactionData: {},
+        acceptableAnswers: [],
         studentAnswer,
       });
     }
   } else {
     correct = isAnswerCorrect({
       interactionType: resolvedInteractionType,
-      correctAnswer: layer6Item.correct_answer,
-      interactionData: layer6Item.interaction_data,
-      acceptableAnswers,
+      correctAnswer: contentItem.correct_answer,
+      interactionData: {},
+      acceptableAnswers: [],
       studentAnswer,
     });
   }
@@ -991,10 +968,10 @@ export const submitAnswer = async ({
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       `,
       [
-        layer6Item.generation_id,
+        contentItem.generation_id,
         attemptId,
         attemptItem.attempt_item_id,
-        layer6Item.assessment_unit_id,
+        contentItem.assessment_unit_id,
         studentAnswer,
         correct,
         Number(timeTakenSeconds || 0),
@@ -1002,21 +979,16 @@ export const submitAnswer = async ({
       ]
     );
     await client.query("UPDATE student_attempt_item SET marks_awarded = $1 WHERE id = $2", [
-      correct ? Number(layer6Item.marks || 0) : 0,
+      correct ? Number(contentItem.marks || 0) : 0,
       attemptItem.attempt_item_id,
     ]);
   });
 
   await updateMasteryForUnit({
     userId,
-    assessmentUnitId: layer6Item.assessment_unit_id,
-    generationId: layer6Item.generation_id,
+    assessmentUnitId: contentItem.assessment_unit_id,
+    generationId: contentItem.generation_id,
   });
-
-  const support = await getLayer7Support(layer6Item.assessment_unit_id);
-  const distractorMatch = support?.distractorAnalysis?.find(
-    (distractor) => normalizeAnswer(distractor.optionText) === normalizeAnswer(studentAnswer)
-  );
 
   const dependencyResult = await pool.query(
     `
@@ -1026,7 +998,7 @@ export const submitAnswer = async ({
       ORDER BY id ASC
       LIMIT 1
     `,
-    [layer6Item.assessment_unit_id]
+    [contentItem.assessment_unit_id]
   );
 
   let relatedConcept = null;
@@ -1040,14 +1012,10 @@ export const submitAnswer = async ({
 
   return {
     isCorrect: correct,
-    correctAnswer: layer6Item.correct_answer,
-    explanation:
-      aiFeedback ||
-      (correct
-        ? support?.correctAnswerReasoning || support?.conceptExplanation || null
-        : distractorMatch?.whyIncorrect || support?.conceptExplanation || null),
+    correctAnswer: contentItem.correct_answer,
+    explanation: aiFeedback || contentItem.answer_explanation || null,
     relatedConcept,
-    hints: support?.progressiveHints || [],
+    hints: toArray(contentItem.hints),
   };
 };
 
@@ -1070,7 +1038,7 @@ export const getAssessmentResult = async ({ attemptId, userId }) => {
         lai.assessment_unit_id,
         au.primary_concept
       FROM student_attempt_item sai
-      LEFT JOIN layer6_assessment_item lai ON lai.item_id = sai.item_id
+      LEFT JOIN content_assessment_item lai ON lai.item_id = sai.item_id
       LEFT JOIN assessment_unit au ON au.assessment_unit_id = lai.assessment_unit_id
       WHERE sai.student_attempt_id = $1
       ORDER BY sai.display_order ASC
@@ -1152,7 +1120,7 @@ export const submitAssessment = async ({ attemptId, userId }) => {
           COALESCE(SUM(lai.marks), 0) AS total_marks,
           COALESCE(SUM(sai.marks_awarded), 0) AS scored_marks
         FROM student_attempt_item sai
-        LEFT JOIN layer6_assessment_item lai ON lai.item_id = sai.item_id
+        LEFT JOIN content_assessment_item lai ON lai.item_id = sai.item_id
         WHERE sai.student_attempt_id = $1
       `,
       [attemptId]
@@ -1203,29 +1171,5 @@ export const submitAssessment = async ({ attemptId, userId }) => {
 
 export const getMindMapForSection = async (sourceSectionId) => {
   const assessmentUnitIds = await getAssessmentUnitsForSourceSection(sourceSectionId);
-  if (!assessmentUnitIds.length) {
-    return { nodes: [], edges: [] };
-  }
-
-  const [nodesResult, edgesResult] = await Promise.all([
-    pool.query(
-      "SELECT assessment_unit_id, primary_concept FROM assessment_unit WHERE assessment_unit_id = ANY($1)",
-      [assessmentUnitIds]
-    ),
-    pool.query(
-      "SELECT assessment_unit_id, depends_on_assessment_unit_id FROM assessment_unit_dependency WHERE assessment_unit_id = ANY($1)",
-      [assessmentUnitIds]
-    ),
-  ]);
-
-  return {
-    nodes: nodesResult.rows.map((row) => ({
-      assessmentUnitId: row.assessment_unit_id,
-      primaryConcept: row.primary_concept,
-    })),
-    edges: edgesResult.rows.map((row) => ({
-      from: row.depends_on_assessment_unit_id,
-      to: row.assessment_unit_id,
-    })),
-  };
+  return buildMindMapForAssessmentUnitIds(assessmentUnitIds);
 };

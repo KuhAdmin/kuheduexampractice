@@ -66,13 +66,13 @@ const buildQuery = (params = {}) => {
   return search.toString();
 };
 
-export const getAssessmentStudioBootstrap = async (params = {}) => {
-  const query = buildQuery(params);
-  return apiRequest(`/catalog/assessment-studio/bootstrap${query ? `?${query}` : ""}`);
-};
+export const getStudentSections = async (chapterNumber, { examGoalCode, levelCode, subjectCode } = {}) =>
+  apiRequest(`/user/sections?${buildQuery({ chapterNumber, examGoalCode, levelCode, subjectCode })}`);
 
-export const getStudentSections = async (chapterNumber) =>
-  apiRequest(`/user/sections?${buildQuery({ chapterNumber })}`);
+export const getClassSubjectOptions = async () => apiRequest("/user/class-subject-options");
+
+export const getChaptersForSelection = async ({ examGoalCode, levelCode, subjectCode }) =>
+  apiRequest(`/user/chapters-for-selection?${buildQuery({ examGoalCode, levelCode, subjectCode })}`);
 
 export const getRemainingConcepts = async () => apiRequest("/user/goals/remaining-concepts");
 
@@ -93,14 +93,26 @@ export const getStudentMemoryBoosterForSection = async (sourceSectionId) =>
 export const getStudentFlashcards = async (sourceSectionId) =>
   apiRequest(`/user/sections/${sourceSectionId}/flashcards`);
 
+export const getStudentRevision = async (sourceSectionId) =>
+  apiRequest(`/user/sections/${sourceSectionId}/revision`);
+
+export const getStudentTutorNotes = async (sourceSectionId) =>
+  apiRequest(`/user/sections/${sourceSectionId}/tutor-notes`);
+
 export const getStudentDiagrams = async (sourceSectionId) =>
   apiRequest(`/user/sections/${sourceSectionId}/diagrams`);
+
+export const getStudentVisualLearningItems = async (sourceSectionId) =>
+  apiRequest(`/user/sections/${sourceSectionId}/visual-learning`);
 
 export const getStudentDiagramMedia = async (diagramId) =>
   apiRequest(`/user/diagrams/${diagramId}/media`);
 
 export const getStudentConceptCard = async (assessmentUnitId) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/card`);
+
+export const getStudentConceptChallenges = async (assessmentUnitId) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/challenges`);
 
 export const getStudentConceptSectionMedia = async (assessmentUnitId, sectionKey) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/memory-hook-media/${sectionKey}`);
@@ -174,6 +186,9 @@ export const getRecentAssessmentAttempts = async (sourceSectionId) =>
 export const startConceptAssessment = async (assessmentUnitId) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/assessment/start`, { method: "POST" });
 
+export const restartConceptAssessment = async (assessmentUnitId) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/assessment/restart`, { method: "POST" });
+
 export const getRecentConceptAssessmentAttempts = async (assessmentUnitId) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/assessment/attempts`);
 
@@ -218,104 +233,6 @@ export const submitAssessment = async (attemptId) =>
 
 export const getAssessmentResult = async (attemptId) =>
   apiRequest(`/user/attempts/${attemptId}/result`);
-
-export const getAssessmentStudioChapters = async (params = {}) => {
-  const query = buildQuery(params);
-  return apiRequest(`/catalog/assessment-studio/chapters${query ? `?${query}` : ""}`);
-};
-
-export const getAssessmentStudioSections = async (params = {}) => {
-  const query = buildQuery(params);
-  return apiRequest(`/catalog/assessment-studio/sections${query ? `?${query}` : ""}`);
-};
-
-export const saveSourceSectionDraft = async (payload) =>
-  apiRequest("/assessment-studio/sections/draft", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-
-export const getSourceSectionDraft = async (sourceSectionId) =>
-  apiRequest(`/assessment-studio/sections/${sourceSectionId}`);
-
-export const updateSourceSection = async (sourceSectionId, { adminNotes, sectionOcrText }) =>
-  apiRequest(`/assessment-studio/sections/${sourceSectionId}`, {
-    method: "PUT",
-    body: JSON.stringify({ adminNotes, sectionOcrText }),
-  });
-
-export const addSourceSectionImage = async (sourceSectionId, image) =>
-  apiRequest(`/assessment-studio/sections/${sourceSectionId}/images`, {
-    method: "POST",
-    body: JSON.stringify(image),
-  });
-
-export const removeSourceSectionImage = async (sourceSectionId, imageId) =>
-  apiRequest(`/assessment-studio/sections/${sourceSectionId}/images/${imageId}`, {
-    method: "DELETE",
-  });
-
-export const saveSourceDocumentPdf = async (sourceDocumentId, { pdfDataUrl, fileName, pageCount }) =>
-  apiRequest(`/assessment-studio/documents/${sourceDocumentId}/pdf`, {
-    method: "POST",
-    body: JSON.stringify({ pdfDataUrl, fileName, pageCount }),
-  });
-
-export const getSourceDocumentPdf = async (sourceDocumentId) =>
-  apiRequest(`/assessment-studio/documents/${sourceDocumentId}/pdf`);
-
-export const runAssessmentStudioPipeline = async (payload) =>
-  apiRequest("/assessment-studio/pipeline/run", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-
-export const getAssessmentStudioPipelineStatus = async (jobId) =>
-  apiRequest(`/assessment-studio/pipeline/${jobId}`);
-
-export const getAssessmentStudioPipelineStatusBatch = async (jobIds = []) => {
-  if (!jobIds.length) {
-    return { jobs: [] };
-  }
-  const query = buildQuery({ jobIds: jobIds.join(",") });
-  return apiRequest(`/assessment-studio/pipeline/status-batch?${query}`);
-};
-
-export const getAssessmentStudioPipelineConcurrency = async () =>
-  apiRequest("/assessment-studio/pipeline/concurrency");
-
-export const getAssessmentStudioPipelineNavigation = async (params = {}) => {
-  const query = buildQuery(params);
-  return apiRequest(`/assessment-studio/pipeline/navigation${query ? `?${query}` : ""}`);
-};
-
-export const abortAssessmentStudioPipeline = async (jobId) =>
-  apiRequest(`/assessment-studio/pipeline/${jobId}/abort`, {
-    method: "POST",
-  });
-
-export const getAssessmentStudioPipelineAudit = async (jobId) =>
-  apiRequest(`/assessment-studio/pipeline/${jobId}/audit`);
-
-export const getCompletedAssessmentStudioRuns = async () =>
-  apiRequest("/assessment-studio/pipeline/completed");
-
-export const deleteAssessmentStudioPipelineRun = async (jobId) =>
-  apiRequest(`/assessment-studio/pipeline/${jobId}`, {
-    method: "DELETE",
-  });
-
-export const rerunAssessmentStudioPipelineLayer = async (jobId, layerNumber, modelId = null) =>
-  apiRequest(`/assessment-studio/pipeline/${jobId}/layers/${layerNumber}/rerun`, {
-    method: "POST",
-    body: JSON.stringify({ modelId }),
-  });
-
-export const initializeAssessmentStudioDatabase = async (options = {}) =>
-  apiRequest("/assessment-studio/admin/db/initialize", {
-    method: "POST",
-    body: JSON.stringify(options),
-  });
 
 export const getAdminUsers = async () => apiRequest("/admin/users");
 
@@ -447,95 +364,122 @@ export const uploadAdminBooksBulk = async ({ fileName, dataUrl }) =>
     body: JSON.stringify({ fileName, dataUrl }),
   });
 
-export const assignModerationTask = async ({ sourceSectionId, layerNumber, moderatorUserId, dueAt }) =>
-  apiRequest("/moderation/tasks", {
-    method: "POST",
-    body: JSON.stringify({ sourceSectionId, layerNumber, moderatorUserId, dueAt }),
-  });
+// Streams newline-delimited JSON progress events from postConceptImport
+// (server/src/controllers/adminConceptImportController.js) as the import
+// actually runs, calling onEvent for each one, so the caller can render a
+// live log of concept nodes instead of waiting for the whole import to
+// finish. Still resolves to { summary } like a normal apiRequest call once
+// the stream ends, for callers that only care about the final result.
+export const uploadConceptImport = async ({ payload, onEvent }) => {
+  const token = localStorage.getItem("kuhedu_token");
+  const headers = { "Content-Type": "application/json" };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
-export const getModerationAssignableSections = async (params = {}) => {
-  const query = buildQuery(params);
-  return apiRequest(`/moderation/assignable-sections${query ? `?${query}` : ""}`);
+  let response;
+  try {
+    response = await fetch(`${API_ROOT}/admin/concept-import`, {
+      method: "POST",
+      headers,
+      credentials: "include",
+      body: JSON.stringify({ payload }),
+    });
+  } catch (error) {
+    throw new Error(
+      `Unable to connect to the KUHEDU server. Please check your internet connection and try again. ${
+        error.message || ""
+      }`.trim()
+    );
+  }
+
+  // A shape-validation failure responds with a normal JSON body before any
+  // streaming starts (see the controller) -- detected by content-type, since
+  // response.ok alone can't tell a pre-stream 400 apart from a 200 stream
+  // that later reports a {type:"error"} line.
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/x-ndjson")) {
+    return readJson(response);
+  }
+  if (!response.body) {
+    throw new Error("This browser doesn't support streaming responses.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let summary = null;
+  let streamError = null;
+
+  const consumeLine = (line) => {
+    if (!line.trim()) return;
+    let event;
+    try {
+      event = JSON.parse(line);
+    } catch {
+      return;
+    }
+    if (event.type === "summary") {
+      summary = event.summary;
+    } else if (event.type === "error") {
+      streamError = event.message;
+    }
+    onEvent?.(event);
+  };
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop();
+    lines.forEach(consumeLine);
+  }
+  if (buffer) {
+    consumeLine(buffer);
+  }
+
+  if (streamError) {
+    throw new Error(streamError);
+  }
+  if (!summary) {
+    throw new Error("The import stream ended without a summary.");
+  }
+  return { summary };
 };
 
-export const getMyModerationTasks = async () => apiRequest("/moderation/tasks/mine");
-
-export const getAllModerationTasks = async () => apiRequest("/moderation/tasks");
-
-export const getModerationTaskDetail = async (reviewQueueId) =>
-  apiRequest(`/moderation/tasks/${reviewQueueId}`);
-
-export const submitModeratorDecision = async (reviewQueueId, decision, notes) =>
-  apiRequest(`/moderation/tasks/${reviewQueueId}/moderator-decision`, {
-    method: "POST",
-    body: JSON.stringify({ decision, notes }),
-  });
-
-export const submitAdminModerationDecision = async (reviewQueueId, decision, notes) =>
-  apiRequest(`/moderation/tasks/${reviewQueueId}/admin-decision`, {
-    method: "POST",
-    body: JSON.stringify({ decision, notes }),
-  });
-
-export const getAssessmentStudioLayerVersions = async (jobId, layerNumber) =>
-  apiRequest(`/assessment-studio/pipeline/${jobId}/layers/${layerNumber}/versions`);
-
-export const selectAssessmentStudioLayerVersion = async (assessmentUnitId, layerNumber, generationId) =>
-  apiRequest(
-    `/assessment-studio/assessment-units/${assessmentUnitId}/layers/${layerNumber}/versions/${generationId}/select`,
-    { method: "POST" }
-  );
-
 export const getMemoryHookMedia = async (assessmentUnitId) =>
-  apiRequest(`/assessment-studio/assessment-units/${assessmentUnitId}/memory-hook-media`);
+  apiRequest(`/admin/media/memory-hooks/${assessmentUnitId}`);
 
 export const uploadMemoryHookMedia = async (assessmentUnitId, sectionKey, dataUrl, fileName) =>
-  apiRequest(`/assessment-studio/assessment-units/${assessmentUnitId}/memory-hook-media/${sectionKey}/upload`, {
+  apiRequest(`/admin/media/memory-hooks/${assessmentUnitId}/${sectionKey}/upload`, {
     method: "POST",
     body: JSON.stringify({ dataUrl, fileName }),
-  });
-
-export const generateMemoryHookImage = async (assessmentUnitId, sectionKey, modelId = null) =>
-  apiRequest(`/assessment-studio/assessment-units/${assessmentUnitId}/memory-hook-images/${sectionKey}/generate`, {
-    method: "POST",
-    body: JSON.stringify({ modelId }),
   });
 
 export const getAssessmentUnitDiagrams = async (assessmentUnitId) =>
-  apiRequest(`/assessment-studio/assessment-units/${assessmentUnitId}/diagrams`);
+  apiRequest(`/admin/media/diagrams/unit/${assessmentUnitId}`);
 
 export const getDiagramMedia = async (diagramId) =>
-  apiRequest(`/assessment-studio/diagrams/${diagramId}/media`);
+  apiRequest(`/admin/media/diagrams/${diagramId}`);
 
 export const uploadDiagramMedia = async (diagramId, dataUrl, fileName) =>
-  apiRequest(`/assessment-studio/diagrams/${diagramId}/media/upload`, {
+  apiRequest(`/admin/media/diagrams/${diagramId}/upload`, {
     method: "POST",
     body: JSON.stringify({ dataUrl, fileName }),
   });
 
-export const generateDiagramImage = async (diagramId, modelId = null) =>
-  apiRequest(`/assessment-studio/diagrams/${diagramId}/media/generate`, {
+export const uploadChapterExercise = async (bookId, chapterNumber, { dataUrl, mimeType, chapterName }) =>
+  apiRequest(`/admin/chapter-exercises/${bookId}/${chapterNumber}/upload`, {
     method: "POST",
-    body: JSON.stringify({ modelId }),
-  });
-
-export const generateAllMemoryHookImages = async (assessmentUnitId, modelId = null) =>
-  apiRequest(`/assessment-studio/assessment-units/${assessmentUnitId}/memory-hook-images/generate-all`, {
-    method: "POST",
-    body: JSON.stringify({ modelId }),
-  });
-
-export const uploadChapterExercise = async (bookId, chapterNumber, { dataUrl, mimeType, chapterName, pipelineJobId }) =>
-  apiRequest(`/assessment-studio/chapters/${bookId}/${chapterNumber}/exercises/upload`, {
-    method: "POST",
-    body: JSON.stringify({ dataUrl, mimeType, chapterName, pipelineJobId }),
+    body: JSON.stringify({ dataUrl, mimeType, chapterName }),
   });
 
 export const getPendingChapterExerciseQuestions = async (bookId, chapterNumber) =>
-  apiRequest(`/assessment-studio/chapters/${bookId}/${chapterNumber}/exercises/pending`);
+  apiRequest(`/admin/chapter-exercises/${bookId}/${chapterNumber}/pending`);
 
 export const reviewChapterExerciseQuestion = async (questionId, decision) =>
-  apiRequest(`/assessment-studio/chapters/exercises/${questionId}/review`, {
+  apiRequest(`/admin/chapter-exercises/${questionId}/review`, {
     method: "POST",
     body: JSON.stringify({ decision }),
   });
@@ -547,20 +491,6 @@ export const submitBookQuestionResponse = async (chapterNumber, questionId, stud
   apiRequest(`/user/chapters/${chapterNumber}/book-questions/${questionId}/respond`, {
     method: "POST",
     body: JSON.stringify({ studentAnswer, sourcePageImages }),
-  });
-
-export const getAiModelSettings = async () => apiRequest("/settings/ai-model");
-
-export const updateActiveAiModel = async (modelId) =>
-  apiRequest("/settings/ai-model", {
-    method: "PUT",
-    body: JSON.stringify({ modelId }),
-  });
-
-export const updateLayerAiModelOverride = async (layerNumber, modelId) =>
-  apiRequest("/settings/ai-model/layer-overrides", {
-    method: "PUT",
-    body: JSON.stringify({ layerNumber, modelId }),
   });
 
 export const getAdminDemoSubmissions = async () => apiRequest("/admin/ai-demo");
@@ -599,25 +529,3 @@ export const updateDemoSubjectModelOverride = async (subjectCode, { ocrModelId, 
     body: JSON.stringify({ ocrModelId, gradingModelId }),
   });
 
-export const downloadAssessmentStudioPipelineAudit = async (jobId) => {
-  const token = localStorage.getItem("kuhedu_token");
-  const headers = token ? { Authorization: `Bearer ${token}` } : {};
-  const response = await fetch(`${API_ROOT}/assessment-studio/pipeline/${jobId}/audit.txt`, {
-    method: "GET",
-    headers,
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    let message = "Failed to download audit log.";
-    try {
-      const data = await response.json();
-      message = data.message || message;
-    } catch {
-      message = await response.text();
-    }
-    throw new Error(message);
-  }
-
-  return response.text();
-};

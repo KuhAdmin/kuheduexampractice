@@ -4,6 +4,7 @@ import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentDrilldownCard } from "../components/StudentDrilldownCard";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getBookQuestions, getStudentSections } from "../api/client";
+import { decodeSelectionChapterId, isSelectionChapterId } from "./studentChapterData";
 
 const ChapterDetailIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -132,6 +133,21 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
   const tier = useBreakpoint();
   const isDesktop = tier !== "mobile";
   const { chapterId: chapterNumber } = useParams();
+
+  // Chapters browsed via the class/subject switcher on
+  // StudentChaptersPage.jsx outside the student's own profile subject carry
+  // their (examGoalCode, levelCode, subjectCode) encoded into the route
+  // param (see studentChapterData.js) -- chapterNumber alone can't
+  // disambiguate once this page isn't locked to one profile's subject.
+  // sections/flashcards/revision/etc. are keyed by sourceSectionId, a real
+  // DB id independent of subject, so only the sections *lookup* itself needs
+  // the override codes; book questions and the chapter-level assessment are
+  // still profile-scoped server-side (out of scope here) and are hidden
+  // instead of silently loading the wrong subject's data.
+  const selectionOverride = decodeSelectionChapterId(chapterNumber);
+  const isSelection = isSelectionChapterId(chapterNumber);
+  const displayChapterNumber = selectionOverride?.chapterNumber ?? chapterNumber;
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -148,7 +164,7 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
     setLoading(true);
     setError("");
 
-    getStudentSections(chapterNumber)
+    getStudentSections(displayChapterNumber, selectionOverride || undefined)
       .then((result) => {
         if (!cancelled) setData(result);
       })
@@ -162,9 +178,15 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterNumber]);
 
   useEffect(() => {
+    if (isSelection) {
+      setBookQuestionsLoading(false);
+      return undefined;
+    }
+
     let cancelled = false;
     setBookQuestionsLoading(true);
     setBookQuestionsError("");
@@ -183,7 +205,8 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
     return () => {
       cancelled = true;
     };
-  }, [chapterNumber]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapterNumber, isSelection]);
 
   const chapterName = data?.chapterName || dashboardChapter?.title || "Chapter";
   const sections = data?.sections || [];
@@ -235,35 +258,72 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
               <ChapterDetailIcon type="back" />
             </button>
             <div>
-              <h1>{`Chapter ${chapterNumber}. ${chapterName}`}</h1>
+              <h1>{`Chapter ${displayChapterNumber}. ${chapterName}`}</h1>
               <p>Browse sections and continue where you left off.</p>
             </div>
           </header>
 
           <section className="student-chapter-detail-card">
-            <div className="student-chapter-detail-progress-copy">
-              <span>Overall Progress</span>
-              <strong>{overallProgress}%</strong>
-              <p>
-                {generatedSections.length}/{sections.length || 0} Sections Available
-              </p>
-              <div className="student-chapter-detail-progress-bar" aria-hidden="true">
-                <span style={{ width: `${overallProgress}%` }} />
+            <div className="student-chapter-detail-summary-row">
+              <div className="student-chapter-detail-progress-copy">
+                <span>Overall Progress</span>
+                <strong>{overallProgress}%</strong>
+                <p>
+                  {generatedSections.length}/{sections.length || 0} Sections Available
+                </p>
               </div>
-              {bookQuestions.length > 0 && (
-                <>
-                  <span>Book Questions</span>
-                  <strong>{bookQuestionsProgress}%</strong>
-                  <p>
-                    {bookQuestionsAnsweredCount}/{bookQuestions.length} Answered
-                  </p>
-                  <div className="student-chapter-detail-progress-bar" aria-hidden="true">
-                    <span style={{ width: `${bookQuestionsProgress}%` }} />
+
+              {!loading && !error && sections.length > 0 && (
+                <div className="student-goals-stats student-goals-stats--embedded">
+                  <div className="student-goals-stat-card">
+                    <span className="student-goals-stat-icon is-total">
+                      <ChapterDetailIcon type="book" />
+                    </span>
+                    <strong>{summary.total}</strong>
+                    <span>Total Sections</span>
                   </div>
-                </>
+                  <div className="student-goals-stat-card is-in-progress">
+                    <span className="student-goals-stat-icon is-in-progress">
+                      <ChapterDetailIcon type="clock" />
+                    </span>
+                    <strong>{summary.inProgress}</strong>
+                    <span>In Progress</span>
+                  </div>
+                  <div className="student-goals-stat-card is-completed">
+                    <span className="student-goals-stat-icon is-completed">
+                      <ChapterDetailIcon type="check" />
+                    </span>
+                    <strong>{summary.completed}</strong>
+                    <span>Completed</span>
+                  </div>
+                  <div className="student-goals-stat-card is-not-started">
+                    <span className="student-goals-stat-icon is-not-started">
+                      <ChapterDetailIcon type="circle-outline" />
+                    </span>
+                    <strong>{summary.notStarted}</strong>
+                    <span>Not Started</span>
+                  </div>
+                </div>
               )}
             </div>
-            <img src="/plant.png" alt="" className="student-chapter-detail-illustration" aria-hidden="true" />
+
+            <div className="student-chapter-detail-progress-bar" aria-hidden="true">
+              <span style={{ width: `${overallProgress}%` }} />
+            </div>
+
+            {bookQuestions.length > 0 && (
+              <div className="student-chapter-detail-secondary-progress">
+                <div className="student-chapter-detail-divider" aria-hidden="true" />
+                <span>Book Questions</span>
+                <strong>{bookQuestionsProgress}%</strong>
+                <p>
+                  {bookQuestionsAnsweredCount}/{bookQuestions.length} Answered
+                </p>
+                <div className="student-chapter-detail-progress-bar" aria-hidden="true">
+                  <span style={{ width: `${bookQuestionsProgress}%` }} />
+                </div>
+              </div>
+            )}
           </section>
 
           {loading ? (
@@ -274,37 +334,6 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
             <p className="student-empty-state">No sections found for this chapter yet.</p>
           ) : (
             <>
-              <section className="student-goals-stats">
-                <div className="student-goals-stat-card">
-                  <span className="student-goals-stat-icon is-total">
-                    <ChapterDetailIcon type="book" />
-                  </span>
-                  <strong>{summary.total}</strong>
-                  <span>Total Sections</span>
-                </div>
-                <div className="student-goals-stat-card is-in-progress">
-                  <span className="student-goals-stat-icon is-in-progress">
-                    <ChapterDetailIcon type="clock" />
-                  </span>
-                  <strong>{summary.inProgress}</strong>
-                  <span>In Progress</span>
-                </div>
-                <div className="student-goals-stat-card is-completed">
-                  <span className="student-goals-stat-icon is-completed">
-                    <ChapterDetailIcon type="check" />
-                  </span>
-                  <strong>{summary.completed}</strong>
-                  <span>Completed</span>
-                </div>
-                <div className="student-goals-stat-card is-not-started">
-                  <span className="student-goals-stat-icon is-not-started">
-                    <ChapterDetailIcon type="circle-outline" />
-                  </span>
-                  <strong>{summary.notStarted}</strong>
-                  <span>Not Started</span>
-                </div>
-              </section>
-
               <div className="student-goals-list">
                 {sections.map((section) => {
                   const status = statusForSection(section);
@@ -340,7 +369,7 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
                     </button>
                   );
                 })}
-                {!bookQuestionsLoading && !bookQuestionsError && (
+                {!isSelection && !bookQuestionsLoading && !bookQuestionsError && (
                   <button
                     type="button"
                     className="student-goals-row"
@@ -376,7 +405,7 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
           >
             <ChapterDetailIcon type="back" />
           </button>
-          <h1>{`Chapter ${chapterNumber}. ${chapterName}`}</h1>
+          <h1>{`Chapter ${displayChapterNumber}. ${chapterName}`}</h1>
         </header>
 
         <section className="student-chapter-detail-card">
@@ -402,12 +431,6 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
               </>
             )}
           </div>
-          <img
-            src="/plant.png"
-            alt=""
-            className="student-chapter-detail-illustration"
-            aria-hidden="true"
-          />
         </section>
 
         <section className="student-chapter-detail-section">
@@ -437,7 +460,7 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
                 >
                 </StudentDrilldownCard>
               ))}
-              {!bookQuestionsLoading && !bookQuestionsError && (
+              {!isSelection && !bookQuestionsLoading && !bookQuestionsError && (
                 <StudentDrilldownCard
                   className="student-chapter-detail-row"
                   onClick={() => navigate(`/chapters/${chapterNumber}/assessment`)}

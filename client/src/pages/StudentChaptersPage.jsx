@@ -4,8 +4,15 @@ import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentDrilldownCard } from "../components/StudentDrilldownCard";
 import { StudentNotificationPanel } from "../components/StudentNotificationPanel";
 import { useBreakpoint } from "../hooks/useBreakpoint";
-import { getNotifications, markNotificationsSeen } from "../api/client";
-import { buildChapterRows, toTitleLabel } from "./studentChapterData";
+import {
+  getChaptersForSelection,
+  getClassSubjectOptions,
+  getNotifications,
+  markNotificationsSeen,
+} from "../api/client";
+import { buildChapterRows, encodeSelectionChapterId } from "./studentChapterData";
+
+const selectionKey = ({ examGoalCode, levelCode, subjectCode }) => `${examGoalCode}|${levelCode}|${subjectCode}`;
 
 const ChapterIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -155,13 +162,57 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
   const navigate = useNavigate();
   const tier = useBreakpoint();
   const isDesktop = tier !== "mobile";
-  const classLabel = user?.studentClass ? `Class ${user.studentClass}` : "Class 11";
-  const subjectLabel = toTitleLabel(user?.subject) || "Biology";
-  const chapters = buildChapterRows(Array.isArray(dashboard?.chapters) ? dashboard.chapters : []);
-
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [panelOpen, setPanelOpen] = useState(false);
+
+  // Class/subject switcher -- every board/
+  // class/subject combo that has content in the DB, not just the student's
+  // own profile (see listClassSubjectOptionsWithContent). Defaults to the
+  // student's own profile combo, matched by level + subject name once the
+  // options list loads, so existing behavior (their own chapters, sourced
+  // from the already-loaded `dashboard` prop with no extra fetch) is
+  // unchanged unless they actively switch.
+  const [classSubjectOptions, setClassSubjectOptions] = useState([]);
+  const [selection, setSelection] = useState(null);
+  const [selectedChapters, setSelectedChapters] = useState([]);
+  const [selectedChaptersError, setSelectedChaptersError] = useState("");
+
+  const defaultOption = useMemo(() => {
+    if (!classSubjectOptions.length) return null;
+    const userClass = String(user?.studentClass || "").trim();
+    const userSubject = String(user?.subject || "").trim().toLowerCase();
+    return (
+      classSubjectOptions.find(
+        (option) => option.levelCode === userClass && option.subjectName.toLowerCase() === userSubject
+      ) || classSubjectOptions[0]
+    );
+  }, [classSubjectOptions, user?.studentClass, user?.subject]);
+
+  useEffect(() => {
+    if (defaultOption && !selection) {
+      setSelection(defaultOption);
+    }
+  }, [defaultOption, selection]);
+
+  const isDefaultSelection =
+    !selection || (defaultOption && selectionKey(selection) === selectionKey(defaultOption));
+
+  // The student's own combo reuses the already-loaded `dashboard` prop
+  // (no extra request, and chapterNumber stays a plain, unencoded value so
+  // every existing profile-scoped route -- book questions, assessments, mind
+  // maps -- keeps working exactly as before). Only a genuine switch away
+  // from that combo fetches via getChaptersForSelection and encodes the
+  // chapter id with the chosen codes so the detail page knows which
+  // subject's chapter was meant.
+  const realChapters = isDefaultSelection
+    ? buildChapterRows(Array.isArray(dashboard?.chapters) ? dashboard.chapters : [])
+    : buildChapterRows(
+        selectedChapters.map((chapter) => ({
+          ...chapter,
+          chapterNumber: encodeSelectionChapterId({ ...selection, chapterNumber: chapter.chapterNumber }),
+        }))
+      );
 
   useEffect(() => {
     let cancelled = false;
@@ -178,6 +229,46 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getClassSubjectOptions()
+      .then((result) => {
+        if (!cancelled) setClassSubjectOptions(result?.options || []);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!selection || isDefaultSelection) {
+      setSelectedChapters([]);
+      setSelectedChaptersError("");
+      return undefined;
+    }
+
+    let cancelled = false;
+    setSelectedChaptersError("");
+
+    getChaptersForSelection(selection)
+      .then((result) => {
+        if (!cancelled) setSelectedChapters(result?.chapters || []);
+      })
+      .catch((error) => {
+        if (!cancelled) setSelectedChaptersError(error.message || "Failed to load chapters.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selection, isDefaultSelection]);
+
+  const chapters = realChapters;
 
   const handleBellClick = () => {
     setPanelOpen((current) => {
@@ -203,6 +294,28 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
 
   const goToChapter = (chapter) => navigate(`/chapters/${chapter.chapterNumber || chapter.id}`);
 
+  const filterControl = (
+    <div className="student-chapters-filter">
+      <ChapterIcon type="book" />
+      <select
+        aria-label="Class and subject"
+        value={selection ? selectionKey(selection) : ""}
+        onChange={(event) => {
+          const next = classSubjectOptions.find((option) => selectionKey(option) === event.target.value);
+          if (next) setSelection(next);
+        }}
+        disabled={!classSubjectOptions.length}
+      >
+        {classSubjectOptions.length === 0 && <option value="">No chapters available yet</option>}
+        {classSubjectOptions.map((option) => (
+          <option key={selectionKey(option)} value={selectionKey(option)}>
+            {`Class ${option.levelCode} - ${option.subjectName}`}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
   const bell = (
     <div className="student-dashboard-bell-wrap">
       <button type="button" className="student-dashboard-bell" aria-label="Notifications" onClick={handleBellClick}>
@@ -220,11 +333,9 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
       <StudentPageShell pageClass="student-page--chapters" legacyModifierClass="student-chapters-phone">
         <div className="student-chapters-desktop">
           <header className="student-chapters-header">
-            <button type="button" className="student-chapters-filter" aria-label="Selected class and subject">
-              <ChapterIcon type="book" />
-              <span>{`${classLabel} - ${subjectLabel}`}</span>
-              <ChapterIcon type="caret" />
-            </button>
+            <div className="student-chapters-header-filters">
+              {filterControl}
+            </div>
             {bell}
           </header>
 
@@ -233,8 +344,10 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
             <p>Track your progress and continue learning.</p>
           </div>
 
+          {selectedChaptersError && <p className="error-text">{selectedChaptersError}</p>}
+
           {chapters.length === 0 ? (
-            <p className="student-empty-state">No chapters available yet for your board/class/subject.</p>
+            <p className="student-empty-state">No chapters available yet for the selected class/subject.</p>
           ) : (
             <>
               <section className="student-goals-stats">
@@ -307,17 +420,17 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
   return (
     <StudentPageShell pageClass="student-page--chapters" legacyModifierClass="student-chapters-phone">
         <header className="student-chapters-header">
-          <button type="button" className="student-chapters-filter" aria-label="Selected class and subject">
-            <span>{`${classLabel} - ${subjectLabel}`}</span>
-            <ChapterIcon type="caret" />
-          </button>
+          <div className="student-chapters-header-filters">
+            {filterControl}
+          </div>
           {bell}
         </header>
 
         <section className="student-chapters-section">
           <h1>All Chapters</h1>
+          {selectedChaptersError && <p className="error-text">{selectedChaptersError}</p>}
           {chapters.length === 0 ? (
-            <p className="student-empty-state">No chapters available yet for your board/class/subject.</p>
+            <p className="student-empty-state">No chapters available yet for the selected class/subject.</p>
           ) : (
             <div className="student-chapters-list">
               {chapters.map((chapter, index) => (

@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { EditProfileModal } from "../components/EditProfileModal";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { useAuth } from "../context/AuthContext";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
+import {
+  getAvatarVisibleServerSnapshot,
+  getAvatarVisibleSnapshot,
+  setAvatarVisible,
+  subscribeAvatarVisible,
+} from "../lib/aiTutorAvatarVisibility";
 
 const firstNameFromUser = (name) => {
   if (!name) {
@@ -330,13 +336,66 @@ const AccountRow = ({ label, onClick, tone = "default", disabled = false, disabl
   </button>
 );
 
+const AccountToggleRow = ({ label, description, checked, onChange }) => (
+  <div className="student-profile-account-row">
+    <span>
+      {label}
+      {description && <span className="student-profile-account-row-hint">{description}</span>}
+    </span>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      className={`student-profile-toggle-switch ${checked ? "is-on" : ""}`}
+      onClick={() => onChange(!checked)}
+    >
+      <span className="student-profile-toggle-switch-thumb" />
+    </button>
+  </div>
+);
+
+const AccountThemeRow = ({ theme, onChange }) => (
+  <div className="student-profile-account-row student-profile-theme-row">
+    <span>
+      Appearance
+      <span className="student-profile-account-row-hint">Choose Dawn (light) or Dusk (dark)</span>
+    </span>
+    <div className="student-profile-theme-toggle" role="radiogroup" aria-label="Appearance">
+      <button
+        type="button"
+        role="radio"
+        aria-checked={theme !== "dusk"}
+        className={`student-profile-theme-chip ${theme !== "dusk" ? "is-active" : ""}`}
+        onClick={() => onChange("dawn")}
+      >
+        Dawn
+      </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={theme === "dusk"}
+        className={`student-profile-theme-chip ${theme === "dusk" ? "is-active" : ""}`}
+        onClick={() => onChange("dusk")}
+      >
+        Dusk
+      </button>
+    </div>
+  </div>
+);
+
 export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
-  const { updateProfile, changePassword } = useAuth();
+  const { updateProfile, changePassword, setTheme } = useAuth();
   const isMobile = useBreakpoint() === "mobile";
   const { platform, canInstall, promptInstall } = useInstallPrompt();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const canChangePassword = user?.provider !== "google";
+  const avatarEnabled = useSyncExternalStore(
+    subscribeAvatarVisible,
+    getAvatarVisibleSnapshot,
+    getAvatarVisibleServerSnapshot
+  );
   const firstName = firstNameFromUser(user?.name);
   const subjectLabel = toTitleLabel(user?.subject) || "Biology";
   const boardLabel = String(user?.board || "CBSE").toUpperCase();
@@ -374,6 +433,12 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
       meta: "Secure",
     },
   ];
+
+  const handleThemeChange = (nextTheme) => {
+    const current = user?.theme === "dusk" ? "dusk" : "dawn";
+    if (nextTheme === current) return;
+    setTheme(nextTheme).catch(() => {});
+  };
 
   return (
     <StudentPageShell pageClass="student-page--profile" legacyModifierClass="student-profile-phone">
@@ -486,6 +551,25 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
             <Tile tone="violet" badge="DL" label="Downloads" />
             <Tile tone="orange" badge="TS" label="My Tests" />
             <Tile tone="rose" badge="BM" label="Bookmarks" />
+          </div>
+        </section>
+
+        <section className="student-profile-section">
+          <h2>AI Tutor</h2>
+          <div className="student-profile-account-card">
+            <AccountToggleRow
+              label="Show Avatar"
+              description="Display a 3D avatar face during AI Tutor voice sessions"
+              checked={avatarEnabled}
+              onChange={setAvatarVisible}
+            />
+          </div>
+        </section>
+
+        <section className="student-profile-section">
+          <h2>Appearance</h2>
+          <div className="student-profile-account-card">
+            <AccountThemeRow theme={user?.theme} onChange={handleThemeChange} />
           </div>
         </section>
 

@@ -1,11 +1,15 @@
 import {
+  getAssessmentExtraForUnit,
   getConceptCard,
   getDiagramsForSourceSection,
   getFlashcardsForSection,
   getLearningMap,
   getMemoryBoosterForSection,
   getMemoryBoosterForUnit,
+  getRevisionForSection,
   getSectionOverview,
+  getTutorNotesForSection,
+  getVisualLearningItemsForSection,
   listSectionsForChapter,
 } from "../services/studentContentService.js";
 import { getMemoryHookMediaForSection } from "../services/memoryHookImageService.js";
@@ -30,6 +34,9 @@ export const getStudentSections = async (req, res, next) => {
   try {
     const result = await listSectionsForChapter({
       ...studentAcademicContext(req),
+      examGoalCode: req.query.examGoalCode || undefined,
+      levelCode: req.query.levelCode || undefined,
+      subjectCode: req.query.subjectCode || undefined,
       chapterNumber: String(req.query.chapterNumber || ""),
     });
     return res.json(result);
@@ -86,6 +93,15 @@ export const getStudentConceptCard = async (req, res, next) => {
   }
 };
 
+export const getStudentConceptChallenges = async (req, res, next) => {
+  try {
+    const result = await getAssessmentExtraForUnit({ assessmentUnitId: req.params.assessmentUnitId });
+    return res.json(result);
+  } catch (error) {
+    return next(error);
+  }
+};
+
 export const getStudentConceptSectionMedia = async (req, res, next) => {
   try {
     const media = await getMemoryHookMediaForSection(
@@ -132,6 +148,35 @@ export const getStudentFlashcards = async (req, res, next) => {
       sourceSectionId: req.params.sourceSectionId,
     });
     return res.json({ flashcards: result });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getStudentRevision = async (req, res, next) => {
+  try {
+    const result = await getRevisionForSection({ sourceSectionId: req.params.sourceSectionId });
+    return res.json({ items: result });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getStudentTutorNotes = async (req, res, next) => {
+  try {
+    const result = await getTutorNotesForSection({ sourceSectionId: req.params.sourceSectionId });
+    return res.json({ items: result });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getStudentVisualLearningItems = async (req, res, next) => {
+  try {
+    const result = await getVisualLearningItemsForSection({
+      sourceSectionId: req.params.sourceSectionId,
+    });
+    return res.json({ items: result });
   } catch (error) {
     return next(error);
   }

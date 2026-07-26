@@ -10,6 +10,7 @@ import {
   logout,
   register,
   updateProfile,
+  updateTheme,
 } from "../controllers/authController.js";
 import { requireAuth } from "../middleware/authMiddleware.js";
 
@@ -20,6 +21,7 @@ router.post("/login", login);
 router.get("/me", requireAuth, currentUser);
 router.post("/onboarding/complete", requireAuth, completeOnboarding);
 router.put("/profile", requireAuth, updateProfile);
+router.put("/theme", requireAuth, updateTheme);
 router.post("/change-password", requireAuth, changePassword);
 router.post("/logout", logout);
 

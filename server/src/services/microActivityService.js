@@ -1,6 +1,6 @@
 import { pool } from "../db/pool.js";
 import { createStructuredCompletion } from "./openAiService.js";
-import { getLayer2Memory } from "./assessmentStudioContextAssembler.js";
+import { getLayer2Memory } from "./contentReadService.js";
 
 // Mirrors the client-side cap in StudentMicroActivityPanel.jsx -- enforced
 // here too since a direct API call could bypass client-side truncation.
