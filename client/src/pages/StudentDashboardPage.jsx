@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentNotificationPanel } from "../components/StudentNotificationPanel";
 import { getNotifications, markNotificationsSeen } from "../api/client";
+import { useClassSubject } from "../context/ClassSubjectContext";
 
 const defaultContinueCard = {
   eyebrow: "Continue Learning",
@@ -283,6 +284,17 @@ const ReturningDashboard = ({ view }) => {
             Continue
           </button>
         </div>
+
+        <article className="student-dashboard-streak-card student-dashboard-continue-streak">
+          <div className="student-dashboard-streak-mark">
+            <Icon type="streak" />
+          </div>
+          <div className="student-dashboard-streak-copy">
+            <span>Study Streak</span>
+            <strong>{view.streak.value}</strong>
+          </div>
+        </article>
+
         <div
           className="student-dashboard-progress-ring"
           style={{ "--progress": `${continueCard.progress}%` }}
@@ -334,34 +346,29 @@ const ReturningDashboard = ({ view }) => {
           ))
         )}
       </section>
-
-      <section className="student-dashboard-section">
-        <h2>Study Streak</h2>
-        <article className="student-dashboard-streak-card">
-          <div className="student-dashboard-streak-mark">
-            <Icon type="streak" />
-          </div>
-          <div className="student-dashboard-streak-copy">
-            <strong>{view.streak.value}</strong>
-          </div>
-        </article>
-        {view.streak.last7Days?.length ? (
-          <div className="student-dashboard-streak-strip" aria-hidden="true">
-            {view.streak.last7Days.map((day) => (
-              <span
-                key={day.date}
-                className={`student-dashboard-streak-dot ${day.active ? "is-active" : ""}`}
-              />
-            ))}
-          </div>
-        ) : null}
-      </section>
     </>
   );
 };
 
 export const StudentDashboardPage = ({ dashboard, dashboardMode = "returning", user }) => {
   const firstName = firstNameFromUser(user?.name);
+  // Continue Learning/Today's Goal/Weak Concepts follow the sidebar's
+  // class/subject switcher instead of always the student's own profile
+  // (see ClassSubjectContext / getReturningDashboardForSelection). Greeting/
+  // subheading/streak stay from the original `dashboard` prop regardless --
+  // those are account-wide, not tied to whichever class/subject is being
+  // browsed (see server-side comment on getReturningDashboardForSelection).
+  const { isDefaultSelection, selectionDashboard } = useClassSubject();
+  const effectiveDashboard =
+    dashboardMode === "returning" && !isDefaultSelection && selectionDashboard
+      ? {
+          ...dashboard,
+          continueCard: selectionDashboard.continueCard,
+          chapters: selectionDashboard.chapters,
+          todayGoal: selectionDashboard.todayGoal,
+          weakConcepts: selectionDashboard.weakConcepts,
+        }
+      : dashboard;
   const enrollmentParts = [
     toTitleLabel(user?.board),
     user?.studentClass ? `Class ${user.studentClass}` : "",
@@ -389,7 +396,7 @@ export const StudentDashboardPage = ({ dashboard, dashboardMode = "returning", u
         }
       : {
           ...defaults,
-          ...dashboard,
+          ...effectiveDashboard,
           greeting: dashboard?.greeting || `Hi, ${firstName}`,
         };
 

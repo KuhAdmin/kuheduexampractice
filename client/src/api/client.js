@@ -74,6 +74,9 @@ export const getClassSubjectOptions = async () => apiRequest("/user/class-subjec
 export const getChaptersForSelection = async ({ examGoalCode, levelCode, subjectCode }) =>
   apiRequest(`/user/chapters-for-selection?${buildQuery({ examGoalCode, levelCode, subjectCode })}`);
 
+export const getDashboardForSelection = async ({ examGoalCode, levelCode, subjectCode }) =>
+  apiRequest(`/user/dashboard-for-selection?${buildQuery({ examGoalCode, levelCode, subjectCode })}`);
+
 export const getRemainingConcepts = async () => apiRequest("/user/goals/remaining-concepts");
 
 export const getNotifications = async () => apiRequest("/user/notifications");

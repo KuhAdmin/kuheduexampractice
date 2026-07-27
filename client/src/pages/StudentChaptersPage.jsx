@@ -4,15 +4,9 @@ import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentDrilldownCard } from "../components/StudentDrilldownCard";
 import { StudentNotificationPanel } from "../components/StudentNotificationPanel";
 import { useBreakpoint } from "../hooks/useBreakpoint";
-import {
-  getChaptersForSelection,
-  getClassSubjectOptions,
-  getNotifications,
-  markNotificationsSeen,
-} from "../api/client";
+import { getChaptersForSelection, getNotifications, markNotificationsSeen } from "../api/client";
 import { buildChapterRows, encodeSelectionChapterId } from "./studentChapterData";
-
-const selectionKey = ({ examGoalCode, levelCode, subjectCode }) => `${examGoalCode}|${levelCode}|${subjectCode}`;
+import { selectionKey, useClassSubject } from "../context/ClassSubjectContext";
 
 const ChapterIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -166,37 +160,14 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [panelOpen, setPanelOpen] = useState(false);
 
-  // Class/subject switcher -- every board/
-  // class/subject combo that has content in the DB, not just the student's
-  // own profile (see listClassSubjectOptionsWithContent). Defaults to the
-  // student's own profile combo, matched by level + subject name once the
-  // options list loads, so existing behavior (their own chapters, sourced
-  // from the already-loaded `dashboard` prop with no extra fetch) is
-  // unchanged unless they actively switch.
-  const [classSubjectOptions, setClassSubjectOptions] = useState([]);
-  const [selection, setSelection] = useState(null);
+  // Class/subject switcher state now lives in ClassSubjectContext (provided
+  // by StudentLayout, above both this page and the sidebar switcher that
+  // replaced the old in-page dropdown on desktop) -- shared instead of
+  // page-local so the sidebar and this page's own data-fetching agree on
+  // the same selection.
+  const { classSubjectOptions, selection, setSelection, isDefaultSelection } = useClassSubject();
   const [selectedChapters, setSelectedChapters] = useState([]);
   const [selectedChaptersError, setSelectedChaptersError] = useState("");
-
-  const defaultOption = useMemo(() => {
-    if (!classSubjectOptions.length) return null;
-    const userClass = String(user?.studentClass || "").trim();
-    const userSubject = String(user?.subject || "").trim().toLowerCase();
-    return (
-      classSubjectOptions.find(
-        (option) => option.levelCode === userClass && option.subjectName.toLowerCase() === userSubject
-      ) || classSubjectOptions[0]
-    );
-  }, [classSubjectOptions, user?.studentClass, user?.subject]);
-
-  useEffect(() => {
-    if (defaultOption && !selection) {
-      setSelection(defaultOption);
-    }
-  }, [defaultOption, selection]);
-
-  const isDefaultSelection =
-    !selection || (defaultOption && selectionKey(selection) === selectionKey(defaultOption));
 
   // The student's own combo reuses the already-loaded `dashboard` prop
   // (no extra request, and chapterNumber stays a plain, unencoded value so
@@ -222,20 +193,6 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
         if (cancelled) return;
         setNotifications(result?.notifications || []);
         setUnreadCount(result?.unreadCount || 0);
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getClassSubjectOptions()
-      .then((result) => {
-        if (!cancelled) setClassSubjectOptions(result?.options || []);
       })
       .catch(() => {});
 
@@ -332,10 +289,11 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
     return (
       <StudentPageShell pageClass="student-page--chapters" legacyModifierClass="student-chapters-phone">
         <div className="student-chapters-desktop">
+          {/* Class/subject switcher moved to the sidebar (see
+              StudentClassSubjectSwitcher) -- desktop no longer has its own
+              copy in this header, mobile still does below (no sidebar
+              there to embed it in). */}
           <header className="student-chapters-header">
-            <div className="student-chapters-header-filters">
-              {filterControl}
-            </div>
             {bell}
           </header>
 

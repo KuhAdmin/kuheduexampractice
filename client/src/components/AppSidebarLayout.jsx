@@ -63,6 +63,7 @@ const SidebarGroup = ({ item, isChildActive }) => {
 export const AppSidebarLayout = ({
   brandTitle,
   brandSubtitle,
+  belowBrand,
   menuItems,
   homeLink,
   user,
@@ -147,6 +148,8 @@ export const AppSidebarLayout = ({
             <span>{brandSubtitle}</span>
           </div>
         </div>
+
+        {belowBrand}
 
         <nav className="admin-sidebar-nav" id="app-sidebar-nav" aria-label={ariaLabel} ref={navRef}>
           {homeLink && (

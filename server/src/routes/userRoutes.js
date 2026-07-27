@@ -3,6 +3,7 @@ import { requireAuth } from "../middleware/authMiddleware.js";
 import {
   getChaptersForClassSubjectSelection,
   getNotificationsForUser,
+  getReturningDashboardForSelection,
   getReturningDashboardForUser,
   listRemainingConceptsForUser,
   markNotificationsSeen,
@@ -147,6 +148,26 @@ router.get("/chapters-for-selection", async (req, res, next) => {
     });
 
     res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Powers the sidebar class/subject switcher extended to the Dashboard's
+// Continue Learning/Today's Goal/Weak Concepts (see chapters-for-selection
+// above for the same pattern already used by the Chapters list). No
+// "greeting"/"streak" here -- those are account-wide, not subject-scoped;
+// the client reuses the values from its own /dashboard fetch instead.
+router.get("/dashboard-for-selection", async (req, res, next) => {
+  try {
+    const dashboard = await getReturningDashboardForSelection({
+      userId: req.user.id,
+      examGoalCode: req.query.examGoalCode,
+      levelCode: req.query.levelCode,
+      subjectCode: req.query.subjectCode,
+    });
+
+    res.json(dashboard);
   } catch (error) {
     next(error);
   }

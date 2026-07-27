@@ -40,9 +40,9 @@ export const StudentAiTutorPanel = ({ assessmentUnitId }) => {
   };
 
   return (
-    <section className="student-ai-tutor-panel" aria-label="AI Tutor">
+    <section className="student-ai-tutor-panel" aria-label="Smart Tutor">
       <header className="student-ai-tutor-header">
-        <h2>AI Tutor</h2>
+        <h2>Smart Tutor</h2>
         <p>Ask a question, or have the tutor walk you through this concept.</p>
       </header>
 

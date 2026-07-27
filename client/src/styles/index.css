@@ -93,6 +93,48 @@
   box-sizing: border-box;
 }
 
+/* Sleek, "on demand" scrollbars everywhere (page body, sidebar, any
+   overflow:auto container) -- thin and invisible until the scrollable
+   surface itself is hovered, instead of a bulky OS scrollbar sitting there
+   permanently. Firefox: the standard scrollbar-width/scrollbar-color
+   properties (no native hover-reveal, so it's always a faint thin thumb).
+   Chromium/Safari: ::-webkit-scrollbar pseudo-elements do support a
+   hover-reveal thumb, so those get the fuller "invisible until hovered"
+   treatment. border + background-clip on the thumb insets the visible bar
+   slightly inside the track for a slimmer look than a full-width thumb. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+*:hover {
+  scrollbar-color: rgb(from var(--muted) r g b / 0.45) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(from var(--muted) r g b / 0.45);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(from var(--muted) r g b / 0.65);
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -103,6 +145,17 @@ body {
   --canvas-bg: #d9ebdc;
   background: var(--canvas-bg);
   color: var(--text);
+  /* Belt-and-suspenders for the `width: 100vw` shells further down (e.g.
+     .dashboard-app-shell): 100vw is computed including the vertical
+     scrollbar's width, so any descendant using it is a few pixels wider
+     than the actually-visible viewport whenever a vertical scrollbar is
+     present. Their own `overflow-x: clip` only absorbs overflow from
+     *their own children*, not their own too-wide box -- that box still
+     forces this element (their real container) to scroll horizontally
+     unless something above them clips it too. clip (not hidden) so this
+     doesn't turn body into a scroll container and start coercing
+     overflow-y, which would break position: sticky descendants. */
+  overflow-x: clip;
 }
 
 [data-theme="dusk"] body {
@@ -1486,7 +1539,6 @@ a {
 .home-desktop-hero p {
   margin: 22px 0 0;
   max-width: 100%;
-  white-space: nowrap;
   font-size: clamp(1.1719em, 2.21vw, 1.9301em);
   line-height: 1.6;
   color: var(--muted);
@@ -2297,7 +2349,7 @@ a {
   }
 
   .student-practice-frame {
-    height: calc(100vh - 140px);
+    height: 90vh;
     min-height: 480px;
   }
 
@@ -2475,7 +2527,20 @@ a {
   .student-page--dashboard {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 12px;
+  }
+
+  /* .student-dashboard-continue-card/-info-card and .student-dashboard-section
+     each carry their own margin-top: 18px for the mobile phone-card layout,
+     where they're plain stacked-flow siblings with no grid gap of their own.
+     Here they're direct children of the grid above instead, so that margin
+     just stacks on top of the grid's own `gap`, roughly doubling the visual
+     space between sections -- zeroed out for this tier only (mobile keeps
+     its margin-top untouched). */
+  .student-page--dashboard > .student-dashboard-continue-card,
+  .student-page--dashboard > .student-dashboard-info-card,
+  .student-page--dashboard > .student-dashboard-section {
+    margin-top: 0;
   }
 
   /* Chapter/Section reading-hub density target: the drilldown row list
@@ -2638,13 +2703,18 @@ a {
   position: relative;
   display: inline-grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   padding: 0;
   border: 1px solid rgb(from var(--text) r g b / 0.1);
   border-radius: 14px;
   background: var(--surface-strong);
   color: var(--text);
+}
+
+.student-dashboard-bell .student-dashboard-icon {
+  width: 27px;
+  height: 27px;
 }
 
 .student-dashboard-bell-badge {
@@ -2687,23 +2757,6 @@ a {
   color: var(--green);
 }
 
-.student-dashboard-streak-strip {
-  display: flex;
-  gap: 6px;
-  padding: 0 14px 14px;
-}
-
-.student-dashboard-streak-dot {
-  flex: 1;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--surface-strong);
-}
-
-.student-dashboard-streak-dot.is-active {
-  background: var(--success);
-}
-
 .student-dashboard-icon {
   width: 18px;
   height: 18px;
@@ -2723,12 +2776,28 @@ a {
 
 .student-dashboard-continue-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
   gap: 16px;
   padding: 16px;
   background:
     linear-gradient(180deg, var(--success-bg), var(--success-bg)),
     linear-gradient(135deg, rgb(from var(--green) r g b / 0.06), transparent);
+}
+
+/* Study Streak embedded in the middle of the Continue Learning card (between
+   the copy and the progress ring) instead of its own row/section -- reuses
+   .student-dashboard-streak-card's white-pill look, just without the
+   margin-top that card normally gets when stacked as its own block. */
+.student-dashboard-continue-streak {
+  margin-top: 0;
+}
+
+.student-dashboard-streak-copy span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.9651em;
+  font-weight: 700;
 }
 
 .student-dashboard-continue-copy span,
@@ -3020,6 +3089,13 @@ a {
   gap: 14px;
 }
 
+/* Desktop's header now only ever has the bell (the class/subject filter
+   moved to the sidebar) -- space-between with a single child sits it at
+   flex-start instead of the intended right-aligned corner position. */
+.student-chapters-desktop .student-chapters-header {
+  justify-content: flex-end;
+}
+
 .student-chapters-filter {
   display: inline-flex;
   align-items: center;
@@ -3155,7 +3231,7 @@ a {
 .student-chapters-desktop {
   display: grid;
   align-content: start;
-  gap: 20px;
+  gap: 12px;
 }
 
 .student-chapters-desktop-heading h1 {
@@ -7488,15 +7564,20 @@ a {
   background: var(--surface);
 }
 
+/* flex, not grid-template-rows: auto 1fr auto -- a fixed row-count template
+   silently misassigns every row once a variable-count child (e.g.
+   belowBrand, only present on the student sidebar) is added or removed.
+   flex naturally adapts regardless of how many siblings exist before/after
+   the nav, as long as .admin-sidebar-nav is the only flex: 1 item. */
 .admin-sidebar {
   position: sticky;
   top: 16px;
   align-self: start;
-  height: 96vh;
+  height: 90vh;
   overflow-y: auto;
   padding: 22px 18px;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
+  display: flex;
+  flex-direction: column;
   gap: 22px;
 }
 
@@ -7504,6 +7585,43 @@ a {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Class/subject switcher, moved here from the Chapters page itself (see
+   StudentClassSubjectSwitcher) -- same pill look as the old
+   .student-chapters-filter it replaced, just full-width to fit the sidebar
+   column instead of inline/auto-width in a page header. */
+.admin-sidebar-class-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgb(from var(--text) r g b / 0.1);
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--text);
+  font-size: 1.0754em;
+  font-weight: 700;
+}
+
+.admin-sidebar-class-filter .student-dashboard-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.admin-sidebar-class-filter select {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  text-overflow: ellipsis;
 }
 
 .admin-sidebar-brand p,
@@ -7535,7 +7653,10 @@ a {
 
 .admin-sidebar-nav {
   display: grid;
+  align-content: start;
   gap: 8px;
+  flex: 1;
+  min-height: 0;
 }
 
 .admin-sidebar-link {
@@ -7546,6 +7667,18 @@ a {
   border-radius: 16px;
   color: var(--text);
   transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+/* Student sidebar only (.student-app-shell -- StudentLayout's railClassName,
+   see App.jsx/StudentLayout.jsx) -- the shared admin sidebar keeps its
+   default size. */
+.student-app-shell .admin-sidebar-nav .student-dashboard-icon {
+  width: 27px;
+  height: 27px;
+}
+
+.student-app-shell .admin-sidebar-link-label {
+  font-size: 1.5em;
 }
 
 .admin-sidebar-link.is-disabled {
@@ -7660,6 +7793,7 @@ a {
   border-top: 1px solid var(--line);
   display: grid;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .admin-main {

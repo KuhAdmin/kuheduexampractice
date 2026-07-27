@@ -302,6 +302,42 @@ export const getChaptersForClassSubjectSelection = async ({ userId, examGoalCode
   return { chapters };
 };
 
+// Same shape as getReturningDashboardForUser, but for an explicitly chosen
+// (exam goal, level, subject) combo instead of the student's own profile --
+// extends the sidebar class/subject switcher (already powering the Chapters
+// list via getChaptersForClassSubjectSelection above) to also drive the
+// Dashboard's Continue Learning/Today's Goal/Weak Concepts. Progress is
+// still the requesting user's own real mastery data (student_mastery is
+// keyed by user_id + assessment_unit_id regardless of subject).
+// Deliberately does NOT compute/return streak -- that's account-wide daily
+// activity, not subject-scoped (see getReturningDashboardForUser), so the
+// route reuses the streak value from the user's own /dashboard fetch
+// instead of re-querying the same account-wide data here.
+export const getReturningDashboardForSelection = async ({ userId, examGoalCode, levelCode, subjectCode }) => {
+  if (!examGoalCode || !levelCode || !subjectCode) {
+    return { ...emptyReturningDashboard };
+  }
+
+  const [syllabusRows, catalogFallback] = await Promise.all([
+    getSyllabusRowsForUser({ examGoalCode, levelCode, subjectCode, userId }),
+    getDashboardCatalogForCodes({ examGoalCode, levelCode, subjectCode }),
+  ]);
+
+  const masteredUnits = syllabusRows.filter(
+    (row) => row.masteryProbability >= MASTERY_COMPLETE_THRESHOLD
+  ).length;
+
+  const { chapters, chapterProgressByKey } = buildChapterProgress(syllabusRows, catalogFallback.chapters);
+
+  return {
+    ...emptyReturningDashboard,
+    continueCard: buildContinueCard(syllabusRows, chapterProgressByKey, catalogFallback),
+    chapters,
+    todayGoal: buildTodayGoal(syllabusRows.length, masteredUnits),
+    weakConcepts: buildWeakConcepts(syllabusRows),
+  };
+};
+
 const toLocalDateKey = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
     date.getDate()

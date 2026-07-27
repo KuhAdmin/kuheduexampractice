@@ -192,7 +192,7 @@ const ConceptLearningIcon = ({ type, className = "" }) => {
   );
 };
 
-const TABS = ["Learn", "Explore", "Practice", "AI Tutor", "Challenges"];
+const TABS = ["Learn", "Explore", "Practice", "Smart Tutor", "Challenges"];
 
 // Ordered, real fields only -- mirrors exactly what renderExploreMode's
 // accordion already checks for presence, just as a sequence instead of a
@@ -1570,7 +1570,7 @@ export const StudentConceptLearningPage = () => {
                       </div>
                     </section>
                   )
-                ) : activeTab === "AI Tutor" ? (
+                ) : activeTab === "Smart Tutor" ? (
                   <>
                     <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
                     <StudentConceptPracticeCapture assessmentUnitId={assessmentUnitId} />
@@ -1627,7 +1627,7 @@ export const StudentConceptLearningPage = () => {
           renderLearnMode()
         ) : activeTab === "Explore" ? (
           renderExploreMode()
-        ) : activeTab === "AI Tutor" ? (
+        ) : activeTab === "Smart Tutor" ? (
           <>
             <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
             <StudentConceptPracticeCapture assessmentUnitId={assessmentUnitId} />

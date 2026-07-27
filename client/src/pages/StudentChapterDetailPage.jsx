@@ -294,7 +294,7 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
                       <ChapterDetailIcon type="check" />
                     </span>
                     <strong>{summary.completed}</strong>
-                    <span>Completed</span>
+                    <span>Done</span>
                   </div>
                   <div className="student-goals-stat-card is-not-started">
                     <span className="student-goals-stat-icon is-not-started">

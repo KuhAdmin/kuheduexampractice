@@ -555,11 +555,11 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
         </section>
 
         <section className="student-profile-section">
-          <h2>AI Tutor</h2>
+          <h2>Smart Tutor</h2>
           <div className="student-profile-account-card">
             <AccountToggleRow
               label="Show Avatar"
-              description="Display a 3D avatar face during AI Tutor voice sessions"
+              description="Display a 3D avatar face during Smart Tutor voice sessions"
               checked={avatarEnabled}
               onChange={setAvatarVisible}
             />
@@ -607,7 +607,7 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
             <div className="student-profile-premium-copy">
               <div className="student-profile-premium-head">
                 <div>
-                  <strong>Install KUHEDU EXAM-BUDDY</strong>
+                  <strong>Install KUHEDU STUDY BUDDY</strong>
                   <p>Add to your home screen for quick access</p>
                 </div>
                 <ProfileIcon type="download" />
