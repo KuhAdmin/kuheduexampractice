@@ -7,7 +7,13 @@ import { toPublicUser } from "./userService.js";
 // STEMLab Premium is a fixed one-time purchase for now (not wired to
 // AdminSettingsPage.jsx's currently-unused premiumPrice field -- that would
 // need its own persistence layer, a separate change from this integration).
-const PREMIUM_AMOUNT_PAISE = 199900;
+// "monthly" vs "yearly" only changes the charged amount -- there is no
+// recurring billing/expiry, "is_premium" is a one-way flag set on any
+// successful purchase.
+const PLAN_AMOUNTS_PAISE = {
+  monthly: 19900,
+  yearly: 199900,
+};
 const CURRENCY = "INR";
 
 export class PaymentError extends Error {
@@ -30,14 +36,19 @@ const getRazorpayClient = () => {
   return razorpayClient;
 };
 
-export const createPremiumOrder = async ({ userId }) => {
+export const createPremiumOrder = async ({ userId, plan = "yearly" }) => {
+  const amount = PLAN_AMOUNTS_PAISE[plan];
+  if (!amount) {
+    throw new PaymentError("Invalid plan.", 400);
+  }
+
   const razorpay = getRazorpayClient();
   const receipt = `premium_${userId}_${Date.now()}`.slice(0, 40);
 
   let order;
   try {
     order = await razorpay.orders.create({
-      amount: PREMIUM_AMOUNT_PAISE,
+      amount,
       currency: CURRENCY,
       receipt,
     });
@@ -48,13 +59,13 @@ export const createPremiumOrder = async ({ userId }) => {
 
   await pool.query(
     `
-      INSERT INTO payment_order (user_id, razorpay_order_id, amount, currency, status, receipt)
-      VALUES ($1, $2, $3, $4, 'created', $5)
+      INSERT INTO payment_order (user_id, razorpay_order_id, amount, currency, status, receipt, plan)
+      VALUES ($1, $2, $3, $4, 'created', $5, $6)
     `,
-    [userId, order.id, PREMIUM_AMOUNT_PAISE, CURRENCY, receipt]
+    [userId, order.id, amount, CURRENCY, receipt, plan]
   );
 
-  return { orderId: order.id, amount: PREMIUM_AMOUNT_PAISE, currency: CURRENCY };
+  return { orderId: order.id, amount, currency: CURRENCY, plan };
 };
 
 export const verifyPremiumPayment = async ({

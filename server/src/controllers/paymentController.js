@@ -2,7 +2,7 @@ import { createPremiumOrder, verifyPremiumPayment } from "../services/paymentSer
 
 export const createOrder = async (req, res, next) => {
   try {
-    const order = await createPremiumOrder({ userId: req.user.id });
+    const order = await createPremiumOrder({ userId: req.user.id, plan: req.body?.plan });
     return res.json(order);
   } catch (error) {
     if (error.statusCode) {

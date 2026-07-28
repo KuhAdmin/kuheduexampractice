@@ -20,6 +20,7 @@ import { AdminSectionPage } from "./pages/AdminSectionPage";
 import { AuthSuccessPage } from "./pages/AuthSuccessPage";
 import { HomePage } from "./pages/HomePage";
 import { LegalPage } from "./pages/LegalPage";
+import { PricingPage } from "./pages/PricingPage";
 import { StudentAssessmentPage } from "./pages/StudentAssessmentPage";
 import { StudentAssessmentResultPage } from "./pages/StudentAssessmentResultPage";
 import { StudentChapterDetailPage } from "./pages/StudentChapterDetailPage";
@@ -121,6 +122,7 @@ const App = () => {
       <Routes>
         <Route path="/auth/success" element={<AuthSuccessPage />} />
         <Route path="/legal/:docId" element={<LegalPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
         <Route
           path="/"
           element={

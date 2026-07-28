@@ -79,7 +79,8 @@ export const getDashboardForSelection = async ({ examGoalCode, levelCode, subjec
 
 export const getRemainingConcepts = async () => apiRequest("/user/goals/remaining-concepts");
 
-export const createPremiumOrder = async () => apiRequest("/user/payments/create-order", { method: "POST" });
+export const createPremiumOrder = async ({ plan } = {}) =>
+  apiRequest("/user/payments/create-order", { method: "POST", body: JSON.stringify({ plan }) });
 
 export const verifyPremiumPayment = async ({ razorpayOrderId, razorpayPaymentId, razorpaySignature }) =>
   apiRequest("/user/payments/verify", {

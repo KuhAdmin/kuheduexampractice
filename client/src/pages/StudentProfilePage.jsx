@@ -449,7 +449,7 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
     setPaymentError("");
     setPaymentStatus("processing");
     try {
-      const order = await createPremiumOrder();
+      const order = await createPremiumOrder({ plan: "yearly" });
       await openRazorpayCheckout({
         order,
         user,

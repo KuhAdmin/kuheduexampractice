@@ -58,6 +58,12 @@ CREATE TABLE IF NOT EXISTS payment_order (
 );
 CREATE INDEX IF NOT EXISTS idx_payment_order_user_id ON payment_order(user_id);
 
+-- monthly vs yearly only changes the charged amount (see paymentService.js) --
+-- default 'yearly' keeps existing rows consistent with the flat ₹1999
+-- purchase they were created under before this column existed.
+ALTER TABLE payment_order
+ADD COLUMN IF NOT EXISTS plan VARCHAR(20) NOT NULL DEFAULT 'yearly';
+
 CREATE TABLE IF NOT EXISTS app_settings (
   setting_key VARCHAR(120) PRIMARY KEY,
   setting_value JSONB NOT NULL,

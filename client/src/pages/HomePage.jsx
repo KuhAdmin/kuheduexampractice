@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { LegalDocumentModal } from "../components/LegalDocumentModal";
 import { LEGAL_DOC_SLUGS, legalDocsBySlug } from "../content/legalContent";
@@ -658,6 +658,13 @@ const HomeScreen = ({
                 <p className="home-onboarding-copyright">
                   © 2026 Kuhedu Technologies (P) Ltd. All rights reserved.
                 </p>
+                <nav className="home-onboarding-footer-links" aria-label="Company">
+                  <a href="#">About Kuhedu</a>
+                  <a href="#">exam4u.study</a>
+                  <a href="#">Learners</a>
+                  <a href="#">Institutions</a>
+                  <Link to="/pricing">Pricing</Link>
+                </nav>
                 <nav className="home-onboarding-footer-links" aria-label="Legal">
                   <button type="button" onClick={() => onOpenLegal(LEGAL_DOC_SLUGS.privacy)}>
                     Privacy
@@ -1130,6 +1137,13 @@ export const HomePage = ({
             <img src="/kuhedu-logo.png" alt="KUHEDU logo" />
             <span>KUHEDU STUDY BUDDY</span>
           </div>
+          <nav className="home-desktop-navbar-links" aria-label="Company">
+            <a href="#">About Kuhedu</a>
+            <a href="#">exam4u.study</a>
+            <a href="#">Learners</a>
+            <a href="#">Institutions</a>
+            <Link to="/pricing">Pricing</Link>
+          </nav>
         </nav>
         <AnimatePresence mode="wait">
           <motion.div
