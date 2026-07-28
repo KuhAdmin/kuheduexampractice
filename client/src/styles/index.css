@@ -9494,6 +9494,53 @@ a {
   color: var(--muted);
 }
 
+.legal-page {
+  min-height: 100vh;
+  background: var(--surface-strong);
+  color: var(--text);
+}
+
+.legal-page-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.legal-page-header img {
+  width: 24px;
+  height: 24px;
+}
+
+.legal-page-header span {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.legal-page-back {
+  margin-left: auto;
+  font-size: 0.9em;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.legal-page-back:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.legal-page-content {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.legal-page-content h1 {
+  margin: 0 0 24px;
+  font-size: 2em;
+}
+
 .auth-form {
   display: grid;
   gap: 14px;

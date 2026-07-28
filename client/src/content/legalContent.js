@@ -1,3 +1,11 @@
+export const LEGAL_DOC_SLUGS = {
+  privacy: "privacy",
+  terms: "terms",
+  refund: "refund-cancellation",
+  disclaimer: "disclaimer",
+  contact: "contact",
+};
+
 export const privacyPolicy = {
   title: "Privacy Policy",
   sections: [
@@ -440,4 +448,12 @@ export const contactUs = {
       paragraphs: ["Ms. Rinita Das"],
     },
   ],
+};
+
+export const legalDocsBySlug = {
+  [LEGAL_DOC_SLUGS.privacy]: privacyPolicy,
+  [LEGAL_DOC_SLUGS.terms]: termsAndConditions,
+  [LEGAL_DOC_SLUGS.refund]: refundAndCancellation,
+  [LEGAL_DOC_SLUGS.disclaimer]: disclaimer,
+  [LEGAL_DOC_SLUGS.contact]: contactUs,
 };

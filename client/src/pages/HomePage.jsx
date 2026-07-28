@@ -3,21 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { LegalDocumentModal } from "../components/LegalDocumentModal";
-import {
-  privacyPolicy,
-  termsAndConditions,
-  disclaimer,
-  refundAndCancellation,
-  contactUs,
-} from "../content/legalContent";
-
-const legalDocsById = {
-  privacy: privacyPolicy,
-  terms: termsAndConditions,
-  disclaimer,
-  refund: refundAndCancellation,
-  contact: contactUs,
-};
+import { LEGAL_DOC_SLUGS, legalDocsBySlug } from "../content/legalContent";
 
 const GOOGLE_AUTH_URL =
  "/api/auth/google";
@@ -673,22 +659,22 @@ const HomeScreen = ({
                   © 2026 Kuhedu Technologies (P) Ltd. All rights reserved.
                 </p>
                 <nav className="home-onboarding-footer-links" aria-label="Legal">
-                  <button type="button" onClick={() => onOpenLegal("privacy")}>
+                  <button type="button" onClick={() => onOpenLegal(LEGAL_DOC_SLUGS.privacy)}>
                     Privacy
                   </button>
-                  <button type="button" onClick={() => onOpenLegal("terms")}>
+                  <button type="button" onClick={() => onOpenLegal(LEGAL_DOC_SLUGS.terms)}>
                     Terms
                   </button>
-                  <button type="button" onClick={() => onOpenLegal("refund")}>
+                  <button type="button" onClick={() => onOpenLegal(LEGAL_DOC_SLUGS.refund)}>
                     Refund
                   </button>
-                  <button type="button" onClick={() => onOpenLegal("refund")}>
+                  <button type="button" onClick={() => onOpenLegal(LEGAL_DOC_SLUGS.refund)}>
                     Cancellation
                   </button>
-                  <button type="button" onClick={() => onOpenLegal("disclaimer")}>
+                  <button type="button" onClick={() => onOpenLegal(LEGAL_DOC_SLUGS.disclaimer)}>
                     Disclaimer
                   </button>
-                  <button type="button" onClick={() => onOpenLegal("contact")}>
+                  <button type="button" onClick={() => onOpenLegal(LEGAL_DOC_SLUGS.contact)}>
                     Contact
                   </button>
                 </nav>
@@ -854,7 +840,16 @@ export const HomePage = ({
   const navigate = useNavigate();
   const activeScreen = homeScreens[activeIndex];
   const isPostCreateOnboarding = emailOnboarding || googleOnboarding || resumeOnboarding;
-  const openLegalDoc = (id) => setLegalDocId(id);
+  // Payment gateway KYC review needs a stable, directly-visitable URL per
+  // policy -- desktop opens the real /legal/:docId route in a new tab, while
+  // mobile/tablet keep the existing in-app dialog.
+  const openLegalDoc = (id) => {
+    if (tier === "desktop") {
+      window.open(`/legal/${id}`, "_blank", "noopener,noreferrer");
+      return;
+    }
+    setLegalDocId(id);
+  };
   const closeLegalDoc = () => setLegalDocId(null);
 
   // Primary advance is the video's own onEnded event (see the splash render
@@ -1178,29 +1173,29 @@ export const HomePage = ({
         <footer className="home-desktop-footer">
           <span>© 2026 Kuhedu Technologies (P) Ltd. All rights reserved.</span>
           <nav className="home-desktop-footer-links" aria-label="Legal">
-            <button type="button" onClick={() => openLegalDoc("privacy")}>
+            <button type="button" onClick={() => openLegalDoc(LEGAL_DOC_SLUGS.privacy)}>
               Privacy
             </button>
-            <button type="button" onClick={() => openLegalDoc("terms")}>
+            <button type="button" onClick={() => openLegalDoc(LEGAL_DOC_SLUGS.terms)}>
               Terms
             </button>
-            <button type="button" onClick={() => openLegalDoc("refund")}>
+            <button type="button" onClick={() => openLegalDoc(LEGAL_DOC_SLUGS.refund)}>
               Refund
             </button>
-            <button type="button" onClick={() => openLegalDoc("refund")}>
+            <button type="button" onClick={() => openLegalDoc(LEGAL_DOC_SLUGS.refund)}>
               Cancellation
             </button>
-            <button type="button" onClick={() => openLegalDoc("disclaimer")}>
+            <button type="button" onClick={() => openLegalDoc(LEGAL_DOC_SLUGS.disclaimer)}>
               Disclaimer
             </button>
-            <button type="button" onClick={() => openLegalDoc("contact")}>
+            <button type="button" onClick={() => openLegalDoc(LEGAL_DOC_SLUGS.contact)}>
               Contact
             </button>
           </nav>
         </footer>
         <LegalDocumentModal
           open={Boolean(legalDocId)}
-          doc={legalDocId ? legalDocsById[legalDocId] : null}
+          doc={legalDocId ? legalDocsBySlug[legalDocId] : null}
           onClose={closeLegalDoc}
         />
       </main>
@@ -1261,7 +1256,7 @@ export const HomePage = ({
       </section>
       <LegalDocumentModal
         open={Boolean(legalDocId)}
-        doc={legalDocId ? legalDocsById[legalDocId] : null}
+        doc={legalDocId ? legalDocsBySlug[legalDocId] : null}
         onClose={closeLegalDoc}
       />
     </main>
