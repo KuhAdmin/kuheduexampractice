@@ -2,6 +2,22 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import { LegalDocumentModal } from "../components/LegalDocumentModal";
+import {
+  privacyPolicy,
+  termsAndConditions,
+  disclaimer,
+  refundAndCancellation,
+  contactUs,
+} from "../content/legalContent";
+
+const legalDocsById = {
+  privacy: privacyPolicy,
+  terms: termsAndConditions,
+  disclaimer,
+  refund: refundAndCancellation,
+  contact: contactUs,
+};
 
 const GOOGLE_AUTH_URL =
  "/api/auth/google";
@@ -538,6 +554,7 @@ const HomeScreen = ({
   onLoginGoogleAuth,
   onBackToWelcome,
   onSwitchToLogin,
+  onOpenLegal,
   user,
 }) => {
   const isWelcome = screen.kind === "welcome";
@@ -651,9 +668,31 @@ const HomeScreen = ({
               </div>
             )}
             {showBrandChrome && (
-              <p className="home-onboarding-copyright">
-                © 2026 Kuhedu Technologies (P) Ltd. All rights reserved.
-              </p>
+              <div className="home-onboarding-footer">
+                <p className="home-onboarding-copyright">
+                  © 2026 Kuhedu Technologies (P) Ltd. All rights reserved.
+                </p>
+                <nav className="home-onboarding-footer-links" aria-label="Legal">
+                  <button type="button" onClick={() => onOpenLegal("privacy")}>
+                    Privacy
+                  </button>
+                  <button type="button" onClick={() => onOpenLegal("terms")}>
+                    Terms
+                  </button>
+                  <button type="button" onClick={() => onOpenLegal("refund")}>
+                    Refund
+                  </button>
+                  <button type="button" onClick={() => onOpenLegal("refund")}>
+                    Cancellation
+                  </button>
+                  <button type="button" onClick={() => onOpenLegal("disclaimer")}>
+                    Disclaimer
+                  </button>
+                  <button type="button" onClick={() => onOpenLegal("contact")}>
+                    Contact
+                  </button>
+                </nav>
+              </div>
             )}
           </div>
         </div>
@@ -811,9 +850,12 @@ export const HomePage = ({
   const [registerStep, setRegisterStep] = useState("details");
   const [loginForm, setLoginForm] = useState(initialLoginForm);
   const [authState, setAuthState] = useState({ submitting: false, error: "" });
+  const [legalDocId, setLegalDocId] = useState(null);
   const navigate = useNavigate();
   const activeScreen = homeScreens[activeIndex];
   const isPostCreateOnboarding = emailOnboarding || googleOnboarding || resumeOnboarding;
+  const openLegalDoc = (id) => setLegalDocId(id);
+  const closeLegalDoc = () => setLegalDocId(null);
 
   // Primary advance is the video's own onEnded event (see the splash render
   // branch below); this is only a safety net in case the video fails to
@@ -1134,8 +1176,33 @@ export const HomePage = ({
           </motion.div>
         </AnimatePresence>
         <footer className="home-desktop-footer">
-          © 2026 Kuhedu Technologies (P) Ltd. All rights reserved.
+          <span>© 2026 Kuhedu Technologies (P) Ltd. All rights reserved.</span>
+          <nav className="home-desktop-footer-links" aria-label="Legal">
+            <button type="button" onClick={() => openLegalDoc("privacy")}>
+              Privacy
+            </button>
+            <button type="button" onClick={() => openLegalDoc("terms")}>
+              Terms
+            </button>
+            <button type="button" onClick={() => openLegalDoc("refund")}>
+              Refund
+            </button>
+            <button type="button" onClick={() => openLegalDoc("refund")}>
+              Cancellation
+            </button>
+            <button type="button" onClick={() => openLegalDoc("disclaimer")}>
+              Disclaimer
+            </button>
+            <button type="button" onClick={() => openLegalDoc("contact")}>
+              Contact
+            </button>
+          </nav>
         </footer>
+        <LegalDocumentModal
+          open={Boolean(legalDocId)}
+          doc={legalDocId ? legalDocsById[legalDocId] : null}
+          onClose={closeLegalDoc}
+        />
       </main>
     );
   }
@@ -1185,12 +1252,18 @@ export const HomePage = ({
                 onLoginGoogleAuth={() => openGoogleAuth("login")}
                 onBackToWelcome={() => goToScreen("welcome")}
                 onSwitchToLogin={() => goToScreen("login")}
+                onOpenLegal={openLegalDoc}
                 user={user}
               />
             </motion.div>
           </AnimatePresence>
         </motion.div>
       </section>
+      <LegalDocumentModal
+        open={Boolean(legalDocId)}
+        doc={legalDocId ? legalDocsById[legalDocId] : null}
+        onClose={closeLegalDoc}
+      />
     </main>
   );
 };

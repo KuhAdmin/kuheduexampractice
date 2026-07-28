@@ -2,9 +2,12 @@ import { useState, useSyncExternalStore } from "react";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { EditProfileModal } from "../components/EditProfileModal";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
+import { PaymentStatusModal } from "../components/PaymentStatusModal";
 import { useAuth } from "../context/AuthContext";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
+import { createPremiumOrder, verifyPremiumPayment } from "../api/client";
+import { openRazorpayCheckout } from "../lib/razorpayCheckout";
 import {
   getAvatarVisibleServerSnapshot,
   getAvatarVisibleSnapshot,
@@ -385,11 +388,13 @@ const AccountThemeRow = ({ theme, onChange }) => (
 );
 
 export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
-  const { updateProfile, changePassword, setTheme } = useAuth();
+  const { updateProfile, changePassword, setTheme, persistUser } = useAuth();
   const isMobile = useBreakpoint() === "mobile";
   const { platform, canInstall, promptInstall } = useInstallPrompt();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [paymentError, setPaymentError] = useState("");
   const canChangePassword = user?.provider !== "google";
   const avatarEnabled = useSyncExternalStore(
     subscribeAvatarVisible,
@@ -438,6 +443,40 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
     const current = user?.theme === "dusk" ? "dusk" : "dawn";
     if (nextTheme === current) return;
     setTheme(nextTheme).catch(() => {});
+  };
+
+  const handlePremiumPurchase = async () => {
+    setPaymentError("");
+    setPaymentStatus("processing");
+    try {
+      const order = await createPremiumOrder();
+      await openRazorpayCheckout({
+        order,
+        user,
+        onSuccess: async (response) => {
+          try {
+            const result = await verifyPremiumPayment({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            persistUser(result.user);
+            setPaymentStatus("success");
+          } catch (error) {
+            setPaymentError(error?.message || "We couldn't verify your payment.");
+            setPaymentStatus("error");
+          }
+        },
+        onFailure: (error) => {
+          setPaymentError(error?.description || "Your payment failed.");
+          setPaymentStatus("error");
+        },
+        onDismiss: () => setPaymentStatus(null),
+      });
+    } catch (error) {
+      setPaymentError(error?.message || "We couldn't start the checkout.");
+      setPaymentStatus("error");
+    }
   };
 
   return (
@@ -512,7 +551,11 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
             <div className="student-profile-premium-head">
               <div>
                 <strong>STEMLab Premium</strong>
-                <p>Access all features and premium content</p>
+                <p>
+                  {user?.isPremium
+                    ? "You have full access to all features and premium content"
+                    : "Access all features and premium content"}
+                </p>
               </div>
               <button
                 type="button"
@@ -524,12 +567,34 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
             </div>
           </div>
           <div className="student-profile-premium-actions">
-            <button type="button" className="student-profile-premium-cta">
-              View Subscription
-            </button>
-            <div className="student-profile-premium-trial">Trial Ends in 15 Days</div>
+            {user?.isPremium ? (
+              <div className="student-profile-premium-trial">Premium Active</div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="student-profile-premium-cta"
+                  onClick={handlePremiumPurchase}
+                  disabled={paymentStatus === "processing"}
+                >
+                  {paymentStatus === "processing" ? "Please wait..." : "View Subscription"}
+                </button>
+                <div className="student-profile-premium-trial">Trial Ends in 15 Days</div>
+              </>
+            )}
           </div>
         </section>
+
+        <PaymentStatusModal
+          open={Boolean(paymentStatus)}
+          status={paymentStatus}
+          errorMessage={paymentError}
+          onClose={() => setPaymentStatus(null)}
+          onRetry={() => {
+            setPaymentStatus(null);
+            handlePremiumPurchase();
+          }}
+        />
 
         <section className="student-profile-section">
           <div className="student-profile-section-head">

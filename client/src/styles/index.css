@@ -417,6 +417,17 @@ a {
   overflow: hidden;
 }
 
+/* Desktop hero (unlike the mobile phone-mockup this shell is otherwise sized
+   for) has variable-height text content -- a fixed 98dvh + overflow:hidden
+   clips the footer whenever the hero text wraps to 3 lines on a shorter
+   viewport, with no way to scroll down to it. Let it size to its own content
+   and scroll instead. */
+.home-app-shell:has(.home-desktop-page) {
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+}
+
 .home-gallery-page {
   height: 98dvh;
   min-height: 98dvh;
@@ -831,18 +842,48 @@ a {
    column instead of letting it float right after wherever the form ends --
    same margin-top: auto pattern .home-screen-footer/.home-screen-actions
    already use for the dots/CTA row on the other slides. */
-.onboarding-screen.is-auth-screen .home-onboarding-copyright {
+.onboarding-screen.is-auth-screen .home-onboarding-footer {
   margin-top: auto;
   padding-top: 8px;
   padding-bottom: 12px;
-  color: #ffffff;
+}
+
+.home-onboarding-footer {
+  margin: 10px 0 0;
+  text-align: center;
 }
 
 .home-onboarding-copyright {
-  margin: 10px 0 0;
-  text-align: center;
+  margin: 0;
   font-size: 0.9375em;
   color: #ffffff;
+}
+
+.home-onboarding-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 12px;
+  margin-top: 6px;
+  font-size: 0.8em;
+}
+
+.home-onboarding-footer-links a,
+.home-onboarding-footer-links button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  color: #ffffff;
+  opacity: 0.8;
+  text-decoration: none;
+}
+
+.home-onboarding-footer-links a:hover,
+.home-onboarding-footer-links button:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 /* No illustration on these slides -- let the title/subtitle fill and
@@ -1513,10 +1554,37 @@ a {
 }
 
 .home-desktop-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
   padding: 16px 40px 24px;
-  text-align: center;
   color: var(--muted);
   font-size: 1.1305em;
+}
+
+.home-desktop-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  font-size: 0.88em;
+}
+
+.home-desktop-footer-links a,
+.home-desktop-footer-links button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.home-desktop-footer-links a:hover,
+.home-desktop-footer-links button:hover {
+  color: var(--text);
+  text-decoration: underline;
 }
 
 .home-desktop-hero {
@@ -1528,7 +1596,7 @@ a {
 
 .home-desktop-hero h1 {
   margin: 0;
-  font-size: clamp(3.5846em, 8.27vw, 6.8934em);
+  font-size: clamp(3.15em, 7.28vw, 6.07em);
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.05;
@@ -9386,6 +9454,44 @@ a {
   height: 36px;
   border-radius: 999px;
   background: rgb(from var(--text) r g b / 0.06);
+}
+
+.legal-modal-panel {
+  width: min(960px, 96vw);
+  height: 92vh;
+  max-height: 92vh;
+  padding: 40px 44px;
+  display: flex;
+  flex-direction: column;
+}
+
+.legal-modal-scroll {
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.legal-modal-scroll h2 {
+  margin: 0 0 18px;
+  font-size: 1.75em;
+}
+
+.legal-modal-section {
+  margin-top: 24px;
+}
+
+.legal-modal-section:first-child {
+  margin-top: 0;
+}
+
+.legal-modal-section h3 {
+  margin: 0 0 10px;
+  font-size: 1.15em;
+}
+
+.legal-modal-section p {
+  margin: 0 0 12px;
+  line-height: 1.6;
+  color: var(--muted);
 }
 
 .auth-form {

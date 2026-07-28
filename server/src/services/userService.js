@@ -15,6 +15,7 @@ const mapUser = (row) => ({
   subject: row.subject,
   onboardingCompletedAt: row.onboarding_completed_at,
   theme: row.theme,
+  isPremium: row.is_premium,
   createdAt: row.created_at,
 });
 

@@ -33,8 +33,30 @@ ADD COLUMN IF NOT EXISTS last_notifications_seen_at TIMESTAMPTZ;
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS theme VARCHAR(10) NOT NULL DEFAULT 'dawn';
 
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS is_premium BOOLEAN NOT NULL DEFAULT FALSE;
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
+
+-- Razorpay Standard Checkout order/payment record for the STEMLab Premium
+-- one-time purchase (see server/src/services/paymentService.js). status
+-- only ever flips created -> paid via a verified HMAC signature match, or
+-- created -> failed on a signature mismatch -- never set directly from
+-- client-supplied data.
+CREATE TABLE IF NOT EXISTS payment_order (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id),
+  razorpay_order_id VARCHAR(64) NOT NULL UNIQUE,
+  razorpay_payment_id VARCHAR(64),
+  amount INTEGER NOT NULL,
+  currency VARCHAR(10) NOT NULL DEFAULT 'INR',
+  status VARCHAR(20) NOT NULL DEFAULT 'created',
+  receipt VARCHAR(64),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_payment_order_user_id ON payment_order(user_id);
 
 CREATE TABLE IF NOT EXISTS app_settings (
   setting_key VARCHAR(120) PRIMARY KEY,

@@ -9,6 +9,7 @@ import {
   markNotificationsSeen,
 } from "../services/studentDashboardService.js";
 import { listClassSubjectOptionsWithContent } from "../services/catalogService.js";
+import { createOrder, verifyPayment } from "../controllers/paymentController.js";
 import {
   getMicroActivityResponseHandler,
   getStudentBookQuestions,
@@ -172,6 +173,11 @@ router.get("/dashboard-for-selection", async (req, res, next) => {
     next(error);
   }
 });
+
+// STEMLab Premium purchase (Razorpay Standard Checkout) -- see
+// services/paymentService.js for order creation + signature verification.
+router.post("/payments/create-order", createOrder);
+router.post("/payments/verify", verifyPayment);
 
 router.get("/goals/remaining-concepts", async (req, res, next) => {
   try {

@@ -150,6 +150,7 @@ export const AuthProvider = ({ children }) => {
         updateProfile,
         setTheme,
         changePassword,
+        persistUser,
         isAuthenticated: Boolean(user),
       }}
     >

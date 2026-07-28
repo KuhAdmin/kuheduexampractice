@@ -120,4 +120,8 @@ export const env = {
   spatialRealAppId: process.env.SPATIALREAL_APP_ID || "",
   spatialRealAvatarId: process.env.SPATIALREAL_AVATAR_ID || "",
   spatialRealRegion: process.env.SPATIALREAL_REGION || "ap-northeast",
+  // Razorpay Standard Checkout (STEMLab Premium purchase) -- test-mode keys
+  // in dev. Secret never reaches the client; only VITE_RAZORPAY_KEY_ID does.
+  razorpayKeyId: process.env.RAZORPAY_KEY_ID || "",
+  razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET || "",
 };
