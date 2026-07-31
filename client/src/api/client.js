@@ -129,6 +129,12 @@ export const getStudentConceptChallenges = async (assessmentUnitId) =>
 export const getStudentConceptSectionMedia = async (assessmentUnitId, sectionKey) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/memory-hook-media/${sectionKey}`);
 
+export const uploadStudentConceptSectionMedia = async (assessmentUnitId, sectionKey, { dataUrl, fileName }) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/memory-hook-media/${sectionKey}/upload`, {
+    method: "POST",
+    body: JSON.stringify({ dataUrl, fileName }),
+  });
+
 export const getStudentMemoryBoosterForUnit = async (assessmentUnitId) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/memory-booster`);
 

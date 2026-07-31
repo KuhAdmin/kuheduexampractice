@@ -28,6 +28,7 @@ import {
   getStudentTutorNotes,
   getStudentVisualLearningItems,
   submitMicroActivityResponseHandler,
+  uploadStudentConceptSectionMedia,
   submitStudentBookQuestionResponse,
 } from "../controllers/studentContentController.js";
 import {
@@ -77,6 +78,7 @@ router.get("/sections/:sourceSectionId/mind-map", getMindMap);
 router.get("/concepts/:assessmentUnitId/card", getStudentConceptCard);
 router.get("/concepts/:assessmentUnitId/challenges", getStudentConceptChallenges);
 router.get("/concepts/:assessmentUnitId/memory-hook-media/:sectionKey", getStudentConceptSectionMedia);
+router.post("/concepts/:assessmentUnitId/memory-hook-media/:sectionKey/upload", uploadStudentConceptSectionMedia);
 router.get("/concepts/:assessmentUnitId/memory-booster", getStudentMemoryBoosterForUnit);
 router.get("/concepts/:assessmentUnitId/micro-activity/response", getMicroActivityResponseHandler);
 router.post("/concepts/:assessmentUnitId/micro-activity/respond", submitMicroActivityResponseHandler);

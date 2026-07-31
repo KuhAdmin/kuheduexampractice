@@ -17,8 +17,30 @@ import {
   getStudentDiagramMedia,
   getStudentSections,
   getStudentVisualLearningItems,
+  uploadStudentConceptSectionMedia,
 } from "../api/client";
 import { decodeSelectionChapterId } from "./studentChapterData";
+
+// Mirrors server/src/services/memoryHookImageService.js's SECTION_CONFIG --
+// drives the accept="" filter and button copy for the upload placeholder
+// below, the server is still the source of truth for validation.
+const MEDIA_TYPE_BY_STEP_KEY = {
+  analogy: "image",
+  visualHook: "image",
+  curiosityHook: "image",
+  memoryTrick: "image",
+  story: "video",
+  realWorldConnection: "video",
+  microActivity: "video",
+};
+
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Could not read the selected file."));
+    reader.readAsDataURL(file);
+  });
 
 const ConceptLearningIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -510,6 +532,14 @@ export const StudentConceptLearningPage = () => {
   // synchronously, so a fast double-toggle/double-navigation can't fire the
   // same request twice while the first one is still pending.
   const requestedMediaKeysRef = useRef(new Set());
+  // Student-facing upload for a missing Explore-step visual/video -- becomes
+  // the shared, official media for this concept section (see
+  // uploadStudentConceptSectionMedia). One file input shared across every
+  // step; which section key it uploads to is resolved at change-time from
+  // the currently active Explore step.
+  const mediaUploadInputRef = useRef(null);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [mediaUploadError, setMediaUploadError] = useState("");
   // Visual Learning (mind maps/flowcharts/etc) is section-scoped, not part of
   // the concept card -- fetched once per section instead of once per concept,
   // since every concept in the same section shares the same set of cards.
@@ -871,6 +901,64 @@ export const StudentConceptLearningPage = () => {
     );
   };
 
+  const handleMediaUploadClick = () => {
+    setMediaUploadError("");
+    mediaUploadInputRef.current?.click();
+  };
+
+  const handleMediaFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    const step = exploreSteps[activeExploreStepIndex];
+    if (!step) return;
+
+    setUploadingMedia(true);
+    setMediaUploadError("");
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const result = await uploadStudentConceptSectionMedia(assessmentUnitId, step.key, {
+        dataUrl,
+        fileName: file.name,
+      });
+      setSectionMediaByKey((current) => ({ ...current, [step.key]: result }));
+    } catch (uploadError) {
+      setMediaUploadError(uploadError.message || "Upload failed. Please try again.");
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
+
+  // Shared "no media yet" placeholder for any Explore step with a media slot
+  // -- lets a student fill the gap themselves; the upload becomes the shared,
+  // official media for this concept section (see uploadStudentConceptSectionMedia).
+  const renderMediaUploadPlaceholder = (step) => {
+    const mediaKind = MEDIA_TYPE_BY_STEP_KEY[step.key] || "image";
+    return (
+      <div className="student-memory-booster-media-placeholder">
+        <ConceptLearningIcon type="image" />
+        <span>{mediaKind === "video" ? "Video" : "Visual"} coming soon</span>
+        <button
+          type="button"
+          className="student-concept-media-upload-cta"
+          onClick={handleMediaUploadClick}
+          disabled={uploadingMedia}
+        >
+          {uploadingMedia ? "Uploading..." : `Upload ${mediaKind}`}
+        </button>
+        {mediaUploadError && <p className="student-concept-media-upload-error">{mediaUploadError}</p>}
+        <input
+          ref={mediaUploadInputRef}
+          type="file"
+          accept={`${mediaKind}/*`}
+          className="student-concept-media-upload-input"
+          onChange={handleMediaFileChange}
+        />
+      </div>
+    );
+  };
+
   // Visual/Read toggle for a step with a media slot -- replaces the old
   // fixed two-column layout (see activeStepView above for why).
   const renderStepViewTabs = () => (
@@ -973,10 +1061,7 @@ export const StudentConceptLearningPage = () => {
                   speechText={speechText}
                 />
               ) : (
-                <div className="student-memory-booster-media-placeholder">
-                  <ConceptLearningIcon type="image" />
-                  <span>Visual coming soon</span>
-                </div>
+                renderMediaUploadPlaceholder(step)
               )}
             </div>
           ) : (
@@ -1104,10 +1189,7 @@ export const StudentConceptLearningPage = () => {
                 speechText={text}
               />
             ) : (
-              <div className="student-memory-booster-media-placeholder">
-                <ConceptLearningIcon type="image" />
-                <span>Visual coming soon</span>
-              </div>
+              renderMediaUploadPlaceholder(step)
             )}
           </div>
         ) : (

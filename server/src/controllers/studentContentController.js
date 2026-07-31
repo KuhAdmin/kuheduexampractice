@@ -12,7 +12,7 @@ import {
   getVisualLearningItemsForSection,
   listSectionsForChapter,
 } from "../services/studentContentService.js";
-import { getMemoryHookMediaForSection } from "../services/memoryHookImageService.js";
+import { getMemoryHookMediaForSection, uploadMemoryHookMedia } from "../services/memoryHookImageService.js";
 import { getDiagramMedia } from "../services/diagramImageService.js";
 import {
   getMostRecentMicroActivityResponse,
@@ -111,6 +111,28 @@ export const getStudentConceptSectionMedia = async (req, res, next) => {
 
     return res.json({ media });
   } catch (error) {
+    return next(error);
+  }
+};
+
+// Student-facing upload for a missing Explore-step visual/video -- becomes
+// the shared, official media for this concept section (same
+// memory_hook_media table/versioning the admin workbench uses), by design:
+// there is no separate per-student copy.
+export const uploadStudentConceptSectionMedia = async (req, res, next) => {
+  try {
+    const result = await uploadMemoryHookMedia({
+      assessmentUnitId: req.params.assessmentUnitId,
+      sectionKey: req.params.sectionKey,
+      dataUrl: req.body?.dataUrl,
+      fileName: req.body?.fileName || null,
+      userId: req.user?.id || null,
+    });
+    return res.json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
     return next(error);
   }
 };

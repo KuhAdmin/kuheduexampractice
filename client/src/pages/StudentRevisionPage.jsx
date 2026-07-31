@@ -85,7 +85,11 @@ export const StudentRevisionPage = () => {
         <p className="student-empty-state">No revision content has been generated for this section yet.</p>
       ) : (
         <>
-          <nav className="student-section-detail-tabs" aria-label="Revision mode">
+          <nav
+            className="student-section-detail-tabs"
+            aria-label="Revision mode"
+            style={{ gridTemplateColumns: `repeat(${availableTabs.length}, minmax(0, 1fr))` }}
+          >
             {availableTabs.map((tab) => (
               <button
                 key={tab.key}

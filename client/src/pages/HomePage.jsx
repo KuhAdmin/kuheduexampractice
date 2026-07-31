@@ -3,6 +3,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { LegalDocumentModal } from "../components/LegalDocumentModal";
+import { CorporateSiteModal } from "../components/CorporateSiteModal";
+import { StudyBuddyModal } from "../components/StudyBuddyModal";
+import { LearnerModal } from "../components/LearnerModal";
+import { InstitutionModal } from "../components/InstitutionModal";
 import { LEGAL_DOC_SLUGS, legalDocsBySlug } from "../content/legalContent";
 
 const GOOGLE_AUTH_URL =
@@ -541,6 +545,10 @@ const HomeScreen = ({
   onBackToWelcome,
   onSwitchToLogin,
   onOpenLegal,
+  onOpenCorporateSite,
+  onOpenStudyBuddy,
+  onOpenLearnerInfo,
+  onOpenInstitutionInfo,
   user,
 }) => {
   const isWelcome = screen.kind === "welcome";
@@ -659,10 +667,18 @@ const HomeScreen = ({
                   © 2026 Kuhedu Technologies (P) Ltd. All rights reserved.
                 </p>
                 <nav className="home-onboarding-footer-links" aria-label="Company">
-                  <a href="#">About Kuhedu</a>
-                  <a href="#">exam4u.study</a>
-                  <a href="#">Learners</a>
-                  <a href="#">Institutions</a>
+                  <button type="button" onClick={onOpenCorporateSite}>
+                    About Kuhedu
+                  </button>
+                  <button type="button" onClick={onOpenStudyBuddy}>
+                    Study Buddy
+                  </button>
+                  <button type="button" onClick={onOpenLearnerInfo}>
+                    Learners
+                  </button>
+                  <button type="button" onClick={onOpenInstitutionInfo}>
+                    Institutions
+                  </button>
                   <Link to="/pricing">Pricing</Link>
                 </nav>
                 <nav className="home-onboarding-footer-links" aria-label="Legal">
@@ -844,6 +860,10 @@ export const HomePage = ({
   const [loginForm, setLoginForm] = useState(initialLoginForm);
   const [authState, setAuthState] = useState({ submitting: false, error: "" });
   const [legalDocId, setLegalDocId] = useState(null);
+  const [showCorporateSite, setShowCorporateSite] = useState(false);
+  const [showStudyBuddy, setShowStudyBuddy] = useState(false);
+  const [showLearnerInfo, setShowLearnerInfo] = useState(false);
+  const [showInstitutionInfo, setShowInstitutionInfo] = useState(false);
   const navigate = useNavigate();
   const activeScreen = homeScreens[activeIndex];
   const isPostCreateOnboarding = emailOnboarding || googleOnboarding || resumeOnboarding;
@@ -858,6 +878,14 @@ export const HomePage = ({
     setLegalDocId(id);
   };
   const closeLegalDoc = () => setLegalDocId(null);
+  const openCorporateSite = () => setShowCorporateSite(true);
+  const closeCorporateSite = () => setShowCorporateSite(false);
+  const openStudyBuddy = () => setShowStudyBuddy(true);
+  const closeStudyBuddy = () => setShowStudyBuddy(false);
+  const openLearnerInfo = () => setShowLearnerInfo(true);
+  const closeLearnerInfo = () => setShowLearnerInfo(false);
+  const openInstitutionInfo = () => setShowInstitutionInfo(true);
+  const closeInstitutionInfo = () => setShowInstitutionInfo(false);
 
   // Primary advance is the video's own onEnded event (see the splash render
   // branch below); this is only a safety net in case the video fails to
@@ -1138,10 +1166,18 @@ export const HomePage = ({
             <span>KUHEDU STUDY BUDDY</span>
           </div>
           <nav className="home-desktop-navbar-links" aria-label="Company">
-            <a href="#">About Kuhedu</a>
-            <a href="#">exam4u.study</a>
-            <a href="#">Learners</a>
-            <a href="#">Institutions</a>
+            <button type="button" className="home-desktop-navbar-link-button" onClick={openCorporateSite}>
+              About Kuhedu
+            </button>
+            <button type="button" className="home-desktop-navbar-link-button" onClick={openStudyBuddy}>
+              Study Buddy
+            </button>
+            <button type="button" className="home-desktop-navbar-link-button" onClick={openLearnerInfo}>
+              Learners
+            </button>
+            <button type="button" className="home-desktop-navbar-link-button" onClick={openInstitutionInfo}>
+              Institutions
+            </button>
             <Link to="/pricing">Pricing</Link>
           </nav>
         </nav>
@@ -1212,6 +1248,24 @@ export const HomePage = ({
           doc={legalDocId ? legalDocsBySlug[legalDocId] : null}
           onClose={closeLegalDoc}
         />
+        <CorporateSiteModal open={showCorporateSite} onClose={closeCorporateSite} />
+        <StudyBuddyModal
+          open={showStudyBuddy}
+          onClose={closeStudyBuddy}
+          onGetStarted={() => {
+            closeStudyBuddy();
+            handleContinue();
+          }}
+        />
+        <LearnerModal
+          open={showLearnerInfo}
+          onClose={closeLearnerInfo}
+          onGetStarted={() => {
+            closeLearnerInfo();
+            handleContinue();
+          }}
+        />
+        <InstitutionModal open={showInstitutionInfo} onClose={closeInstitutionInfo} />
       </main>
     );
   }
@@ -1262,6 +1316,10 @@ export const HomePage = ({
                 onBackToWelcome={() => goToScreen("welcome")}
                 onSwitchToLogin={() => goToScreen("login")}
                 onOpenLegal={openLegalDoc}
+                onOpenCorporateSite={openCorporateSite}
+                onOpenStudyBuddy={openStudyBuddy}
+                onOpenLearnerInfo={openLearnerInfo}
+                onOpenInstitutionInfo={openInstitutionInfo}
                 user={user}
               />
             </motion.div>
@@ -1273,6 +1331,24 @@ export const HomePage = ({
         doc={legalDocId ? legalDocsBySlug[legalDocId] : null}
         onClose={closeLegalDoc}
       />
+      <CorporateSiteModal open={showCorporateSite} onClose={closeCorporateSite} />
+      <StudyBuddyModal
+        open={showStudyBuddy}
+        onClose={closeStudyBuddy}
+        onGetStarted={() => {
+          closeStudyBuddy();
+          handleContinue();
+        }}
+      />
+      <LearnerModal
+        open={showLearnerInfo}
+        onClose={closeLearnerInfo}
+        onGetStarted={() => {
+          closeLearnerInfo();
+          handleContinue();
+        }}
+      />
+      <InstitutionModal open={showInstitutionInfo} onClose={closeInstitutionInfo} />
     </main>
   );
 };
