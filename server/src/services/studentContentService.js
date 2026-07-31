@@ -2,11 +2,13 @@ import { pool } from "../db/pool.js";
 import { resolveDashboardAcademicFilters } from "./catalogService.js";
 import {
   getAssessmentUnitsForSourceSection,
+  getConceptLearningPillars,
   getDiagramsForSection,
   getLayer1Context,
   getLayer2Memory,
   getSectionKnowledgeSummary,
   getTerminologyForSection,
+  getTextbookContentForSection,
   getVisualLearningCardsForSection,
 } from "./contentReadService.js";
 import { getMemoryHookMedia } from "./memoryHookImageService.js";
@@ -261,9 +263,10 @@ export const getSectionOverview = async ({ sourceSectionId, userId }) => {
   }
 
   const assessmentUnitIds = units.map((unit) => unit.assessmentUnitId);
-  const [masteryByUnit, lastActivityByUnit] = await Promise.all([
+  const [masteryByUnit, lastActivityByUnit, competenciesByUnit] = await Promise.all([
     getMasteryByAssessmentUnitId({ userId, assessmentUnitIds }),
     getLastActivityByAssessmentUnitId({ userId, assessmentUnitIds }),
+    getConceptLearningPillars(assessmentUnitIds),
   ]);
   const masteredCount = units.filter(
     (unit) => (masteryByUnit.get(unit.assessmentUnitId) || 0) >= MASTERY_COMPLETE_THRESHOLD
@@ -290,6 +293,7 @@ export const getSectionOverview = async ({ sourceSectionId, userId }) => {
         curriculumImportance: unit.curriculumImportance,
         completed: isMastered,
         status,
+        competencies: competenciesByUnit.get(unit.assessmentUnitId) || [],
       };
     }),
   };
@@ -559,7 +563,7 @@ export const getTutorNotesForSection = async ({ sourceSectionId }) => {
 export const getAssessmentExtraForUnit = async ({ assessmentUnitId }) => {
   const result = await pool.query(
     `
-      SELECT processorkey AS "questionFamily", title, summary, details
+      SELECT processorkey AS "questionFamily", cardkey, title, summary, details
       FROM content_card
       WHERE assessment_unit_id = $1
         AND contentuitab = 'assessment'
@@ -573,6 +577,10 @@ export const getAssessmentExtraForUnit = async ({ assessmentUnitId }) => {
   for (const row of result.rows) {
     if (!grouped[row.questionFamily]) continue;
     grouped[row.questionFamily].push({
+      // "${assessmentUnitId}:${cardkey}" -- the stable key
+      // challengeResponseService.js resolves case-study responses by
+      // (cardkey survives re-imports, a content_card.id would not).
+      responseKey: `${assessmentUnitId}:${row.cardkey}`,
       title: row.title || null,
       summary: row.summary || null,
       details: Array.isArray(row.details) ? row.details : [],
@@ -589,6 +597,20 @@ export const getVisualLearningItemsForSection = async ({ sourceSectionId }) => {
   const cards = await getVisualLearningCardsForSection(sourceSectionId);
   return cards.map((card) => ({
     cardId: card.id,
+    mode: card.mode,
+    title: card.title,
+    summary: card.summary,
+    details: card.details,
+  }));
+};
+
+// textbook/{activities,exercises} cards for a section -- feeds the student
+// "Exercises/Activities" tab.
+export const getTextbookContentForSourceSection = async ({ sourceSectionId }) => {
+  const cards = await getTextbookContentForSection(sourceSectionId);
+  return cards.map((card) => ({
+    cardId: card.id,
+    activityKey: card.activityKey,
     mode: card.mode,
     title: card.title,
     summary: card.summary,

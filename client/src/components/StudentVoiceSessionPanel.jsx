@@ -17,6 +17,7 @@ export const StudentVoiceSessionPanel = ({ mode, label, assessmentUnitId }) => {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState(null);
   const [elapsed, setElapsed] = useState(0);
+  const [muted, setMuted] = useState(false);
   const sessionRef = useRef(null);
   const timerRef = useRef(null);
   const avatar = useAiTutorAvatar();
@@ -28,21 +29,51 @@ export const StudentVoiceSessionPanel = ({ mode, label, assessmentUnitId }) => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
     setStatus("idle");
+    setMuted(false);
     avatar.releaseSession(avatarSessionId);
   }, [avatar, avatarSessionId]);
 
   useEffect(() => stop, [stop]);
 
+  // VoiceSession reaches "closed"/"error" on its own too -- an unexpected
+  // Gemini-side close, or a failed start() -- not just via the "End
+  // session" button. Previously only setStatus ran for those, so the
+  // shared avatar slot never got released and a stale sessionRef stuck
+  // around, until the student clicked "End session" on a session that had
+  // already died. This mirrors that same cleanup for every path a session
+  // can end, not just the manual one -- the VoiceSession instance itself
+  // already released its own resources (mic/timers) before this fires.
+  const handleStatusChange = useCallback(
+    (nextStatus) => {
+      setStatus(nextStatus);
+      if (nextStatus === "closed" || nextStatus === "error") {
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = null;
+        sessionRef.current = null;
+        setMuted(false);
+        avatar.releaseSession(avatarSessionId);
+      }
+    },
+    [avatar, avatarSessionId]
+  );
+
+  const toggleMute = () => {
+    const next = !muted;
+    sessionRef.current?.setMuted(next);
+    setMuted(next);
+  };
+
   const start = async () => {
     setError(null);
     setElapsed(0);
+    setMuted(false);
     // Must happen before the session's own audio starts flowing -- also
     // what triggers the avatar's audio-context init inside this click's
     // user gesture. Resolves false when the avatar is off/not ready, in
     // which case VoiceSession falls back to its own local audio playback.
     const avatarBound = await avatar.bindSession(avatarSessionId);
     const session = new VoiceSession(
-      { onStatusChange: setStatus, onError: setError },
+      { onStatusChange: handleStatusChange, onError: setError },
       avatarBound
         ? {
             sendAudioChunk: (pcm, end) => avatar.sendAudioChunk(avatarSessionId, pcm, end),
@@ -64,6 +95,11 @@ export const StudentVoiceSessionPanel = ({ mode, label, assessmentUnitId }) => {
   const active = status === "connecting" || status === "listening" || status === "speaking";
   const minutes = String(Math.floor(elapsed / 60)).padStart(2, "0");
   const seconds = String(elapsed % 60).padStart(2, "0");
+  // "Listening…" is misleading in the gap right after muting -- audio has
+  // already stopped and the turn-end signal is already sent, but the model
+  // hasn't started its response yet. "Speaking…"/"Connecting…" need no
+  // override: being muted while the AI talks is expected, not a stale label.
+  const statusText = muted && status === "listening" ? "Muted — waiting for the AI to respond" : STATUS_LABEL[status];
 
   return (
     <div className="student-ai-tutor-voice">
@@ -74,17 +110,28 @@ export const StudentVoiceSessionPanel = ({ mode, label, assessmentUnitId }) => {
             {label} — Live Voice {active && `(${minutes}:${seconds})`}
           </span>
         </div>
-        {active ? (
-          <button type="button" className="student-ai-tutor-voice-stop" onClick={stop}>
-            End session
-          </button>
-        ) : (
-          <button type="button" className="student-ai-tutor-voice-start" onClick={start}>
-            🎙 Start talking
-          </button>
-        )}
+        <div className="student-ai-tutor-voice-actions">
+          {active && (
+            <button
+              type="button"
+              className={`student-ai-tutor-voice-mute ${muted ? "is-muted" : ""}`}
+              onClick={toggleMute}
+            >
+              {muted ? "🔇 Unmute to keep talking" : "🎤 Mute — I'm done talking"}
+            </button>
+          )}
+          {active ? (
+            <button type="button" className="student-ai-tutor-voice-stop" onClick={stop}>
+              End session
+            </button>
+          ) : (
+            <button type="button" className="student-ai-tutor-voice-start" onClick={start}>
+              🎙 Start talking
+            </button>
+          )}
+        </div>
       </div>
-      <p className="student-ai-tutor-voice-label">{STATUS_LABEL[status]}</p>
+      <p className="student-ai-tutor-voice-label">{statusText}</p>
       {error && <p className="student-ai-tutor-error">{error}</p>}
     </div>
   );

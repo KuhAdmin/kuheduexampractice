@@ -9,14 +9,19 @@ import { StudentEinsteinMode } from "../components/StudentEinsteinMode";
 import { StudentVivaMode } from "../components/StudentVivaMode";
 import { StudentDetailCard } from "../components/StudentDetailCard";
 import { StudentChallengesTab } from "../components/StudentChallengesTab";
+import { StudentOpenResponsePanel } from "../components/StudentOpenResponsePanel";
 import { MathPreview } from "../components/MathPreview";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import {
   getStudentConceptCard,
   getStudentConceptSectionMedia,
   getStudentDiagramMedia,
+  getStudentRevision,
   getStudentSections,
+  getStudentTextbookContent,
   getStudentVisualLearningItems,
+  getTextbookActivityResponse,
+  submitTextbookActivityResponse,
   uploadStudentConceptSectionMedia,
 } from "../api/client";
 import { decodeSelectionChapterId } from "./studentChapterData";
@@ -214,7 +219,7 @@ const ConceptLearningIcon = ({ type, className = "" }) => {
   );
 };
 
-const TABS = ["Learn", "Explore", "Practice", "Smart Tutor", "Challenges"];
+const TABS = ["Learn", "Explore", "Exercises/Activities", "Practice", "Revision", "Smart Tutor", "Challenges"];
 
 // Ordered, real fields only -- mirrors exactly what renderExploreMode's
 // accordion already checks for presence, just as a sequence instead of a
@@ -339,6 +344,12 @@ const VISUAL_LEARNING_CATEGORIES = [
   { key: "visualposter", label: "Visual Poster" },
   { key: "notebooknotes", label: "Notebook Notes" },
   { key: "infographics", label: "Infographics" },
+];
+
+const REVISION_MODES = [
+  { key: "cheatsheet", label: "Cheat Sheet" },
+  { key: "mnemonics", label: "Mnemonics" },
+  { key: "examnotes", label: "Exam Notes" },
 ];
 
 // Collapsible card for the Explore tab. mediaType ("image" | "video" | null)
@@ -545,6 +556,9 @@ export const StudentConceptLearningPage = () => {
   // since every concept in the same section shares the same set of cards.
   // null = not loaded yet, [] = loaded, confirmed empty.
   const [visualLearningItems, setVisualLearningItems] = useState(null);
+  const [textbookContent, setTextbookContent] = useState(null);
+  const [revisionItems, setRevisionItems] = useState(null);
+  const [activeRevisionMode, setActiveRevisionMode] = useState(null);
   const [visualLearningMediaByCardId, setVisualLearningMediaByCardId] = useState({});
   const [activeVisualLearningCategory, setActiveVisualLearningCategory] = useState(VISUAL_LEARNING_CATEGORIES[0].key);
   // Visual Learning grid item opened via its maximize button -- full item
@@ -666,6 +680,62 @@ export const StudentConceptLearningPage = () => {
       cancelled = true;
     };
   }, [sourceSectionId]);
+
+  // Same section-scoped fetch-once pattern as visualLearningItems above --
+  // Exercises/Activities content is the textbook's own end-of-section
+  // material, shared by every concept in the section.
+  useEffect(() => {
+    let cancelled = false;
+    setTextbookContent(null);
+
+    getStudentTextbookContent(sourceSectionId)
+      .then((result) => {
+        if (!cancelled) setTextbookContent(result?.items || []);
+      })
+      .catch(() => {
+        if (!cancelled) setTextbookContent([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceSectionId]);
+
+  // Fetched section-wide (same endpoint StudentRevisionPage.jsx uses) since
+  // that's what content_card's assessment_unit_id join naturally returns --
+  // filtered down to this concept's rows below, in renderRevisionMode.
+  useEffect(() => {
+    let cancelled = false;
+    setRevisionItems(null);
+
+    getStudentRevision(sourceSectionId)
+      .then((result) => {
+        if (!cancelled) setRevisionItems(result?.items || []);
+      })
+      .catch(() => {
+        if (!cancelled) setRevisionItems([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceSectionId]);
+
+  // revisionItems is section-wide (every concept's cheatsheet/mnemonics/
+  // examnotes); narrowed to this concept here so switching concepts within
+  // the same section (no refetch needed) still shows only relevant cards.
+  const conceptRevisionItems = useMemo(
+    () => (revisionItems || []).filter((item) => String(item.assessmentUnitId) === String(assessmentUnitId)),
+    [revisionItems, assessmentUnitId]
+  );
+  const populatedRevisionModes = useMemo(
+    () => REVISION_MODES.filter((mode) => conceptRevisionItems.some((item) => item.mode === mode.key)),
+    [conceptRevisionItems]
+  );
+
+  useEffect(() => {
+    setActiveRevisionMode(populatedRevisionModes[0]?.key || null);
+  }, [populatedRevisionModes]);
 
   const learnContent = useMemo(
     () => (card ? buildLearnContent(card) : { modePages: [], fallbackSlides: [] }),
@@ -1535,6 +1605,121 @@ export const StudentConceptLearningPage = () => {
     </section>
   );
 
+  const renderRevisionMode = () => {
+    if (revisionItems === null) {
+      return <p className="student-empty-state">Loading revision content...</p>;
+    }
+
+    if (populatedRevisionModes.length === 0) {
+      return (
+        <section className="student-concept-learning-card">
+          <div className="student-concept-learning-copy">
+            <h2>Revision</h2>
+            <p>No revision content has been generated for this concept yet.</p>
+          </div>
+        </section>
+      );
+    }
+
+    const visibleItems = conceptRevisionItems.filter((item) => item.mode === activeRevisionMode);
+
+    return (
+      <div className="student-concept-step-copy is-full-width">
+        <div className="student-concept-step-view-tabs is-multi" role="tablist" aria-label="Revision mode">
+          {populatedRevisionModes.map((mode) => (
+            <button
+              key={mode.key}
+              type="button"
+              role="tab"
+              aria-selected={activeRevisionMode === mode.key}
+              className={`student-concept-step-view-tab ${activeRevisionMode === mode.key ? "is-active" : ""}`}
+              onClick={() => setActiveRevisionMode(mode.key)}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="student-detail-card-list-page">
+          {visibleItems.map((item, index) => (
+            <StudentDetailCard
+              key={`${item.assessmentUnitId}-${item.mode}-${index}`}
+              title={item.title}
+              summary={item.summary}
+              details={item.details}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const EXERCISES_ACTIVITIES_GROUPS = [
+    { key: "activities", label: "Activities" },
+    { key: "exercises", label: "Exercises" },
+  ];
+
+  const renderExercisesActivitiesMode = () => {
+    if (textbookContent === null) {
+      return <p className="student-empty-state">Loading exercises and activities...</p>;
+    }
+
+    const groups = EXERCISES_ACTIVITIES_GROUPS.map((group) => ({
+      ...group,
+      items: textbookContent.filter((item) => item.mode === group.key),
+    })).filter((group) => group.items.length > 0);
+
+    if (groups.length === 0) {
+      return (
+        <section className="student-concept-learning-card">
+          <div className="student-concept-learning-copy">
+            <h2>Exercises/Activities</h2>
+            <p>No exercises or activities have been added for this section yet.</p>
+          </div>
+        </section>
+      );
+    }
+
+    return (
+      <>
+        {groups.map((group) => (
+          <section className="student-concept-learning-card" key={group.key}>
+            <div className="student-concept-learning-copy">
+              <h2>{group.label}</h2>
+            </div>
+            <div className="student-detail-card-list-page">
+              {group.items.map((item) => (
+                <StudentDetailCard
+                  key={item.cardId}
+                  title={item.title}
+                  // Exercises' "summary" is just a paraphrase of the question(s)
+                  // already listed in full in "details" below -- for multi-
+                  // question exercises the source content often only captures
+                  // some of them there, which reads as a truncation bug rather
+                  // than the harmless redundancy it is for single-question
+                  // ones. "details" is always the complete, authoritative
+                  // content, so summary is dropped here. Activities keep their
+                  // summary -- it's a distinct instructional blurb there, not a
+                  // duplicate of the details.
+                  summary={group.key === "exercises" ? null : item.summary}
+                  details={item.details}
+                >
+                  {group.key === "exercises" && (
+                    <StudentOpenResponsePanel
+                      responseKey={item.activityKey}
+                      fetchResponse={getTextbookActivityResponse}
+                      submitResponse={submitTextbookActivityResponse}
+                    />
+                  )}
+                </StudentDetailCard>
+              ))}
+            </div>
+          </section>
+        ))}
+      </>
+    );
+  };
+
   // Desktop/tablet only: breadcrumb + hero card + tab bar as persistent
   // chrome, matching the reference design's Notion/Duolingo-style layout.
   // Only the Explore tab's content structure actually changes (accordion ->
@@ -1661,6 +1846,10 @@ export const StudentConceptLearningPage = () => {
                   </>
                 ) : activeTab === "Challenges" ? (
                   <StudentChallengesTab assessmentUnitId={assessmentUnitId} />
+                ) : activeTab === "Exercises/Activities" ? (
+                  renderExercisesActivitiesMode()
+                ) : activeTab === "Revision" ? (
+                  renderRevisionMode()
                 ) : (
                   renderComingSoon(activeTab)
                 )}
@@ -1718,6 +1907,10 @@ export const StudentConceptLearningPage = () => {
           </>
         ) : activeTab === "Challenges" ? (
           <StudentChallengesTab assessmentUnitId={assessmentUnitId} />
+        ) : activeTab === "Exercises/Activities" ? (
+          renderExercisesActivitiesMode()
+        ) : activeTab === "Revision" ? (
+          renderRevisionMode()
         ) : (
           renderComingSoon(activeTab)
         )}

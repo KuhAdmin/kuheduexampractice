@@ -314,6 +314,24 @@ const STATUS_ICON = {
   notStarted: "circle-outline",
 };
 
+// Competency ("learning pillar") chips a concept develops -- see
+// conceptImportService.js's resolveConceptPillarLinks/concept_learning_pillar
+// and studentContentService.js's getSectionOverview, which attaches
+// concept.competencies. Purely a label, not interactive -- no drill-down
+// into the pillar's own content (summary/details) from here.
+const ConceptCompetencyChips = ({ competencies }) => {
+  if (!competencies?.length) return null;
+  return (
+    <span className="student-concept-pillar-chips">
+      {competencies.map((pillar) => (
+        <span key={pillar.key} className="student-concept-pillar-chip">
+          {pillar.title}
+        </span>
+      ))}
+    </span>
+  );
+};
+
 const CONCEPTS_PAGE_SIZE = 12;
 
 export const StudentSectionDetailPage = () => {
@@ -576,6 +594,7 @@ export const StudentSectionDetailPage = () => {
                           </span>
                           <span className="student-goals-row-copy">
                             <strong>{concept.title}</strong>
+                            <ConceptCompetencyChips competencies={concept.competencies} />
                           </span>
                           <span className={`student-goals-row-status ${statusClass}`}>
                             <SectionDetailIcon type={STATUS_ICON[concept.status]} />
@@ -663,6 +682,7 @@ export const StudentSectionDetailPage = () => {
                       title={concept.title}
                       subtitle={concept.completed ? "Status - Completed" : "Status - Ready to learn"}
                     >
+                      <ConceptCompetencyChips competencies={concept.competencies} />
                     </StudentDrilldownCard>
                   ))}
                 </div>

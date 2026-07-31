@@ -44,6 +44,7 @@ export class VoiceSession {
     this.playbackContext = null;
     this.nextPlaybackTime = 0;
     this.closed = false;
+    this.muted = false;
   }
 
   async start({ assessmentUnitId, mode }) {
@@ -79,8 +80,26 @@ export class VoiceSession {
         resolve();
       };
       ws.onerror = () => reject(new Error("Could not connect to the voice service."));
-      ws.onclose = () => {
-        if (!this.closed) this.callbacks.onStatusChange("closed");
+      // A clean, expected close (1000 = student ended the session, 1005 = no
+      // status code sent, treated the same) needs no explanation. Any other
+      // code -- most commonly Gemini rejecting the ephemeral token or a
+      // liveConnectConstraints value it doesn't accept -- previously
+      // vanished silently: onopen had already resolved (so start() saw no
+      // error), the mic kept recording into a dead socket, and the UI just
+      // read "Session ended" a few seconds later with no explanation. The
+      // close event's own code/reason is Gemini's actual diagnostic for
+      // this, so it's surfaced via onError instead of discarded, and
+      // stop() releases the mic/timers here too since nothing else would.
+      ws.onclose = (event) => {
+        if (this.closed) return;
+        const wasClean = event.code === 1000 || event.code === 1005;
+        if (!wasClean) {
+          this.callbacks.onError(
+            `Voice session closed unexpectedly${event.reason ? `: ${event.reason}` : ` (code ${event.code})`}.`
+          );
+        }
+        this.callbacks.onStatusChange("closed");
+        this.stop();
       };
       ws.onmessage = (event) => {
         void this.handleServerMessage(event);
@@ -180,6 +199,7 @@ export class VoiceSession {
     this.recorderNode = recorder;
 
     recorder.port.onmessage = (event) => {
+      if (this.muted) return;
       this.pendingChunks.push(new Int16Array(event.data));
     };
     source.connect(recorder);
@@ -187,6 +207,26 @@ export class VoiceSession {
     // student's own mic back to them.
 
     this.sendTimer = setInterval(() => this.flushMicChunks(), SEND_INTERVAL_MS);
+  }
+
+  // Manual turn control: muting is the student's explicit "I'm done talking"
+  // signal, in addition to whatever silence-based VAD Gemini does on its
+  // own -- realtimeInput.audioStreamEnd tells it to stop waiting for more
+  // audio and respond to what it has now, rather than waiting out its own
+  // silence timeout. Unmuting just resumes sending mic audio; no explicit
+  // "resume" frame exists or is needed -- audio flowing again is itself the
+  // signal that a new turn has started. Muting/unmuting never happens
+  // automatically from server events (e.g. when a response finishes) -- the
+  // student always drives both transitions.
+  setMuted(muted) {
+    if (this.muted === muted) return;
+    this.muted = muted;
+    if (muted) {
+      this.pendingChunks = [];
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({ realtimeInput: { audioStreamEnd: true } }));
+      }
+    }
   }
 
   flushMicChunks() {

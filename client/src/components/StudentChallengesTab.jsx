@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { getStudentConceptChallenges } from "../api/client";
+import { getChallengeResponse, getStudentConceptChallenges, submitChallengeResponse } from "../api/client";
 import { StudentCameraCapture } from "./StudentCameraCapture";
+import { StudentOpenResponsePanel } from "./StudentOpenResponsePanel";
 
 // Strips <script> tags and on*="..." handler attributes before the SVG is
 // injected via dangerouslySetInnerHTML. The generation contract already
@@ -27,7 +28,10 @@ const parseJsonDetail = (value) => {
 const getDetailValue = (details, label) => details?.find((detail) => detail.label === label)?.value;
 
 // casestudy: scenario + question up front, hints/answer behind reveal
-// buttons -- self-check, nothing here is submitted or scored anywhere.
+// buttons for self-check, plus a "Submit for Feedback" response box (same
+// StudentOpenResponsePanel used by textbook Exercises) so a student can
+// also write their own answer and get AI feedback instead of only
+// comparing against the official answer/rubric.
 const CaseStudyCard = ({ item }) => {
   const [showHints, setShowHints] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -81,6 +85,14 @@ const CaseStudyCard = ({ item }) => {
             </>
           )}
         </div>
+      )}
+      {item.responseKey && (
+        <StudentOpenResponsePanel
+          responseKey={item.responseKey}
+          fetchResponse={getChallengeResponse}
+          submitResponse={submitChallengeResponse}
+          placeholder="Type your own answer, or capture a photo of your handwritten answer above"
+        />
       )}
     </article>
   );
@@ -138,9 +150,11 @@ const HotspotCard = ({ item }) => {
 // objects, distinctly named/placed from the existing live "Einstein Mode"
 // feature (StudentEinsteinMode.jsx, a different single-object-per-round,
 // AI-vision-graded activity) so the two aren't mistaken for one another.
-// This content has no grading rubric at all, so there is no photo upload or
-// AI judging here -- "Attach a photo" is purely a local, in-session
-// reference thumbnail (never sent to the server).
+// Per-object "Attach a photo" stays a local, in-session reference thumbnail
+// only (never sent to the server, no per-object grading) -- but a
+// StudentOpenResponsePanel below the checklist lets the student write a
+// free-text summary of the whole hunt and get one holistic AI feedback
+// pass on it, same mechanism as Case Study/textbook Exercises.
 const ObjectHuntCard = ({ item }) => {
   const objects = parseJsonDetail(getDetailValue(item.details, "Objects")) || [];
   const [foundState, setFoundState] = useState({});
@@ -195,6 +209,14 @@ const ObjectHuntCard = ({ item }) => {
             setCameraObjectId(null);
           }}
           onCancel={() => setCameraObjectId(null)}
+        />
+      )}
+      {item.responseKey && (
+        <StudentOpenResponsePanel
+          responseKey={item.responseKey}
+          fetchResponse={getChallengeResponse}
+          submitResponse={submitChallengeResponse}
+          placeholder="Describe the objects you found and how they connect to the theme, or capture a photo of your notes above"
         />
       )}
     </article>

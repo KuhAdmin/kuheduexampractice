@@ -53,6 +53,8 @@ const COUNT_LABELS = {
   tutor: "Tutor items (coach/interview/viva/debate)",
   deeplearning: "Deep-learning items (misconceptions/why-chain)",
   visual: "Section visuals (diagrams/mind maps/etc.)",
+  textbook: "Exercises/Activities items (textbook content)",
+  learningPillars: "Learning pillars (competencies)",
 };
 
 const LOG_EVENT_ICON = {

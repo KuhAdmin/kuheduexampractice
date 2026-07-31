@@ -1351,14 +1351,24 @@ CREATE TABLE IF NOT EXISTS content_assessment_item (
   options JSONB NOT NULL DEFAULT '[]'::jsonb,
   correct_answer TEXT,
   answer_explanation TEXT,
-  difficulty VARCHAR(40),
-  blooms_level VARCHAR(80),
+  difficulty TEXT,
+  blooms_level TEXT,
   learning_objective TEXT,
   hints JSONB NOT NULL DEFAULT '[]'::jsonb,
   estimated_time_seconds INTEGER NOT NULL DEFAULT 0,
   marks INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Both were originally VARCHAR(40)/VARCHAR(80) -- widened to TEXT after a
+-- real import failed with "value too long for type character varying(40)"
+-- on difficulty: neither column is ever compared against a known short
+-- enum anywhere in the code (grepped client+server), they're just
+-- free-text labels from the source JSON, so there's no reason to cap their
+-- length at all. ALTER COLUMN TYPE TEXT is a safe widening cast, re-running
+-- it on an already-TEXT column is a no-op.
+ALTER TABLE IF EXISTS content_assessment_item ALTER COLUMN difficulty TYPE TEXT;
+ALTER TABLE IF EXISTS content_assessment_item ALTER COLUMN blooms_level TYPE TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_content_assessment_item_unit
 ON content_assessment_item (assessment_unit_id);
@@ -1432,6 +1442,80 @@ ON micro_activity_response (user_id, assessment_unit_id, created_at DESC);
 -- NULL for typed-only answers, same as today.
 ALTER TABLE IF EXISTS micro_activity_response
 ADD COLUMN IF NOT EXISTS source_page_images JSONB;
+
+-- Student responses to textbook Activities/Exercises content (content_card
+-- rows with contentuitab='textbook', see conceptImportService.js). Same
+-- open-ended, no-single-right-answer nature as micro_activity_response (a
+-- reflection question or hands-on activity), so this mirrors its shape and
+-- append-only history exactly -- but keyed by activity_key
+-- ("${contentKey}:${cardkey}", same convention assessment_unit_id already
+-- uses) instead of a content_card.id FK: content_card rows for a
+-- content_key are hard-deleted and re-inserted on every re-import (fresh
+-- ids each time), so a row-id FK would silently orphan/cascade-delete every
+-- student's response history on the next re-import. activity_key survives
+-- re-imports because cardkey is sourced from the item's own stable "id"
+-- field in the source JSON.
+CREATE TABLE IF NOT EXISTS textbook_content_response (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  activity_key VARCHAR(240) NOT NULL,
+  response_text TEXT NOT NULL,
+  feedback_text TEXT,
+  source_page_images JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_textbook_content_response_lookup
+ON textbook_content_response (user_id, activity_key, created_at DESC);
+
+-- Student responses to Challenges tab items (content_card rows with
+-- contentuitab='assessment', processorkey IN 'casestudy'/'einsteinmode' --
+-- a free-text answer to a case-study question, or a written summary of an
+-- Object Hunt; hotspot stays self-check only, tapping markers has no
+-- free-text answer to grade). Same open-ended shape/history as
+-- textbook_content_response, but response_key
+-- is "${assessmentUnitId}:${cardkey}" instead of "${contentKey}:${cardkey}"
+-- -- these cards are concept-scoped, not section-scoped, and
+-- assessment_unit_id (not content_key) is this app's stable per-concept
+-- identity. assessmentUnitId itself already contains one ":" (it's
+-- "${contentKey}:${conceptCardkey}"), so parsing response_key back apart
+-- must split on the LAST ":", not the first -- cardkey values (e.g.
+-- "casestudy-1") never contain one, so that's always the right split point.
+CREATE TABLE IF NOT EXISTS challenge_response (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  response_key VARCHAR(240) NOT NULL,
+  response_text TEXT NOT NULL,
+  feedback_text TEXT,
+  source_page_images JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_challenge_response_lookup
+ON challenge_response (user_id, response_key, created_at DESC);
+
+-- Many-to-many link between concepts (assessment_unit) and the "learning
+-- pillars" (competencies) they develop -- learningpillars content_card rows,
+-- see conceptImportService.js's card routing. Joined back to content_card by
+-- (content_key, pillar_cardkey) rather than a content_card.id FK, same
+-- reasoning as activity_key above: content_card rows for a content_key are
+-- hard-deleted/re-inserted on every re-import (fresh ids each time), but
+-- content_key+cardkey survives because cardkey is sourced from the pillar's
+-- own stable "id" field in the source JSON.
+CREATE TABLE IF NOT EXISTS concept_learning_pillar (
+  id BIGSERIAL PRIMARY KEY,
+  assessment_unit_id VARCHAR(80) NOT NULL REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
+  content_key VARCHAR(160) NOT NULL,
+  pillar_cardkey VARCHAR(80) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (assessment_unit_id, content_key, pillar_cardkey)
+);
+
+CREATE INDEX IF NOT EXISTS idx_concept_learning_pillar_unit
+ON concept_learning_pillar (assessment_unit_id);
+
+CREATE INDEX IF NOT EXISTS idx_concept_learning_pillar_pillar
+ON concept_learning_pillar (content_key, pillar_cardkey);
 
 -- Chapter-end textbook exercise questions, extracted from an admin-uploaded
 -- photo of the exercise page. Keyed by (fk_mst_book_id, chapter_number) --

@@ -25,9 +25,14 @@ import {
   getStudentRevision,
   getStudentSectionOverview,
   getStudentSections,
+  getStudentTextbookContent,
   getStudentTutorNotes,
   getStudentVisualLearningItems,
+  getChallengeResponseHandler,
+  getTextbookActivityResponseHandler,
+  submitChallengeResponseHandler,
   submitMicroActivityResponseHandler,
+  submitTextbookActivityResponseHandler,
   uploadStudentConceptSectionMedia,
   submitStudentBookQuestionResponse,
 } from "../controllers/studentContentController.js";
@@ -71,6 +76,11 @@ router.get("/sections/:sourceSectionId/memory-booster", getStudentMemoryBoosterF
 router.get("/sections/:sourceSectionId/flashcards", getStudentFlashcards);
 router.get("/sections/:sourceSectionId/revision", getStudentRevision);
 router.get("/sections/:sourceSectionId/tutor-notes", getStudentTutorNotes);
+router.get("/sections/:sourceSectionId/textbook-content", getStudentTextbookContent);
+router.get("/textbook-activities/:activityKey/response", getTextbookActivityResponseHandler);
+router.post("/textbook-activities/:activityKey/respond", submitTextbookActivityResponseHandler);
+router.get("/challenges/:responseKey/response", getChallengeResponseHandler);
+router.post("/challenges/:responseKey/respond", submitChallengeResponseHandler);
 router.get("/sections/:sourceSectionId/diagrams", getStudentDiagrams);
 router.get("/sections/:sourceSectionId/visual-learning", getStudentVisualLearningItems);
 router.get("/diagrams/:diagramId/media", getStudentDiagramMedia);

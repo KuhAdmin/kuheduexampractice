@@ -8,6 +8,7 @@ import {
   getMemoryBoosterForUnit,
   getRevisionForSection,
   getSectionOverview,
+  getTextbookContentForSourceSection,
   getTutorNotesForSection,
   getVisualLearningItemsForSection,
   listSectionsForChapter,
@@ -22,6 +23,11 @@ import {
   getBookQuestionsForStudent,
   submitBookQuestionResponseForStudent,
 } from "../services/chapterExerciseService.js";
+import {
+  getMostRecentTextbookActivityResponse,
+  gradeTextbookActivityResponse,
+} from "../services/textbookActivityResponseService.js";
+import { getMostRecentChallengeResponse, gradeChallengeResponse } from "../services/challengeResponseService.js";
 
 const studentAcademicContext = (req) => ({
   board: req.user.board,
@@ -204,6 +210,46 @@ export const getStudentVisualLearningItems = async (req, res, next) => {
   }
 };
 
+export const getStudentTextbookContent = async (req, res, next) => {
+  try {
+    const result = await getTextbookContentForSourceSection({
+      sourceSectionId: req.params.sourceSectionId,
+    });
+    return res.json({ items: result });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getChallengeResponseHandler = async (req, res, next) => {
+  try {
+    const result = await getMostRecentChallengeResponse({
+      responseKey: req.params.responseKey,
+      userId: req.user.id,
+    });
+    return res.json(result);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const submitChallengeResponseHandler = async (req, res, next) => {
+  try {
+    const result = await gradeChallengeResponse({
+      responseKey: req.params.responseKey,
+      userId: req.user.id,
+      responseText: req.body?.responseText,
+      sourcePageImages: req.body?.sourcePageImages,
+    });
+    return res.json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
 export const getStudentDiagrams = async (req, res, next) => {
   try {
     const result = await getDiagramsForSourceSection({
@@ -240,6 +286,35 @@ export const submitMicroActivityResponseHandler = async (req, res, next) => {
   try {
     const result = await gradeMicroActivityResponse({
       assessmentUnitId: req.params.assessmentUnitId,
+      userId: req.user.id,
+      responseText: req.body?.responseText,
+      sourcePageImages: req.body?.sourcePageImages,
+    });
+    return res.json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const getTextbookActivityResponseHandler = async (req, res, next) => {
+  try {
+    const result = await getMostRecentTextbookActivityResponse({
+      activityKey: req.params.activityKey,
+      userId: req.user.id,
+    });
+    return res.json(result);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const submitTextbookActivityResponseHandler = async (req, res, next) => {
+  try {
+    const result = await gradeTextbookActivityResponse({
+      activityKey: req.params.activityKey,
       userId: req.user.id,
       responseText: req.body?.responseText,
       sourcePageImages: req.body?.sourcePageImages,

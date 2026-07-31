@@ -26,10 +26,16 @@
 //  - revision/*, tutor/*, deeplearning/* -> content_card rows only, read
 //    directly by mode-tab filtering (their {title,summary,details} shape
 //    already matches StudentDetailCard exactly).
-//  - pdfassets/*, visual/* (root-level, parentCardkey="") -> content_card
-//    rows scoped to the section instead of a concept (diagrams/mind-maps/etc,
-//    each an image-generation prompt an admin can attach an uploaded image
-//    to via content_card_media).
+//  - pdfassets/*, visual/*, textbook/*, learningpillars/* (root-level,
+//    parentCardkey="") -> content_card rows scoped to the section instead of
+//    a concept. pdfassets/visual are diagrams/mind-maps/etc, each an
+//    image-generation prompt an admin can attach an uploaded image to via
+//    content_card_media. textbook/{activities,exercises} are the textbook's
+//    own end-of-section activities and reflection questions (whole-section,
+//    not tied to one concept) -- fed to the student "Exercises/Activities"
+//    tab. learningpillars/pillar are competencies concepts develop --
+//    resolveConceptPillarLinks additionally links them to specific concepts
+//    (concept_learning_pillar), fed to the "Concepts" list as chips.
 //
 // Re-importing the same contentKey is a hard overwrite for content_card/
 // content_assessment_item/content_concept_memory (deleted then re-inserted),
@@ -39,6 +45,7 @@
 import { pool } from "../db/pool.js";
 import { resolveOrCreateCatalogTarget } from "./conceptImportCatalogService.js";
 import * as conceptCardCache from "./conceptCardCache.js";
+import { createStructuredCompletion } from "./openAiService.js";
 
 class ConceptImportError extends Error {
   constructor(message) {
@@ -47,7 +54,7 @@ class ConceptImportError extends Error {
   }
 }
 
-const SECTION_SCOPED_TABS = new Set(["pdfassets", "visual"]);
+const SECTION_SCOPED_TABS = new Set(["pdfassets", "visual", "textbook", "learningpillars"]);
 
 const STRUCTURED_ASSESSMENT_FAMILIES = {
   mcq: "single_select",
@@ -150,6 +157,34 @@ const getFirstBucket = (entry, candidateNames) => {
   return key ? entry[key] : null;
 };
 
+// Detects a concept<->learning-pillar link wherever it might live: a
+// top-level field on a legacy concept object (checked here, by candidate
+// name like the other bucket lookups), OR a details entry with a matching
+// label (checked uniformly for both legacy and modern-shape concepts by
+// resolveConceptPillarLinks in importConceptContent, since "details" is the
+// one structured field both schemas guarantee). Whichever form a source file
+// actually uses, both funnel into the same synthetic "Learning Pillars"
+// details entry below so there's exactly one place downstream that reads it.
+const CONCEPT_PILLAR_LINK_FIELD_NAMES = ["learningpillars", "competencies", "pillars", "relatedpillars"];
+const PILLAR_LINK_LABEL_PATTERN = /^(learning ?pillars?|competenc(?:y|ies)|pillars)$/i;
+
+const extractLegacyConceptPillarRefs = (concept) => {
+  const value = getFirstBucket(concept, CONCEPT_PILLAR_LINK_FIELD_NAMES);
+  if (value == null) return [];
+  return Array.isArray(value) ? value : [value];
+};
+
+// Used both here (legacy shape, injecting the synthetic detail below) and in
+// importConceptContent (modern flat-cards shape, reading a concept card's
+// own "details" directly) -- ref values may be a pillar's id/cardkey OR its
+// title, resolved against the imported pillar cards in
+// resolveConceptPillarLinks.
+const extractPillarRefs = (details) => {
+  const entry = toArray(details).find((item) => PILLAR_LINK_LABEL_PATTERN.test(normalize(item?.label)));
+  if (!entry || entry.value == null) return [];
+  return Array.isArray(entry.value) ? entry.value : [entry.value];
+};
+
 const convertLegacyPayload = (payload) => {
   const extractionConcepts = toArray(payload?.extraction?.concepts);
   const conceptsMap = payload?.concepts || {};
@@ -157,6 +192,9 @@ const convertLegacyPayload = (payload) => {
 
   extractionConcepts.forEach((concept, conceptIndex) => {
     if (!concept?.id || !concept?.title) return;
+
+    const legacyPillarRefs = extractLegacyConceptPillarRefs(concept);
+    const conceptDetails = toArray(concept.details);
 
     cards.push({
       contentuitab: "extraction",
@@ -166,7 +204,13 @@ const convertLegacyPayload = (payload) => {
       sortOrder: conceptIndex,
       title: concept.title,
       summary: concept.summary || "",
-      details: toArray(concept.details),
+      // A top-level pillar-link field (legacy shape) is folded into details
+      // as a synthetic "Learning Pillars" entry so resolveConceptPillarLinks
+      // only has to check one place (details) regardless of source shape.
+      details:
+        legacyPillarRefs.length > 0
+          ? [...conceptDetails, { label: "Learning Pillars", value: legacyPillarRefs }]
+          : conceptDetails,
       imageDataUrl: concept?.image?.dataUrl || null,
     });
 
@@ -248,6 +292,91 @@ const convertLegacyPayload = (payload) => {
         details: toArray(item?.details),
         imageDataUrl: item?.image?.dataUrl || null,
       });
+    });
+  });
+
+  // "revision" (cheatsheet/mnemonics/examnotes) also sits at the payload
+  // ROOT in this newer export shape -- confirmed against a real upload --
+  // instead of nested per-concept as conceptEntry.revision[mode]
+  // (LEGACY_REVISION_MODES above, still handled for older files). Unlike
+  // visual/textbookContent, revision content IS concept-specific (feeds
+  // getRevisionForSection by assessment_unit_id), but this shape carries no
+  // concept id -- only a "title" that matches an extraction concept's title
+  // exactly (item ids like "cheatsheet-concepts-0-green-school-green-school"
+  // embed a concept slug too, but parsing that back out is brittler than
+  // just matching the title both already carry). Items whose title doesn't
+  // match any known concept are dropped rather than imported orphaned
+  // (parentAssessmentUnitId would never resolve, so they'd never surface to
+  // a student anyway).
+  const revisionBucket = getFirstBucket(payload, ["revision"]);
+  Object.entries(revisionBucket || {}).forEach(([mode, items]) => {
+    toArray(items).forEach((item, itemIndex) => {
+      const itemTitleKey = normalize(item?.title).toLowerCase();
+      const matchedConcept = extractionConcepts.find(
+        (concept) => normalize(concept.title).toLowerCase() === itemTitleKey
+      );
+      if (!matchedConcept) return;
+
+      cards.push({
+        contentuitab: "revision",
+        processorkey: mode,
+        parentCardkey: matchedConcept.id,
+        cardkey: item?.id || `${mode}-${itemIndex + 1}`,
+        sortOrder: itemIndex,
+        title: item?.title || null,
+        summary: item?.summary || null,
+        details: toArray(item?.details),
+        imageDataUrl: item?.image?.dataUrl || null,
+      });
+    });
+  });
+
+  // "textbookContent" sits at the payload ROOT too, same as "visual" -- the
+  // textbook's end-of-section activities/reflection questions apply to the
+  // whole section, not one concept. Each item already carries a stable
+  // source "id" (e.g. "activities-0-activity-1"), so that's used as cardkey
+  // directly instead of the synthesized "${mode}-${itemIndex+1}" fallback
+  // visual uses, to stay stable across re-imports even if item ordering
+  // shifts.
+  const textbookBucket = getFirstBucket(payload, ["textbookcontent", "textbook"]);
+  Object.entries(textbookBucket || {}).forEach(([mode, items]) => {
+    toArray(items).forEach((item, itemIndex) => {
+      cards.push({
+        contentuitab: "textbook",
+        processorkey: mode,
+        parentCardkey: "",
+        cardkey: item?.id || `${mode}-${itemIndex + 1}`,
+        sortOrder: itemIndex,
+        title: item?.title || null,
+        summary: item?.summary || null,
+        details: toArray(item?.details),
+        imageDataUrl: item?.image?.dataUrl || null,
+      });
+    });
+  });
+
+  // "learningPillars" sits at the payload ROOT too, same as "visual"/
+  // "textbookContent" -- but unlike those, it's a flat array of pillar items,
+  // not a {mode: [...]} bucket-of-buckets (pillars aren't grouped by a
+  // "mode" the way textbook activities/exercises are). Each pillar is a
+  // competency (e.g. "Environmental Stewardship at School") that one or more
+  // concepts develop; the link itself is resolved in importConceptContent's
+  // resolveConceptPillarLinks (an explicit field on the concept if present,
+  // else an AI best-guess match), not here -- this just imports the pillars'
+  // own display content as section-scoped cards.
+  const learningPillarsArray = toArray(getFirstBucket(payload, ["learningpillars", "learningpillar", "pillars"]));
+  learningPillarsArray.forEach((item, itemIndex) => {
+    if (!item?.id) return;
+    cards.push({
+      contentuitab: "learningpillars",
+      processorkey: "pillar",
+      parentCardkey: "",
+      cardkey: item.id,
+      sortOrder: itemIndex,
+      title: item?.title || null,
+      summary: item?.summary || null,
+      details: toArray(item?.details),
+      imageDataUrl: item?.image?.dataUrl || null,
     });
   });
 
@@ -385,6 +514,132 @@ const insertStructuredAssessmentItem = async ({ syncRunId, contentKey, assessmen
   );
 };
 
+// Fallback only -- used when a file has pillar content but NO concept
+// anywhere carries an explicit pillar-link field (extractPillarRefs comes up
+// empty for every concept). A single batched call rather than one per
+// concept: cheaper, and lets the model see every pillar/concept at once so
+// it can decide a pillar applies to zero, one, or several concepts instead
+// of being forced to pick per concept in isolation.
+const matchPillarsToConceptsWithAi = async ({ concepts, pillars }) => {
+  const conceptsText = concepts
+    .map((concept) => `- id: "${concept.cardkey}", title: "${concept.title}", summary: "${concept.summary || ""}"`)
+    .join("\n");
+  const pillarsText = pillars
+    .map(
+      (pillar) =>
+        `- id: "${pillar.cardkey}", title: "${pillar.title}", summary: "${pillar.summary || ""}", ` +
+        `details: ${JSON.stringify(toArray(pillar.details))}`
+    )
+    .join("\n");
+
+  const { parsed } = await createStructuredCompletion({
+    systemPrompt:
+      "You are matching curriculum competencies (\"learning pillars\") to the concepts within one lesson " +
+      "section that actually develop them. A pillar's content (summary/details/focus areas) must genuinely " +
+      "match what a concept teaches -- do not force a link just to cover every pillar or every concept. A " +
+      "pillar can link to zero, one, or several concepts; a concept can link to zero, one, or several pillars. " +
+      "Only use the exact id values given below for concepts and pillars -- never invent an id. Return only " +
+      "valid JSON matching the schema.",
+    userPrompt:
+      `Concepts:\n${conceptsText}\n\nLearning pillars (competencies):\n${pillarsText}\n\n` +
+      `Schema:\n{ "links": [ { "pillarId": "", "conceptIds": [""] } ] }`,
+    responseFormatName: "concept_pillar_links",
+  });
+
+  return Array.isArray(parsed?.links) ? parsed.links : [];
+};
+
+// Resolves which concepts (by assessmentUnitId) develop which learning
+// pillars, for concept_learning_pillar. Primary mechanism: an explicit
+// pillar-link field on the concept itself (extractPillarRefs, matched
+// against imported pillar cards by cardkey/id or by title). Only if THE
+// WHOLE FILE has zero such links anywhere (not per-concept -- a file either
+// carries this field or it doesn't) does it fall back to a single AI
+// matching call. Returns [] (no crash, pillars still imported as content,
+// just unlinked) if the file has no pillars, no concepts, or the AI call
+// fails.
+const resolveConceptPillarLinks = async ({ cards, contentKey, assessmentUnitIdByCardkey, onProgress }) => {
+  const pillarCards = cards.filter(
+    (card) => card.contentuitab === "learningpillars" && card.processorkey === "pillar"
+  );
+  if (pillarCards.length === 0) {
+    return [];
+  }
+
+  const conceptCards = cards.filter((card) => card.contentuitab === "extraction" && card.processorkey === "concepts");
+
+  const resolveRefToPillar = (ref) => {
+    const refKey = normalize(ref).toLowerCase();
+    return pillarCards.find(
+      (pillar) =>
+        normalize(pillar.cardkey).toLowerCase() === refKey || normalize(pillar.title).toLowerCase() === refKey
+    );
+  };
+
+  const explicitLinks = [];
+  for (const conceptCard of conceptCards) {
+    const assessmentUnitId = assessmentUnitIdByCardkey.get(conceptCard.cardkey);
+    if (!assessmentUnitId) continue;
+
+    for (const ref of extractPillarRefs(conceptCard.details)) {
+      const pillar = resolveRefToPillar(ref);
+      if (pillar) {
+        explicitLinks.push({ assessmentUnitId, contentKey, pillarCardkey: pillar.cardkey });
+      }
+    }
+  }
+
+  if (explicitLinks.length > 0) {
+    onProgress({
+      type: "info",
+      message: `Linked ${explicitLinks.length} concept<->pillar relationship(s) from the file's own concept fields.`,
+    });
+    return explicitLinks;
+  }
+
+  if (conceptCards.length === 0) {
+    return [];
+  }
+
+  onProgress({
+    type: "info",
+    message: "No explicit concept<->pillar links found in the file -- asking AI to match pillars to concepts...",
+  });
+
+  try {
+    const aiLinks = await matchPillarsToConceptsWithAi({
+      concepts: conceptCards.map((card) => ({ cardkey: card.cardkey, title: card.title, summary: card.summary })),
+      pillars: pillarCards,
+    });
+
+    const pillarByCardkey = new Map(pillarCards.map((pillar) => [normalize(pillar.cardkey).toLowerCase(), pillar]));
+    const assessmentUnitIdByNormalizedCardkey = new Map(
+      [...assessmentUnitIdByCardkey.entries()].map(([cardkey, unitId]) => [normalize(cardkey).toLowerCase(), unitId])
+    );
+
+    const resolved = [];
+    aiLinks.forEach((link) => {
+      const pillar = pillarByCardkey.get(normalize(link?.pillarId).toLowerCase());
+      if (!pillar) return;
+      toArray(link?.conceptIds).forEach((conceptId) => {
+        const assessmentUnitId = assessmentUnitIdByNormalizedCardkey.get(normalize(conceptId).toLowerCase());
+        if (assessmentUnitId) {
+          resolved.push({ assessmentUnitId, contentKey, pillarCardkey: pillar.cardkey });
+        }
+      });
+    });
+
+    onProgress({ type: "info", message: `AI matched ${resolved.length} concept<->pillar relationship(s).` });
+    return resolved;
+  } catch (error) {
+    onProgress({
+      type: "warning",
+      message: `Could not AI-match pillars to concepts: ${error.message || error}. Pillars were imported but left unlinked.`,
+    });
+    return [];
+  }
+};
+
 const noopProgress = () => {};
 
 export const importConceptContent = async ({ payload: rawPayload, userId = null, onProgress = noopProgress }) => {
@@ -503,7 +758,17 @@ export const importConceptContent = async ({ payload: rawPayload, userId = null,
 
   const summary = {
     conceptsProcessed: conceptCards.length,
-    counts: { teaching: 0, assessmentCore: 0, assessmentExtra: 0, revision: 0, tutor: 0, deeplearning: 0, visual: 0 },
+    counts: {
+      teaching: 0,
+      assessmentCore: 0,
+      assessmentExtra: 0,
+      revision: 0,
+      tutor: 0,
+      deeplearning: 0,
+      visual: 0,
+      textbook: 0,
+      learningPillars: 0,
+    },
     warnings: [],
     catalogTarget: { sourceSectionId, fkMstChapterId },
   };
@@ -636,6 +901,10 @@ export const importConceptContent = async ({ payload: rawPayload, userId = null,
       summary.counts.tutor += 1;
     } else if (card.contentuitab === "deeplearning" && parentAssessmentUnitId) {
       summary.counts.deeplearning += 1;
+    } else if (isSectionScoped && card.contentuitab === "textbook") {
+      summary.counts.textbook += 1;
+    } else if (isSectionScoped && card.contentuitab === "learningpillars") {
+      summary.counts.learningPillars += 1;
     } else if (isSectionScoped) {
       summary.counts.visual += 1;
     }
@@ -653,6 +922,22 @@ export const importConceptContent = async ({ payload: rawPayload, userId = null,
             updated_at = NOW()
       `,
       [assessmentUnitId, memory.story || null, memory.analogy || null, memory.realWorldConnection || null]
+    );
+  }
+
+  const pillarLinks = await resolveConceptPillarLinks({ cards, contentKey, assessmentUnitIdByCardkey, onProgress });
+  // Hard-overwrite, same policy as content_card -- concept_learning_pillar
+  // is pure derived linkage, not student history, so it's safe to fully
+  // replace on every re-import rather than diff/merge.
+  await pool.query("DELETE FROM concept_learning_pillar WHERE assessment_unit_id = ANY($1)", [assessmentUnitIds]);
+  for (const link of pillarLinks) {
+    await pool.query(
+      `
+        INSERT INTO concept_learning_pillar (assessment_unit_id, content_key, pillar_cardkey)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (assessment_unit_id, content_key, pillar_cardkey) DO NOTHING
+      `,
+      [link.assessmentUnitId, link.contentKey, link.pillarCardkey]
     );
   }
 

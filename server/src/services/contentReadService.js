@@ -289,6 +289,71 @@ export const getVisualLearningCardsForSection = async (sourceSectionId) => {
   }));
 };
 
+// textbook/{activities,exercises} cards -- section-scoped like pdfassets/
+// visual (see conceptImportService.js's card routing), feeds the student
+// "Exercises/Activities" tab. Items are the textbook's own end-of-section
+// activities and reflection questions, not tied to a single concept.
+// activityKey ("${content_key}:${cardkey}") is exposed alongside the row id
+// because it -- not the row id -- is the stable identity for a card's
+// student response history: content_card rows are hard-deleted/re-inserted
+// (fresh ids) on every re-import, but content_key+cardkey survives (see
+// textbook_content_response in init.sql).
+export const getTextbookContentForSection = async (sourceSectionId) => {
+  const result = await pool.query(
+    `
+      SELECT id, content_key, cardkey, processorkey, title, summary, details
+      FROM content_card
+      WHERE source_section_id = $1 AND contentuitab = 'textbook'
+      ORDER BY sort_order ASC, id ASC
+    `,
+    [sourceSectionId]
+  );
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    activityKey: `${row.content_key}:${row.cardkey}`,
+    mode: row.processorkey,
+    title: row.title,
+    summary: row.summary,
+    details: toArray(row.details),
+  }));
+};
+
+// Competencies ("learning pillars") each concept develops, via
+// concept_learning_pillar (see conceptImportService.js's
+// resolveConceptPillarLinks). Joined on (content_key, pillar_cardkey)
+// rather than a content_card.id FK -- same reason as everywhere else in
+// this file: content_card rows churn ids on re-import, but that composite
+// key survives. Returns a Map so callers building a per-concept list (e.g.
+// getSectionOverview) can look up by assessmentUnitId with no N+1 queries.
+export const getConceptLearningPillars = async (assessmentUnitIds) => {
+  if (!assessmentUnitIds.length) {
+    return new Map();
+  }
+
+  const result = await pool.query(
+    `
+      SELECT clp.assessment_unit_id, cc.cardkey AS pillar_cardkey, cc.title AS pillar_title
+      FROM concept_learning_pillar clp
+      JOIN content_card cc
+        ON cc.content_key = clp.content_key
+       AND cc.cardkey = clp.pillar_cardkey
+       AND cc.contentuitab = 'learningpillars'
+      WHERE clp.assessment_unit_id = ANY($1)
+      ORDER BY cc.sort_order ASC, cc.id ASC
+    `,
+    [assessmentUnitIds]
+  );
+
+  const byUnit = new Map();
+  for (const row of result.rows) {
+    const list = byUnit.get(row.assessment_unit_id) || [];
+    list.push({ key: row.pillar_cardkey, title: row.pillar_title });
+    byUnit.set(row.assessment_unit_id, list);
+  }
+  return byUnit;
+};
+
 export const getSectionKnowledgeSummary = async (sourceSectionId) => {
   const result = await pool.query(
     `

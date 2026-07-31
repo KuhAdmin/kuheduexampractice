@@ -111,6 +111,27 @@ export const getStudentRevision = async (sourceSectionId) =>
 export const getStudentTutorNotes = async (sourceSectionId) =>
   apiRequest(`/user/sections/${sourceSectionId}/tutor-notes`);
 
+export const getStudentTextbookContent = async (sourceSectionId) =>
+  apiRequest(`/user/sections/${sourceSectionId}/textbook-content`);
+
+export const getTextbookActivityResponse = async (activityKey) =>
+  apiRequest(`/user/textbook-activities/${encodeURIComponent(activityKey)}/response`);
+
+export const submitTextbookActivityResponse = async (activityKey, responseText, sourcePageImages) =>
+  apiRequest(`/user/textbook-activities/${encodeURIComponent(activityKey)}/respond`, {
+    method: "POST",
+    body: JSON.stringify({ responseText, sourcePageImages }),
+  });
+
+export const getChallengeResponse = async (responseKey) =>
+  apiRequest(`/user/challenges/${encodeURIComponent(responseKey)}/response`);
+
+export const submitChallengeResponse = async (responseKey, responseText, sourcePageImages) =>
+  apiRequest(`/user/challenges/${encodeURIComponent(responseKey)}/respond`, {
+    method: "POST",
+    body: JSON.stringify({ responseText, sourcePageImages }),
+  });
+
 export const getStudentDiagrams = async (sourceSectionId) =>
   apiRequest(`/user/sections/${sourceSectionId}/diagrams`);
 

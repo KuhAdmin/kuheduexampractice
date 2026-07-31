@@ -4076,6 +4076,25 @@ a {
   font-size: 1.1029em;
 }
 
+.student-concept-pillar-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.student-concept-pillar-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #dae0e5;
+  color: #46379f;
+  font-size: 0.95em;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .student-goals-row-status {
   display: inline-flex;
   align-items: center;
@@ -5523,8 +5542,47 @@ a {
   margin-bottom: 14px;
 }
 
+.student-detail-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.student-detail-card-header .student-detail-card-title {
+  flex: 1;
+  margin: 0;
+}
+
+.student-detail-card-speech-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgb(from var(--green) r g b / 0.3);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--green);
+  font-size: 0.85em;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.student-detail-card-speech-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.student-detail-card-speech-toggle.is-speaking {
+  background: var(--green);
+  border-color: var(--green);
+  color: #ffffff;
+}
+
 .student-detail-card-title {
-  margin: 0 0 8px;
   font-size: 1.4476em;
   font-weight: 700;
   color: var(--text);
@@ -6369,6 +6427,30 @@ a {
 @keyframes student-ai-tutor-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+.student-ai-tutor-voice-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.student-ai-tutor-voice-mute {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgb(from var(--indigo) r g b / 0.35);
+  background: transparent;
+  color: var(--indigo);
+  font-size: 1.1305em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.student-ai-tutor-voice-mute.is-muted {
+  border-color: transparent;
+  background: var(--warning);
+  color: #ffffff;
 }
 
 .student-ai-tutor-voice-start {
