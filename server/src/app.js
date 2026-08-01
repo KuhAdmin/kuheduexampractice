@@ -91,7 +91,26 @@ export const createApp = () => {
   app.use("/api/admin/media", mediaAdminRoutes);
 
   const clientDist = path.resolve(__dirname, "../../client/dist");
-  app.use(express.static(clientDist));
+  app.use(
+    express.static(clientDist, {
+      // Vite hashes every filename under dist/assets/ from its own content
+      // (e.g. index-CUDSvD7M.js) -- any content change produces a different
+      // filename, so these are safe to cache forever. Without this,
+      // express.static's default (Cache-Control: public, max-age=0) applied
+      // to EVERY file including these, forcing a network round-trip for
+      // every asset on every load -- worse repeat-visit performance, and
+      // more exposure to any brief server hiccup during a deploy having
+      // nothing cached to fall back on. index.html itself (outside
+      // assets/) intentionally keeps the default max-age=0 -- it's the one
+      // file that changes on every deploy and must always be re-fetched to
+      // pick up the current build's hashed asset names.
+      setHeaders: (res, filePath) => {
+        if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        }
+      },
+    })
+  );
 
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api")) {
