@@ -25,32 +25,62 @@ const __dirname = path.dirname(__filename);
 
 export const createApp = () => {
   const app = express();
-  const isLocalDevOrigin = (origin = "") => {
+
+  const parseOrigin = (origin) => {
     try {
-      const parsedOrigin = new URL(origin);
-      return ["localhost", "127.0.0.1", "::1"].includes(parsedOrigin.hostname);
+      return new URL(origin);
     } catch {
-      return false;
+      return null;
     }
   };
-  const allowedOrigins = new Set(
-    [
-      env.clientUrl,
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "http://localhost:4173",
-      "http://127.0.0.1:4173",
-    ].filter(Boolean)
-  );
 
+  // "www." is treated as optional/interchangeable on both sides -- a single
+  // exact-string CLIENT_URL match caused a real production outage: prod was
+  // actually served from https://www.exam4u.study, but CLIENT_URL didn't
+  // have that exact "www.", so the site's OWN real visitors' same-origin
+  // requests were rejected as a foreign origin.
+  const stripWww = (hostname) => hostname.replace(/^www\./, "");
+
+  const allowedOriginUrls = [
+    env.clientUrl,
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+  ]
+    .filter(Boolean)
+    .map(parseOrigin)
+    .filter(Boolean);
+
+  const isAllowedOrigin = (origin) => {
+    const parsedOrigin = parseOrigin(origin);
+    if (!parsedOrigin) return false;
+    if (["localhost", "127.0.0.1", "::1"].includes(parsedOrigin.hostname)) return true;
+
+    return allowedOriginUrls.some(
+      (allowed) =>
+        allowed.protocol === parsedOrigin.protocol && stripWww(allowed.hostname) === stripWww(parsedOrigin.hostname)
+    );
+  };
+
+  // Scoped to /api only -- a browser loading this same app's own static
+  // assets/SPA shell is never a cross-origin concern, so CORS has no
+  // business running (and potentially rejecting) those requests at all.
+  // This is what was actually breaking: cors() used to run globally
+  // (app.use(cors(...)) with no path), so the origin mismatch above was
+  // crashing plain <script>/<link> asset loads, not just API calls.
   app.use(
+    "/api",
     cors({
       origin(origin, callback) {
-        if (!origin || allowedOrigins.has(origin) || isLocalDevOrigin(origin)) {
+        if (!origin || isAllowedOrigin(origin)) {
           return callback(null, true);
         }
 
-        return callback(new Error(`CORS blocked origin: ${origin}`));
+        // Never throw here -- that turns a disallowed origin into an
+        // unhandled exception (Express's global error handler -> 500 for
+        // every such request) instead of cors's normal, clean rejection.
+        return callback(null, false);
       },
       credentials: true,
     })
