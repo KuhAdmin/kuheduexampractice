@@ -1,8 +1,21 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FeatureCard } from "./FeatureCard";
 import { SCHOOL_FEATURES, NEP_GOALS } from "../content/institutionContent";
+import { PEDAGOGY_PILLARS } from "../content/studyBuddyContent";
 
 const NEP_GOAL_ACCENTS = ["var(--green)", "var(--blue)", "var(--warning)", "var(--indigo)"];
+
+// The 3 pedagogy pillars, folded into the same simple chip shape as
+// NEP_GOALS (label + one-line description, from each pillar's own tagline)
+// instead of their own elaborate before/after comparison cards -- and
+// listed first, ahead of NEP_GOALS, per feedback that they belong at the
+// top of this section rather than as a separate one above it.
+const CLASSROOM_TRANSFORMATION_CHIPS = PEDAGOGY_PILLARS.map((pillar) => ({
+  id: pillar.id,
+  label: pillar.title,
+  description: pillar.tagline,
+}));
+const NEP_SECTION_ITEMS = [...CLASSROOM_TRANSFORMATION_CHIPS, ...NEP_GOALS];
 
 export const InstitutionModal = ({ open, onClose }) => (
   <AnimatePresence>
@@ -45,7 +58,7 @@ export const InstitutionModal = ({ open, onClose }) => (
 
             <h3>Aligned with NEP 2020</h3>
             <div className="study-buddy-assessment-chips">
-              {NEP_GOALS.map((goal, index) => (
+              {NEP_SECTION_ITEMS.map((goal, index) => (
                 <div
                   className="study-buddy-chip"
                   style={{ "--accent": NEP_GOAL_ACCENTS[index % NEP_GOAL_ACCENTS.length] }}

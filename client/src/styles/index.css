@@ -343,6 +343,19 @@ a {
   --brand-glow: #ffab6b;
 }
 
+/* Sign-in CTA only -- not the app-wide orange .primary-button used
+   everywhere else (Hero, admin pages, other modals) -- scoped to
+   AuthModal's own form so this doesn't recolor buttons app-wide. */
+.auth-form .primary-button {
+  --brand-glow: #4caf6e;
+  background: linear-gradient(135deg, var(--green), var(--brand-glow));
+  box-shadow: 0 14px 30px rgb(from var(--green) r g b / 0.28);
+}
+
+[data-theme="dusk"] .auth-form .primary-button {
+  --brand-glow: #7ed9a0;
+}
+
 .text-link {
   display: inline-flex;
   align-items: center;
@@ -473,6 +486,19 @@ a {
   text-align: left;
 }
 
+/* Matches .home-desktop-page's background exactly (same radial gradients
+   over var(--surface-strong)) instead of its own warning-bg-to-green
+   vertical gradient -- mobile onboarding previously looked nothing like
+   the desktop version of the same screens. Several text colors below
+   (.home-onboarding-copyright, .home-onboarding-footer-links,
+   .home-auth-divider, .home-auth-switch, .home-board-note) were white
+   specifically because the OLD gradient went fully dark-green at the
+   bottom -- now that the background is uniformly light everywhere (like
+   desktop's), those are recolored to the same var(--muted)/var(--green)
+   values desktop's equivalent elements already use, or they'd be
+   unreadable against the new light background. Everything else (headings,
+   body copy, status bar) was already using dark var(--text)-family colors
+   because it always sat on the gradient's light top -- unaffected by this. */
 .home-phone-screen {
   position: relative;
   overflow: hidden;
@@ -483,11 +509,12 @@ a {
   border: 1px solid rgb(from var(--green) r g b / 0.14);
   border-radius: 34px;
   background:
-    radial-gradient(ellipse 90% 40% at 50% 8%, rgb(from var(--teal) r g b / 0.14), transparent 60%),
-    linear-gradient(180deg, var(--warning-bg) 0%, var(--green) 100%);
+    radial-gradient(ellipse 70% 55% at 50% 38%, rgb(from var(--green) r g b / 0.14), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 85% 15%, rgb(from var(--teal) r g b / 0.08), transparent 70%),
+    var(--surface-strong);
   box-shadow:
     inset 0 1px 0 var(--surface),
-    0 24px 55px var(--warning-bg);
+    0 24px 55px rgb(from var(--text) r g b / 0.12);
 }
 
 .home-phone-frame.is-active .home-phone-screen {
@@ -757,15 +784,20 @@ a {
   gap: 8px;
 }
 
+/* Used to be white/near-white (var(--surface)/var(--surface-strong)) for
+   the OLD dark phone-screen background -- now that .home-phone-screen is
+   the same light background as desktop, those were invisible against it.
+   Matches what .home-desktop-hero's own override below already used (that
+   override is now redundant but harmless, kept as-is). */
 .home-dots span {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--surface);
+  background: rgb(from var(--text) r g b / 0.2);
 }
 
 .home-dots span.is-active {
-  background: var(--surface-strong);
+  background: var(--green);
 }
 
 .home-arrow-cta,
@@ -775,6 +807,10 @@ a {
   transition: transform 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
 }
 
+/* No explicit font-size -- matches .home-primary-cta/.home-secondary-cta
+   (Sign In/Sign Up), which also have none and just inherit the ambient
+   size. This previously set its own 1.3787em, making mobile's "Continue"
+   noticeably larger than Sign In/Sign Up right next to it. */
 .home-arrow-cta {
   display: inline-grid;
   place-items: center;
@@ -785,7 +821,6 @@ a {
   border-radius: 999px;
   background: var(--green);
   color: #fff;
-  font-size: 1.3787em;
   font-weight: 700;
   box-shadow: 0 16px 28px rgb(from var(--green) r g b / 0.24);
 }
@@ -806,10 +841,11 @@ a {
 /* Onboarding-1/2/3, welcome, and sign-in/sign-up slides: logo+wordmark top
    bar (replaces the plain spacer other screens use) and a copyright footer
    matching the desktop hero's, mirroring
-   .home-desktop-navbar-brand/.home-desktop-footer. White text because the
-   phone frame's background is a light-to-dark-green gradient
-   (.home-phone-screen) -- the footer sits in the dark end of it, where the
-   original dark low-opacity color was nearly invisible. */
+   .home-desktop-navbar-brand/.home-desktop-footer. Footer text now uses
+   the same var(--muted) family desktop's footer does -- .home-phone-screen
+   used to be a warning-bg-to-green vertical gradient with the footer
+   sitting in its dark end, hence white text there; it's now the same flat
+   light background as desktop at every point, so that's no longer needed. */
 .home-onboarding-topbar {
   display: flex;
   align-items: center;
@@ -853,19 +889,33 @@ a {
   text-align: center;
 }
 
+/* clamp() so the full sentence ("© 2026 Kuhedu Technologies (P) Ltd. All
+   rights reserved.", 54 characters) stays on one line rather than wrapping
+   -- same reasoning as .home-onboarding-footer-links' clamp just above:
+   scales down continuously with viewport width instead of a fixed size
+   that only fits on wider phones. */
 .home-onboarding-copyright {
   margin: 0;
-  font-size: 0.9375em;
-  color: #ffffff;
+  font-size: clamp(0.58em, 3.4vw, 0.9375em);
+  color: var(--muted);
 }
 
+/* clamp() instead of a fixed 0.8em -- on narrow phones these 5-6 item rows
+   (About Kuhedu/Study Buddy/Learners/Institutions/Pricing, then Privacy/
+   Terms/Refund/Cancellation/Disclaimer/Contact) wrapped with a single
+   orphaned word stranded on its own line. Scales down continuously as the
+   viewport narrows (2.6vw) rather than jumping at one breakpoint, floored
+   at 0.62em so it never gets illegibly small; caps at the original 0.8em
+   once the viewport is wide enough that shrinking is unnecessary (~492px+,
+   i.e. effectively unchanged on tablet/desktop). flex-wrap stays on as a
+   safety net for any device this still doesn't quite fit. */
 .home-onboarding-footer-links {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 4px 12px;
+  gap: 4px 10px;
   margin-top: 6px;
-  font-size: 0.8em;
+  font-size: clamp(0.62em, 2.6vw, 0.8em);
 }
 
 .home-onboarding-footer-links a,
@@ -875,14 +925,13 @@ a {
   padding: 0;
   font: inherit;
   cursor: pointer;
-  color: #ffffff;
-  opacity: 0.8;
+  color: var(--muted);
   text-decoration: none;
 }
 
 .home-onboarding-footer-links a:hover,
 .home-onboarding-footer-links button:hover {
-  opacity: 1;
+  color: var(--text);
   text-decoration: underline;
 }
 
@@ -903,10 +952,21 @@ a {
   padding: 10px 16px 16px;
 }
 
+/* is-onboarding-slide covers onboarding-1/2/3 AND welcome (both go
+   illustration-free with centered title/subtitle, see hideIllustration in
+   HomePage.jsx) -- welcome also separately matches .is-welcome below, same
+   value either way. Onboarding-1/2/3 previously matched none of these three
+   and fell through to the base .home-screen-copy h2 rule, which is actually
+   the LARGEST clamp of all of them (2.6195em-3.3778em vs this rule's
+   2.3438em-2.9642em) -- exactly backwards, since two-line titles like
+   "Master Every Subject,\nStep by Step" (see the title strings' explicit
+   \n, rendered via white-space: pre-line) need MORE headroom to avoid
+   re-wrapping within a line, not less. */
+.onboarding-screen.is-onboarding-slide .home-screen-copy h2,
 .onboarding-screen.is-welcome .home-screen-copy h2,
 .onboarding-screen.is-auth-screen .home-screen-copy h2,
 .onboarding-screen.is-action-page .home-screen-copy h2 {
-  font-size: clamp(2.3438em, 6.34vw, 2.9642em);
+  font-size: clamp(1.85em, 6.34vw, 2.9642em);
 }
 
 .onboarding-screen.is-welcome .home-screen-copy p,
@@ -1144,7 +1204,7 @@ a {
   font-size: 1.0754em;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--muted);
 }
 
 .home-auth-switch {
@@ -1154,14 +1214,14 @@ a {
   gap: 6px;
   margin: -2px 0 0;
   font-size: 1.1029em;
-  color: #ffffff;
+  color: var(--muted);
 }
 
 .home-auth-switch button {
   border: 0;
   background: transparent;
   padding: 0;
-  color: #ffffff;
+  color: var(--green);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -1263,7 +1323,7 @@ a {
   grid-column: 1 / -1;
   text-align: center;
   font-size: 1.0754em;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--muted);
 }
 
 .home-screen-actions-inline {
@@ -1309,8 +1369,13 @@ a {
   box-shadow: 0 16px 28px rgb(from var(--green) r g b / 0.22);
 }
 
+/* Single shared rule for both desktop (.home-desktop-hero only overrides
+   sizing below) and mobile (onboarding screens) -- deepened from a barely-
+   visible 1px/18% outline to a clearly-defined one, distinguishing this
+   "Sign In" secondary CTA from the solid-fill "Sign Up" primary CTA next
+   to it at a glance. */
 .home-secondary-cta {
-  border: 1px solid rgb(from var(--green) r g b / 0.18);
+  border: 2px solid rgb(from var(--green) r g b / 0.55);
   background: var(--surface-strong);
   color: var(--green);
 }
@@ -1434,10 +1499,22 @@ a {
     height: clamp(168px, 22vh, 190px);
   }
 
+  /* is-onboarding-slide added here too -- this @media (max-width: 640px)
+     block is what actually applies on real phones, and this rule's
+     specificity ties the base is-onboarding-slide rule above (both 3
+     classes + element), so being later in the file it was silently
+     winning and undoing that fix for the welcome screen specifically
+     (onboarding-1/2/3 happened to still come out fine here since they
+     didn't match this selector list at all, falling through to the
+     lower-specificity bare .home-screen-copy h2 rule instead, which the
+     base fix's higher specificity still beats). Fixed em -> clamp for the
+     same reason as the base rule: a single fixed size can't adapt across
+     the whole 640px-and-under range, only vw-based scaling can. */
+  .onboarding-screen.is-onboarding-slide .home-screen-copy h2,
   .onboarding-screen.is-welcome .home-screen-copy h2,
   .onboarding-screen.is-auth-screen .home-screen-copy h2,
   .onboarding-screen.is-action-page .home-screen-copy h2 {
-    font-size: 2.6195em;
+    font-size: clamp(1.85em, 6.9vw, 2.6195em);
   }
 
 }
@@ -1667,8 +1744,9 @@ a {
   margin-top: 36px;
 }
 
-/* .home-dots defaults to white dots for the dark phone-card background;
-   this light desktop page needs a dark-on-light version instead. */
+/* Redundant now that the base .home-dots rule uses these same dark-on-light
+   values (it used to be white, for the old dark phone-card background) --
+   kept for clarity/safety, no behavior change. */
 .home-desktop-hero .home-dots span {
   background: rgb(from var(--text) r g b / 0.2);
 }
@@ -2248,15 +2326,18 @@ a {
   text-align: center;
 }
 
+/* Flat, single-tone tint of the card's own --accent -- previously a two-layer
+   gradient whose top layer (--brand-soft, a near-opaque orange) sat over
+   the accent layer and drowned it out almost entirely, so every card read
+   as the same garish orange regardless of its actual (distinct
+   blue/green/warning/indigo) accent. */
 .feature-card {
   min-height: 154px;
   padding: 24px;
   border-radius: 28px;
-  background:
-    linear-gradient(180deg, var(--surface), rgb(from var(--brand-soft) r g b / 0.9)),
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, white), transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, white);
-  box-shadow: var(--shadow);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-strong));
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--surface-strong));
+  box-shadow: var(--shadow-soft);
 }
 
 .feature-card h3 {
@@ -2771,6 +2852,13 @@ a {
   gap: 16px;
 }
 
+/* Mobile-only class/subject switcher, standing in for the sidebar's copy
+   (desktop-only) -- see the .student-chapters-filter base rule for the pill
+   itself, this just places it as its own row below the greeting header. */
+.student-dashboard-filter {
+  margin: 14px 0 0;
+}
+
 .student-dashboard-header-copy {
   min-width: 0;
 }
@@ -2876,21 +2964,135 @@ a {
   box-shadow: 0 12px 32px rgb(from var(--success) r g b / 0.08);
 }
 
+/* Mobile-first: copy gets its own full-width row, and everything actionable
+   (Continue button, streak pill, progress ring) lives together in one
+   sleek flex row underneath -- previously the button sat stacked inside
+   the copy block while streak+ring were a separate row, which read as two
+   disconnected pieces instead of a single action bar. Each child is sized
+   down (see below) so all three comfortably share one row even on a
+   narrow phone, instead of wrapping or crowding the streak pill. */
 .student-dashboard-continue-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 16px;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "copy"
+    "actions";
+  gap: 14px;
   padding: 16px;
   background:
     linear-gradient(180deg, var(--success-bg), var(--success-bg)),
     linear-gradient(135deg, rgb(from var(--green) r g b / 0.06), transparent);
 }
 
-/* Study Streak embedded in the middle of the Continue Learning card (between
-   the copy and the progress ring) instead of its own row/section -- reuses
-   .student-dashboard-streak-card's white-pill look, just without the
-   margin-top that card normally gets when stacked as its own block. */
+.student-dashboard-continue-card .student-dashboard-continue-copy {
+  grid-area: copy;
+  min-width: 0;
+}
+
+.student-dashboard-continue-actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.student-dashboard-continue-actions .student-dashboard-continue-button {
+  min-width: 0;
+  margin-top: 0;
+  padding: 0 14px;
+  font-size: 1.1029em;
+  flex-shrink: 0;
+}
+
+.student-dashboard-continue-actions .student-dashboard-continue-streak {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  gap: 8px;
+}
+
+.student-dashboard-continue-actions .student-dashboard-streak-mark {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.student-dashboard-continue-actions .student-dashboard-streak-mark svg {
+  width: 15px;
+  height: 15px;
+}
+
+.student-dashboard-continue-actions .student-dashboard-streak-copy {
+  min-width: 0;
+}
+
+.student-dashboard-continue-actions .student-dashboard-streak-copy span {
+  font-size: 0.8377em;
+  white-space: nowrap;
+}
+
+.student-dashboard-continue-actions .student-dashboard-streak-copy strong {
+  font-size: 1.2408em;
+  white-space: nowrap;
+}
+
+.student-dashboard-continue-actions .student-dashboard-progress-ring {
+  width: 52px;
+  height: 52px;
+  font-size: 0.9651em;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .student-dashboard-continue-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "copy actions";
+    align-items: center;
+  }
+
+  /* Room to breathe once the viewport widens -- back to full size instead
+     of the mobile action-bar compaction above. */
+  .student-dashboard-continue-actions .student-dashboard-continue-button {
+    padding: 0 16px;
+    font-size: 1.2408em;
+  }
+
+  .student-dashboard-continue-actions .student-dashboard-continue-streak {
+    flex: none;
+    padding: 14px 12px;
+    gap: 12px;
+  }
+
+  .student-dashboard-continue-actions .student-dashboard-streak-mark {
+    width: 34px;
+    height: 34px;
+  }
+
+  .student-dashboard-continue-actions .student-dashboard-streak-mark svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .student-dashboard-continue-actions .student-dashboard-streak-copy span {
+    font-size: 0.9651em;
+  }
+
+  .student-dashboard-continue-actions .student-dashboard-streak-copy strong {
+    font-size: 1.5441em;
+  }
+
+  .student-dashboard-continue-actions .student-dashboard-progress-ring {
+    width: 72px;
+    height: 72px;
+    font-size: 1.3787em;
+  }
+}
+
+/* Study Streak embedded in the Continue Learning card's action row instead
+   of its own row/section -- reuses .student-dashboard-streak-card's
+   white-pill look, just without the margin-top that card normally gets
+   when stacked as its own block. */
 .student-dashboard-continue-streak {
   margin-top: 0;
 }
@@ -2940,6 +3142,11 @@ a {
   font-weight: 700;
 }
 
+/* The unfilled arc is a green tint distinct from the card's own background
+   (not var(--success-bg), which the card also uses -- at low progress the
+   ring nearly vanishes into the card, leaving only the center "N%" text
+   with no visible ring around it) plus a thin boundary via box-shadow, so
+   the ring always reads as a defined circle regardless of fill amount. */
 .student-dashboard-progress-ring {
   --progress: 72%;
   --ring-angle: calc(var(--progress) * 3.6deg);
@@ -2950,7 +3157,8 @@ a {
   border-radius: 50%;
   background:
     radial-gradient(circle at center, var(--surface-strong) 58%, transparent 59%),
-    conic-gradient(var(--green) 0deg var(--ring-angle), var(--success-bg) var(--ring-angle) 360deg);
+    conic-gradient(var(--green) 0deg var(--ring-angle), rgb(from var(--green) r g b / 0.18) var(--ring-angle) 360deg);
+  box-shadow: 0 0 0 1px rgb(from var(--green) r g b / 0.18);
   color: var(--text);
   font-size: 1.3787em;
   font-weight: 700;
@@ -3674,10 +3882,14 @@ a {
   font-weight: 700;
 }
 
+/* clamp() so "This Textbook Section covers N Concepts." stays on one line
+   on narrow phones instead of wrapping -- same vw-scaling approach used
+   elsewhere this session (e.g. .home-onboarding-copyright), capped at the
+   original 1.1857em so wider viewports are unaffected. */
 .student-section-detail-copy p {
   margin: 6px 0 0;
   color: var(--muted-strong);
-  font-size: 1.1857em;
+  font-size: clamp(0.82em, 4.4vw, 1.1857em);
   line-height: 1.45;
 }
 
@@ -4165,37 +4377,87 @@ a {
   color: var(--text);
 }
 
-.student-concept-learning-tabs {
+/* Mobile concept page: every tab is a collapsible accordion section instead
+   of a separate scrolling tab bar + single content area below it -- 7 tabs
+   never all fit on a phone width, and no amount of scroll affordance
+   (arrows, swipe, keyboard) fixed the underlying problem that the tab bar
+   and its content were two disconnected pieces of chrome. Stacking them
+   removes the horizontal-scroll problem entirely: nothing to scroll
+   sideways, just a vertical list where one section is open at a time. */
+.student-concept-accordion {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  padding: 6px;
-  border-radius: 18px;
-  background: rgb(from var(--muted) r g b / 0.1);
-  align-self: start;
+  gap: 10px;
 }
 
-.student-concept-learning-tab {
-  position: relative;
-  padding: 12px 14px;
-  border-radius: 13px;
+.student-concept-accordion-item {
+  border-radius: 16px;
+  background: rgb(from var(--muted) r g b / 0.06);
+  overflow: hidden;
+}
+
+.student-concept-accordion-item.is-open {
+  background: var(--surface-strong);
+  box-shadow: 0 12px 28px rgb(from var(--text) r g b / 0.08);
+}
+
+.student-concept-accordion-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
   background: transparent;
   color: var(--muted);
-  font-size: 1.1581em;
+  font-size: 1.1305em;
   font-weight: 700;
-  text-align: center;
-  transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+  text-align: left;
 }
 
-.student-concept-learning-tab:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 2px;
+.student-concept-accordion-item.is-open .student-concept-accordion-header {
+  color: var(--text);
 }
 
-.student-concept-learning-tab.is-active {
-  background: var(--text);
+.student-concept-accordion-header-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: rgb(from var(--muted) r g b / 0.14);
+  color: var(--muted);
+}
+
+.student-concept-accordion-item.is-open .student-concept-accordion-header-icon {
+  background: var(--green);
   color: #ffffff;
-  box-shadow: 0 8px 18px rgb(from var(--text) r g b / 0.18);
+}
+
+.student-concept-accordion-header-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.student-concept-accordion-header-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.student-concept-accordion-chevron {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  transition: transform 160ms ease;
+}
+
+.student-concept-accordion-chevron.is-open {
+  color: var(--green);
+  transform: rotate(180deg);
+}
+
+.student-concept-accordion-panel {
+  padding: 0 14px 16px;
 }
 
 /* Learn tab's mode switcher -- one pill per teaching mode the concept was
@@ -4268,29 +4530,57 @@ a {
   overflow: hidden;
 }
 
+/* Sized/structured to match .student-concept-accordion-header (the main
+   accordion's own headers, e.g. "Explore") exactly -- same font-size,
+   padding, and icon-badge treatment, since these sub-headers previously
+   read as visually smaller/lesser despite the sub-item's OWN font-size
+   actually being larger (1.3787em vs the outer's 1.1305em) -- no line
+   between them was actually shrinking the text, but the outer's colored
+   icon badge and this one's bare icon gave it noticeably less visual
+   weight regardless. */
 .student-explore-section-header {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 14px;
+  padding: 14px 16px;
   background: none;
   border: none;
+  color: var(--muted);
+  font-size: 1.1305em;
+  font-weight: 700;
   text-align: left;
   cursor: pointer;
+}
+
+.student-explore-section.is-open .student-explore-section-header {
+  color: var(--text);
+}
+
+.student-explore-section-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: rgb(from var(--muted) r g b / 0.14);
+  color: var(--muted);
+}
+
+.student-explore-section.is-open .student-explore-section-icon {
+  background: var(--green);
+  color: #ffffff;
+}
+
+.student-explore-section-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .student-explore-section-title {
   flex: 1;
   min-width: 0;
-  font-size: 1.3787em;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.student-explore-section-header .student-dashboard-icon.is-expanded {
-  transform: rotate(180deg);
-  transition: transform 0.15s ease;
 }
 
 .student-explore-section-body {
@@ -9592,6 +9882,12 @@ a {
   max-height: min(90vh, 880px);
   overflow-y: auto;
   position: relative;
+  /* Explicit margin: auto as an independent guarantee of horizontal
+     centering (a grid item's own margin: auto overrides place-items on
+     that axis, per spec) -- reported as showing a large right-side gap on
+     mobile despite .modal-backdrop's place-items: center, which should
+     already center it. This forces equal left/right margins regardless. */
+  margin: 0 auto;
   padding: 30px;
   border-radius: 28px;
   background: var(--surface-strong);

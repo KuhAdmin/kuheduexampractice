@@ -1,6 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FeatureCard } from "./FeatureCard";
-import { PEDAGOGY_PILLARS, AI_FEATURES, ASSESSMENT_TYPES } from "../content/studyBuddyContent";
+import {
+  PEDAGOGY_PILLARS,
+  AI_FEATURES,
+  ASSESSMENT_TYPES,
+  EXERCISE_ACTIVITY_REVISION_TYPES,
+} from "../content/studyBuddyContent";
 
 const ASSESSMENT_ACCENTS = ["var(--green)", "var(--blue)", "var(--warning)", "var(--indigo)"];
 
@@ -69,6 +74,20 @@ export const StudyBuddyModal = ({ open, onClose, onGetStarted }) => (
                 >
                   <span className="study-buddy-chip-label">{assessment.label}</span>
                   <span className="study-buddy-chip-description">{assessment.description}</span>
+                </div>
+              ))}
+            </div>
+
+            <h3>Exercises, Activities &amp; Revision Types</h3>
+            <div className="study-buddy-assessment-chips">
+              {EXERCISE_ACTIVITY_REVISION_TYPES.map((type, index) => (
+                <div
+                  className="study-buddy-chip"
+                  style={{ "--accent": ASSESSMENT_ACCENTS[index % ASSESSMENT_ACCENTS.length] }}
+                  key={type.id}
+                >
+                  <span className="study-buddy-chip-label">{type.label}</span>
+                  <span className="study-buddy-chip-description">{type.description}</span>
                 </div>
               ))}
             </div>

@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentNotificationPanel } from "../components/StudentNotificationPanel";
 import { getNotifications, markNotificationsSeen } from "../api/client";
-import { useClassSubject } from "../context/ClassSubjectContext";
+import { selectionKey, useClassSubject } from "../context/ClassSubjectContext";
+import { useBreakpoint } from "../hooks/useBreakpoint";
 
 const defaultContinueCard = {
   eyebrow: "Continue Learning",
@@ -219,6 +220,8 @@ const FirstTimeDashboard = ({ view }) => {
           <strong>{continueCard.title}</strong>
           <p>Section: {continueCard.section}</p>
           <p>Concept: {continueCard.concept}</p>
+        </div>
+        <div className="student-dashboard-continue-actions">
           <button
             type="button"
             className="student-dashboard-continue-button"
@@ -226,13 +229,13 @@ const FirstTimeDashboard = ({ view }) => {
           >
             Continue
           </button>
-        </div>
-        <div
-          className="student-dashboard-progress-ring"
-          style={{ "--progress": `${continueCard.progress}%` }}
-          aria-label={`${continueCard.progress}% completed`}
-        >
-          <span>{continueCard.progress}%</span>
+          <div
+            className="student-dashboard-progress-ring"
+            style={{ "--progress": `${continueCard.progress}%` }}
+            aria-label={`${continueCard.progress}% completed`}
+          >
+            <span>{continueCard.progress}%</span>
+          </div>
         </div>
       </section>
 
@@ -276,6 +279,9 @@ const ReturningDashboard = ({ view }) => {
           <strong>{continueCard.title}</strong>
           <p>Section: {continueCard.section}</p>
           <p>Concept: {continueCard.concept}</p>
+        </div>
+
+        <div className="student-dashboard-continue-actions">
           <button
             type="button"
             className="student-dashboard-continue-button"
@@ -283,24 +289,24 @@ const ReturningDashboard = ({ view }) => {
           >
             Continue
           </button>
-        </div>
 
-        <article className="student-dashboard-streak-card student-dashboard-continue-streak">
-          <div className="student-dashboard-streak-mark">
-            <Icon type="streak" />
-          </div>
-          <div className="student-dashboard-streak-copy">
-            <span>Study Streak</span>
-            <strong>{view.streak.value}</strong>
-          </div>
-        </article>
+          <article className="student-dashboard-streak-card student-dashboard-continue-streak">
+            <div className="student-dashboard-streak-mark">
+              <Icon type="streak" />
+            </div>
+            <div className="student-dashboard-streak-copy">
+              <span>Study Streak</span>
+              <strong>{view.streak.value}</strong>
+            </div>
+          </article>
 
-        <div
-          className="student-dashboard-progress-ring"
-          style={{ "--progress": `${continueCard.progress}%` }}
-          aria-label={`${continueCard.progress}% completed`}
-        >
-          <span>{continueCard.progress}%</span>
+          <div
+            className="student-dashboard-progress-ring"
+            style={{ "--progress": `${continueCard.progress}%` }}
+            aria-label={`${continueCard.progress}% completed`}
+          >
+            <span>{continueCard.progress}%</span>
+          </div>
         </div>
       </section>
 
@@ -358,7 +364,9 @@ export const StudentDashboardPage = ({ dashboard, dashboardMode = "returning", u
   // subheading/streak stay from the original `dashboard` prop regardless --
   // those are account-wide, not tied to whichever class/subject is being
   // browsed (see server-side comment on getReturningDashboardForSelection).
-  const { isDefaultSelection, selectionDashboard } = useClassSubject();
+  const { isDefaultSelection, selectionDashboard, classSubjectOptions, selection, setSelection } = useClassSubject();
+  const tier = useBreakpoint();
+  const isMobile = tier === "mobile";
   const effectiveDashboard =
     dashboardMode === "returning" && !isDefaultSelection && selectionDashboard
       ? {
@@ -462,6 +470,35 @@ export const StudentDashboardPage = ({ dashboard, dashboardMode = "returning", u
             ) : null}
           </div>
         </header>
+
+        {/* Desktop gets this from the persistent sidebar (see
+            StudentClassSubjectSwitcher/StudentLayout.jsx) -- mobile has no
+            sidebar to embed it in, so it needs its own inline copy here,
+            same as StudentChaptersPage's mobile header already does.
+            Without this, mobile students had no way at all to switch which
+            class/subject the dashboard (and its Continue Learning/Today's
+            Goal/Weak Concepts) reflects. */}
+        {isMobile && (
+          <div className="student-chapters-filter student-dashboard-filter">
+            <Icon type="book" />
+            <select
+              aria-label="Class and subject"
+              value={selection ? selectionKey(selection) : ""}
+              onChange={(event) => {
+                const next = classSubjectOptions.find((option) => selectionKey(option) === event.target.value);
+                if (next) setSelection(next);
+              }}
+              disabled={!classSubjectOptions.length}
+            >
+              {classSubjectOptions.length === 0 && <option value="">No chapters available yet</option>}
+              {classSubjectOptions.map((option) => (
+                <option key={selectionKey(option)} value={selectionKey(option)}>
+                  {`Class ${option.levelCode} - ${option.subjectName}`}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {dashboardMode === "first-time" ? (
           <FirstTimeDashboard view={view} />

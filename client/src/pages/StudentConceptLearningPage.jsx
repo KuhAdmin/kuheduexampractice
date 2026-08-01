@@ -205,6 +205,130 @@ const ConceptLearningIcon = ({ type, className = "" }) => {
     );
   }
 
+  // Tab-bar icons below (Explore/Exercises-Activities/Practice/Revision/
+  // Smart Tutor/Challenges) -- same glyphs as SectionDetailIcon's
+  // atom/list/quiz/revision/tutor on StudentSectionDetailPage.jsx, kept as
+  // a separate copy here rather than a shared import (this file's icon
+  // components have always been self-contained, see StudentMediaViewer.jsx
+  // for the same pattern elsewhere).
+  if (type === "atom") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <circle cx="12" cy="12" r="2" fill="currentColor" />
+        <ellipse cx="12" cy="12" rx="9" ry="4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        <ellipse cx="12" cy="12" rx="9" ry="4" fill="none" stroke="currentColor" strokeWidth="1.6" transform="rotate(60 12 12)" />
+        <ellipse cx="12" cy="12" rx="9" ry="4" fill="none" stroke="currentColor" strokeWidth="1.6" transform="rotate(120 12 12)" />
+      </svg>
+    );
+  }
+
+  if (type === "list") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path d="M8 6.5h10M8 12h10M8 17.5h10" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+        <circle cx="4.5" cy="6.5" r="1.1" fill="currentColor" />
+        <circle cx="4.5" cy="12" r="1.1" fill="currentColor" />
+        <circle cx="4.5" cy="17.5" r="1.1" fill="currentColor" />
+      </svg>
+    );
+  }
+
+  if (type === "quiz") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M8 6.5h8m-8 4h8m-8 4h5M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+        <path d="m8.2 15.5 1.2 1.2 2-2.4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+      </svg>
+    );
+  }
+
+  if (type === "revision") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M6 4.5h9l3 3V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.7"
+        />
+        <path d="M8 9.5h8M8 13h8M8 16.5h5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
+      </svg>
+    );
+  }
+
+  if (type === "tutor") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M12 4.5c-3.6 0-6.5 2.6-6.5 5.8 0 1.9 1 3.6 2.6 4.7-.1.9-.5 1.7-1.2 2.4a.5.5 0 0 0 .4.9c1.4-.2 2.6-.7 3.6-1.5.7.2 1.4.3 2.1.3 3.6 0 6.5-2.6 6.5-5.8s-2.9-5.8-6.5-5.8Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.7"
+        />
+        <circle cx="9.3" cy="10.3" r="0.9" fill="currentColor" />
+        <circle cx="14.7" cy="10.3" r="0.9" fill="currentColor" />
+      </svg>
+    );
+  }
+
+  if (type === "trophy") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M7 4h10v4a5 5 0 0 1-5 5 5 5 0 0 1-5-5V4Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.7"
+        />
+        <path
+          d="M7 5H4.5A1.5 1.5 0 0 0 3 6.5 3.5 3.5 0 0 0 6.5 10H7M17 5h2.5A1.5 1.5 0 0 1 21 6.5 3.5 3.5 0 0 1 17.5 10H17"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.6"
+        />
+        <path
+          d="M12 13v3M9 20h6M10 20v-2.2a2 2 0 0 1 4 0V20"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.7"
+        />
+      </svg>
+    );
+  }
+
+  if (type === "lightbulb") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M12 4.5a5.5 5.5 0 0 0-3 10.1c.5.3.8.9.8 1.5v.4h4.4v-.4c0-.6.3-1.2.8-1.5A5.5 5.5 0 0 0 12 4.5Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.7"
+        />
+        <path d="M10 19.5h4M10.7 21.5h2.6" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
       <path
@@ -220,6 +344,18 @@ const ConceptLearningIcon = ({ type, className = "" }) => {
 };
 
 const TABS = ["Learn", "Explore", "Exercises/Activities", "Practice", "Revision", "Smart Tutor", "Challenges"];
+
+// Mobile accordion only (see .student-concept-accordion-header below) --
+// desktop keeps its plain underline tabs, no icons there.
+const MOBILE_TAB_ICON = {
+  Learn: "book",
+  Explore: "atom",
+  "Exercises/Activities": "list",
+  Practice: "quiz",
+  Revision: "revision",
+  "Smart Tutor": "tutor",
+  Challenges: "trophy",
+};
 
 // Ordered, real fields only -- mirrors exactly what renderExploreMode's
 // accordion already checks for presence, just as a sequence instead of a
@@ -357,16 +493,23 @@ const REVISION_MODES = [
 // this section -- the icon is purely indicative for now, no media is stored
 // or rendered yet.
 const ExploreSection = ({ sectionKey, title, mediaType, isExpanded, onToggle, children }) => (
-  <section className="student-concept-learning-card student-explore-section">
+  <section className={`student-concept-learning-card student-explore-section ${isExpanded ? "is-open" : ""}`}>
     <button
       type="button"
       className="student-explore-section-header"
       onClick={() => onToggle(sectionKey)}
       aria-expanded={isExpanded}
     >
-      {mediaType && <ConceptLearningIcon type={mediaType} />}
+      {mediaType && (
+        <span className="student-explore-section-icon">
+          <ConceptLearningIcon type={mediaType} />
+        </span>
+      )}
       <span className="student-explore-section-title">{title}</span>
-      <ConceptLearningIcon type="chevron-down" className={isExpanded ? "is-expanded" : ""} />
+      <ConceptLearningIcon
+        type="chevron-down"
+        className={`student-concept-accordion-chevron ${isExpanded ? "is-open" : ""}`}
+      />
     </button>
     {isExpanded && (
       <div className="student-concept-learning-copy student-explore-section-body">{children}</div>
@@ -1339,7 +1482,14 @@ export const StudentConceptLearningPage = () => {
     // (same source as the Learn tab's pages) rather than a single summary
     // string -- stacked here (no pagination needed, the section already
     // scrolls) instead of one paragraph per field.
-    const renderTeachingModeSection = ({ sectionKey, title, mediaType, teachingMode, notesField }) => {
+    // mediaType gates the uploadable image/video hook (sectionMediaByKey) --
+    // iconType is purely which icon ExploreSection's header shows, and
+    // defaults to mediaType so Compare/Story/Real Life (which use the same
+    // value for both) don't need to pass it separately. Deep Dive/Simple
+    // have no uploadable media (mediaType: null) but still want a header
+    // icon, hence the two being split apart instead of one param serving
+    // both.
+    const renderTeachingModeSection = ({ sectionKey, title, mediaType, iconType, teachingMode, notesField }) => {
       const slides = notesField ? getStepSlides(card, { notesField }) : getTeachingSlidesForMode(card, teachingMode);
       if (!slides.length) return null;
       const media = mediaType ? sectionMediaByKey[sectionKey] : null;
@@ -1351,7 +1501,7 @@ export const StudentConceptLearningPage = () => {
         <ExploreSection
           sectionKey={sectionKey}
           title={title}
-          mediaType={mediaType}
+          mediaType={iconType ?? mediaType}
           isExpanded={isExpanded(sectionKey)}
           onToggle={toggleSection}
         >
@@ -1385,9 +1535,26 @@ export const StudentConceptLearningPage = () => {
       <div className="student-explore-grid">
         {renderTeachingModeSection({ sectionKey: "analogy", title: "Compare", mediaType: "image", teachingMode: "analogy" })}
 
-        {renderTeachingModeSection({ sectionKey: "story", title: "Story", mediaType: "video", teachingMode: "storymode" })}
+        {renderTeachingModeSection({
+          sectionKey: "story",
+          title: "Story",
+          mediaType: "video",
+          // Header icon only (see iconType's own comment above) -- the thin
+          // outline-rect "video" glyph read as effectively invisible at
+          // header-icon size against the muted inactive-header color,
+          // unlike "image"/"atom"'s bolder filled shapes. mediaType itself
+          // stays "video" so the uploadable video hook is unaffected.
+          iconType: "book",
+          teachingMode: "storymode",
+        })}
 
-        {renderTeachingModeSection({ sectionKey: "simple", title: "Simple", mediaType: null, teachingMode: "eli5" })}
+        {renderTeachingModeSection({
+          sectionKey: "simple",
+          title: "Simple",
+          mediaType: null,
+          iconType: "lightbulb",
+          teachingMode: "eli5",
+        })}
 
         {card.visualHook && (
           <ExploreSection
@@ -1562,6 +1729,7 @@ export const StudentConceptLearningPage = () => {
           sectionKey: "deepLearning",
           title: "Deep Dive",
           mediaType: null,
+          iconType: "atom",
           notesField: "deepLearningNotes",
         })}
 
@@ -1718,6 +1886,33 @@ export const StudentConceptLearningPage = () => {
         ))}
       </>
     );
+  };
+
+  // Feeds the mobile accordion's expanded panel (below). Desktop keeps its
+  // own separate if/else chain -- its Explore tab renders a bespoke step
+  // rail (exploreSteps/renderExploreStepContent), not renderExploreMode(),
+  // so the two aren't safe to unify without also touching that rail.
+  // Parameterized by tab rather than reading activeTab directly so the
+  // accordion can call it per-item; in practice it's only ever invoked for
+  // whichever tab is currently open, since Practice never actually becomes
+  // activeTab (selectTab navigates away instead of opening it).
+  const renderTabContent = (tab) => {
+    if (tab === "Learn") return renderLearnMode();
+    if (tab === "Explore") return renderExploreMode();
+    if (tab === "Smart Tutor") {
+      return (
+        <>
+          <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
+          <StudentConceptPracticeCapture assessmentUnitId={assessmentUnitId} />
+          <StudentEinsteinMode assessmentUnitId={assessmentUnitId} />
+          <StudentVivaMode assessmentUnitId={assessmentUnitId} />
+        </>
+      );
+    }
+    if (tab === "Challenges") return <StudentChallengesTab assessmentUnitId={assessmentUnitId} />;
+    if (tab === "Exercises/Activities") return renderExercisesActivitiesMode();
+    if (tab === "Revision") return renderRevisionMode();
+    return renderComingSoon(tab);
   };
 
   // Desktop/tablet only: breadcrumb + hero card + tab bar as persistent
@@ -1877,42 +2072,47 @@ export const StudentConceptLearningPage = () => {
           <h1>{card?.primaryConcept || "Concept"}</h1>
         </header>
 
-        <nav className="student-concept-learning-tabs" aria-label="Concept modes">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              className={`student-concept-learning-tab ${tab === activeTab ? "is-active" : ""}`}
-              onClick={() => selectTab(tab)}
-            >
-              {tab}
-            </button>
-          ))}
-        </nav>
-
         {loading ? (
           <p className="student-empty-state">Loading concept...</p>
         ) : error || !card ? (
           <p className="student-empty-state">{error || "This concept has not been generated yet."}</p>
-        ) : activeTab === "Learn" ? (
-          renderLearnMode()
-        ) : activeTab === "Explore" ? (
-          renderExploreMode()
-        ) : activeTab === "Smart Tutor" ? (
-          <>
-            <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
-            <StudentConceptPracticeCapture assessmentUnitId={assessmentUnitId} />
-            <StudentEinsteinMode assessmentUnitId={assessmentUnitId} />
-            <StudentVivaMode assessmentUnitId={assessmentUnitId} />
-          </>
-        ) : activeTab === "Challenges" ? (
-          <StudentChallengesTab assessmentUnitId={assessmentUnitId} />
-        ) : activeTab === "Exercises/Activities" ? (
-          renderExercisesActivitiesMode()
-        ) : activeTab === "Revision" ? (
-          renderRevisionMode()
         ) : (
-          renderComingSoon(activeTab)
+          // Accordion instead of a separate horizontally-scrolling tab bar --
+          // 7 tabs never all fit on a phone width, and scrolling (arrows,
+          // swipe, keyboard) still left the tab bar and its content as two
+          // disconnected pieces of chrome competing for the same screen.
+          // Stacking every tab as a collapsible section means there's
+          // nothing to scroll sideways at all: only the active tab's
+          // section expands (via the existing activeTab/selectTab state,
+          // unchanged), so this is a pure presentation change, not a new
+          // navigation model. Practice still isn't a real section here --
+          // selectTab navigates straight to the assessment page for it, so
+          // its header never actually expands.
+          <div className="student-concept-accordion">
+            {TABS.map((tab) => {
+              const isOpen = tab === activeTab;
+              return (
+                <section key={tab} className={`student-concept-accordion-item ${isOpen ? "is-open" : ""}`}>
+                  <button
+                    type="button"
+                    className="student-concept-accordion-header"
+                    onClick={() => selectTab(tab)}
+                    aria-expanded={isOpen}
+                  >
+                    <span className="student-concept-accordion-header-icon">
+                      <ConceptLearningIcon type={MOBILE_TAB_ICON[tab]} />
+                    </span>
+                    <span className="student-concept-accordion-header-label">{tab}</span>
+                    <ConceptLearningIcon
+                      type="chevron-down"
+                      className={`student-concept-accordion-chevron ${isOpen ? "is-open" : ""}`}
+                    />
+                  </button>
+                  {isOpen && <div className="student-concept-accordion-panel">{renderTabContent(tab)}</div>}
+                </section>
+              );
+            })}
+          </div>
         )}
 
     </StudentPageShell>

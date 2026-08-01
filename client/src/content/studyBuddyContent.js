@@ -93,3 +93,19 @@ export const ASSESSMENT_TYPES = [
   { id: "hotspot", label: "Hotspot Diagram", description: "Tap the correctly labelled part of a diagram" },
   { id: "case-study", label: "Case Study", description: "Realistic scenario, apply knowledge in context" },
 ];
+
+export const EXERCISE_ACTIVITY_REVISION_TYPES = [
+  {
+    id: "activities",
+    label: "Activities",
+    description: "Hands-on textbook tasks — type or photograph your work and get AI feedback",
+  },
+  {
+    id: "exercises",
+    label: "Exercises",
+    description: "End-of-section reflection questions — write your answer and get AI feedback",
+  },
+  { id: "cheatsheet", label: "Cheat Sheet", description: "Compact, exam-ready key facts for every concept" },
+  { id: "mnemonics", label: "Mnemonics", description: "Memory hooks that make facts stick" },
+  { id: "examnotes", label: "Exam Notes", description: "What examiners actually check for, concept by concept" },
+];

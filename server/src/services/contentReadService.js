@@ -365,5 +365,5 @@ export const getSectionKnowledgeSummary = async (sourceSectionId) => {
   );
 
   const count = result.rows[0]?.count || 0;
-  return count > 0 ? `Covers ${count} concept${count === 1 ? "" : "s"}.` : null;
+  return count > 0 ? `This Textbook Section covers ${count} Concept${count === 1 ? "" : "s"}.` : null;
 };
