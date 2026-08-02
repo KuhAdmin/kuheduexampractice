@@ -24,7 +24,7 @@ export const PaymentStatusModal = ({ open, status, errorMessage, onClose, onRetr
               </button>
             )}
             <p className="eyebrow" id="payment-status">
-              STEMLab Premium
+              Kuhedu Study Buddy Premium
             </p>
             {status === "processing" ? (
               <>
@@ -36,7 +36,7 @@ export const PaymentStatusModal = ({ open, status, errorMessage, onClose, onRetr
               <>
                 <h2>Welcome to Premium</h2>
                 <p>Your purchase is confirmed and Premium access is now active on your account.</p>
-                <button className="primary-button" onClick={onClose} type="button">
+                <button className="primary-button payment-success-cta" onClick={onClose} type="button">
                   Continue
                 </button>
               </>

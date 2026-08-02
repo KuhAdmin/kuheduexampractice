@@ -356,6 +356,19 @@ a {
   --brand-glow: #7ed9a0;
 }
 
+/* PaymentStatusModal's success-state "Continue" only -- not the app-wide
+   orange .primary-button, and not that same modal's error-state "Try
+   again" button, which stays orange. */
+.payment-success-cta {
+  --brand-glow: #4caf6e;
+  background: linear-gradient(135deg, var(--green), var(--brand-glow));
+  box-shadow: 0 14px 30px rgb(from var(--green) r g b / 0.28);
+}
+
+[data-theme="dusk"] .payment-success-cta {
+  --brand-glow: #7ed9a0;
+}
+
 .text-link {
   display: inline-flex;
   align-items: center;
@@ -7754,6 +7767,22 @@ a {
   line-height: 1.6;
 }
 
+.student-profile-premium-cancel {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted-strong);
+  font-size: 1.0305em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.student-profile-premium-cancel:disabled {
+  opacity: 0.55;
+}
+
 .student-profile-premium-trial {
   display: inline-flex;
   align-items: center;
@@ -8310,6 +8339,17 @@ a {
 .admin-main {
   display: grid;
   gap: 20px;
+  /* Without this, a wide child (e.g. a data table with min-width: 1280px)
+     forces this grid item's implicit auto-sized track to its content's
+     min-content width instead of shrinking to the available space -- even
+     though the outer .admin-page grid's own track is minmax(0, 1fr) and
+     can shrink. The overflow then bleeds all the way up to the page body
+     instead of staying contained in that table's own overflow-x: auto
+     shell (.admin-bulk-pipeline-grid-shell), leaving no way to scroll to
+     the clipped content. min-width: 0 lets this item shrink to fit the
+     viewport so each admin page's own internal scroll containers can do
+     their job. */
+  min-width: 0;
 }
 
 .admin-section-page {
@@ -10261,6 +10301,8 @@ a {
 
 .pricing-toggle {
   display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
   padding: 4px;
   border-radius: 999px;
   background: var(--surface-strong);
@@ -10268,8 +10310,8 @@ a {
 }
 
 .pricing-toggle-option {
-  min-width: 100px;
-  padding: 8px 18px;
+  min-width: 84px;
+  padding: 8px 14px;
   border: none;
   border-radius: 999px;
   background: transparent;
@@ -10309,6 +10351,12 @@ a {
   color: var(--green);
   font-size: 0.78em;
   font-weight: 700;
+}
+
+.pricing-billing-note {
+  margin: 4px 0 0;
+  color: var(--muted-strong);
+  font-size: 0.85em;
 }
 
 .pricing-cta {
@@ -12287,6 +12335,12 @@ a {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  /* Same min-width: auto footgun as .admin-main above, one level down: a
+     wide child (the min-width: 1280px table) forces this flex column
+     itself wider than its own parent instead of staying within it and
+     letting .admin-bulk-pipeline-grid-shell's own overflow-x: auto contain
+     the overflow. */
+  min-width: 0;
 }
 
 .admin-bulk-pipeline-breadcrumb {
@@ -12847,6 +12901,174 @@ a {
   }
   50% {
     opacity: 0.55;
+  }
+}
+
+/* Admin Orders dashboard (AdminOrdersPage.jsx) -- reuses .admin-stat-grid/
+   .admin-stat-card, .admin-panel/-head, .admin-bulk-pipeline-* table/empty/
+   status-badge classes as-is; these are the page-specific additions only.
+   The admin shell is hardcoded to data-theme="dawn" (see App.jsx's /admin
+   route) and has zero [data-theme="dusk"] .admin-* rules anywhere in this
+   file, so -- like every other admin page -- this one fixed color set is
+   all that's needed here. */
+.admin-orders-page .admin-stat-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.admin-orders-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.admin-orders-filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-orders-search-input {
+  min-width: 220px;
+  flex: 1 1 220px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.admin-orders-filters-bar select {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.admin-orders-date-range {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface-strong);
+  border: 1px solid var(--line);
+}
+
+.admin-orders-date-preset-button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted-strong);
+  font-weight: 700;
+  font-size: 0.85em;
+}
+
+.admin-orders-date-preset-button.is-active {
+  background: var(--brand);
+  color: #ffffff;
+}
+
+.admin-orders-date-custom-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+}
+
+.admin-orders-date-custom-inputs input[type="date"] {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.admin-orders-date-custom-inputs span {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.admin-orders-sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.admin-orders-sortable:hover {
+  color: var(--text);
+}
+
+/* In-header filter for the Status/Subscription Status columns -- lives next
+   to the columns it filters instead of in the filters bar above, since that
+   bar scrolls out of view along with the rest of the page once the table
+   itself needs its own horizontal scroll (9 columns). */
+.admin-orders-column-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-orders-column-filter select {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.admin-orders-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 4px;
+  color: var(--muted-strong);
+  font-size: 0.9em;
+}
+
+.admin-orders-pagination-button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.admin-orders-pagination-button:disabled {
+  opacity: 0.45;
+}
+
+@media (max-width: 920px) {
+  .admin-orders-page .admin-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-orders-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-orders-page .admin-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-orders-filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-orders-filters-bar select,
+  .admin-orders-search-input {
+    width: 100%;
   }
 }
 

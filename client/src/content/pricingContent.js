@@ -10,12 +10,24 @@ export const plans = {
     id: "monthly",
     label: "Monthly",
     price: 199,
+    period: "month",
+    billingNote: "Billed monthly, auto-renews for 12 months",
   },
   yearly: {
     id: "yearly",
     label: "Yearly",
     price: 1999,
+    period: "year",
     badge: "Save 16%",
+  },
+  // Testing-only plan (see server/src/services/paymentService.js's
+  // PLAN_AMOUNTS_PAISE.trial) -- a one-time ₹9 charge, premium auto-expires
+  // 1 hour after purchase instead of renewing.
+  trial: {
+    id: "trial",
+    label: "Trial",
+    price: 9,
+    billingNote: "One-time · 1 hour access, then auto-expires",
   },
 };
 

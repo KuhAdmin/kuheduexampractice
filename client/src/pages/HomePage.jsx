@@ -679,7 +679,9 @@ const HomeScreen = ({
                   <button type="button" onClick={onOpenInstitutionInfo}>
                     Institutions
                   </button>
-                  <Link to="/pricing">Pricing</Link>
+                  <Link to="/pricing" state={{ pricingEntryScreenId: screen.id }}>
+                    Pricing
+                  </Link>
                 </nav>
                 <nav className="home-onboarding-footer-links" aria-label="Legal">
                   <button type="button" onClick={() => onOpenLegal(LEGAL_DOC_SLUGS.privacy)}>
@@ -849,11 +851,18 @@ export const HomePage = ({
   emailOnboarding = false,
   googleOnboarding = false,
   resumeOnboarding = false,
+  initialScreenId = null,
   user,
 }) => {
   const tier = useBreakpoint();
   const isMobile = tier === "mobile";
-  const [activeIndex, setActiveIndex] = useState(0);
+  // Seeds straight into a specific screen (e.g. returning from /pricing via
+  // its "Back" link) instead of always starting at the splash video --
+  // absent, this is identical to the old useState(0). Lazy initializer so
+  // this only ever runs once, on mount.
+  const [activeIndex, setActiveIndex] = useState(() =>
+    initialScreenId && screenIndexById[initialScreenId] != null ? screenIndexById[initialScreenId] : 0
+  );
   const [isSplashMuted, setIsSplashMuted] = useState(true);
   const [registerForm, setRegisterForm] = useState(initialRegisterForm);
   const [registerStep, setRegisterStep] = useState("details");
@@ -1178,7 +1187,9 @@ export const HomePage = ({
             <button type="button" className="home-desktop-navbar-link-button" onClick={openInstitutionInfo}>
               Institutions
             </button>
-            <Link to="/pricing">Pricing</Link>
+            <Link to="/pricing" state={{ pricingEntryScreenId: activeScreen.id }}>
+              Pricing
+            </Link>
           </nav>
         </nav>
         <AnimatePresence mode="wait">

@@ -9,7 +9,7 @@ import {
   markNotificationsSeen,
 } from "../services/studentDashboardService.js";
 import { listClassSubjectOptionsWithContent } from "../services/catalogService.js";
-import { createOrder, verifyPayment } from "../controllers/paymentController.js";
+import { createOrder, verifyPayment, getSubscription, cancelMySubscription } from "../controllers/paymentController.js";
 import {
   getMicroActivityResponseHandler,
   getStudentBookQuestions,
@@ -190,6 +190,8 @@ router.get("/dashboard-for-selection", async (req, res, next) => {
 // services/paymentService.js for order creation + signature verification.
 router.post("/payments/create-order", createOrder);
 router.post("/payments/verify", verifyPayment);
+router.get("/payments/subscription", getSubscription);
+router.post("/payments/subscription/cancel", cancelMySubscription);
 
 router.get("/goals/remaining-concepts", async (req, res, next) => {
   try {

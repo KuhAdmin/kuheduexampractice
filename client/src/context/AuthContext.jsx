@@ -32,29 +32,67 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  // Shared by the initial mount fetch below and the two re-validation
+  // effects further down -- user (isPremium/premiumExpiresAt in particular)
+  // otherwise only ever updates via an explicit persistUser/persistAuth
+  // call (login, purchase verify, profile edit, ...), so a tab left open
+  // through e.g. a Trial plan's 1-hour window would keep showing "Premium
+  // Active" indefinitely with no way to learn the server-side flag flipped.
+  const fetchAndSetUser = () => {
     const token = localStorage.getItem(storageKeys.token);
-
     if (!token) {
-      setLoading(false);
-      return;
+      return Promise.resolve(null);
     }
 
-    apiRequest("/auth/me")
+    return apiRequest("/auth/me")
       .then((data) => {
         applyTheme(data.user?.theme);
         startTransition(() => {
           setUser(data.user);
           localStorage.setItem(storageKeys.user, JSON.stringify(data.user));
         });
+        return data.user;
       })
       .catch(() => {
         localStorage.removeItem(storageKeys.token);
         localStorage.removeItem(storageKeys.user);
         setUser(null);
-      })
-      .finally(() => setLoading(false));
+        return null;
+      });
+  };
+
+  useEffect(() => {
+    fetchAndSetUser().finally(() => setLoading(false));
   }, []);
+
+  // Re-validates whenever this tab regains focus -- catches a trial/
+  // subscription that lapsed while it sat in the background, which the
+  // initial mount-only fetch above would otherwise never notice.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchAndSetUser();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
+
+  // Precisely flips a still-open, still-focused tab's premium badge the
+  // moment a time-limited plan (Trial) actually expires, instead of waiting
+  // for a refocus/reload to notice. No-op for permanent plans
+  // (premiumExpiresAt is null there).
+  useEffect(() => {
+    if (!user?.premiumExpiresAt) {
+      return undefined;
+    }
+    const msUntilExpiry = new Date(user.premiumExpiresAt).getTime() - Date.now();
+    if (msUntilExpiry <= 0) {
+      return undefined;
+    }
+    const timer = window.setTimeout(fetchAndSetUser, msUntilExpiry + 500);
+    return () => window.clearTimeout(timer);
+  }, [user?.premiumExpiresAt]);
 
   const persistAuth = ({ token, user: nextUser }) => {
     localStorage.setItem(storageKeys.token, token);

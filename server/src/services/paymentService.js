@@ -8,13 +8,19 @@ import { toPublicUser } from "./userService.js";
 // AdminSettingsPage.jsx's currently-unused premiumPrice field -- that would
 // need its own persistence layer, a separate change from this integration).
 // "monthly" vs "yearly" only changes the charged amount -- there is no
-// recurring billing/expiry, "is_premium" is a one-way flag set on any
-// successful purchase.
+// recurring billing, "is_premium" is a one-way flag set on any successful
+// purchase, EXCEPT the "trial" plan below, which self-expires after
+// TRIAL_DURATION_MS (see markOrderPaidAndActivatePremium).
 const PLAN_AMOUNTS_PAISE = {
   monthly: 19900,
   yearly: 199900,
+  // Testing-only plan: ₹9 for 1 hour of premium access, then auto-expires
+  // (see markOrderPaidAndActivatePremium's premiumExpiresAt below) -- never
+  // a recurring subscription, always the one-time order path.
+  trial: 900,
 };
 const CURRENCY = "INR";
+const TRIAL_DURATION_MS = 60 * 60 * 1000;
 
 export class PaymentError extends Error {
   constructor(message, statusCode = 500) {
@@ -65,7 +71,56 @@ export const createPremiumOrder = async ({ userId, plan = "yearly" }) => {
     [userId, order.id, amount, CURRENCY, receipt, plan]
   );
 
-  return { orderId: order.id, amount, currency: CURRENCY, plan };
+  return { mode: "order", orderId: order.id, amount, currency: CURRENCY, plan };
+};
+
+// Shared by the client-driven verify flow below and by
+// razorpayWebhookService.js (payment.captured/order.paid), so there is one
+// code path for "order paid -> premium on," not two that can drift.
+// Naturally idempotent: re-running with the same order/payment ids is a
+// harmless no-op re-write of the same status/flag.
+export const markOrderPaidAndActivatePremium = async ({
+  razorpayOrderId,
+  razorpayPaymentId,
+  expectedUserId = null,
+  razorpayPaymentMethod = null,
+}) => {
+  const updateResult =
+    expectedUserId != null
+      ? await pool.query(
+          `
+            UPDATE payment_order
+            SET status = 'paid', razorpay_payment_id = $2,
+                payment_method = COALESCE($4, payment_method), updated_at = NOW()
+            WHERE razorpay_order_id = $1 AND user_id = $3
+            RETURNING id, user_id, plan
+          `,
+          [razorpayOrderId, razorpayPaymentId, expectedUserId, razorpayPaymentMethod]
+        )
+      : await pool.query(
+          `
+            UPDATE payment_order
+            SET status = 'paid', razorpay_payment_id = $2,
+                payment_method = COALESCE($3, payment_method), updated_at = NOW()
+            WHERE razorpay_order_id = $1
+            RETURNING id, user_id, plan
+          `,
+          [razorpayOrderId, razorpayPaymentId, razorpayPaymentMethod]
+        );
+
+  if (updateResult.rows.length === 0) {
+    return null;
+  }
+
+  const premiumExpiresAt =
+    updateResult.rows[0].plan === "trial" ? new Date(Date.now() + TRIAL_DURATION_MS) : null;
+
+  const userResult = await pool.query(
+    "UPDATE users SET is_premium = TRUE, premium_expires_at = $2, updated_at = NOW() WHERE id = $1 RETURNING *",
+    [updateResult.rows[0].user_id, premiumExpiresAt]
+  );
+
+  return { user: toPublicUser(userResult.rows[0]) };
 };
 
 export const verifyPremiumPayment = async ({
@@ -103,24 +158,31 @@ export const verifyPremiumPayment = async ({
     throw new PaymentError("Payment verification failed.", 400);
   }
 
-  const updateResult = await pool.query(
-    `
-      UPDATE payment_order
-      SET status = 'paid', razorpay_payment_id = $2, updated_at = NOW()
-      WHERE razorpay_order_id = $1 AND user_id = $3
-      RETURNING id
-    `,
-    [razorpayOrderId, razorpayPaymentId, userId]
-  );
+  // Best-effort -- the payment_method column is a nice-to-have for the admin
+  // Orders dashboard, not required for verification itself. Fetching it here
+  // (rather than waiting on the payment.captured webhook alone) means it's
+  // populated immediately even when webhook delivery is slow, misconfigured,
+  // or (as in local/dev testing) simply not reachable.
+  let razorpayPaymentMethod = null;
+  try {
+    const razorpay = getRazorpayClient();
+    const payment = await razorpay.payments.fetch(razorpayPaymentId);
+    razorpayPaymentMethod = payment?.method || null;
+  } catch (_error) {
+    // Swallow -- the webhook (if/when it arrives) can still fill this in via
+    // markOrderPaidAndActivatePremium's COALESCE update.
+  }
 
-  if (updateResult.rows.length === 0) {
+  const result = await markOrderPaidAndActivatePremium({
+    razorpayOrderId,
+    razorpayPaymentId,
+    expectedUserId: userId,
+    razorpayPaymentMethod,
+  });
+
+  if (!result) {
     throw new PaymentError("Order not found for this user.", 400);
   }
 
-  const userResult = await pool.query(
-    "UPDATE users SET is_premium = TRUE, updated_at = NOW() WHERE id = $1 RETURNING *",
-    [userId]
-  );
-
-  return { user: toPublicUser(userResult.rows[0]) };
+  return result;
 };

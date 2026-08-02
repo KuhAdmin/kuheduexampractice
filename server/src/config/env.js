@@ -124,4 +124,8 @@ export const env = {
   // in dev. Secret never reaches the client; only VITE_RAZORPAY_KEY_ID does.
   razorpayKeyId: process.env.RAZORPAY_KEY_ID || "",
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET || "",
+  // Signs the X-Razorpay-Signature header on inbound webhook deliveries --
+  // set from the exact secret entered in Razorpay Dashboard > Webhooks when
+  // the webhook is created (not derived from razorpayKeySecret).
+  razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || "",
 };

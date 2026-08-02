@@ -7,6 +7,7 @@ import { AdminDemoModelSettingsPage } from "./pages/AdminDemoModelSettingsPage";
 import { AdminChapterExerciseReviewPage } from "./pages/AdminChapterExerciseReviewPage";
 import { AdminSettingsPage } from "./pages/AdminSettingsPage";
 import { AdminUsersPage } from "./pages/AdminUsersPage";
+import { AdminOrdersPage } from "./pages/AdminOrdersPage";
 import { AdminExamTypesPage } from "./pages/AdminExamTypesPage";
 import { AdminExamGoalsPage } from "./pages/AdminExamGoalsPage";
 import { AdminLevelsPage } from "./pages/AdminLevelsPage";
@@ -135,6 +136,7 @@ const App = () => {
                 emailOnboarding={Boolean(location.state?.emailOnboarding)}
                 googleOnboarding={Boolean(location.state?.googleOnboarding)}
                 resumeOnboarding={Boolean(location.state?.resumeOnboarding)}
+                initialScreenId={location.state?.resumeScreenId ?? null}
                 user={user}
               />
             </div>
@@ -261,6 +263,10 @@ const App = () => {
           <Route
             path="users"
             element={<AdminUsersPage />}
+          />
+          <Route
+            path="orders"
+            element={<AdminOrdersPage />}
           />
           <Route
             path="exam-types"

@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { EditProfileModal } from "../components/EditProfileModal";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
@@ -6,7 +6,7 @@ import { PaymentStatusModal } from "../components/PaymentStatusModal";
 import { useAuth } from "../context/AuthContext";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
-import { createPremiumOrder, verifyPremiumPayment } from "../api/client";
+import { createPremiumOrder, verifyPremiumPayment, getMySubscription, cancelMySubscription } from "../api/client";
 import { openRazorpayCheckout } from "../lib/razorpayCheckout";
 import {
   getAvatarVisibleServerSnapshot,
@@ -395,6 +395,8 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [paymentError, setPaymentError] = useState("");
+  const [activeSubscription, setActiveSubscription] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
   const canChangePassword = user?.provider !== "google";
   const avatarEnabled = useSyncExternalStore(
     subscribeAvatarVisible,
@@ -443,6 +445,43 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
     const current = user?.theme === "dusk" ? "dusk" : "dawn";
     if (nextTheme === current) return;
     setTheme(nextTheme).catch(() => {});
+  };
+
+  useEffect(() => {
+    if (!user?.isPremium) {
+      setActiveSubscription(null);
+      return;
+    }
+    let cancelled = false;
+    getMySubscription()
+      .then((result) => {
+        if (!cancelled) setActiveSubscription(result?.subscription || null);
+      })
+      .catch(() => {
+        if (!cancelled) setActiveSubscription(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.isPremium]);
+
+  const handleCancelSubscription = async () => {
+    if (!activeSubscription || !window.confirm("Cancel your monthly subscription? Premium access ends immediately.")) {
+      return;
+    }
+    setCancelling(true);
+    try {
+      const result = await cancelMySubscription({
+        razorpaySubscriptionId: activeSubscription.razorpay_subscription_id,
+      });
+      persistUser(result.user);
+      setActiveSubscription(null);
+    } catch (error) {
+      setPaymentError(error?.message || "We couldn't cancel your subscription.");
+      setPaymentStatus("error");
+    } finally {
+      setCancelling(false);
+    }
   };
 
   const handlePremiumPurchase = async () => {
@@ -550,7 +589,7 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
           <div className="student-profile-premium-copy">
             <div className="student-profile-premium-head">
               <div>
-                <strong>STEMLab Premium</strong>
+                <strong>Kuhedu Study Buddy Premium</strong>
                 <p>
                   {user?.isPremium
                     ? "You have full access to all features and premium content"
@@ -568,7 +607,19 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
           </div>
           <div className="student-profile-premium-actions">
             {user?.isPremium ? (
-              <div className="student-profile-premium-trial">Premium Active</div>
+              <>
+                <div className="student-profile-premium-trial">Premium Active</div>
+                {activeSubscription ? (
+                  <button
+                    type="button"
+                    className="student-profile-premium-cancel"
+                    onClick={handleCancelSubscription}
+                    disabled={cancelling}
+                  >
+                    {cancelling ? "Cancelling..." : "Cancel Subscription"}
+                  </button>
+                ) : null}
+              </>
             ) : (
               <>
                 <button

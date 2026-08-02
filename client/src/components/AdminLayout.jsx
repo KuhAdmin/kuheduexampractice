@@ -5,6 +5,7 @@ const adminMenu = [
   { label: "AI Assessment Demo", to: "/admin/ai-demo" },
   { label: "Demo Model Settings", to: "/admin/ai-demo/model-settings" },
   { label: "Users", to: "/admin/users" },
+  { label: "Orders", to: "/admin/orders" },
   {
     label: "Masters",
     children: [

@@ -36,6 +36,14 @@ ADD COLUMN IF NOT EXISTS theme VARCHAR(10) NOT NULL DEFAULT 'dawn';
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS is_premium BOOLEAN NOT NULL DEFAULT FALSE;
 
+-- Set only for the ₹9/1-hour trial plan (paymentService.js's
+-- PLAN_AMOUNTS_PAISE.trial) -- NULL means premium never auto-expires (the
+-- normal monthly/yearly case). userService.js's findUserById lazily flips
+-- is_premium back to FALSE once this passes, on the next request that loads
+-- the user.
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS premium_expires_at TIMESTAMPTZ;
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 
@@ -63,6 +71,104 @@ CREATE INDEX IF NOT EXISTS idx_payment_order_user_id ON payment_order(user_id);
 -- purchase they were created under before this column existed.
 ALTER TABLE payment_order
 ADD COLUMN IF NOT EXISTS plan VARCHAR(20) NOT NULL DEFAULT 'yearly';
+
+-- Running total of processed refunds against this order, used to decide
+-- "fully refunded" (see payment_refund below) without re-summing on every
+-- webhook delivery.
+ALTER TABLE payment_order
+ADD COLUMN IF NOT EXISTS refunded_amount INTEGER NOT NULL DEFAULT 0;
+
+-- Captured from the Razorpay payment entity on payment.captured/order.paid
+-- webhook deliveries (see razorpayWebhookService.js) -- e.g. "card"/"upi"/
+-- "netbanking"/"wallet"/"emi"/"paylater". NULL for rows paid before this
+-- column existed, or whose webhook delivery hasn't landed yet.
+ALTER TABLE payment_order
+ADD COLUMN IF NOT EXISTS payment_method VARCHAR(30);
+
+CREATE INDEX IF NOT EXISTS idx_payment_order_created_at ON payment_order(created_at);
+
+-- Audit log + idempotency guard for inbound Razorpay webhook deliveries
+-- (see razorpayWebhookService.js). Razorpay does not guarantee a stable
+-- top-level event id on every payload, so event_key is a composite of
+-- event_type + the relevant entity id (e.g. "payment.captured:pay_xxx") --
+-- a duplicate insert (retry/redelivery) hits the unique constraint and is
+-- treated as already-processed.
+CREATE TABLE IF NOT EXISTS webhook_event (
+  id BIGSERIAL PRIMARY KEY,
+  provider VARCHAR(20) NOT NULL DEFAULT 'razorpay',
+  event_type VARCHAR(60) NOT NULL,
+  event_key VARCHAR(120) NOT NULL UNIQUE,
+  payload JSONB NOT NULL,
+  received_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- One row per Razorpay refund against a payment_order (refund.created /
+-- refund.processed webhook events).
+CREATE TABLE IF NOT EXISTS payment_refund (
+  id BIGSERIAL PRIMARY KEY,
+  payment_order_id BIGINT NOT NULL REFERENCES payment_order(id),
+  razorpay_refund_id VARCHAR(64) NOT NULL UNIQUE,
+  amount INTEGER NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_payment_refund_payment_order_id ON payment_refund(payment_order_id);
+
+-- One row per Razorpay dispute against a payment_order (payment.dispute.*
+-- webhook events) -- for admin visibility only, no automated action taken.
+CREATE TABLE IF NOT EXISTS payment_dispute (
+  id BIGSERIAL PRIMARY KEY,
+  payment_order_id BIGINT NOT NULL REFERENCES payment_order(id),
+  razorpay_dispute_id VARCHAR(64) NOT NULL UNIQUE,
+  status VARCHAR(20) NOT NULL,
+  amount INTEGER,
+  reason_code VARCHAR(80),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_payment_dispute_payment_order_id ON payment_dispute(payment_order_id);
+
+-- Recurring STEMLab Premium Monthly subscription (12 monthly charges via
+-- Razorpay Subscriptions -- see subscriptionService.js). Separate from
+-- payment_order/payment_refund, which only ever track one-time Yearly
+-- purchases; a subscription's own charges are tracked in
+-- subscription_invoice below, not payment_order.
+CREATE TABLE IF NOT EXISTS subscription (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id),
+  razorpay_subscription_id VARCHAR(64) NOT NULL UNIQUE,
+  razorpay_plan_id VARCHAR(64) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'created',
+  total_count INTEGER NOT NULL DEFAULT 12,
+  paid_count INTEGER NOT NULL DEFAULT 0,
+  current_start TIMESTAMPTZ,
+  current_end TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_subscription_user_id ON subscription(user_id);
+
+-- One row per Razorpay invoice (a single monthly charge) against a
+-- subscription (invoice.paid / invoice.partially_paid webhook events) --
+-- for admin visibility only, mirrors payment_refund's shape.
+CREATE TABLE IF NOT EXISTS subscription_invoice (
+  id BIGSERIAL PRIMARY KEY,
+  subscription_id BIGINT NOT NULL REFERENCES subscription(id),
+  razorpay_invoice_id VARCHAR(64) NOT NULL UNIQUE,
+  amount INTEGER NOT NULL,
+  status VARCHAR(20) NOT NULL,
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_subscription_invoice_subscription_id ON subscription_invoice(subscription_id);
+CREATE INDEX IF NOT EXISTS idx_subscription_invoice_paid_at ON subscription_invoice(paid_at);
+
+-- Mirrors payment_order.payment_method above -- captured from the payment
+-- entity accompanying invoice.paid/invoice.partially_paid webhook deliveries.
+ALTER TABLE subscription_invoice
+ADD COLUMN IF NOT EXISTS payment_method VARCHAR(30);
 
 CREATE TABLE IF NOT EXISTS app_settings (
   setting_key VARCHAR(120) PRIMARY KEY,
@@ -1601,6 +1707,15 @@ CREATE TABLE IF NOT EXISTS question_bank_item (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- CREATE TABLE IF NOT EXISTS above is a no-op on a question_bank_item that
+-- already existed pre-item_id (e.g. from before the seven-layer-removal
+-- migration) -- this ALTER guarantees the column exists before the index
+-- below is built, instead of relying on bootstrap.js's JS-side
+-- pruneRedundantAssessmentStudioSchema() cleanup, which only runs AFTER
+-- this whole init.sql query and is too late to save this statement.
+ALTER TABLE question_bank_item
+ADD COLUMN IF NOT EXISTS item_id VARCHAR(160) REFERENCES content_assessment_item(item_id) ON DELETE SET NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_question_bank_item_item_id
 ON question_bank_item (item_id) WHERE item_id IS NOT NULL;

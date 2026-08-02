@@ -88,6 +88,20 @@ export const verifyPremiumPayment = async ({ razorpayOrderId, razorpayPaymentId,
     body: JSON.stringify({ razorpayOrderId, razorpayPaymentId, razorpaySignature }),
   });
 
+export const verifyPremiumSubscription = async ({ razorpaySubscriptionId, razorpayPaymentId, razorpaySignature }) =>
+  apiRequest("/user/payments/verify", {
+    method: "POST",
+    body: JSON.stringify({ razorpaySubscriptionId, razorpayPaymentId, razorpaySignature }),
+  });
+
+export const getMySubscription = async () => apiRequest("/user/payments/subscription");
+
+export const cancelMySubscription = async ({ razorpaySubscriptionId }) =>
+  apiRequest("/user/payments/subscription/cancel", {
+    method: "POST",
+    body: JSON.stringify({ razorpaySubscriptionId }),
+  });
+
 export const getNotifications = async () => apiRequest("/user/notifications");
 
 export const markNotificationsSeen = async () =>
@@ -531,6 +545,26 @@ export const submitBookQuestionResponse = async (chapterNumber, questionId, stud
     method: "POST",
     body: JSON.stringify({ studentAnswer, sourcePageImages }),
   });
+
+export const getAdminOrders = async (params) => apiRequest(`/admin/orders?${buildQuery(params)}`);
+
+export const getAdminOrdersSummary = async (params) => apiRequest(`/admin/orders/summary?${buildQuery(params)}`);
+
+// A plain <a href> download can't attach the Bearer header this app's auth
+// relies on, so the export button does an authenticated fetch and downloads
+// the resulting Blob itself (see AdminOrdersPage.jsx) instead of going
+// through apiRequest, which assumes a JSON response.
+export const fetchAdminOrdersExportBlob = async (params) => {
+  const token = localStorage.getItem("kuhedu_token");
+  const response = await fetch(`/api/admin/orders/export?${buildQuery(params)}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to export orders.");
+  }
+  return response.blob();
+};
 
 export const getAdminDemoSubmissions = async () => apiRequest("/admin/ai-demo");
 

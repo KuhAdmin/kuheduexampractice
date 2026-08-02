@@ -19,6 +19,8 @@ import adminConceptImportRoutes from "./routes/adminConceptImportRoutes.js";
 import adminDemoRoutes from "./routes/adminDemoRoutes.js";
 import chapterExerciseAdminRoutes from "./routes/chapterExerciseAdminRoutes.js";
 import mediaAdminRoutes from "./routes/mediaAdminRoutes.js";
+import razorpayWebhookRoutes from "./routes/razorpayWebhookRoutes.js";
+import adminOrdersRoutes from "./routes/adminOrdersRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -85,6 +87,11 @@ export const createApp = () => {
       credentials: true,
     })
   );
+  // Must be mounted before express.json() below -- HMAC signature
+  // verification needs the exact raw bytes Razorpay signed, and those are
+  // gone once express.json() has parsed/re-encoded the body.
+  app.use("/api/webhooks/razorpay", express.raw({ type: "application/json" }), razorpayWebhookRoutes);
+
   // 30mb covers a ~20MB memory-hook video upload as a base64 data URL
   // (~33% inflation) plus JSON overhead, with headroom.
   app.use(express.json({ limit: "30mb" }));
@@ -119,6 +126,7 @@ export const createApp = () => {
   app.use("/api/admin/ai-demo", adminDemoRoutes);
   app.use("/api/admin/chapter-exercises", chapterExerciseAdminRoutes);
   app.use("/api/admin/media", mediaAdminRoutes);
+  app.use("/api/admin/orders", adminOrdersRoutes);
 
   const clientDist = path.resolve(__dirname, "../../client/dist");
   app.use(

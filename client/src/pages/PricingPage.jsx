@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { AuthModal } from "../components/AuthModal";
 import { PaymentStatusModal } from "../components/PaymentStatusModal";
-import { createPremiumOrder, verifyPremiumPayment } from "../api/client";
+import { createPremiumOrder, verifyPremiumPayment, verifyPremiumSubscription } from "../api/client";
 import { openRazorpayCheckout } from "../lib/razorpayCheckout";
 import { currentPackage, plans, features } from "../content/pricingContent";
 
@@ -28,6 +28,7 @@ const CheckBadge = () => (
 // continues automatically once auth completes (see the useEffect below).
 export const PricingPage = () => {
   const { user, isAuthenticated, login, register, persistUser } = useAuth();
+  const location = useLocation();
   const [selectedPlan, setSelectedPlan] = useState("yearly");
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [pendingSubscribe, setPendingSubscribe] = useState(false);
@@ -44,11 +45,18 @@ export const PricingPage = () => {
         user,
         onSuccess: async (response) => {
           try {
-            const result = await verifyPremiumPayment({
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            });
+            const result =
+              order.mode === "subscription"
+                ? await verifyPremiumSubscription({
+                    razorpaySubscriptionId: response.razorpay_subscription_id,
+                    razorpayPaymentId: response.razorpay_payment_id,
+                    razorpaySignature: response.razorpay_signature,
+                  })
+                : await verifyPremiumPayment({
+                    razorpayOrderId: response.razorpay_order_id,
+                    razorpayPaymentId: response.razorpay_payment_id,
+                    razorpaySignature: response.razorpay_signature,
+                  });
             persistUser(result.user);
             setPaymentStatus("success");
           } catch (error) {
@@ -87,12 +95,24 @@ export const PricingPage = () => {
 
   const activePlan = plans[selectedPlan];
 
+  // Logged-in visitors always go to /dashboard (the app's own route guard
+  // there already bounces an onboarding-incomplete user back into resume
+  // mode, so this is correct regardless of onboarding status). Logged-out
+  // visitors return to the exact onboarding screen on "/" they left from --
+  // see the Pricing nav links in HomePage.jsx, which stamp
+  // pricingEntryScreenId into this navigation's location.state.
+  const backTo = isAuthenticated ? "/dashboard" : "/";
+  const backState =
+    !isAuthenticated && location.state?.pricingEntryScreenId
+      ? { resumeScreenId: location.state.pricingEntryScreenId }
+      : undefined;
+
   return (
     <div className="legal-page pricing-page">
       <header className="legal-page-header">
         <img src="/kuhedu-logo.png" alt="" />
         <span>KUHEDU STUDY BUDDY</span>
-        <Link className="legal-page-back" to="/">
+        <Link className="legal-page-back" to={backTo} state={backState}>
           Back to KUHEDU STUDY BUDDY
         </Link>
       </header>
@@ -113,7 +133,7 @@ export const PricingPage = () => {
           {user?.isPremium ? (
             <div className="pricing-card-active">
               <strong>You&apos;re already Premium</strong>
-              <p>Enjoy full access to STEMLab Premium.</p>
+              <p>Enjoy full access to Kuhedu Study Buddy Premium.</p>
             </div>
           ) : (
             <>
@@ -134,9 +154,12 @@ export const PricingPage = () => {
 
               <div className="pricing-price">
                 <span className="pricing-price-amount">₹{activePlan.price}</span>
-                <span className="pricing-price-period">/{selectedPlan === "monthly" ? "month" : "year"}</span>
+                {activePlan.period ? (
+                  <span className="pricing-price-period">/{activePlan.period}</span>
+                ) : null}
                 {activePlan.badge ? <span className="pricing-price-badge">{activePlan.badge}</span> : null}
               </div>
+              {activePlan.billingNote ? <p className="pricing-billing-note">{activePlan.billingNote}</p> : null}
 
               <button
                 type="button"

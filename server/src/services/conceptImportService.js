@@ -29,13 +29,17 @@
 //  - pdfassets/*, visual/*, textbook/*, learningpillars/* (root-level,
 //    parentCardkey="") -> content_card rows scoped to the section instead of
 //    a concept. pdfassets/visual are diagrams/mind-maps/etc, each an
-//    image-generation prompt an admin can attach an uploaded image to via
-//    content_card_media. textbook/{activities,exercises} are the textbook's
-//    own end-of-section activities and reflection questions (whole-section,
-//    not tied to one concept) -- fed to the student "Exercises/Activities"
-//    tab. learningpillars/pillar are competencies concepts develop --
-//    resolveConceptPillarLinks additionally links them to specific concepts
-//    (concept_learning_pillar), fed to the "Concepts" list as chips.
+//    image-generation PROMPT (in the card's own details) -- any image the
+//    source JSON embeds alongside that prompt is ignored on import; the
+//    actual image is generated separately in production from the prompt
+//    text, and an admin can then attach it to the card via the existing
+//    content_card_media re-upload flow. textbook/{activities,exercises} are
+//    the textbook's own end-of-section activities and reflection questions
+//    (whole-section, not tied to one concept) -- fed to the student
+//    "Exercises/Activities" tab. learningpillars/pillar are competencies
+//    concepts develop -- resolveConceptPillarLinks additionally links them
+//    to specific concepts (concept_learning_pillar), fed to the "Concepts"
+//    list as chips.
 //
 // Re-importing the same contentKey is a hard overwrite for content_card/
 // content_assessment_item/content_concept_memory (deleted then re-inserted),
@@ -211,7 +215,6 @@ const convertLegacyPayload = (payload) => {
         legacyPillarRefs.length > 0
           ? [...conceptDetails, { label: "Learning Pillars", value: legacyPillarRefs }]
           : conceptDetails,
-      imageDataUrl: concept?.image?.dataUrl || null,
     });
 
     const conceptEntry = findLegacyConceptEntry(conceptsMap, concept);
@@ -228,11 +231,6 @@ const convertLegacyPayload = (payload) => {
           title: item?.title || null,
           summary: item?.summary || null,
           details: toArray(item?.details),
-          // Source shape is a nested { image: { dataUrl } } object, not a
-          // flat "imageDataUrl" string -- confirmed against a real upload
-          // (this was previously dropped entirely, regardless of key name,
-          // since nothing here ever read the source item's "image" field).
-          imageDataUrl: item?.image?.dataUrl || null,
         });
       });
     };
@@ -254,7 +252,6 @@ const convertLegacyPayload = (payload) => {
             title: item?.title || null,
             summary: item?.summary || null,
             details: toArray(item?.details),
-            imageDataUrl: item?.image?.dataUrl || null,
           });
         });
       });
@@ -290,7 +287,6 @@ const convertLegacyPayload = (payload) => {
         title: item?.title || null,
         summary: item?.summary || null,
         details: toArray(item?.details),
-        imageDataUrl: item?.image?.dataUrl || null,
       });
     });
   });
@@ -326,7 +322,6 @@ const convertLegacyPayload = (payload) => {
         title: item?.title || null,
         summary: item?.summary || null,
         details: toArray(item?.details),
-        imageDataUrl: item?.image?.dataUrl || null,
       });
     });
   });
@@ -350,7 +345,6 @@ const convertLegacyPayload = (payload) => {
         title: item?.title || null,
         summary: item?.summary || null,
         details: toArray(item?.details),
-        imageDataUrl: item?.image?.dataUrl || null,
       });
     });
   });
@@ -376,7 +370,6 @@ const convertLegacyPayload = (payload) => {
       title: item?.title || null,
       summary: item?.summary || null,
       details: toArray(item?.details),
-      imageDataUrl: item?.image?.dataUrl || null,
     });
   });
 
@@ -792,22 +785,25 @@ export const importConceptContent = async ({ payload: rawPayload, userId = null,
       ? assessmentUnitIdByCardkey.get(card.cardkey)
       : parentAssessmentUnitId || null;
 
-    // Modern "cards" array files: source shape is nested { image: { dataUrl } },
-    // not a flat "imageDataUrl" string (confirmed against a real upload) --
-    // legacy-converted cards already carry a flat imageDataUrl from
-    // convertLegacyPayload above, so both are checked here.
-    const imageDataUrl = card.image?.dataUrl || card.imageDataUrl || null;
-
-    const insertResult = await pool.query(
+    // Deliberately ignores any image/imageDataUrl the source JSON carries --
+    // pdfassets/visual cards are image-generation PROMPTS, and the actual
+    // images are generated separately in production straight from that
+    // prompt text already sitting in the card's own details, not shipped
+    // through the import JSON. Skipping this here also keeps import
+    // payloads far smaller (base64 image data was routinely pushing
+    // uploads past nginx's/Express's body-size limits -- a real production
+    // incident). Admins can still attach an image to a card afterward via
+    // the existing content_card_media re-upload flow; only the "the JSON
+    // upload itself contains the image" path is removed.
+    await pool.query(
       `
         INSERT INTO content_card (
           sync_run_id, assessment_unit_id, source_section_id, content_key,
           contentuitab, processorkey, parent_cardkey, cardkey, sort_order,
-          title, summary, details, image_data_url
+          title, summary, details
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         ON CONFLICT (content_key, processorkey, parent_cardkey, cardkey) DO NOTHING
-        RETURNING id
       `,
       [
         syncRunId,
@@ -822,48 +818,13 @@ export const importConceptContent = async ({ payload: rawPayload, userId = null,
         card.title || null,
         card.summary || null,
         JSON.stringify(toArray(card.details)),
-        imageDataUrl,
       ]
     );
     cardSortOrder += 1;
 
-    // image_data_url on content_card is only the imported source-of-truth
-    // copy -- the actual student-facing diagram viewer (getDiagramMedia,
-    // used by /user/diagrams/:id/media) reads from content_card_media
-    // instead (it's versioned, supports admin re-uploads replacing the
-    // imported image). Without this insert, an imported image is captured
-    // in content_card but the viewer always finds no content_card_media row
-    // and renders the "coming soon" placeholder forever.
-    const insertedCardId = insertResult.rows[0]?.id;
-    if (insertedCardId && imageDataUrl) {
-      const mimeType = /^data:([^;,]+)[;,]/.exec(imageDataUrl)?.[1] || "image/png";
-      await pool.query(
-        `
-          INSERT INTO content_card_media (
-            content_card_id, version_number, is_selected, media_data, mime_type, created_by
-          )
-          VALUES ($1, 1, TRUE, $2, $3, $4)
-          ON CONFLICT (content_card_id, version_number) DO UPDATE
-          SET media_data = EXCLUDED.media_data,
-              mime_type = EXCLUDED.mime_type,
-              is_selected = TRUE
-        `,
-        [insertedCardId, imageDataUrl, mimeType, userId]
-      );
-    }
     onProgress({
       type: "info",
       message: `Card "${card.title || card.cardkey}" (${card.contentuitab}/${card.processorkey}) written.`,
-    });
-    // Debug aid for images not being picked up during import: lists the
-    // property names actually present on this card node (values omitted) so
-    // it's possible to see, per card, whether an image field exists at all
-    // and under what key -- e.g. "imageDataUrl" vs. a differently-named or
-    // missing field from the source JSON. Remove once the import's image
-    // handling is confirmed working end to end.
-    onProgress({
-      type: "info",
-      message: `  properties: ${Object.keys(card).join(", ")}`,
     });
 
     if (isConceptCard) {

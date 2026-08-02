@@ -16,8 +16,36 @@ const mapUser = (row) => ({
   onboardingCompletedAt: row.onboarding_completed_at,
   theme: row.theme,
   isPremium: row.is_premium,
+  premiumExpiresAt: row.premium_expires_at,
   createdAt: row.created_at,
 });
+
+// Trial premium (paymentService.js PLAN_AMOUNTS_PAISE.trial) is
+// self-expiring rather than webhook/cron-revoked -- cheapest correct option
+// for a ₹9/1-hour testing plan. Checked wherever a user row is loaded for
+// auth (requireAuth calls findUserById on every request), so a lapsed trial
+// never reads as premium for more than one request past its expiry.
+const expirePremiumIfLapsed = async (row) => {
+  if (!row || !row.is_premium || !row.premium_expires_at) {
+    return row;
+  }
+  if (new Date(row.premium_expires_at) > new Date()) {
+    return row;
+  }
+
+  // premium_expires_at is deliberately left as-is (not nulled) -- it's the
+  // only record of when a lapsed trial actually ended, which the admin
+  // Orders dashboard reads (ordersService.js's access_ends_at). It gets
+  // overwritten naturally on the user's next purchase either way
+  // (markOrderPaidAndActivatePremium always sets a fresh value or NULL), so
+  // leaving the stale timestamp here never causes a future "still active"
+  // misread.
+  const result = await pool.query(
+    "UPDATE users SET is_premium = FALSE, updated_at = NOW() WHERE id = $1 RETURNING *",
+    [row.id]
+  );
+  return result.rows[0] || row;
+};
 
 export const findUserByEmail = async (email) => {
   const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
@@ -26,7 +54,7 @@ export const findUserByEmail = async (email) => {
 
 export const findUserById = async (id) => {
   const result = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
-  return result.rows[0] || null;
+  return (await expirePremiumIfLapsed(result.rows[0])) || null;
 };
 
 export const findUserByGoogleId = async (googleId) => {

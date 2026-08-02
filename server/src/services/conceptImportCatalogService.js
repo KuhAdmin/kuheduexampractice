@@ -320,9 +320,18 @@ export const resolveOrCreateCatalogTarget = async ({
   if (chapter.created) {
     // Best-effort: mv_chapter_catalog is otherwise only refreshed on server
     // startup (db/bootstrap.js), so without this a newly-created chapter
-    // would be invisible to students until a restart. A failure here (e.g.
-    // concurrent refresh already in progress) self-heals on the next one.
-    await pool.query("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_chapter_catalog").catch(() => {});
+    // would be invisible to students (missing from the class/subject
+    // picker, listClassSubjectOptionsWithContent) until a restart. A
+    // failure here (e.g. concurrent refresh already in progress) is
+    // logged rather than silently swallowed -- a real production incident
+    // was caused by this failing on every import with nothing in the logs
+    // to explain why newly-imported content never showed up; it should
+    // still self-heal on the next successful refresh (import or restart),
+    // this is just so a *persistent* failure is actually diagnosable next
+    // time instead of invisible.
+    await pool.query("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_chapter_catalog").catch((error) => {
+      console.error("Failed to refresh mv_chapter_catalog after concept import:", error);
+    });
   }
 
   return { fkMstChapterId: chapter.id, sourceSectionId };
