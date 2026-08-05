@@ -53,9 +53,11 @@ import {
 } from "../controllers/studentPracticeController.js";
 import { postHandwrittenNoteOcr } from "../controllers/ocrController.js";
 import {
+  getTutorUsageHandler,
   postConceptTutorMessage,
   postConceptTutorVoiceToken,
   postTutorAvatarToken,
+  postTutorVoiceUsageHandler,
 } from "../controllers/studentTutorController.js";
 import {
   postConceptPracticeAnswerCapture,
@@ -95,6 +97,8 @@ router.post("/concepts/:assessmentUnitId/micro-activity/respond", submitMicroAct
 router.post("/concepts/:assessmentUnitId/tutor", postConceptTutorMessage);
 router.post("/concepts/:assessmentUnitId/tutor/voice-token", postConceptTutorVoiceToken);
 router.post("/tutor/avatar-token", postTutorAvatarToken);
+router.get("/tutor/usage", getTutorUsageHandler);
+router.post("/tutor/voice-usage", postTutorVoiceUsageHandler);
 router.post("/concepts/:assessmentUnitId/practice-capture/question", postConceptPracticeQuestionCapture);
 router.post("/concepts/:assessmentUnitId/practice-capture/answer", postConceptPracticeAnswerCapture);
 router.post("/concepts/:assessmentUnitId/practice-capture/grade", postConceptPracticeGrade);

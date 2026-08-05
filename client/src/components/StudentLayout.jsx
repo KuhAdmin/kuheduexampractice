@@ -6,7 +6,7 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { AiTutorAvatarProvider } from "./AiTutorAvatarProvider";
 import { ClassSubjectProvider } from "../context/ClassSubjectContext";
 
-const studentMenuItems = navItems.map((item) => ({
+const baseStudentMenuItems = navItems.map((item) => ({
   label: item.label,
   to: item.path || "#",
   icon: <StudentNavIcon type={item.icon} />,
@@ -15,6 +15,20 @@ const studentMenuItems = navItems.map((item) => ({
 
 export const StudentLayout = ({ user, onLogout }) => {
   const tier = useBreakpoint();
+  // Content moderators are normal student-app users (see App.jsx's /dashboard
+  // guard) but also need a way back to their one allowed admin route --
+  // see AdminLayout.jsx's menu filtering for the other half of this.
+  const studentMenuItems =
+    user?.role === "moderator"
+      ? [
+          ...baseStudentMenuItems,
+          {
+            label: "Moderate Content",
+            to: "/admin/content-editor",
+            icon: <StudentNavIcon type="clipboard" />,
+          },
+        ]
+      : baseStudentMenuItems;
 
   // Wraps both branches (not just the desktop sidebar) since
   // StudentChaptersPage -- rendered via <Outlet/> in either case -- reads

@@ -1,5 +1,11 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_RULE_HINT,
+  validatePasswordStrength,
+} from "../lib/passwordRules";
 
 const initialForm = {
   name: "",
@@ -8,8 +14,6 @@ const initialForm = {
 };
 const MIN_NAME_LENGTH = 2;
 const MAX_NAME_LENGTH = 80;
-const MIN_PASSWORD_LENGTH = 8;
-const MAX_PASSWORD_LENGTH = 15;
 
 const validateRegisterForm = (form) => {
   const trimmedName = form.name.trim();
@@ -22,8 +26,9 @@ const validateRegisterForm = (form) => {
     return `Full name must be ${MAX_NAME_LENGTH} characters or fewer.`;
   }
 
-  if (form.password.length < MIN_PASSWORD_LENGTH || form.password.length > MAX_PASSWORD_LENGTH) {
-    return `Password must be ${MIN_PASSWORD_LENGTH}-${MAX_PASSWORD_LENGTH} characters long.`;
+  const passwordError = validatePasswordStrength(form.password);
+  if (passwordError) {
+    return passwordError;
   }
 
   return "";
@@ -39,11 +44,11 @@ const PasswordField = ({ value, onChange }) => {
         <input
           name="password"
           type={visible ? "text" : "password"}
-          placeholder={`Use ${MIN_PASSWORD_LENGTH}-${MAX_PASSWORD_LENGTH} characters`}
+          placeholder={PASSWORD_RULE_HINT}
           value={value}
           onChange={onChange}
-          minLength={MIN_PASSWORD_LENGTH}
-          maxLength={MAX_PASSWORD_LENGTH}
+          minLength={PASSWORD_MIN_LENGTH}
+          maxLength={PASSWORD_MAX_LENGTH}
           required
         />
         <button

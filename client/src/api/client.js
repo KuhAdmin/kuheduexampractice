@@ -188,6 +188,14 @@ export const getConceptTutorVoiceToken = async (assessmentUnitId, mode) =>
 export const getTutorAvatarToken = async () =>
   apiRequest(`/user/tutor/avatar-token`, { method: "POST" });
 
+export const getTutorUsage = async () => apiRequest("/user/tutor/usage");
+
+export const postTutorVoiceUsage = async (seconds) =>
+  apiRequest("/user/tutor/voice-usage", {
+    method: "POST",
+    body: JSON.stringify({ seconds }),
+  });
+
 export const captureConceptPracticeQuestion = async (assessmentUnitId, imageDataUrl) =>
   apiRequest(`/user/concepts/${assessmentUnitId}/practice-capture/question`, {
     method: "POST",
@@ -522,6 +530,43 @@ export const uploadDiagramMedia = async (diagramId, dataUrl, fileName) =>
     body: JSON.stringify({ dataUrl, fileName }),
   });
 
+export const getContentEditorBooks = async () => apiRequest("/admin/content-editor/books");
+
+export const getContentEditorChapters = async (bookId) =>
+  apiRequest(`/admin/content-editor/books/${bookId}/chapters`);
+
+export const getContentEditorCards = async (sourceSectionId) =>
+  apiRequest(`/admin/content-editor/sections/${sourceSectionId}/cards`);
+
+export const updateContentEditorCard = async (cardId, { title, summary, details, isHidden }) =>
+  apiRequest(`/admin/content-editor/cards/${cardId}`, {
+    method: "PUT",
+    body: JSON.stringify({ title, summary, details, isHidden }),
+  });
+
+export const regenerateContentCardImage = async (cardId, prompt) =>
+  apiRequest(`/admin/content-editor/cards/${cardId}/regenerate-image`, {
+    method: "POST",
+    body: JSON.stringify({ prompt }),
+  });
+
+export const regenerateMemoryHookImage = async (assessmentUnitId, sectionKey, prompt) =>
+  apiRequest(`/admin/content-editor/memory-hooks/${assessmentUnitId}/${sectionKey}/regenerate-image`, {
+    method: "POST",
+    body: JSON.stringify({ prompt }),
+  });
+
+export const updateMemoryHookPrompt = async (assessmentUnitId, sectionKey, prompt) =>
+  apiRequest(`/admin/content-editor/memory-hooks/${assessmentUnitId}/${sectionKey}/prompt`, {
+    method: "PUT",
+    body: JSON.stringify({ prompt }),
+  });
+
+export const generateMemoryHookPrompt = async (assessmentUnitId, sectionKey) =>
+  apiRequest(`/admin/content-editor/memory-hooks/${assessmentUnitId}/${sectionKey}/generate-prompt`, {
+    method: "POST",
+  });
+
 export const uploadChapterExercise = async (bookId, chapterNumber, { dataUrl, mimeType, chapterName }) =>
   apiRequest(`/admin/chapter-exercises/${bookId}/${chapterNumber}/upload`, {
     method: "POST",
@@ -545,6 +590,8 @@ export const submitBookQuestionResponse = async (chapterNumber, questionId, stud
     method: "POST",
     body: JSON.stringify({ studentAnswer, sourcePageImages }),
   });
+
+export const getAdminOverviewStats = async () => apiRequest("/admin/overview");
 
 export const getAdminOrders = async (params) => apiRequest(`/admin/orders?${buildQuery(params)}`);
 

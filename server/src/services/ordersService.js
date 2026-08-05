@@ -53,7 +53,7 @@ const ORDERS_CTE = `
       si.id,
       s.user_id,
       u.email,
-      'monthly',
+      COALESCE(s.card_id || '-monthly', 'monthly'),
       s.status,
       -- Monthly's real analog of Trial's premium_expires_at above: the
       -- current billing cycle's end, already a stored column on
@@ -80,7 +80,7 @@ const ORDERS_CTE = `
       s.id,
       s.user_id,
       u.email,
-      'monthly',
+      COALESCE(s.card_id || '-monthly', 'monthly'),
       s.status,
       s.current_end,
       NULL,

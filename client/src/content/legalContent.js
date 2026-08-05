@@ -4,6 +4,7 @@ export const LEGAL_DOC_SLUGS = {
   refund: "refund-cancellation",
   disclaimer: "disclaimer",
   contact: "contact",
+  faq: "faq",
 };
 
 export const privacyPolicy = {
@@ -514,10 +515,138 @@ export const contactUs = {
   ],
 };
 
+export const faqAndHelp = {
+  title: "Frequently Asked Questions",
+  sections: [
+    {
+      heading: "What is KUHEDU STUDY BUDDY?",
+      paragraphs: [
+        "A CBSE-aligned digital learning companion for Class 6-8 students, covering English, Social Science, Science, and Mathematics -- combining an AI Smart Tutor with competency-based, inquiry-based, and experiential learning, not just a bank of practice questions.",
+      ],
+    },
+    {
+      heading: "What makes Smart Tutor different from a typical chatbot?",
+      paragraphs: [
+        "Smart Tutor gives step-by-step explanations and holds real spoken conversations -- students can ask a doubt out loud and get it explained back, not just typed text.",
+      ],
+    },
+    {
+      heading: "What is \"Practice with Real Question\"?",
+      paragraphs: [
+        "Photograph an actual textbook question, write your answer by hand on paper, and the AI reads your handwriting and gives instant feedback -- no retyping the question or your answer.",
+      ],
+    },
+    {
+      heading: "What is Einstein Mode?",
+      paragraphs: [
+        "The AI poses a real-world challenge tied to a concept, the student finds and photographs a matching real object, and the AI checks it and explains the connection back to the syllabus -- turning abstract concepts into something tangible.",
+      ],
+    },
+    {
+      heading: "What is Viva Mode?",
+      paragraphs: [
+        "A spoken practice mode: students explain a concept out loud, the AI listens, asks follow-up questions like a real examiner would, and evaluates understanding -- building confidence for school orals and vivas.",
+      ],
+    },
+    {
+      heading: "How is the content different from \"more questions\"?",
+      paragraphs: [
+        "Every chapter blends competency-based questions (apply, don't just recall), inquiry-based prompts, and hands-on \"do, observe, reflect, apply\" tasks, alongside 8 real assessment formats -- not only MCQs.",
+      ],
+    },
+    {
+      heading: "What question formats does the app use?",
+      paragraphs: [
+        "MCQ, Fill in the Blank, Assertion-Reason, Short Answer, True/False, HOTS (Higher-Order Thinking), Hotspot Diagram, and Case Study -- mirroring the range CBSE exams actually use.",
+      ],
+    },
+    {
+      heading: "What are Cheat Sheets, Mnemonics, and Exam Notes?",
+      paragraphs: [
+        "Cheat Sheets give compact, exam-ready key facts per concept; Mnemonics are memory hooks that make facts stick; Exam Notes highlight exactly what examiners check for -- each generated per concept, not a generic chapter summary.",
+      ],
+    },
+    {
+      heading: "What are Flashcards and Memory Booster?",
+      paragraphs: [
+        "Recall-focused tools built to speed up retention beyond a single read-through, so revision compounds over the term instead of starting from zero each time.",
+      ],
+    },
+    {
+      heading: "How does the app track my progress?",
+      paragraphs: [
+        "A Daily Study Streak plus concept-level mastery tracking on the dashboard automatically flags weak concepts and builds a personalized revision plan -- so a student knows what to revisit, not just how much they've done.",
+      ],
+    },
+    {
+      heading: "What subjects and classes are supported?",
+      paragraphs: [
+        "Subject-specific CBSE plans for Class 6, 7, and 8 -- English, Social Science, Science, and Mathematics -- so a family only pays for the subjects they actually need.",
+      ],
+    },
+    {
+      heading: "What is \"Access to Virtual Labs\"?",
+      paragraphs: [
+        "Available on the Science and Mathematics plans: interactive simulations/experiments tied directly to the syllabus, so students run an experiment instead of only reading about it.",
+      ],
+    },
+    {
+      heading: "Is there a free trial?",
+      paragraphs: [
+        "Yes -- a low-cost, time-limited Trial plan lets you explore Smart Tutor and the full learning experience before committing to a subscription.",
+      ],
+    },
+    {
+      heading: "What's the difference between Monthly and Yearly billing?",
+      paragraphs: [
+        "Monthly billing renews automatically each month; Yearly billing is a single upfront payment at a discounted rate (up to ~16% cheaper than paying monthly all year).",
+      ],
+    },
+    {
+      heading: "Can I cancel anytime?",
+      paragraphs: [
+        "Yes. Cancelling stops future auto-renewal, and access continues until the end of your current billing period; no partial refund is issued for the unused portion (see our Refund & Cancellation Policy).",
+      ],
+    },
+    {
+      heading: "How many Smart Tutor hours do I get, and can I add more?",
+      paragraphs: [
+        "Every subscription includes 30 hours of Smart Tutor usage per month. If you need more in a given month, a 30-hour recharge is available for ₹49.",
+      ],
+    },
+    {
+      heading: "Can I use KUHEDU STUDY BUDDY without downloading an app from a store?",
+      paragraphs: [
+        "Yes -- it's a Progressive Web App. Add it to your phone's home screen from Safari (iOS) or Chrome (Android) for an app-like experience with no store download required.",
+      ],
+    },
+    {
+      heading: "Is payment and personal data handled securely?",
+      paragraphs: [
+        "Yes -- payments are processed through Razorpay and KUHEDU never stores your card/UPI details directly; data handling is governed by our Privacy Policy.",
+      ],
+    },
+    {
+      heading: "What if I'm charged but my subscription doesn't activate?",
+      paragraphs: [
+        "This is explicitly covered under our Refund & Cancellation Policy. Email support@kuhedu.com within 7 days of the charge with your Order ID/Transaction ID, and it will be reviewed for a refund.",
+      ],
+    },
+    {
+      heading: "How do I contact KUHEDU if I have a question the app can't answer?",
+      paragraphs: [
+        "General and grievance queries: rinitad@kuhedu.com.",
+        "Refund and billing support: support@kuhedu.com.",
+      ],
+    },
+  ],
+};
+
 export const legalDocsBySlug = {
   [LEGAL_DOC_SLUGS.privacy]: privacyPolicy,
   [LEGAL_DOC_SLUGS.terms]: termsAndConditions,
   [LEGAL_DOC_SLUGS.refund]: refundAndCancellation,
   [LEGAL_DOC_SLUGS.disclaimer]: disclaimer,
   [LEGAL_DOC_SLUGS.contact]: contactUs,
+  [LEGAL_DOC_SLUGS.faq]: faqAndHelp,
 };

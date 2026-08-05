@@ -19,8 +19,10 @@ import adminConceptImportRoutes from "./routes/adminConceptImportRoutes.js";
 import adminDemoRoutes from "./routes/adminDemoRoutes.js";
 import chapterExerciseAdminRoutes from "./routes/chapterExerciseAdminRoutes.js";
 import mediaAdminRoutes from "./routes/mediaAdminRoutes.js";
+import adminContentEditorRoutes from "./routes/adminContentEditorRoutes.js";
 import razorpayWebhookRoutes from "./routes/razorpayWebhookRoutes.js";
 import adminOrdersRoutes from "./routes/adminOrdersRoutes.js";
+import adminOverviewRoutes from "./routes/adminOverviewRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -126,7 +128,9 @@ export const createApp = () => {
   app.use("/api/admin/ai-demo", adminDemoRoutes);
   app.use("/api/admin/chapter-exercises", chapterExerciseAdminRoutes);
   app.use("/api/admin/media", mediaAdminRoutes);
+  app.use("/api/admin/content-editor", adminContentEditorRoutes);
   app.use("/api/admin/orders", adminOrdersRoutes);
+  app.use("/api/admin/overview", adminOverviewRoutes);
 
   const clientDist = path.resolve(__dirname, "../../client/dist");
   app.use(

@@ -1,4 +1,4 @@
-import { createPremiumOrder, verifyPremiumPayment } from "../services/paymentService.js";
+import { createPremiumOrder, verifyPremiumPayment, getLastPaymentAttempt } from "../services/paymentService.js";
 import {
   createPremiumSubscription,
   verifyPremiumSubscription,
@@ -6,17 +6,19 @@ import {
   cancelSubscription,
 } from "../services/subscriptionService.js";
 
-// Monthly is a real 12-cycle recurring subscription; Yearly stays a
-// one-time order. Both go through the same create-order/verify endpoints so
-// the frontend keeps a single checkout entry point regardless of which plan
-// the learner picked.
+// Monthly is a real 12-cycle recurring subscription (one per pricing card,
+// e.g. "science-monthly"); Yearly stays a one-time order (e.g.
+// "science-yearly"). Both go through the same create-order/verify endpoints
+// so the frontend keeps a single checkout entry point regardless of which
+// card/cycle the learner picked.
+const MONTHLY_SUFFIX = "-monthly";
+
 export const createOrder = async (req, res, next) => {
   try {
     const plan = req.body?.plan;
-    const order =
-      plan === "monthly"
-        ? await createPremiumSubscription({ userId: req.user.id })
-        : await createPremiumOrder({ userId: req.user.id, plan });
+    const order = plan?.endsWith(MONTHLY_SUFFIX)
+      ? await createPremiumSubscription({ userId: req.user.id, cardId: plan.slice(0, -MONTHLY_SUFFIX.length) })
+      : await createPremiumOrder({ userId: req.user.id, plan });
     return res.json(order);
   } catch (error) {
     if (error.statusCode) {
@@ -53,8 +55,11 @@ export const verifyPayment = async (req, res, next) => {
 
 export const getSubscription = async (req, res, next) => {
   try {
-    const subscription = await getActiveSubscriptionForUser(req.user.id);
-    return res.json({ subscription });
+    const [subscription, lastAttempt] = await Promise.all([
+      getActiveSubscriptionForUser(req.user.id),
+      getLastPaymentAttempt(req.user.id),
+    ]);
+    return res.json({ subscription, lastAttempt });
   } catch (error) {
     if (error.statusCode) {
       return res.status(error.statusCode).json({ message: error.message });

@@ -79,7 +79,7 @@ export const gradeChallengeResponse = async ({ responseKey, userId, responseText
 
   const cardResult = await pool.query(
     `SELECT title, summary, details FROM content_card
-     WHERE assessment_unit_id = $1 AND cardkey = $2 AND contentuitab = 'assessment'
+     WHERE assessment_unit_id = $1 AND cardkey = $2 AND contentuitab = 'assessment' AND is_hidden = FALSE
      LIMIT 1`,
     [keyParts.assessmentUnitId, keyParts.cardkey]
   );

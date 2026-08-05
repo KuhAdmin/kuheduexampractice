@@ -38,6 +38,62 @@ const nextDisplayOrder = async (table, whereClause = "", params = []) => {
   return Number(result.rows[0].max_order) + 1;
 };
 
+// mst_exam_goal.fk_state_id/fk_mst_exam_type_id are NOT NULL, but neither is
+// ever actually read by any real query (resolveDashboardAcademicFilters
+// matches on board_code, not state; exam type is only ever looked up back by
+// its own type_id here) -- they're just required FK slots with no signal in
+// the import metadata to derive real values from. Rather than depending on
+// these being pre-seeded (which would put this import path right back to
+// needing seed data), a single placeholder country/state row and the one
+// 'BRD' exam-type row are created on first use, exactly like
+// mst_level/mst_subject/mst_book below auto-create from upload metadata.
+const resolveOrCreateCountry = async () => {
+  const existing = await pool.query("SELECT id FROM mst_country ORDER BY id ASC LIMIT 1");
+  if (existing.rows[0]) return existing.rows[0].id;
+
+  const result = await pool.query(
+    `
+      INSERT INTO mst_country (name_code, name)
+      VALUES ('IN', 'INDIA')
+      ON CONFLICT (name_code) DO UPDATE SET name = EXCLUDED.name
+      RETURNING id
+    `
+  );
+  return result.rows[0].id;
+};
+
+const resolveOrCreateState = async () => {
+  const existing = await pool.query("SELECT id FROM mst_state ORDER BY id ASC LIMIT 1");
+  if (existing.rows[0]) return existing.rows[0].id;
+
+  const countryId = await resolveOrCreateCountry();
+  const result = await pool.query(
+    `
+      INSERT INTO mst_state (state_id, name, fk_country_id)
+      VALUES ('DEL', 'Delhi', $1)
+      ON CONFLICT (state_id) DO UPDATE SET fk_country_id = EXCLUDED.fk_country_id
+      RETURNING id
+    `,
+    [countryId]
+  );
+  return result.rows[0].id;
+};
+
+const resolveOrCreateBoardExamType = async () => {
+  const existing = await pool.query("SELECT id FROM mst_exam_type WHERE type_id = 'BRD' LIMIT 1");
+  if (existing.rows[0]) return existing.rows[0].id;
+
+  const result = await pool.query(
+    `
+      INSERT INTO mst_exam_type (type_id, name)
+      VALUES ('BRD', 'BOARD')
+      ON CONFLICT (type_id) DO UPDATE SET name = EXCLUDED.name
+      RETURNING id
+    `
+  );
+  return result.rows[0].id;
+};
+
 // mst_exam_goal.board_code is what resolveDashboardAcademicFilters
 // (catalogService.js) matches a student's board against -- an exam goal
 // created any other way would be invisible to the student-facing flow no
@@ -49,13 +105,7 @@ const resolveOrCreateExamGoal = async (board) => {
   );
   if (existing.rows[0]) return existing.rows[0];
 
-  const [examTypeResult, stateResult] = await Promise.all([
-    pool.query("SELECT id FROM mst_exam_type WHERE type_id = 'BRD' LIMIT 1"),
-    pool.query("SELECT id FROM mst_state ORDER BY id ASC LIMIT 1"),
-  ]);
-  if (!examTypeResult.rows[0] || !stateResult.rows[0]) {
-    throw new Error("Cannot auto-create an exam goal: mst_exam_type/mst_state has no rows.");
-  }
+  const [examTypeId, stateId] = await Promise.all([resolveOrCreateBoardExamType(), resolveOrCreateState()]);
 
   const baseCode = slugCode(board, 40);
   for (let attempt = 0; attempt < 20; attempt += 1) {
@@ -67,7 +117,7 @@ const resolveOrCreateExamGoal = async (board) => {
           VALUES ($1, $2, $3, $4, $5, TRUE)
           RETURNING id, goal_id
         `,
-        [goalId, board, board, examTypeResult.rows[0].id, stateResult.rows[0].id]
+        [goalId, board, board, examTypeId, stateId]
       );
       return result.rows[0];
     } catch (error) {
@@ -251,9 +301,10 @@ const resolveOrCreateSourceSection = async ({
 
 // Returns null (rather than throwing) when the metadata is too incomplete to
 // resolve confidently -- callers should fall back to the demo_*_label path in
-// that case. Once resolution starts, missing seed data (mst_exam_type 'BRD',
-// mst_state) is a real error and throws, since that indicates a broken
-// database rather than a malformed upload.
+// that case. Once resolution starts, every master-data row it needs
+// (country/state/exam type/exam goal/level/subject/book/chapter) is
+// auto-created on demand -- this import path never depends on any table
+// being pre-seeded.
 export const resolveOrCreateCatalogTarget = async ({
   board,
   classNum,

@@ -13,12 +13,28 @@ const defaultUsers = [
     email: "student@example.com",
     password: "password123",
     role: "student",
+    isPremium: false,
   },
   {
     name: "Default Admin",
     email: "admin@example.com",
     password: "admin12345",
     role: "admin",
+    isPremium: false,
+  },
+  // Normal subscription-activated student account, but with role=moderator
+  // so it also gets the "Moderate Content" nav entry (StudentLayout.jsx) ->
+  // /admin/content-editor (edit cards, show/hide, regenerate images -- see
+  // contentEditorService.js). isPremium: true so it isn't blocked by
+  // subscription-gated content while testing. Seeded (not just a one-off
+  // admin-created account) so it survives a truncate_all.sql run instead of
+  // needing to be manually recreated every time.
+  {
+    name: "Content Moderator",
+    email: "contentadmin@exam4u.study",
+    password: "pass~!@#$%",
+    role: "moderator",
+    isPremium: true,
   },
 ];
 
@@ -28,16 +44,17 @@ const seedDefaultUsers = async () => {
 
     await pool.query(
       `
-        INSERT INTO users (name, email, password_hash, provider, role)
-        VALUES ($1, $2, $3, 'local', $4)
+        INSERT INTO users (name, email, password_hash, provider, role, is_premium, premium_expires_at)
+        VALUES ($1, $2, $3, 'local', $4, $5, NULL)
         ON CONFLICT (email) DO UPDATE
         SET name = EXCLUDED.name,
             password_hash = EXCLUDED.password_hash,
             provider = EXCLUDED.provider,
             role = EXCLUDED.role,
+            is_premium = EXCLUDED.is_premium,
             updated_at = NOW()
       `,
-      [user.name, user.email, passwordHash, user.role]
+      [user.name, user.email, passwordHash, user.role, user.isPremium]
     );
   }
 };
@@ -186,10 +203,6 @@ const pruneRedundantAssessmentStudioSchema = async () => {
     "ALTER TABLE IF EXISTS assessment_unit_supporting_concept ADD COLUMN IF NOT EXISTS generation_id BIGINT REFERENCES content_sync_run(id)",
     "ALTER TABLE IF EXISTS assessment_unit_dependency DROP COLUMN IF EXISTS generation_id",
     "ALTER TABLE IF EXISTS assessment_unit_dependency ADD COLUMN IF NOT EXISTS generation_id BIGINT REFERENCES content_sync_run(id)",
-    "ALTER TABLE IF EXISTS concept DROP COLUMN IF EXISTS generation_id",
-    "ALTER TABLE IF EXISTS concept ADD COLUMN IF NOT EXISTS generation_id BIGINT REFERENCES content_sync_run(id)",
-    "ALTER TABLE IF EXISTS concept_alias DROP COLUMN IF EXISTS generation_id",
-    "ALTER TABLE IF EXISTS concept_alias ADD COLUMN IF NOT EXISTS generation_id BIGINT REFERENCES content_sync_run(id)",
     "ALTER TABLE IF EXISTS student_response DROP COLUMN IF EXISTS generation_id",
     "ALTER TABLE IF EXISTS student_response ADD COLUMN IF NOT EXISTS generation_id BIGINT REFERENCES content_sync_run(id)",
     "ALTER TABLE IF EXISTS student_mastery DROP COLUMN IF EXISTS last_generation_id",
@@ -206,6 +219,23 @@ const pruneRedundantAssessmentStudioSchema = async () => {
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_question_bank_item_item_id ON question_bank_item (item_id) WHERE item_id IS NOT NULL",
     "ALTER TABLE IF EXISTS student_attempt_item DROP COLUMN IF EXISTS item_id",
     "ALTER TABLE IF EXISTS student_attempt_item ADD COLUMN IF NOT EXISTS item_id VARCHAR(160) REFERENCES content_assessment_item(item_id) ON DELETE SET NULL",
+
+    // Confirmed zero app-code readers/writers (repo-wide audit, 2026-08-04):
+    // concept/concept_alias were superseded by assessment_unit and never
+    // queried after that migration; source_section_image's role (uploaded
+    // section images) was superseded by content_card_media; teacher_assignment/
+    // teacher_feedback_note have no controller/route/service anywhere -- a
+    // speced-but-never-built "teacher assigns work" feature (see
+    // docs/bio_assessment.md); mst_practice_type's only FK
+    // (practice_set.fk_mst_practice_type_id) is never populated by any of
+    // practice_set's insert paths in studentPracticeService.js.
+    "DROP TABLE IF EXISTS teacher_feedback_note CASCADE",
+    "DROP TABLE IF EXISTS teacher_assignment CASCADE",
+    "DROP TABLE IF EXISTS concept_alias CASCADE",
+    "DROP TABLE IF EXISTS concept CASCADE",
+    "DROP TABLE IF EXISTS source_section_image CASCADE",
+    "DROP TABLE IF EXISTS mst_practice_type CASCADE",
+    "ALTER TABLE IF EXISTS practice_set DROP COLUMN IF EXISTS fk_mst_practice_type_id",
   ];
 
   for (const sql of cleanupStatements) {

@@ -5,6 +5,8 @@ import {
   registerWithEmail,
 } from "../services/authService.js";
 import { updateUserOnboarding, updateUserProfile, updateUserTheme } from "../services/userService.js";
+import { validatePasswordStrength } from "../services/passwordRules.js";
+import { validateEmail } from "../services/emailRules.js";
 import { env } from "../config/env.js";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -28,10 +30,14 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ message: "Name must be 80 characters or fewer." });
     }
 
-    if (password.length < 8 || password.length > 15) {
-      return res
-        .status(400)
-        .json({ message: "Password must be 8-15 characters long." });
+    const emailError = validateEmail(email);
+    if (emailError) {
+      return res.status(400).json({ message: emailError });
+    }
+
+    const passwordError = validatePasswordStrength(password);
+    if (passwordError) {
+      return res.status(400).json({ message: passwordError });
     }
 
     const payload = await registerWithEmail({ name: trimmedName, email, password });
@@ -160,8 +166,13 @@ export const changePassword = async (req, res, next) => {
       return res.status(400).json({ message: "Current password is required." });
     }
 
-    if (!newPassword || newPassword.length < 8 || newPassword.length > 15) {
-      return res.status(400).json({ message: "New password must be 8-15 characters long." });
+    if (!newPassword) {
+      return res.status(400).json({ message: "New password is required." });
+    }
+
+    const passwordError = validatePasswordStrength(newPassword);
+    if (passwordError) {
+      return res.status(400).json({ message: passwordError.replace(/^Password/, "New password") });
     }
 
     await changeUserPassword({ id: req.user.id, currentPassword, newPassword });

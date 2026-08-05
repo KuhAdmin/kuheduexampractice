@@ -4,16 +4,17 @@ import { pool } from "../db/pool.js";
 import { env } from "../config/env.js";
 import { toPublicUser } from "./userService.js";
 
-// STEMLab Premium is a fixed one-time purchase for now (not wired to
-// AdminSettingsPage.jsx's currently-unused premiumPrice field -- that would
-// need its own persistence layer, a separate change from this integration).
-// "monthly" vs "yearly" only changes the charged amount -- there is no
-// recurring billing, "is_premium" is a one-way flag set on any successful
-// purchase, EXCEPT the "trial" plan below, which self-expires after
-// TRIAL_DURATION_MS (see markOrderPaidAndActivatePremium).
+// STEMLab Premium's one-time purchases: each pricing card's Yearly tier
+// (its Monthly tier is a real recurring subscription instead -- see
+// subscriptionService.js). "is_premium" is a one-way flag set on any
+// successful purchase, EXCEPT the "trial" plan below, which self-expires
+// after TRIAL_DURATION_MS (see markOrderPaidAndActivatePremium). Amounts
+// must match client/src/content/pricingContent.js's pricingCards.
 const PLAN_AMOUNTS_PAISE = {
-  monthly: 19900,
-  yearly: 199900,
+  "english-yearly": 99900,
+  "social-science-yearly": 199900,
+  "science-yearly": 399900,
+  "mathematics-yearly": 399900,
   // Testing-only plan: ₹9 for 1 hour of premium access, then auto-expires
   // (see markOrderPaidAndActivatePremium's premiumExpiresAt below) -- never
   // a recurring subscription, always the one-time order path.
@@ -40,6 +41,26 @@ const getRazorpayClient = () => {
     razorpayClient = new Razorpay({ key_id: env.razorpayKeyId, key_secret: env.razorpayKeySecret });
   }
   return razorpayClient;
+};
+
+// Most recent one-time order attempt (Yearly/Trial), regardless of outcome --
+// lets the profile page tell a student "your last attempt failed" instead of
+// silently showing the generic "Subscribe" state with no explanation. Only
+// covers payment_order (not the subscription table): a Monthly signup either
+// reaches 'active' or just never completes, there's no equivalent "failed"
+// status to surface the same way.
+export const getLastPaymentAttempt = async (userId) => {
+  const result = await pool.query(
+    `
+      SELECT status, plan, created_at
+      FROM payment_order
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      LIMIT 1
+    `,
+    [userId]
+  );
+  return result.rows[0] || null;
 };
 
 export const createPremiumOrder = async ({ userId, plan = "yearly" }) => {

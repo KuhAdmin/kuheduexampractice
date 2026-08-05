@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-
-const MIN_PASSWORD_LENGTH = 8;
-const MAX_PASSWORD_LENGTH = 15;
+import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_RULE_HINT,
+  validatePasswordStrength,
+} from "../lib/passwordRules";
 
 const initialForm = {
   currentPassword: "",
@@ -19,11 +22,11 @@ const PasswordField = ({ name, label, value, onChange }) => {
         <input
           name={name}
           type={visible ? "text" : "password"}
-          placeholder={`Use ${MIN_PASSWORD_LENGTH}-${MAX_PASSWORD_LENGTH} characters`}
+          placeholder={PASSWORD_RULE_HINT}
           value={value}
           onChange={onChange}
-          minLength={MIN_PASSWORD_LENGTH}
-          maxLength={MAX_PASSWORD_LENGTH}
+          minLength={PASSWORD_MIN_LENGTH}
+          maxLength={PASSWORD_MAX_LENGTH}
           required
         />
         <button
@@ -100,8 +103,9 @@ export const ChangePasswordModal = ({ open, onClose, onSave }) => {
       return;
     }
 
-    if (form.newPassword.length < MIN_PASSWORD_LENGTH || form.newPassword.length > MAX_PASSWORD_LENGTH) {
-      setError(`New password must be ${MIN_PASSWORD_LENGTH}-${MAX_PASSWORD_LENGTH} characters long.`);
+    const passwordError = validatePasswordStrength(form.newPassword);
+    if (passwordError) {
+      setError(passwordError.replace(/^Password/, "New password"));
       return;
     }
 

@@ -7,9 +7,16 @@ import { getSetting, setSetting } from "./appSettingsService.js";
 import { PaymentError } from "./paymentService.js";
 
 // STEMLab Premium Monthly: a real recurring subscription (unlike the
-// one-time Yearly purchase in paymentService.js) -- 12 monthly charges of
-// ₹199, then no further auto-charging.
-const MONTHLY_AMOUNT_PAISE = 19900;
+// one-time Yearly purchase in paymentService.js) -- 12 monthly charges, then
+// no further auto-charging. One amount (and one cached Razorpay Plan id) per
+// pricing card -- see client/src/content/pricingContent.js for the card
+// definitions these amounts must match.
+const CARD_MONTHLY_AMOUNTS_PAISE = {
+  english: 9900,
+  "social-science": 19900,
+  science: 39900,
+  mathematics: 39900,
+};
 const MONTHLY_TOTAL_COUNT = 12;
 const CURRENCY = "INR";
 
@@ -26,15 +33,21 @@ const getRazorpayClient = () => {
   return razorpayClient;
 };
 
-// Plan ids are scoped per Razorpay key-mode (test vs live) -- caching under
-// a mode-suffixed app_settings key means a prod cutover to live keys
-// provisions its own plan automatically instead of reusing a stale test-mode
-// plan id.
-const planCacheKey = () =>
-  `razorpay_monthly_plan_id_${env.razorpayKeyId.startsWith("rzp_live_") ? "live" : "test"}`;
+// Plan ids are scoped per Razorpay key-mode (test vs live) AND per pricing
+// card -- caching under a mode-and-card-suffixed app_settings key means a
+// prod cutover to live keys provisions its own plans automatically instead
+// of reusing stale test-mode plan ids, and each card gets its own Razorpay
+// Plan since they charge different amounts.
+const planCacheKey = (cardId) =>
+  `razorpay_monthly_plan_id_${cardId}_${env.razorpayKeyId.startsWith("rzp_live_") ? "live" : "test"}`;
 
-const getOrCreateMonthlyPlanId = async () => {
-  const cached = await getSetting(planCacheKey());
+const getOrCreateMonthlyPlanId = async (cardId) => {
+  const amount = CARD_MONTHLY_AMOUNTS_PAISE[cardId];
+  if (!amount) {
+    throw new PaymentError("Invalid plan.", 400);
+  }
+
+  const cached = await getSetting(planCacheKey(cardId));
   if (cached) {
     return cached;
   }
@@ -46,8 +59,8 @@ const getOrCreateMonthlyPlanId = async () => {
       period: "monthly",
       interval: 1,
       item: {
-        name: "STEMLab Premium Monthly",
-        amount: MONTHLY_AMOUNT_PAISE,
+        name: `STEMLab Premium Monthly — ${cardId}`,
+        amount,
         currency: CURRENCY,
       },
     });
@@ -56,13 +69,13 @@ const getOrCreateMonthlyPlanId = async () => {
     throw new PaymentError(error?.error?.description || "Failed to create Razorpay plan.", statusCode);
   }
 
-  await setSetting(planCacheKey(), plan.id);
+  await setSetting(planCacheKey(cardId), plan.id);
   return plan.id;
 };
 
-export const createPremiumSubscription = async ({ userId }) => {
+export const createPremiumSubscription = async ({ userId, cardId }) => {
   const razorpay = getRazorpayClient();
-  const planId = await getOrCreateMonthlyPlanId();
+  const planId = await getOrCreateMonthlyPlanId(cardId);
 
   let subscription;
   try {
@@ -70,7 +83,7 @@ export const createPremiumSubscription = async ({ userId }) => {
       plan_id: planId,
       total_count: MONTHLY_TOTAL_COUNT,
       customer_notify: 1,
-      notes: { user_id: String(userId) },
+      notes: { user_id: String(userId), card_id: cardId },
     });
   } catch (error) {
     const statusCode = error?.statusCode === 401 ? 401 : 500;
@@ -79,18 +92,18 @@ export const createPremiumSubscription = async ({ userId }) => {
 
   await pool.query(
     `
-      INSERT INTO subscription (user_id, razorpay_subscription_id, razorpay_plan_id, status, total_count)
-      VALUES ($1, $2, $3, 'created', $4)
+      INSERT INTO subscription (user_id, razorpay_subscription_id, razorpay_plan_id, card_id, status, total_count)
+      VALUES ($1, $2, $3, $4, 'created', $5)
     `,
-    [userId, subscription.id, planId, MONTHLY_TOTAL_COUNT]
+    [userId, subscription.id, planId, cardId, MONTHLY_TOTAL_COUNT]
   );
 
   return {
     mode: "subscription",
     subscriptionId: subscription.id,
-    amount: MONTHLY_AMOUNT_PAISE,
+    amount: CARD_MONTHLY_AMOUNTS_PAISE[cardId],
     currency: CURRENCY,
-    plan: "monthly",
+    plan: `${cardId}-monthly`,
   };
 };
 

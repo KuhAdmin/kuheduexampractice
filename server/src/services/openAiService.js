@@ -1,3 +1,4 @@
+import { GoogleGenAI } from "@google/genai";
 import { env } from "../config/env.js";
 import { getModelRegistryEntry } from "./llm/modelRegistry.js";
 
@@ -294,8 +295,95 @@ export const createStructuredCompletion = async ({
 const IMAGE_MAX_ATTEMPTS = 2;
 const IMAGE_RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
 
-export const generateImage = async ({ prompt, size = "1536x1024", modelId, modelName, signal }) => {
+// Google's own SDK (@google/genai, already a dependency -- see
+// geminiLiveTokenService.js) rather than a hand-rolled fetch, since it
+// already handles the native generateContent endpoint/auth for us. Returns
+// inline image bytes directly in the response part, unlike the OpenAI/Azure
+// images/generations endpoint's separate b64_json field.
+const generateGeminiImage = async ({ prompt, aspectRatio, registryEntry, signal }) => {
+  if (!hasConfiguredValue(registryEntry.apiKeyEnvValue)) {
+    const configError = new Error(`${registryEntry.label} is not configured. Set GEMINIAPI_KEY.`);
+    configError.statusCode = 503;
+    throw configError;
+  }
+
+  const client = new GoogleGenAI({ apiKey: registryEntry.apiKeyEnvValue });
+  const modelName = registryEntry.modelName;
+
+  let response = null;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= IMAGE_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      response = await client.models.generateContent({
+        model: modelName,
+        contents: prompt,
+        config: {
+          abortSignal: signal,
+          responseModalities: ["IMAGE"],
+          imageConfig: { aspectRatio },
+        },
+      });
+      lastError = null;
+      break;
+    } catch (error) {
+      if (signal?.aborted) {
+        throw error;
+      }
+      lastError = error;
+      const status = error?.status || error?.code;
+      if (attempt < IMAGE_MAX_ATTEMPTS && IMAGE_RETRYABLE_STATUS_CODES.has(status)) {
+        await sleep(backoffDelayMs(attempt));
+        continue;
+      }
+      break;
+    }
+  }
+
+  if (lastError) {
+    const wrapped = new Error(`Gemini image generation failed: ${lastError.message}`);
+    wrapped.statusCode = Number.isInteger(lastError.status) ? lastError.status : 502;
+    throw wrapped;
+  }
+
+  const parts = response?.candidates?.[0]?.content?.parts || [];
+  const imagePart = parts.find((part) => part?.inlineData?.data);
+  if (!imagePart) {
+    const blockReason = response?.promptFeedback?.blockReason;
+    if (blockReason) {
+      const policyError = new Error(
+        `The image prompt was rejected by the content safety system (${blockReason}).`
+      );
+      policyError.isContentPolicyViolation = true;
+      policyError.statusCode = 422;
+      throw policyError;
+    }
+    throw new Error("Image generation response did not include image data.");
+  }
+
+  const mimeType = imagePart.inlineData.mimeType || "image/png";
+  return {
+    imageDataUrl: `data:${mimeType};base64,${imagePart.inlineData.data}`,
+    mimeType,
+    revisedPrompt: null,
+    model: modelName,
+  };
+};
+
+export const generateImage = async ({
+  prompt,
+  size = "1536x1024",
+  aspectRatio = "16:9",
+  modelId,
+  modelName,
+  signal,
+}) => {
   const registryEntry = modelId ? getModelRegistryEntry(modelId) : null;
+
+  if (registryEntry?.provider === "gemini-image") {
+    return generateGeminiImage({ prompt, aspectRatio, registryEntry, signal });
+  }
+
   const deploymentName = getAzureImageDeploymentName(registryEntry?.modelName || modelName);
 
   if (!isAzureOpenAiConfigured()) {

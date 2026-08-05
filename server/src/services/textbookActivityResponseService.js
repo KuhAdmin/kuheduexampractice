@@ -71,7 +71,7 @@ export const gradeTextbookActivityResponse = async ({ activityKey, userId, respo
 
   const cardResult = await pool.query(
     `SELECT title, summary, details FROM content_card
-     WHERE content_key = $1 AND cardkey = $2 AND contentuitab = 'textbook'
+     WHERE content_key = $1 AND cardkey = $2 AND contentuitab = 'textbook' AND is_hidden = FALSE
      LIMIT 1`,
     [keyParts.contentKey, keyParts.cardkey]
   );

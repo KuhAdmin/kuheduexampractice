@@ -6,7 +6,7 @@ import { StudentNotificationPanel } from "../components/StudentNotificationPanel
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getChaptersForSelection, getNotifications, markNotificationsSeen } from "../api/client";
 import { buildChapterRows, encodeSelectionChapterId } from "./studentChapterData";
-import { selectionKey, useClassSubject } from "../context/ClassSubjectContext";
+import { selectionKey, useClassSubject } from "../context/classSubjectHooks";
 
 const ChapterIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -93,6 +93,22 @@ const ChapterIcon = ({ type, className = "" }) => {
         <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
         <path
           d="M12 7.5V12l3 2"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+      </svg>
+    );
+  }
+
+  if (type === "lock") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <rect x="6" y="10.5" width="12" height="9" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <path
+          d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"
           fill="none"
           stroke="currentColor"
           strokeLinecap="round"
@@ -227,6 +243,13 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
 
   const chapters = realChapters;
 
+  // Free preview: only the first chapter of the student's own class/subject
+  // is browsable without an active subscription -- everything else (and any
+  // chapter reached via the class/subject switcher, since that's a premium
+  // browse-other-subjects feature) stays locked until user.isPremium.
+  const subscriptionActive = Boolean(user?.isPremium);
+  const isChapterLocked = (index) => !subscriptionActive && (!isDefaultSelection || index !== 0);
+
   const handleBellClick = () => {
     setPanelOpen((current) => {
       const next = !current;
@@ -249,7 +272,17 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
     };
   }, [chapters]);
 
-  const goToChapter = (chapter) => navigate(`/chapters/${chapter.chapterNumber || chapter.id}`);
+  const goToChapter = (chapter, locked) => {
+    if (locked) return;
+    navigate(`/chapters/${chapter.chapterNumber || chapter.id}`);
+  };
+
+  const subscribeBanner = !subscriptionActive && (
+    <button type="button" className="student-chapters-subscribe-banner" onClick={() => navigate("/pricing")}>
+      <ChapterIcon type="lock" />
+      Subscribe to unlock all chapters
+    </button>
+  );
 
   const filterControl = (
     <div className="student-chapters-filter">
@@ -339,16 +372,19 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
                 </div>
               </section>
 
+              {subscribeBanner}
+
               <div className="student-goals-list">
                 {chapters.map((chapter, index) => {
                   const status = statusForProgress(chapter.progress);
                   const statusClass = STATUS_CLASS[status];
+                  const locked = isChapterLocked(index);
                   return (
                     <button
                       key={chapter.chapterNumber || chapter.id}
                       type="button"
-                      className={`student-goals-row ${statusClass}`}
-                      onClick={() => goToChapter(chapter)}
+                      className={`student-goals-row ${statusClass} ${locked ? "is-disabled" : ""}`}
+                      onClick={() => goToChapter(chapter, locked)}
                     >
                       <span className="student-goals-row-rail">
                         <span className="student-goals-row-circle">
@@ -359,11 +395,18 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
                         <strong>{chapter.title}</strong>
                         <small>{chapter.progress}% complete</small>
                       </span>
-                      <span className={`student-goals-row-status ${statusClass}`}>
-                        <ChapterIcon type={STATUS_ICON[status]} />
-                        {STATUS_LABEL[status]}
-                      </span>
-                      <ChapterIcon type="chevron" />
+                      {locked ? (
+                        <span className="student-goals-row-status">
+                          <ChapterIcon type="lock" />
+                          Premium
+                        </span>
+                      ) : (
+                        <span className={`student-goals-row-status ${statusClass}`}>
+                          <ChapterIcon type={STATUS_ICON[status]} />
+                          {STATUS_LABEL[status]}
+                        </span>
+                      )}
+                      <ChapterIcon type={locked ? "lock" : "chevron"} />
                     </button>
                   );
                 })}
@@ -390,19 +433,26 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
           {chapters.length === 0 ? (
             <p className="student-empty-state">No chapters available yet for the selected class/subject.</p>
           ) : (
-            <div className="student-chapters-list">
-              {chapters.map((chapter, index) => (
-                <StudentDrilldownCard
-                  key={chapter.chapterNumber || chapter.id}
-                  className="student-chapters-row"
-                  onClick={() => goToChapter(chapter)}
-                  leading={<div className="student-chapters-index">{index + 1}</div>}
-                  title={chapter.title}
-                  subtitle={`${chapter.progress}% complete`}
-                >
-                </StudentDrilldownCard>
-              ))}
-            </div>
+            <>
+              {subscribeBanner}
+              <div className="student-chapters-list">
+                {chapters.map((chapter, index) => {
+                  const locked = isChapterLocked(index);
+                  return (
+                    <StudentDrilldownCard
+                      key={chapter.chapterNumber || chapter.id}
+                      className={`student-chapters-row ${locked ? "is-disabled" : ""}`}
+                      onClick={() => goToChapter(chapter, locked)}
+                      leading={<div className="student-chapters-index">{index + 1}</div>}
+                      title={chapter.title}
+                      subtitle={locked ? "Premium" : `${chapter.progress}% complete`}
+                      trailing={locked ? <ChapterIcon type="lock" /> : undefined}
+                    >
+                    </StudentDrilldownCard>
+                  );
+                })}
+              </div>
+            </>
           )}
         </section>
 

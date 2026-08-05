@@ -80,21 +80,30 @@ const MIN_NAME_LENGTH = 2;
 const MAX_NAME_LENGTH = 80;
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 15;
+// Only CBSE content exists today -- the rest stay visible (so students can
+// see what's coming) but disabled, and CBSE is the forced default so the
+// board step can never be left unselected.
 const boardOptions = [
   { id: "cbse", label: "CBSE", badge: "C" },
-  { id: "icse", label: "ICSE", badge: "I" },
-  { id: "isc", label: "ISC", badge: "S" },
-  { id: "igcse", label: "IGCSE", badge: "G" },
-  { id: "neet", label: "NEET", badge: "N" },
-  { id: "jee-foundation", label: "JEE Foundation", badge: "J" },
+  { id: "icse", label: "ICSE", badge: "I", disabled: true },
+  { id: "isc", label: "ISC", badge: "S", disabled: true },
+  { id: "igcse", label: "IGCSE", badge: "G", disabled: true },
+  { id: "neet", label: "NEET", badge: "N", disabled: true },
+  { id: "jee-foundation", label: "JEE Foundation", badge: "J", disabled: true },
 ];
+// Only classes 6-8 have content today -- 9-12 stay visible but disabled, and
+// 6 is the forced default so the class step can never be left unselected.
+const DISABLED_CLASSES = new Set(["9", "10", "11", "12"]);
 const classOptions = ["6", "7", "8", "9", "10", "11", "12"];
+// Only English content exists today -- the rest stay visible but disabled,
+// and English is the forced default so the subject step can never be left
+// unselected. IDs match pricingContent.js's subject cards where they overlap.
 const subjectOptions = [
-  { id: "biology", label: "Biology", badge: "B" },
-  { id: "physics", label: "Physics", badge: "P" },
-  { id: "chemistry", label: "Chemistry", badge: "C" },
-  { id: "mathematics", label: "Math", badge: "M" },
   { id: "english", label: "English", badge: "E" },
+  { id: "social-science", label: "Social Science", badge: "SS", disabled: true },
+  { id: "science", label: "Science", badge: "Sc", disabled: true },
+  { id: "mathematics", label: "Mathematics", badge: "M", disabled: true },
+  { id: "arts", label: "Arts", badge: "A", disabled: true },
 ];
 
 const initialRegisterForm = {
@@ -103,9 +112,9 @@ const initialRegisterForm = {
   email: "",
   password: "",
   confirmPassword: "",
-  board: "",
-  studentClass: "",
-  subject: "",
+  board: "cbse",
+  studentClass: "6",
+  subject: "english",
   acceptPolicy: false,
 };
 
@@ -327,7 +336,7 @@ const RegisterForm = ({
   const selectionOptions = isBoardStep
     ? boardOptions
     : isClassStep
-      ? classOptions.map((value) => ({ id: value, label: value }))
+      ? classOptions.map((value) => ({ id: value, label: value, disabled: DISABLED_CLASSES.has(value) }))
       : subjectOptions;
   const selectedValue = isBoardStep ? form.board : isClassStep ? form.studentClass : form.subject;
   const selectionField = isBoardStep ? "board" : isClassStep ? "studentClass" : "subject";
@@ -430,7 +439,10 @@ const RegisterForm = ({
                 type="button"
                 className={`home-board-option ${
                   selectedValue === option.id ? "is-active" : ""
-                } ${isCompactSelectionStep ? "is-class-option" : ""}`.trim()}
+                } ${isCompactSelectionStep ? "is-class-option" : ""} ${
+                  option.disabled ? "is-disabled" : ""
+                }`.trim()}
+                disabled={option.disabled}
                 onClick={() => onChange(selectionField, option.id)}
               >
                 {!isClassStep ? (
@@ -702,6 +714,9 @@ const HomeScreen = ({
                   <button type="button" onClick={() => onOpenLegal(LEGAL_DOC_SLUGS.contact)}>
                     Contact
                   </button>
+                  <button type="button" onClick={() => onOpenLegal(LEGAL_DOC_SLUGS.faq)}>
+                    FAQ
+                  </button>
                 </nav>
               </div>
             )}
@@ -929,9 +944,9 @@ export const HomePage = ({
       ...current,
       name: user.name || current.name,
       email: user.email || current.email,
-      board: user.board || "",
-      studentClass: user.studentClass || "",
-      subject: user.subject || "",
+      board: user.board || "cbse",
+      studentClass: user.studentClass || "6",
+      subject: user.subject || "english",
       acceptPolicy: true,
     }));
     setActiveIndex(screenIndexById.register);
@@ -967,7 +982,7 @@ export const HomePage = ({
     }
 
     if (user?.role === "moderator") {
-      navigate("/admin");
+      navigate("/dashboard");
       return;
     }
 
@@ -977,9 +992,9 @@ export const HomePage = ({
           ...current,
           name: user.name || current.name,
           email: user.email || current.email,
-          board: user.board || "",
-          studentClass: user.studentClass || "",
-          subject: user.subject || "",
+          board: user.board || "cbse",
+          studentClass: user.studentClass || "6",
+          subject: user.subject || "english",
           acceptPolicy: true,
         }));
         setActiveIndex(screenIndexById.register);
@@ -1251,6 +1266,9 @@ export const HomePage = ({
             </button>
             <button type="button" onClick={() => openLegalDoc(LEGAL_DOC_SLUGS.contact)}>
               Contact
+            </button>
+            <button type="button" onClick={() => openLegalDoc(LEGAL_DOC_SLUGS.faq)}>
+              FAQ
             </button>
           </nav>
         </footer>

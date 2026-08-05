@@ -1331,6 +1331,16 @@ a {
     radial-gradient(circle at center, var(--green) 0 42%, transparent 43%);
 }
 
+.home-board-option.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.home-board-option.is-disabled .home-board-option-badge {
+  background: rgb(from var(--text) r g b / 0.08);
+  color: var(--muted);
+}
+
 .home-board-note {
   margin: 0;
   grid-column: 1 / -1;
@@ -1777,7 +1787,7 @@ a {
 }
 
 .home-desktop-auth-card {
-  width: min(100%, 420px);
+  width: min(100%, 630px);
   padding: 36px 32px;
   border-radius: 24px;
   border: 1px solid var(--line);
@@ -2627,15 +2637,6 @@ a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  /* Profile "Quick Access" tiles: page container above is no longer capped
-     at 480px on this page, so the old fixed 2-up grid would otherwise
-     stretch into two oversized tiles instead of using the room for a
-     third column (there are 5 fixed tiles total, so 3 is a sensible cap
-     rather than continuing to add columns for their own sake). */
-  .student-profile-tile-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   /* Assessment instructions: stats/rules/CTA beside recent attempts
      instead of stacked, now that the screen isn't FocusLayout-narrow. */
   .student-assessment-wide .student-assessment-instructions {
@@ -3397,6 +3398,12 @@ a {
   color: var(--green);
 }
 
+.student-dashboard-nav-item.is-disabled {
+  color: var(--muted);
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .student-profile-phone {
   gap: 18px;
 }
@@ -3491,6 +3498,33 @@ a {
 .student-chapters-list {
   display: grid;
   gap: 10px;
+}
+
+.student-chapters-row.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.student-chapters-subscribe-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgb(from var(--warning) r g b / 0.25);
+  border-radius: 14px;
+  background: rgb(from var(--warning) r g b / 0.1);
+  color: var(--warning);
+  font-size: 0.95em;
+  font-weight: 700;
+  text-align: left;
+}
+
+.student-chapters-subscribe-banner .student-dashboard-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .student-drilldown-card {
@@ -4377,7 +4411,21 @@ a {
   margin: 0;
   font-size: 1.3787em;
   color: var(--text);
-  text-align: center;
+  text-align: left;
+  /* Guarantees the "C11·BIO·4.1 Concept name" prefix (see
+     .student-concept-learning-header-prefix) never wraps to a second line --
+     abbreviations keep the typical case short, this is the actual fallback
+     for an unusually long concept/topic name or a very narrow device. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-concept-learning-header-prefix {
+  font-size: 0.6em;
+  font-weight: 600;
+  color: var(--muted);
+  margin-right: 6px;
 }
 
 .student-concept-learning-bookmark {
@@ -5156,6 +5204,43 @@ a {
   font-size: 1.2132em;
   text-align: center;
   background: var(--success-bg);
+}
+
+.student-chapter-detail-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 24px 4px;
+  padding: 32px 18px;
+  border: 1px dashed rgb(from var(--warning) r g b / 0.3);
+  border-radius: 18px;
+  background: rgb(from var(--warning) r g b / 0.06);
+  color: var(--muted-strong);
+  text-align: center;
+}
+
+.student-chapter-detail-locked .student-dashboard-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--warning);
+}
+
+.student-chapter-detail-locked p {
+  margin: 0;
+  font-size: 1.15em;
+  font-weight: 600;
+}
+
+.student-chapter-detail-locked-cta {
+  min-height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--green);
+  color: #ffffff;
+  font-size: 0.95em;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgb(from var(--green) r g b / 0.2);
 }
 
 .student-chapter-detail-row.is-disabled,
@@ -6435,6 +6520,39 @@ a {
   font-size: 1.1719em;
 }
 
+/* Smart Tutor usage meter -- text (Ask/Coach) tokens converted via
+   1,000,000 tokens = 30 hours, plus voice/avatar session seconds added
+   directly (see tutorUsageService.js). Same track+fill pattern as
+   .student-dashboard-progress-bar, just with a two-line label above it. */
+.student-ai-tutor-usage-meter-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 1.0508em;
+  color: var(--muted);
+}
+
+.student-ai-tutor-usage-meter-bar {
+  width: 100%;
+  height: 6px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bg-inset);
+}
+
+.student-ai-tutor-usage-meter-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--green);
+  transition: width 0.3s ease;
+}
+
+.student-ai-tutor-usage-meter-bar.is-critical span {
+  background: var(--warning);
+}
+
 /* Beneath AI Tutor on the concept AI Tutor tab -- same card treatment, own
    accent color to read as a distinct feature. Step content inside reuses
    .admin-ai-demo-* / .admin-crop-editor / .modal-panel etc. verbatim (those
@@ -7371,15 +7489,22 @@ a {
 
 .student-profile-header h1 {
   margin: 6px 0 0;
-  font-size: 1.3097em;
+  font-size: 1em;
   font-weight: 600;
   color: var(--muted-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .student-profile-header-actions {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.student-profile-bell-wrap {
+  position: relative;
 }
 
 .student-profile-icon-button {
@@ -7397,9 +7522,9 @@ a {
 }
 
 .student-profile-icon,
-.student-profile-inline-action .student-profile-icon {
-  width: 18px;
-  height: 18px;
+.student-profile-icon-button .student-profile-icon {
+  width: 36px;
+  height: 36px;
 }
 
 .student-profile-notice-dot {
@@ -7419,9 +7544,7 @@ a {
 }
 
 .student-profile-card,
-.student-profile-list-card,
-.student-profile-account-card,
-.student-profile-help-card {
+.student-profile-account-card {
   border: 1px solid rgb(from var(--green) r g b / 0.12);
   border-radius: 24px;
   background: var(--surface-strong);
@@ -7502,17 +7625,6 @@ a {
   color: var(--text);
 }
 
-.student-profile-inline-action {
-  display: inline-grid;
-  place-items: center;
-  width: 30px;
-  height: 18px;
-  padding: 0;
-  border-radius: 999px;
-  background: var(--surface-strong);
-  color: var(--muted-strong);
-}
-
 .student-profile-tags {
   display: flex;
   flex-wrap: wrap;
@@ -7542,7 +7654,7 @@ a {
   gap: 8px;
   margin: 0;
   color: var(--muted-strong);
-  font-size: 1.2408em;
+  font-size: 0.9306em;
 }
 
 .student-profile-email .student-profile-icon {
@@ -7550,83 +7662,6 @@ a {
   height: 18px;
   transform: scaleY(1.5);
   transform-origin: center;
-}
-
-.student-profile-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 0;
-  padding-top: 0;
-  border-top: 1px solid rgb(from var(--muted) r g b / 0.12);
-}
-
-.student-profile-stat-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px;
-  border: 1px solid rgb(from var(--green) r g b / 0.08);
-  border-radius: 18px;
-  background: var(--surface-strong);
-  text-align: center;
-}
-
-.student-profile-stat-icon,
-.student-profile-activity-badge,
-.student-profile-tile-badge,
-.student-profile-premium-mark,
-.student-profile-help-badge {
-  display: inline-grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 14px;
-  font-size: 1.0754em;
-  font-weight: 800;
-}
-
-.student-profile-stat-icon {
-  color: #ffffff;
-}
-
-.student-profile-stat-icon.is-amber,
-.student-profile-activity-badge.is-amber,
-.student-profile-tile-badge.is-orange {
-  background: var(--warning-bg);
-  color: var(--warning);
-}
-
-.student-profile-stat-icon.is-gold {
-  background: var(--warning-bg);
-  color: var(--warning);
-}
-
-.student-profile-stat-icon.is-orange {
-  background: var(--danger-bg);
-  color: var(--brand);
-}
-
-.student-profile-stat-icon.is-green,
-.student-profile-activity-badge.is-green,
-.student-profile-tile-badge.is-green {
-  background: var(--success-bg);
-  color: var(--green);
-}
-
-.student-profile-stat-card strong {
-  display: block;
-  margin-top: 12px;
-  font-size: 1.2063em;
-  color: var(--text);
-}
-
-.student-profile-stat-card span {
-  display: block;
-  margin-top: 4px;
-  color: var(--muted-strong);
-  font-size: 1.1305em;
-  font-weight: 600;
 }
 
 .student-profile-premium {
@@ -7698,6 +7733,78 @@ a {
   color: var(--text);
 }
 
+/* Heading is "Install<br/>KUHEDU STUDY BUDDY" here (see StudentProfilePage.jsx)
+   -- smaller than the base .student-profile-premium-copy strong size so the
+   product name fits on its own single line instead of wrapping a second time. */
+/* 1.08em is just under the measured wrap boundary (breaks to 2 lines
+   starting at 1.14em against this card's fixed width) -- leaves a small
+   safety margin for cross-device/DPI font-rendering variance. */
+.student-profile-install .student-profile-premium-copy strong {
+  font-size: 1.08em;
+}
+
+.student-profile-install .student-profile-premium-copy p {
+  font-size: 1.08em;
+}
+
+.student-profile-install-tabs {
+  grid-column: 1 / -1;
+  display: flex;
+  width: 100%;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+}
+
+.student-profile-install-download {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  padding: 6px 0;
+  margin-right: 2px;
+  border-right: 1px solid var(--line);
+  color: var(--muted-strong);
+}
+
+.student-profile-install-download .student-profile-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.student-profile-install-tab {
+  display: inline-flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: var(--muted-strong);
+  background: transparent;
+}
+
+.student-profile-install-tab.is-active {
+  background: var(--green);
+  color: #ffffff;
+}
+
+.student-profile-install-tab-icon {
+  width: 15px;
+  height: 15px;
+  color: currentColor;
+}
+
+.student-profile-install-tab-icon-android {
+  width: 19.5px;
+  height: 19.5px;
+}
+
 .student-profile-premium-copy p {
   margin: 4px 0 0;
   color: var(--muted-strong);
@@ -7705,39 +7812,24 @@ a {
   line-height: 1.35;
 }
 
-.student-profile-premium-arrow {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--green);
-  box-shadow: none;
-}
-
 .student-profile-premium-actions {
   grid-column: 1 / -1;
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 8px;
 }
 
 .student-profile-premium-cta {
-  min-height: 38px;
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0 12px;
   margin-left: 0;
   border: 1px solid rgba(255, 255, 255, 0.92);
   border-radius: 999px;
   background: var(--green);
   color: #ffffff;
-  font-size: 1.1305em;
+  font-size: 0.92em;
   font-weight: 700;
   white-space: nowrap;
   box-shadow: 0 8px 20px rgb(from var(--green) r g b / 0.2);
@@ -7754,27 +7846,22 @@ a {
   justify-content: flex-start;
 }
 
-.student-profile-install .student-profile-premium-cta:disabled {
-  opacity: 0.55;
-  box-shadow: none;
-}
-
 .student-profile-install-steps {
   margin: 0;
   padding-left: 18px;
   color: var(--muted-strong);
-  font-size: 1.1857em;
+  font-size: 0.8893em;
   line-height: 1.6;
 }
 
 .student-profile-premium-cancel {
-  min-height: 38px;
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
   color: var(--muted-strong);
-  font-size: 1.0305em;
+  font-size: 0.85em;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -7787,16 +7874,22 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
+  min-height: 34px;
   white-space: nowrap;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border: 1px solid rgb(from var(--green) r g b / 0.28);
   border-radius: 999px;
   background:
     linear-gradient(90deg, rgb(from var(--success-bg) r g b / 0.95), var(--surface));
   color: var(--muted-strong);
-  font-size: 1.1305em;
+  font-size: 0.88em;
   font-weight: 700;
+}
+
+.student-profile-premium-trial.is-alert {
+  border-color: rgb(from var(--danger) r g b / 0.28);
+  background: linear-gradient(90deg, rgb(from var(--danger-bg) r g b / 0.95), var(--surface));
+  color: var(--danger);
 }
 
 .student-profile-section {
@@ -7829,112 +7922,8 @@ a {
   font-weight: 700;
 }
 
-.student-profile-list-card {
-  overflow: hidden;
-}
-
-.student-profile-activity-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
-  padding: 14px 16px;
-}
-
-.student-profile-activity-row + .student-profile-activity-row,
 .student-profile-account-row + .student-profile-account-row {
   border-top: 1px solid rgb(from var(--muted) r g b / 0.1);
-}
-
-.student-profile-activity-badge.is-violet,
-.student-profile-tile-badge.is-violet {
-  background: rgb(from var(--indigo) r g b / 0.12);
-  color: var(--indigo);
-}
-
-.student-profile-activity-badge.is-blue,
-.student-profile-tile-badge.is-blue {
-  background: rgb(from var(--blue) r g b / 0.12);
-  color: var(--blue);
-}
-
-.student-profile-activity-copy {
-  min-width: 0;
-}
-
-.student-profile-activity-copy strong {
-  display: block;
-  font-size: 1.296em;
-  color: var(--text);
-}
-
-.student-profile-activity-copy p {
-  margin: 4px 0 0;
-  color: var(--muted-strong);
-  font-size: 1.1305em;
-}
-
-.student-profile-activity-meta {
-  color: var(--muted-strong);
-  font-size: 1.0754em;
-  font-weight: 700;
-  text-align: right;
-}
-
-.student-profile-tile-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.student-profile-tile {
-  padding: 16px 14px;
-  border: 1px solid rgb(from var(--green) r g b / 0.08);
-  border-radius: 20px;
-  background: var(--surface-strong);
-  box-shadow: 0 10px 24px rgb(from var(--green) r g b / 0.06);
-}
-
-.student-profile-tile-badge.is-rose {
-  background: var(--danger-bg);
-  color: var(--danger);
-}
-
-.student-profile-tile strong {
-  display: block;
-  margin-top: 12px;
-  font-size: 1.2684em;
-  color: var(--text);
-}
-
-.student-profile-help-card {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
-  width: 100%;
-  padding: 18px;
-  text-align: left;
-  background:
-    linear-gradient(135deg, rgb(from var(--indigo) r g b / 0.56), var(--surface));
-}
-
-.student-profile-help-badge {
-  background: rgb(from var(--indigo) r g b / 0.12);
-  color: var(--indigo);
-  font-size: 1.5165em;
-}
-
-.student-profile-help-copy strong {
-  display: block;
-  font-size: 1.3787em;
-  color: var(--text);
-}
-
-.student-profile-help-copy p {
-  margin: 4px 0 0;
-  color: var(--muted-strong);
-  font-size: 1.1581em;
 }
 
 .student-profile-account-card {
@@ -7955,6 +7944,32 @@ a {
   font-weight: 600;
 }
 
+/* A flex item with text content defaults to min-width: auto -- without this,
+   a wide sibling control squeezes the label down to its narrowest single
+   word instead of wrapping at a sensible width. */
+.student-profile-account-row > span,
+.student-profile-account-row-top > span {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* AccountToggleRow/AccountThemeRow: label + control share one compact top
+   row (control pinned to the far right), with the description/hint as its
+   own full-width line below -- keeps the card short instead of the switch
+   competing with a full sentence for space on a single row. */
+.student-profile-account-row-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.student-profile-account-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .student-profile-account-row.is-danger {
   color: var(--danger);
 }
@@ -7967,7 +7982,7 @@ a {
 .student-profile-account-row-hint {
   display: block;
   margin-top: 2px;
-  font-size: 1.0478em;
+  font-size: 0.7859em;
   font-weight: 500;
   color: var(--muted);
 }
@@ -8004,16 +8019,23 @@ a {
 
 .student-profile-theme-toggle {
   display: inline-flex;
-  gap: 6px;
-  padding: 4px;
+  flex-shrink: 0;
+  gap: 4px;
+  padding: 3px;
   border-radius: 999px;
   background: var(--bg-inset);
   border: 1px solid var(--line);
 }
 
+/* Unlike the other account rows' compact fixed-width switch, this toggle is
+   a ~180px two-button pill -- too wide to share a row with the label/hint
+   text at any reasonable text width on a phone-size card. Letting the row
+   wrap means the toggle drops to its own full-width line below the text
+   instead of squeezing it into an unreadable single-word column. */
 .student-profile-theme-chip {
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 999px;
+  font-size: 0.8em;
   font-weight: 700;
   color: var(--muted);
   background: transparent;
@@ -8026,10 +8048,6 @@ a {
 }
 
 @media (min-width: 640px) {
-  .student-profile-stat-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .student-profile-premium-actions {
     flex-wrap: nowrap;
   }
@@ -8187,8 +8205,12 @@ a {
   font-size: 1em;
 }
 
+.admin-sidebar-footer p {
+  font-size: 0.75em;
+}
+
 .admin-sidebar-footer span {
-  font-size: 1.2408em;
+  font-size: 0.9306em;
 }
 
 .admin-sidebar-nav {
@@ -10231,7 +10253,83 @@ a {
 }
 
 .pricing-page-content {
-  max-width: 720px;
+  max-width: 1100px;
+}
+
+.pricing-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 32px 0;
+}
+
+/* Fewer cards visible than the grid has columns for (e.g. only English on
+   sale right now) -- center a single card instead of leaving it pinned
+   left with empty space beside it. */
+.pricing-cards-grid--single {
+  grid-template-columns: minmax(0, 480px);
+  justify-content: center;
+}
+
+@media (max-width: 860px) {
+  .pricing-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pricing-card-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.pricing-card-name {
+  font-size: 1.4em;
+  color: var(--text);
+}
+
+.pricing-card-subtitle {
+  color: var(--muted-strong);
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.pricing-card-features {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid rgb(from var(--green) r g b / 0.14);
+  text-align: left;
+}
+
+.pricing-recharge-strip {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 32px;
+  padding: 18px 22px;
+  border: 1px dashed rgb(from var(--green) r g b / 0.3);
+  border-radius: 18px;
+  background: var(--success-bg);
+}
+
+.pricing-recharge-price {
+  flex: 0 0 auto;
+  font-size: 1.6em;
+  font-weight: 800;
+  color: var(--green);
+}
+
+.pricing-recharge-copy strong {
+  display: block;
+  color: var(--text);
+}
+
+.pricing-recharge-copy p {
+  margin: 2px 0 0;
+  color: var(--muted-strong);
+  font-size: 0.92em;
 }
 
 .pricing-hero {
@@ -10251,9 +10349,9 @@ a {
 
 .pricing-card {
   display: grid;
+  align-content: start;
   justify-items: center;
   gap: 16px;
-  margin: 32px 0;
   padding: 32px 24px;
   border: 1px solid rgb(from var(--green) r g b / 0.14);
   border-radius: 24px;
@@ -10262,6 +10360,13 @@ a {
     linear-gradient(135deg, var(--success-bg), var(--success-bg) 68%, var(--success-bg));
   box-shadow: 0 12px 32px rgb(from var(--green) r g b / 0.08);
   text-align: center;
+}
+
+/* The lone "already Premium" card (shown instead of the grid) keeps the
+   page-level stacking margin the grid items no longer need. */
+.pricing-card.pricing-card-active {
+  margin: 32px auto;
+  max-width: 480px;
 }
 
 .pricing-card-mark {
@@ -10375,13 +10480,6 @@ a {
   opacity: 0.7;
 }
 
-.pricing-features h2 {
-  margin: 0 0 18px;
-  font-size: 1.3em;
-  text-align: center;
-}
-
-.pricing-features-grid,
 .study-buddy-features-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -10414,7 +10512,6 @@ a {
 }
 
 @media (max-width: 640px) {
-  .pricing-features-grid,
   .study-buddy-features-grid {
     grid-template-columns: 1fr;
   }

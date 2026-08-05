@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentNotificationPanel } from "../components/StudentNotificationPanel";
 import { getNotifications, markNotificationsSeen } from "../api/client";
-import { selectionKey, useClassSubject } from "../context/ClassSubjectContext";
+import { selectionKey, useClassSubject } from "../context/classSubjectHooks";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 
 const defaultContinueCard = {

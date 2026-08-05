@@ -67,7 +67,7 @@ const getConceptCard = async (assessmentUnitId) => {
     `
       SELECT title, summary, details
       FROM content_card
-      WHERE assessment_unit_id = $1 AND processorkey = 'concepts'
+      WHERE assessment_unit_id = $1 AND processorkey = 'concepts' AND is_hidden = FALSE
       LIMIT 1
     `,
     [assessmentUnitId]
@@ -244,6 +244,7 @@ export const getDiagramsForSection = async (sourceSectionId) => {
       WHERE source_section_id = $1
         AND contentuitab IN ('pdfassets', 'visual')
         AND processorkey <> 'ocr'
+        AND is_hidden = FALSE
       ORDER BY sort_order ASC, id ASC
     `,
     [sourceSectionId]
@@ -274,7 +275,7 @@ export const getVisualLearningCardsForSection = async (sourceSectionId) => {
     `
       SELECT id, processorkey, title, summary, details
       FROM content_card
-      WHERE source_section_id = $1 AND contentuitab = 'visual'
+      WHERE source_section_id = $1 AND contentuitab = 'visual' AND is_hidden = FALSE
       ORDER BY sort_order ASC, id ASC
     `,
     [sourceSectionId]
@@ -303,7 +304,7 @@ export const getTextbookContentForSection = async (sourceSectionId) => {
     `
       SELECT id, content_key, cardkey, processorkey, title, summary, details
       FROM content_card
-      WHERE source_section_id = $1 AND contentuitab = 'textbook'
+      WHERE source_section_id = $1 AND contentuitab = 'textbook' AND is_hidden = FALSE
       ORDER BY sort_order ASC, id ASC
     `,
     [sourceSectionId]
@@ -339,6 +340,7 @@ export const getConceptLearningPillars = async (assessmentUnitIds) => {
         ON cc.content_key = clp.content_key
        AND cc.cardkey = clp.pillar_cardkey
        AND cc.contentuitab = 'learningpillars'
+       AND cc.is_hidden = FALSE
       WHERE clp.assessment_unit_id = ANY($1)
       ORDER BY cc.sort_order ASC, cc.id ASC
     `,

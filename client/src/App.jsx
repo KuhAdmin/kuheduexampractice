@@ -14,6 +14,7 @@ import { AdminLevelsPage } from "./pages/AdminLevelsPage";
 import { AdminSubjectsPage } from "./pages/AdminSubjectsPage";
 import { AdminBooksPage } from "./pages/AdminBooksPage";
 import { AdminConceptImportPage } from "./pages/AdminConceptImportPage";
+import { AdminContentEditorPage } from "./pages/AdminContentEditorPage";
 import { StudentLayout } from "./components/StudentLayout";
 import { useAuth } from "./context/AuthContext";
 import { AdminOverviewPage } from "./pages/AdminOverviewPage";
@@ -80,7 +81,7 @@ const App = () => {
     }
 
     if (data.user?.role === "moderator") {
-      navigate("/admin");
+      navigate("/dashboard");
       return data;
     }
 
@@ -145,7 +146,7 @@ const App = () => {
         <Route
           element={
             authPending ? null : isAuthenticated ? (
-              user?.role === "admin" || user?.role === "moderator" ? (
+              user?.role === "admin" ? (
                 <Navigate replace to="/admin" />
               ) : !isStudentOnboardingComplete(user) ? (
                 <Navigate replace to="/" state={{ resumeOnboarding: true }} />
@@ -173,12 +174,12 @@ const App = () => {
           />
           <Route
             path="/profile"
-            element={<StudentProfilePage dashboard={dashboard} user={user} onLogout={handleLogout} />}
+            element={<StudentProfilePage user={user} onLogout={handleLogout} />}
           />
           <Route path="/chapters" element={<StudentChaptersPage dashboard={dashboard} user={user} />} />
           <Route path="/practice" element={<StudentPracticePage />} />
           <Route path="/goals" element={<StudentRemainingConceptsPage />} />
-          <Route path="/chapters/:chapterId" element={<StudentChapterDetailPage dashboard={dashboard} />} />
+          <Route path="/chapters/:chapterId" element={<StudentChapterDetailPage dashboard={dashboard} user={user} />} />
           <Route path="/chapters/:chapterId/book-questions" element={<StudentBookQuestionsPage />} />
           <Route path="/chapters/:chapterId/assessment" element={<StudentAssessmentPage />} />
           <Route
@@ -291,6 +292,10 @@ const App = () => {
           <Route
             path="concept-import"
             element={<AdminConceptImportPage />}
+          />
+          <Route
+            path="content-editor"
+            element={<AdminContentEditorPage />}
           />
           <Route
             path="settings"

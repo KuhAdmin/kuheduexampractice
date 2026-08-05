@@ -323,7 +323,7 @@ const getTeachingNotesForUnit = async (assessmentUnitId) => {
     `
       SELECT processorkey AS mode, title, summary, details
       FROM content_card
-      WHERE assessment_unit_id = $1 AND contentuitab = 'teaching'
+      WHERE assessment_unit_id = $1 AND contentuitab = 'teaching' AND is_hidden = FALSE
       ORDER BY processorkey ASC, sort_order ASC
     `,
     [assessmentUnitId]
@@ -346,7 +346,7 @@ const getDeepLearningNotesForUnit = async (assessmentUnitId) => {
     `
       SELECT processorkey AS mode, title, summary, details
       FROM content_card
-      WHERE assessment_unit_id = $1 AND contentuitab = 'deeplearning'
+      WHERE assessment_unit_id = $1 AND contentuitab = 'deeplearning' AND is_hidden = FALSE
       ORDER BY processorkey ASC, sort_order ASC
     `,
     [assessmentUnitId]
@@ -519,7 +519,7 @@ export const getRevisionForSection = async ({ sourceSectionId }) => {
       SELECT processorkey AS mode, assessment_unit_id AS "assessmentUnitId", title, summary, details
       FROM content_card
       WHERE contentuitab = 'revision' AND processorkey IN ('cheatsheet', 'mnemonics', 'examnotes')
-        AND assessment_unit_id = ANY($1)
+        AND assessment_unit_id = ANY($1) AND is_hidden = FALSE
       ORDER BY assessment_unit_id ASC, sort_order ASC
     `,
     [assessmentUnitIds]
@@ -545,7 +545,7 @@ export const getTutorNotesForSection = async ({ sourceSectionId }) => {
       SELECT processorkey AS mode, assessment_unit_id AS "assessmentUnitId", title, summary, details
       FROM content_card
       WHERE contentuitab = 'tutor' AND processorkey IN ('coach', 'interview', 'viva', 'debate')
-        AND assessment_unit_id = ANY($1)
+        AND assessment_unit_id = ANY($1) AND is_hidden = FALSE
       ORDER BY assessment_unit_id ASC, sort_order ASC
     `,
     [assessmentUnitIds]
@@ -568,6 +568,7 @@ export const getAssessmentExtraForUnit = async ({ assessmentUnitId }) => {
       WHERE assessment_unit_id = $1
         AND contentuitab = 'assessment'
         AND processorkey IN ('hotspot', 'casestudy', 'einsteinmode')
+        AND is_hidden = FALSE
       ORDER BY processorkey ASC, sort_order ASC
     `,
     [assessmentUnitId]

@@ -1,13 +1,14 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { useNavigate } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { EditProfileModal } from "../components/EditProfileModal";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { PaymentStatusModal } from "../components/PaymentStatusModal";
+import { StudentNotificationPanel } from "../components/StudentNotificationPanel";
 import { useAuth } from "../context/AuthContext";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
-import { createPremiumOrder, verifyPremiumPayment, getMySubscription, cancelMySubscription } from "../api/client";
-import { openRazorpayCheckout } from "../lib/razorpayCheckout";
+import { getMySubscription, cancelMySubscription, getNotifications, markNotificationsSeen } from "../api/client";
 import {
   getAvatarVisibleServerSnapshot,
   getAvatarVisibleSnapshot,
@@ -23,15 +24,6 @@ const firstNameFromUser = (name) => {
   return name.trim().split(/\s+/)[0] || "Student";
 };
 
-const toTitleLabel = (value) => {
-  const normalized = String(value || "").trim();
-  if (!normalized) {
-    return "";
-  }
-
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-};
-
 const avatarLetters = (name) =>
   String(name || "ST")
     .trim()
@@ -40,18 +32,48 @@ const avatarLetters = (name) =>
     .map((part) => part.charAt(0).toUpperCase())
     .join("");
 
-const parseDayCount = (value) => {
-  const match = String(value || "").match(/\d+/);
-  return match ? match[0] : "0";
-};
-
-const averageProgress = (chapters = []) => {
-  if (!chapters.length) {
-    return 0;
+// Real countdown from a real end date -- Monthly's activeSubscription.current_end
+// (snake_case, straight off the subscription table, see subscriptionService.js's
+// getActiveSubscriptionForUser) or Trial's user.premiumExpiresAt (the only other
+// plan with a real expiry; Yearly is permanent and has neither, so this returns
+// null and no countdown renders at all). There is no "free trial" plan.
+const formatSubscriptionCountdown = (endDateIso) => {
+  if (!endDateIso) {
+    return null;
   }
 
-  const total = chapters.reduce((sum, chapter) => sum + Number(chapter.progress || 0), 0);
-  return Math.round(total / chapters.length);
+  const diffMs = new Date(endDateIso).getTime() - Date.now();
+  if (diffMs <= 0) {
+    return null;
+  }
+
+  const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  return `Ends in ${days}d ${hours}h`;
+};
+
+// Only Trial's user.premiumExpiresAt is ever a real past end date we can read
+// client-side -- once a Monthly subscription leaves active status,
+// getMySubscription no longer returns it (only active/authenticated/created
+// rows), so there's no accessible "ended at" for that case, and Yearly never
+// ends at all. Returns null rather than guessing for anyone else.
+const formatSubscriptionEndedAgo = (endDateIso) => {
+  if (!endDateIso) {
+    return null;
+  }
+
+  const diffMs = Date.now() - new Date(endDateIso).getTime();
+  if (diffMs <= 0) {
+    return null;
+  }
+
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (days < 1) {
+    const hours = Math.max(Math.floor(diffMs / (1000 * 60 * 60)), 1);
+    return `Ended ${hours}h ago`;
+  }
+  return `Ended ${days}d ago`;
 };
 
 const ProfileIcon = ({ type, className = "" }) => {
@@ -75,21 +97,6 @@ const ProfileIcon = ({ type, className = "" }) => {
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="1.8"
-        />
-      </svg>
-    );
-  }
-
-  if (type === "settings") {
-    return (
-      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
-        <path
-          d="M12 8.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Zm7 3.2-1.7-.5a5.8 5.8 0 0 0-.6-1.4l.9-1.6-1.8-1.8-1.6.9a5.8 5.8 0 0 0-1.4-.6L12 5l-2.2.6a5.8 5.8 0 0 0-1.4.6l-1.6-.9-1.8 1.8.9 1.6a5.8 5.8 0 0 0-.6 1.4L5 12l.6 2.2a5.8 5.8 0 0 0 .6 1.4l-.9 1.6 1.8 1.8 1.6-.9a5.8 5.8 0 0 0 1.4.6L12 19l2.2-.6a5.8 5.8 0 0 0 1.4-.6l1.6.9 1.8-1.8-.9-1.6a5.8 5.8 0 0 0 .6-1.4Z"
-          fill="none"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="1.6"
         />
       </svg>
     );
@@ -279,6 +286,40 @@ const ProfileIcon = ({ type, className = "" }) => {
     );
   }
 
+  if (type === "android") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M6 10a6 6 0 0 1 12 0v5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-5Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+        <path d="M7 10v5M17 10v5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+        <path d="M5 12H3M21 12h-2" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+        <path d="m8 5 1.5-2M16 5l-1.5-2" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+        <circle cx="9.5" cy="9.5" r="0.9" fill="currentColor" />
+        <circle cx="14.5" cy="9.5" r="0.9" fill="currentColor" />
+      </svg>
+    );
+  }
+
+  if (type === "apple") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M15.8 3.5c.1 1-.3 2-.9 2.7-.6.7-1.6 1.3-2.6 1.2-.1-1 .3-2 .9-2.7.6-.7 1.7-1.2 2.6-1.2Z"
+          fill="currentColor"
+        />
+        <path
+          d="M18.9 17.2c-.5 1.1-.7 1.6-1.3 2.6-.9 1.4-2.1 3.1-3.7 3.1-1.4 0-1.7-.9-3.6-.9-1.9 0-2.3.9-3.6.9-1.6 0-2.7-1.6-3.6-2.9C1.2 17.1.4 13.4 1.8 10.9c.9-1.7 2.5-2.7 4-2.7 1.4 0 2.3.9 3.6.9 1.2 0 1.9-.9 3.6-.9 1.3 0 2.7.7 3.6 1.9-3.2 1.7-2.7 6.2 1.3 6.7-.3.5-.6 1-1 1.4Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
       <path
@@ -292,34 +333,6 @@ const ProfileIcon = ({ type, className = "" }) => {
     </svg>
   );
 };
-
-const StatCard = ({ tone, icon, value, label }) => (
-  <article className="student-profile-stat-card">
-    <div className={`student-profile-stat-icon is-${tone}`}>
-      <ProfileIcon type={icon} />
-    </div>
-    <strong>{value}</strong>
-    <span>{label}</span>
-  </article>
-);
-
-const ActivityRow = ({ tone, badge, title, subtitle, meta }) => (
-  <article className="student-profile-activity-row">
-    <div className={`student-profile-activity-badge is-${tone}`}>{badge}</div>
-    <div className="student-profile-activity-copy">
-      <strong>{title}</strong>
-      <p>{subtitle}</p>
-    </div>
-    <span className="student-profile-activity-meta">{meta}</span>
-  </article>
-);
-
-const Tile = ({ tone, badge, label }) => (
-  <article className="student-profile-tile">
-    <div className={`student-profile-tile-badge is-${tone}`}>{badge}</div>
-    <strong>{label}</strong>
-  </article>
-);
 
 const AccountRow = ({ label, onClick, tone = "default", disabled = false, disabledHint = "Coming soon" }) => (
   <button
@@ -340,63 +353,72 @@ const AccountRow = ({ label, onClick, tone = "default", disabled = false, disabl
 );
 
 const AccountToggleRow = ({ label, description, checked, onChange }) => (
-  <div className="student-profile-account-row">
-    <span>
-      {label}
-      {description && <span className="student-profile-account-row-hint">{description}</span>}
-    </span>
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      className={`student-profile-toggle-switch ${checked ? "is-on" : ""}`}
-      onClick={() => onChange(!checked)}
-    >
-      <span className="student-profile-toggle-switch-thumb" />
-    </button>
+  <div className="student-profile-account-row student-profile-account-row-stacked">
+    <div className="student-profile-account-row-top">
+      <span>{label}</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        className={`student-profile-toggle-switch ${checked ? "is-on" : ""}`}
+        onClick={() => onChange(!checked)}
+      >
+        <span className="student-profile-toggle-switch-thumb" />
+      </button>
+    </div>
+    {description && <span className="student-profile-account-row-hint">{description}</span>}
   </div>
 );
 
 const AccountThemeRow = ({ theme, onChange }) => (
-  <div className="student-profile-account-row student-profile-theme-row">
-    <span>
-      Appearance
-      <span className="student-profile-account-row-hint">Choose Dawn (light) or Dusk (dark)</span>
-    </span>
-    <div className="student-profile-theme-toggle" role="radiogroup" aria-label="Appearance">
-      <button
-        type="button"
-        role="radio"
-        aria-checked={theme !== "dusk"}
-        className={`student-profile-theme-chip ${theme !== "dusk" ? "is-active" : ""}`}
-        onClick={() => onChange("dawn")}
-      >
-        Dawn
-      </button>
-      <button
-        type="button"
-        role="radio"
-        aria-checked={theme === "dusk"}
-        className={`student-profile-theme-chip ${theme === "dusk" ? "is-active" : ""}`}
-        onClick={() => onChange("dusk")}
-      >
-        Dusk
-      </button>
+  <div className="student-profile-account-row student-profile-account-row-stacked">
+    <div className="student-profile-account-row-top">
+      <span>Select Theme</span>
+      <div className="student-profile-theme-toggle" role="radiogroup" aria-label="Appearance">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={theme !== "dusk"}
+          className={`student-profile-theme-chip ${theme !== "dusk" ? "is-active" : ""}`}
+          onClick={() => onChange("dawn")}
+        >
+          Dawn
+        </button>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={theme === "dusk"}
+          className={`student-profile-theme-chip ${theme === "dusk" ? "is-active" : ""}`}
+          onClick={() => onChange("dusk")}
+        >
+          Dusk
+        </button>
+      </div>
     </div>
+    <span className="student-profile-account-row-hint">Choose Dawn (light) or Dusk (dark)</span>
   </div>
 );
 
-export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
+export const StudentProfilePage = ({ user, onLogout }) => {
   const { updateProfile, changePassword, setTheme, persistUser } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useBreakpoint() === "mobile";
-  const { platform, canInstall, promptInstall } = useInstallPrompt();
+  const { platform } = useInstallPrompt();
+  // Defaults to the visiting device's own platform, but both tabs are always
+  // shown/selectable -- e.g. a student could be looking at this on Android
+  // while wanting to read the iOS steps to relay to a friend.
+  const [activeInstallTab, setActiveInstallTab] = useState(platform === "android" ? "android" : "ios");
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [paymentError, setPaymentError] = useState("");
   const [activeSubscription, setActiveSubscription] = useState(null);
+  const [lastPaymentAttempt, setLastPaymentAttempt] = useState(null);
   const [cancelling, setCancelling] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const canChangePassword = user?.provider !== "google";
   const avatarEnabled = useSyncExternalStore(
     subscribeAvatarVisible,
@@ -404,61 +426,58 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
     getAvatarVisibleServerSnapshot
   );
   const firstName = firstNameFromUser(user?.name);
-  const subjectLabel = toTitleLabel(user?.subject) || "Biology";
-  const boardLabel = String(user?.board || "CBSE").toUpperCase();
-  const classLabel = user?.studentClass ? `Class ${user.studentClass}` : "Class 11";
-  const chapters = Array.isArray(dashboard?.chapters) ? dashboard.chapters : [];
-  const streakCount = parseDayCount(dashboard?.streak?.value);
-  const progressAverage = averageProgress(chapters);
-  const recentActivity = [
-    {
-      tone: "green",
-      badge: "CL",
-      title: `Continue: ${dashboard?.continueCard?.title || "Your next chapter"}`,
-      subtitle: `${subjectLabel} • ${classLabel}`,
-      meta: `${dashboard?.continueCard?.progress ?? 0}% done`,
-    },
-    {
-      tone: "violet",
-      badge: "EN",
-      title: `Enrolled in ${boardLabel} ${classLabel}`,
-      subtitle: `${subjectLabel} learning path is active`,
-      meta: "Active",
-    },
-    {
-      tone: "blue",
-      badge: "CH",
-      title: `${chapters.length || 0} chapters unlocked`,
-      subtitle: `Current subject: ${subjectLabel}`,
-      meta: "Library",
-    },
-    {
-      tone: "amber",
-      badge: "AC",
-      title: `${toTitleLabel(user?.provider) || "Local"} account ready`,
-      subtitle: "Profile synced for guided learning",
-      meta: "Secure",
-    },
-  ];
-
   const handleThemeChange = (nextTheme) => {
     const current = user?.theme === "dusk" ? "dusk" : "dawn";
     if (nextTheme === current) return;
     setTheme(nextTheme).catch(() => {});
   };
 
+  // Same fetch/mark-seen/panel-toggle pattern as StudentDashboardPage.jsx's
+  // bell -- reusing StudentNotificationPanel rather than inventing a second
+  // notifications UI.
   useEffect(() => {
-    if (!user?.isPremium) {
-      setActiveSubscription(null);
-      return;
-    }
+    let cancelled = false;
+
+    getNotifications()
+      .then((result) => {
+        if (cancelled) return;
+        setNotifications(result?.notifications || []);
+        setUnreadCount(result?.unreadCount || 0);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleBellClick = () => {
+    setNotificationPanelOpen((current) => {
+      const next = !current;
+      if (next && unreadCount > 0) {
+        markNotificationsSeen()
+          .then(() => setUnreadCount(0))
+          .catch(() => {});
+      }
+      return next;
+    });
+  };
+
+  // Fetched regardless of isPremium now -- lastAttempt (the most recent
+  // payment_order, whatever its outcome) is exactly what a NOT-subscribed
+  // student needs to see, e.g. "your last attempt failed."
+  useEffect(() => {
     let cancelled = false;
     getMySubscription()
       .then((result) => {
-        if (!cancelled) setActiveSubscription(result?.subscription || null);
+        if (cancelled) return;
+        setActiveSubscription(result?.subscription || null);
+        setLastPaymentAttempt(result?.lastAttempt || null);
       })
       .catch(() => {
-        if (!cancelled) setActiveSubscription(null);
+        if (cancelled) return;
+        setActiveSubscription(null);
+        setLastPaymentAttempt(null);
       });
     return () => {
       cancelled = true;
@@ -484,39 +503,11 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
     }
   };
 
-  const handlePremiumPurchase = async () => {
-    setPaymentError("");
-    setPaymentStatus("processing");
-    try {
-      const order = await createPremiumOrder({ plan: "yearly" });
-      await openRazorpayCheckout({
-        order,
-        user,
-        onSuccess: async (response) => {
-          try {
-            const result = await verifyPremiumPayment({
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            });
-            persistUser(result.user);
-            setPaymentStatus("success");
-          } catch (error) {
-            setPaymentError(error?.message || "We couldn't verify your payment.");
-            setPaymentStatus("error");
-          }
-        },
-        onFailure: (error) => {
-          setPaymentError(error?.description || "Your payment failed.");
-          setPaymentStatus("error");
-        },
-        onDismiss: () => setPaymentStatus(null),
-      });
-    } catch (error) {
-      setPaymentError(error?.message || "We couldn't start the checkout.");
-      setPaymentStatus("error");
-    }
-  };
+  const subscriptionCountdown = formatSubscriptionCountdown(
+    activeSubscription?.current_end || user?.premiumExpiresAt || null
+  );
+  const subscriptionEndedAgo = formatSubscriptionEndedAgo(user?.premiumExpiresAt);
+  const lastAttemptFailed = !user?.isPremium && lastPaymentAttempt?.status === "failed";
 
   return (
     <StudentPageShell pageClass="student-page--profile" legacyModifierClass="student-profile-phone">
@@ -526,13 +517,23 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
             <h1>Keep learning, keep growing!</h1>
           </div>
           <div className="student-profile-header-actions">
-            <button type="button" className="student-profile-icon-button" aria-label="Notifications">
-              <ProfileIcon type="bell" />
-              <span className="student-profile-notice-dot">1</span>
-            </button>
-            <button type="button" className="student-profile-icon-button" aria-label="Settings">
-              <ProfileIcon type="settings" />
-            </button>
+            <div className="student-profile-bell-wrap">
+              <button
+                type="button"
+                className="student-profile-icon-button"
+                aria-label="Notifications"
+                onClick={handleBellClick}
+              >
+                <ProfileIcon type="bell" />
+                {unreadCount > 0 ? <span className="student-profile-notice-dot">{unreadCount}</span> : null}
+              </button>
+              {notificationPanelOpen ? (
+                <StudentNotificationPanel
+                  notifications={notifications}
+                  onNavigateAway={() => setNotificationPanelOpen(false)}
+                />
+              ) : null}
+            </div>
           </div>
         </header>
 
@@ -563,22 +564,12 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
             <div className="student-profile-summary-copy">
               <div className="student-profile-summary-head">
                 <strong>{user?.name || "Alex Sharma"}</strong>
-                <button type="button" className="student-profile-inline-action" aria-label="Open profile details">
-                  <ProfileIcon type="chevron" />
-                </button>
               </div>
               <p className="student-profile-email">
                 <ProfileIcon type="mail" />
                 <span>{user?.email || "alex.sharma@gmail.com"}</span>
               </p>
             </div>
-          </div>
-
-          <div className="student-profile-stat-grid">
-            <StatCard tone="amber" icon="flame" value={streakCount} label="Learning Streak" />
-            <StatCard tone="gold" icon="star" value={chapters.length || 0} label="Learning IQ" />
-            <StatCard tone="orange" icon="ribbon" value="12" label="Skills Mastered" />
-            <StatCard tone="green" icon="trend" value={`${progressAverage}%`} label="Growth Index" />
           </div>
         </section>
 
@@ -596,19 +587,15 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
                     : "Access all features and premium content"}
                 </p>
               </div>
-              <button
-                type="button"
-                className="student-profile-premium-arrow"
-                aria-label="Open subscription details"
-              >
-                <ProfileIcon type="chevron" />
-              </button>
             </div>
           </div>
           <div className="student-profile-premium-actions">
             {user?.isPremium ? (
               <>
                 <div className="student-profile-premium-trial">Premium Active</div>
+                {subscriptionCountdown ? (
+                  <div className="student-profile-premium-trial">{subscriptionCountdown}</div>
+                ) : null}
                 {activeSubscription ? (
                   <button
                     type="button"
@@ -616,7 +603,7 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
                     onClick={handleCancelSubscription}
                     disabled={cancelling}
                   >
-                    {cancelling ? "Cancelling..." : "Cancel Subscription"}
+                    {cancelling ? "Cancelling..." : "Cancel"}
                   </button>
                 ) : null}
               </>
@@ -625,12 +612,16 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
                 <button
                   type="button"
                   className="student-profile-premium-cta"
-                  onClick={handlePremiumPurchase}
-                  disabled={paymentStatus === "processing"}
+                  onClick={() => navigate("/pricing")}
                 >
-                  {paymentStatus === "processing" ? "Please wait..." : "View Subscription"}
+                  Subscribe
                 </button>
-                <div className="student-profile-premium-trial">Trial Ends in 15 Days</div>
+                {subscriptionEndedAgo ? (
+                  <div className="student-profile-premium-trial">{subscriptionEndedAgo}</div>
+                ) : null}
+                {lastAttemptFailed ? (
+                  <div className="student-profile-premium-trial is-alert">Attempt failed</div>
+                ) : null}
               </>
             )}
           </div>
@@ -643,32 +634,9 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
           onClose={() => setPaymentStatus(null)}
           onRetry={() => {
             setPaymentStatus(null);
-            handlePremiumPurchase();
+            handleCancelSubscription();
           }}
         />
-
-        <section className="student-profile-section">
-          <div className="student-profile-section-head">
-            <h2>Recent Activity</h2>
-            <button type="button">View All</button>
-          </div>
-          <div className="student-profile-list-card">
-            {recentActivity.map((item) => (
-              <ActivityRow key={item.title} {...item} />
-            ))}
-          </div>
-        </section>
-
-        <section className="student-profile-section">
-          <h2>Quick Access</h2>
-          <div className="student-profile-tile-grid">
-            <Tile tone="green" badge="CL" label="My Class" />
-            <Tile tone="blue" badge="SB" label="My Subject" />
-            <Tile tone="violet" badge="DL" label="Downloads" />
-            <Tile tone="orange" badge="TS" label="My Tests" />
-            <Tile tone="rose" badge="BM" label="Bookmarks" />
-          </div>
-        </section>
 
         <section className="student-profile-section">
           <h2>Smart Tutor</h2>
@@ -689,15 +657,6 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
           </div>
         </section>
 
-        <button type="button" className="student-profile-help-card">
-          <div className="student-profile-help-badge">?</div>
-          <div className="student-profile-help-copy">
-            <strong>Help & FAQs</strong>
-            <p>Find answers to common questions</p>
-          </div>
-          <ProfileIcon type="chevron" />
-        </button>
-
         <section className="student-profile-section">
           <h2>Account</h2>
           <div className="student-profile-account-card">
@@ -708,14 +667,20 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
               disabled={!canChangePassword}
               disabledHint="Not available for Google sign-in"
             />
-            <AccountRow label="Privacy & Security" disabled />
-            <AccountRow label="Manage Devices" disabled />
-            <AccountRow label="Parental Controls" disabled />
             <AccountRow label="Logout" onClick={onLogout} tone="danger" />
           </div>
         </section>
 
-        {isMobile && (platform === "android" || platform === "ios") && (
+        {/* Hidden once the PWA is actually running standalone (installed).
+            isStandalone()/getInstallState() in pwaInstall.js/useInstallPrompt.js
+            are live checks made fresh on every load -- not a stored flag -- so
+            if the student later deletes the home screen icon, platform stops
+            reporting "already-installed" on the next visit and this section
+            comes back automatically. Shown for BOTH platforms via tabs now
+            (not just the visiting device's own platform), including
+            "unsupported" (e.g. Android before beforeinstallprompt has fired
+            yet) -- previously that case showed nothing at all. */}
+        {isMobile && platform !== "already-installed" && (
           <section className="student-profile-premium student-profile-install">
             <div className="student-profile-premium-mark">
               <img src="/icons/icon-192.png" alt="" className="student-profile-premium-mark-image" aria-hidden="true" />
@@ -723,27 +688,66 @@ export const StudentProfilePage = ({ user, dashboard, onLogout }) => {
             <div className="student-profile-premium-copy">
               <div className="student-profile-premium-head">
                 <div>
-                  <strong>Install KUHEDU STUDY BUDDY</strong>
-                  <p>Add to your home screen for quick access</p>
+                  <strong>KUHEDU STUDY BUDDY</strong>
+                  <p>Add to your Home Screen for quick access</p>
                 </div>
+              </div>
+
+            </div>
+
+            <div className="student-profile-install-tabs" role="tablist" aria-label="Install instructions">
+              <div className="student-profile-install-download" aria-hidden="true">
                 <ProfileIcon type="download" />
               </div>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeInstallTab === "ios"}
+                className={`student-profile-install-tab ${activeInstallTab === "ios" ? "is-active" : ""}`}
+                onClick={() => setActiveInstallTab("ios")}
+              >
+                <ProfileIcon type="apple" className="student-profile-install-tab-icon" />
+                iOS
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeInstallTab === "android"}
+                className={`student-profile-install-tab ${activeInstallTab === "android" ? "is-active" : ""}`}
+                onClick={() => setActiveInstallTab("android")}
+              >
+                <ProfileIcon
+                  type="android"
+                  className="student-profile-install-tab-icon student-profile-install-tab-icon-android"
+                />
+                Android
+              </button>
             </div>
-            <div className="student-profile-premium-actions">
-              {platform === "android" ? (
-                <button
-                  type="button"
-                  className="student-profile-premium-cta"
-                  onClick={promptInstall}
-                  disabled={!canInstall}
-                >
-                  Install App
-                </button>
+
+            <div className="student-profile-premium-actions" role="tabpanel">
+              {activeInstallTab === "android" ? (
+                <ol className="student-profile-install-steps">
+                  <li>
+                    Tap the <strong>&#8942;</strong> menu icon in Chrome (top-right)
+                  </li>
+                  <li>
+                    Tap <strong>&quot;Install app&quot;</strong> (or <strong>&quot;Add to Home screen&quot;</strong>)
+                  </li>
+                  <li>
+                    Tap <strong>&quot;Install&quot;</strong> to confirm
+                  </li>
+                </ol>
               ) : (
                 <ol className="student-profile-install-steps">
-                  <li>Tap the Share icon in Safari</li>
-                  <li>Scroll down and tap "Add to Home Screen"</li>
-                  <li>Tap "Add"</li>
+                  <li>
+                    Tap the <strong>Share</strong> icon in Safari&apos;s toolbar
+                  </li>
+                  <li>
+                    Scroll down and tap <strong>&quot;Add to Home Screen&quot;</strong>
+                  </li>
+                  <li>
+                    Tap <strong>&quot;Add&quot;</strong> at the top-right corner
+                  </li>
                 </ol>
               )}
             </div>

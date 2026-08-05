@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { askConceptTutor } from "../api/client";
+import { useEffect, useState } from "react";
+import { askConceptTutor, getTutorUsage } from "../api/client";
 import { MathPreview } from "./MathPreview";
 import { StudentVoiceSessionPanel } from "./StudentVoiceSessionPanel";
 
@@ -12,13 +12,21 @@ export const StudentAiTutorPanel = ({ assessmentUnitId }) => {
   const [entries, setEntries] = useState([]);
   const [pendingMode, setPendingMode] = useState(null);
   const [error, setError] = useState("");
+  const [usage, setUsage] = useState(null);
+
+  useEffect(() => {
+    getTutorUsage()
+      .then((result) => setUsage(result?.usage))
+      .catch(() => {});
+  }, []);
 
   const runTutor = async (mode, questionText) => {
     setPendingMode(mode);
     setError("");
     try {
-      const { answer } = await askConceptTutor(assessmentUnitId, { mode, question: questionText });
+      const { answer, usage: nextUsage } = await askConceptTutor(assessmentUnitId, { mode, question: questionText });
       setEntries((prev) => [...prev, { mode, question: questionText, answer }]);
+      setUsage(nextUsage);
       if (mode === "ask") setQuestion("");
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
@@ -46,6 +54,23 @@ export const StudentAiTutorPanel = ({ assessmentUnitId }) => {
         <p>Ask a question, or have the tutor walk you through this concept.</p>
       </header>
 
+      {usage && (
+        <div className="student-ai-tutor-usage-meter">
+          <div className="student-ai-tutor-usage-meter-label">
+            <span>
+              {usage.hoursUsed.toFixed(1)} / {usage.hoursBudget} hrs used
+            </span>
+            <span>{usage.hoursRemaining.toFixed(1)} hrs left this month</span>
+          </div>
+          <div
+            className={`student-ai-tutor-usage-meter-bar ${usage.percentUsed >= 90 ? "is-critical" : ""}`}
+            aria-hidden="true"
+          >
+            <span style={{ width: `${usage.percentUsed}%` }} />
+          </div>
+        </div>
+      )}
+
       <button
         type="button"
         className="student-ai-tutor-coach-button"
@@ -70,7 +95,12 @@ export const StudentAiTutorPanel = ({ assessmentUnitId }) => {
 
       {error && <p className="student-ai-tutor-error">{error}</p>}
 
-      <StudentVoiceSessionPanel mode="ask" label="Ask" assessmentUnitId={assessmentUnitId} />
+      <StudentVoiceSessionPanel
+        mode="ask"
+        label="Ask"
+        assessmentUnitId={assessmentUnitId}
+        onUsageUpdate={setUsage}
+      />
 
       {entries.length > 0 && (
         <ul className="student-ai-tutor-history">

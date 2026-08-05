@@ -1,7 +1,9 @@
 import { pool } from "../db/pool.js";
 import { getDiagramsForSection } from "./contentReadService.js";
+import { generateImage } from "./openAiService.js";
 
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+const IMAGE_MODEL_ID = "azure-image-gpt-image-1";
 
 const getDiagram = async (contentCardId) => {
   const result = await pool.query(
@@ -26,6 +28,9 @@ const persistDiagramMedia = async ({
   mimeType,
   originalFileName,
   userId,
+  source = "uploaded",
+  promptText = null,
+  modelName = null,
 }) => {
   const client = await pool.connect();
   try {
@@ -47,10 +52,21 @@ const persistDiagramMedia = async ({
     const insertResult = await client.query(
       `INSERT INTO content_card_media (
          content_card_id, version_number, is_selected,
-         media_data, mime_type, original_file_name, created_by
-       ) VALUES ($1, $2, TRUE, $3, $4, $5, $6)
+         media_data, mime_type, original_file_name, created_by,
+         source, prompt_text, model_name
+       ) VALUES ($1, $2, TRUE, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id, version_number, created_at`,
-      [contentCardId, nextVersion, mediaDataUrl, mimeType, originalFileName || null, userId || null]
+      [
+        contentCardId,
+        nextVersion,
+        mediaDataUrl,
+        mimeType,
+        originalFileName || null,
+        userId || null,
+        source,
+        promptText,
+        modelName,
+      ]
     );
 
     await client.query("COMMIT");
@@ -127,6 +143,50 @@ export const uploadDiagramMedia = async ({ contentCardId, dataUrl, fileName, use
   };
 };
 
+// Content-moderator "regenerate image" action -- calls the same generateImage
+// already used nowhere else in the app (see openAiService.js), then persists
+// via the exact same version-increment/is_selected-flip transaction as a
+// manual upload, just tagged source='generated' with the prompt/model kept
+// for the editor UI to show.
+export const regenerateDiagramMedia = async ({ contentCardId, prompt, userId }) => {
+  const diagram = await getDiagram(contentCardId);
+  if (!diagram) {
+    const error = new Error("Diagram not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (!prompt || !prompt.trim()) {
+    const error = new Error("A prompt is required to generate an image.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await generateImage({ prompt: prompt.trim(), modelId: IMAGE_MODEL_ID });
+
+  const saved = await persistDiagramMedia({
+    contentCardId,
+    mediaDataUrl: result.imageDataUrl,
+    mimeType: result.mimeType,
+    originalFileName: null,
+    userId,
+    source: "generated",
+    promptText: prompt.trim(),
+    modelName: result.model,
+  });
+
+  return {
+    contentCardId,
+    source: "generated",
+    versionNumber: saved.version_number,
+    mediaData: result.imageDataUrl,
+    mimeType: result.mimeType,
+    promptText: prompt.trim(),
+    modelName: result.model,
+    createdAt: saved.created_at,
+  };
+};
+
 // Lets the admin Workbench (which only has an assessment_unit_id in scope,
 // not the section id diagrams actually belong to) list the diagrams for
 // whichever section that unit was imported into -- diagrams are section-
@@ -146,7 +206,8 @@ export const getDiagramsForAssessmentUnit = async (assessmentUnitId) => {
 
 export const getDiagramMedia = async (contentCardId) => {
   const result = await pool.query(
-    `SELECT version_number, media_data, mime_type, original_file_name, created_at
+    `SELECT version_number, media_data, mime_type, original_file_name, created_at,
+            source, prompt_text, model_name
      FROM content_card_media
      WHERE content_card_id = $1 AND is_selected = TRUE
      LIMIT 1`,
@@ -159,11 +220,13 @@ export const getDiagramMedia = async (contentCardId) => {
   }
 
   return {
-    source: "uploaded",
+    source: row.source || "uploaded",
     versionNumber: row.version_number,
     mediaData: row.media_data,
     mimeType: row.mime_type,
     originalFileName: row.original_file_name,
+    promptText: row.prompt_text,
+    modelName: row.model_name,
     createdAt: row.created_at,
   };
 };

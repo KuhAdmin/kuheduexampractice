@@ -107,6 +107,10 @@ export const env = {
   // separate from geminiModel above (used for other, admin-configurable
   // OCR/grading calls) so this feature's model is pinned independently.
   geminiVisionModel: process.env.GEMINI_VISION_MODEL || "",
+  // Image-generation model for the admin Content Editor's memory-hook
+  // images (visualHook/curiosityHook/memoryTrick) -- reuses geminiApiKey
+  // above. Must be an image-output-capable Gemini model.
+  geminiImageModel: process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image",
   // AI Tutor live voice (Gemini Live API) -- reuses geminiApiKey above.
   // GEMINI_VOICE_MODEL must be a bidiGenerateContent-capable model for that
   // specific key (verify live via GET .../v1alpha/models?key=... rather than

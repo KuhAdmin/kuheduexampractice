@@ -70,6 +70,7 @@ export const AdminConceptImportPage = () => {
   const [uploadError, setUploadError] = useState("");
   const [result, setResult] = useState(null);
   const [logEvents, setLogEvents] = useState([]);
+  const [fileName, setFileName] = useState("");
   const logEndRef = useRef(null);
 
   useEffect(() => {
@@ -85,6 +86,7 @@ export const AdminConceptImportPage = () => {
     setUploadError("");
     setResult(null);
     setLogEvents([]);
+    setFileName(file.name);
 
     try {
       const text = await readFileAsText(file);
@@ -149,6 +151,8 @@ export const AdminConceptImportPage = () => {
           />
         </div>
       </header>
+
+      {fileName && <p className="admin-bulk-pipeline-concurrency">File: {fileName}</p>}
 
       {uploadError && <p className="error-text">{uploadError}</p>}
 

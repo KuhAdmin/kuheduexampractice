@@ -43,6 +43,14 @@ const AI_MODEL_REGISTRY = [
     isDefault: false,
   },
   {
+    id: "gemini-image",
+    label: "Google Gemini — Image (2.5 Flash Image)",
+    provider: "gemini-image",
+    apiKeyEnvValue: env.geminiApiKey,
+    modelName: env.geminiImageModel,
+    isDefault: false,
+  },
+  {
     id: "deepseek-v4-pro",
     label: "DeepSeek V4 Pro",
     provider: "openai-compatible",

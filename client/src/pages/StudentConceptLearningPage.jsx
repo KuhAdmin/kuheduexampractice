@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
+import { useAuth } from "../context/AuthContext";
 import { StudentMediaViewer } from "../components/StudentMediaViewer";
 import { StudentMicroActivityPanel } from "../components/StudentMicroActivityPanel";
 import { StudentAiTutorPanel } from "../components/StudentAiTutorPanel";
@@ -650,6 +651,7 @@ const buildLearnContent = (card) => {
 
 export const StudentConceptLearningPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const tier = useBreakpoint();
   const isDesktop = tier !== "mobile";
   const { chapterId: chapterNumber, sectionId: sourceSectionId, conceptId: assessmentUnitId } = useParams();
@@ -659,10 +661,33 @@ export const StudentConceptLearningPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState(TABS[0]);
+  // Mobile accordion's own "which section is visually expanded" flag,
+  // decoupled from activeTab (which must always hold a real tab so desktop's
+  // tab bar/content-selection keeps working). Starts at null so landing on
+  // this page shows every section's header at a glance -- previously this
+  // just read `tab === activeTab`, which meant TABS[0] ("Learn") was always
+  // pre-expanded, pushing every other option below the fold on a phone.
+  const [mobileExpandedTab, setMobileExpandedTab] = useState(null);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [activeLearnMode, setActiveLearnMode] = useState(null);
   const [expandedSections, setExpandedSections] = useState(() => new Set());
   const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", sectionNumber: "", topicName: "" });
+  // Mobile header's compact "C11·BIO·4.1" prefix ahead of the concept name.
+  // selectionOverride (present when reached via the class/subject switcher's
+  // encoded chapterId, see decodeSelectionChapterId above) wins over the
+  // student's own profile since it reflects what's actually being browsed.
+  // user.subject is stored as a lowercase full word ("biology"), not a short
+  // code, so one is derived here rather than adding a lookup table.
+  // sectionNumber (from breadcrumbMeta below) is already "<chapter>.<section>"
+  // (e.g. "4.1"), so it is NOT combined with displayChapterNumber separately
+  // -- that would duplicate the chapter digit.
+  const headerClassLabel = selectionOverride?.levelCode || user?.studentClass || "";
+  const headerSubjectLabel =
+    selectionOverride?.subjectCode || (user?.subject ? user.subject.slice(0, 3).toUpperCase() : "");
+  const headerSectionLabel = breadcrumbMeta.sectionNumber || "";
+  const headerPrefix = [headerClassLabel ? `C${headerClassLabel}` : "", headerSubjectLabel, headerSectionLabel]
+    .filter(Boolean)
+    .join("·");
   const [activeExploreStepKey, setActiveExploreStepKey] = useState(null);
   const [visitedExploreSteps, setVisitedExploreSteps] = useState(() => new Set());
   // Only meaningful for teachingMode-driven steps (Compare/Story/Simple/Real
@@ -1764,6 +1789,25 @@ export const StudentConceptLearningPage = () => {
     setActiveTab(tab);
   };
 
+  // Mobile accordion header click: toggles that section's own expanded
+  // state (collapsing it again on a second click, which was never possible
+  // when the accordion was driven directly off activeTab) while still going
+  // through selectTab for anything else it does (activeTab itself, and
+  // Practice's navigate-away special case) -- so expanding a section here
+  // behaves exactly like selecting it always did, just also collapsible.
+  const toggleMobileAccordionSection = (tab) => {
+    if (tab === "Practice") {
+      selectTab(tab);
+      return;
+    }
+    if (mobileExpandedTab === tab) {
+      setMobileExpandedTab(null);
+      return;
+    }
+    selectTab(tab);
+    setMobileExpandedTab(tab);
+  };
+
   const renderComingSoon = (label) => (
     <section className="student-concept-learning-card">
       <div className="student-concept-learning-copy">
@@ -2069,7 +2113,10 @@ export const StudentConceptLearningPage = () => {
           >
             <ConceptLearningIcon type="back" />
           </button>
-          <h1>{card?.primaryConcept || "Concept"}</h1>
+          <h1>
+            {headerPrefix ? <span className="student-concept-learning-header-prefix">{headerPrefix}</span> : null}
+            {card?.primaryConcept || "Concept"}
+          </h1>
         </header>
 
         {loading ? (
@@ -2082,21 +2129,24 @@ export const StudentConceptLearningPage = () => {
           // swipe, keyboard) still left the tab bar and its content as two
           // disconnected pieces of chrome competing for the same screen.
           // Stacking every tab as a collapsible section means there's
-          // nothing to scroll sideways at all: only the active tab's
-          // section expands (via the existing activeTab/selectTab state,
-          // unchanged), so this is a pure presentation change, not a new
-          // navigation model. Practice still isn't a real section here --
-          // selectTab navigates straight to the assessment page for it, so
-          // its header never actually expands.
+          // nothing to scroll sideways at all: at most one section expands
+          // at a time (mobileExpandedTab, toggled via
+          // toggleMobileAccordionSection -- separate from activeTab, which
+          // still just tracks which tab's content to render/keep loaded).
+          // Starts with nothing expanded, so landing here shows every
+          // section's header at a glance instead of TABS[0] pre-opened and
+          // pushing the rest below the fold. Practice still isn't a real
+          // section here -- selectTab navigates straight to the assessment
+          // page for it, so its header never actually expands.
           <div className="student-concept-accordion">
             {TABS.map((tab) => {
-              const isOpen = tab === activeTab;
+              const isOpen = tab === mobileExpandedTab;
               return (
                 <section key={tab} className={`student-concept-accordion-item ${isOpen ? "is-open" : ""}`}>
                   <button
                     type="button"
                     className="student-concept-accordion-header"
-                    onClick={() => selectTab(tab)}
+                    onClick={() => toggleMobileAccordionSection(tab)}
                     aria-expanded={isOpen}
                   >
                     <span className="student-concept-accordion-header-icon">

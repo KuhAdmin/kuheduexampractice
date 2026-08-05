@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { selectionKey, useClassSubject } from "../context/ClassSubjectContext";
+import { selectionKey, useClassSubject } from "../context/classSubjectHooks";
 
 const BookIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">

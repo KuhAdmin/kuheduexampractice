@@ -78,6 +78,22 @@ const ChapterDetailIcon = ({ type, className = "" }) => {
     );
   }
 
+  if (type === "lock") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <rect x="6" y="10.5" width="12" height="9" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <path
+          d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+      </svg>
+    );
+  }
+
   if (type === "circle-outline") {
     return (
       <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
@@ -128,7 +144,7 @@ const STATUS_ICON = {
   notStarted: "circle-outline",
 };
 
-export const StudentChapterDetailPage = ({ dashboard }) => {
+export const StudentChapterDetailPage = ({ dashboard, user }) => {
   const navigate = useNavigate();
   const tier = useBreakpoint();
   const isDesktop = tier !== "mobile";
@@ -159,7 +175,23 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
     (chapter) => String(chapter.chapterNumber) === String(chapterNumber)
   );
 
+  // Mirrors the free-preview rule on StudentChaptersPage.jsx (only the first
+  // chapter of the student's own class/subject is free) -- re-checked here
+  // too so a locked chapter can't be reached by typing its URL directly.
+  const isFirstChapter =
+    !isSelection &&
+    Array.isArray(dashboard?.chapters) &&
+    dashboard.chapters.length > 0 &&
+    String(dashboard.chapters[0].chapterNumber ?? dashboard.chapters[0].id) === String(chapterNumber);
+  const subscriptionActive = Boolean(user?.isPremium);
+  const isLocked = !subscriptionActive && !isFirstChapter;
+
   useEffect(() => {
+    if (isLocked) {
+      setLoading(false);
+      return undefined;
+    }
+
     let cancelled = false;
     setLoading(true);
     setError("");
@@ -179,10 +211,10 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapterNumber]);
+  }, [chapterNumber, isLocked]);
 
   useEffect(() => {
-    if (isSelection) {
+    if (isSelection || isLocked) {
       setBookQuestionsLoading(false);
       return undefined;
     }
@@ -206,7 +238,7 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapterNumber, isSelection]);
+  }, [chapterNumber, isSelection, isLocked]);
 
   const chapterName = data?.chapterName || dashboardChapter?.title || "Chapter";
   const sections = data?.sections || [];
@@ -326,7 +358,15 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
             )}
           </section>
 
-          {loading ? (
+          {isLocked ? (
+            <div className="student-chapter-detail-locked">
+              <ChapterDetailIcon type="lock" />
+              <p>Subscribe to unlock this chapter.</p>
+              <button type="button" className="student-chapter-detail-locked-cta" onClick={() => navigate("/pricing")}>
+                View Plans
+              </button>
+            </div>
+          ) : loading ? (
             <p className="student-empty-state">Loading sections...</p>
           ) : error ? (
             <p className="student-empty-state">{error}</p>
@@ -434,7 +474,15 @@ export const StudentChapterDetailPage = ({ dashboard }) => {
         </section>
 
         <section className="student-chapter-detail-section">
-          {loading ? (
+          {isLocked ? (
+            <div className="student-chapter-detail-locked">
+              <ChapterDetailIcon type="lock" />
+              <p>Subscribe to unlock this chapter.</p>
+              <button type="button" className="student-chapter-detail-locked-cta" onClick={() => navigate("/pricing")}>
+                View Plans
+              </button>
+            </div>
+          ) : loading ? (
             <p className="student-empty-state">Loading sections...</p>
           ) : error ? (
             <p className="student-empty-state">{error}</p>

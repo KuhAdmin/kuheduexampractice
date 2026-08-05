@@ -1,9 +1,14 @@
 import { useNavigate } from "react-router-dom";
 
+// "practice" removed from the nav (not from the app -- other flows still
+// link to /practice directly). "labs" and "assessments" (Tests) are
+// deliberately kept with no `path`: both this bar and StudentLayout.jsx's
+// desktop sidebar (see studentMenuItems there) treat a missing path as
+// "disabled," so they stay visible but inert until those features launch.
 export const navItems = [
   { id: "home", label: "Home", icon: "home", path: "/dashboard" },
-  { id: "chapters", label: "Chapters", icon: "book", path: "/chapters" },
-  { id: "practice", label: "Practice", icon: "spark", path: "/practice" },
+  { id: "chapters", label: "Lessons", icon: "book", path: "/chapters" },
+  { id: "labs", label: "Labs", icon: "lab" },
   { id: "assessments", label: "Tests", icon: "clipboard" },
   { id: "profile", label: "Profile", icon: "user", path: "/profile" },
 ];
@@ -64,6 +69,21 @@ export const StudentNavIcon = ({ type }) => {
     );
   }
 
+  if (type === "lab") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M9.5 3.5h5m-4 0V9l-4.6 8.2a1.6 1.6 0 0 0 1.4 2.3h9.4a1.6 1.6 0 0 0 1.4-2.3L13.5 9V3.5m-5.5 12h8"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+      </svg>
+    );
+  }
+
   if (type === "user") {
     return (
       <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
@@ -102,7 +122,11 @@ export const StudentBottomNav = ({ activeItem = "home" }) => {
         <button
           key={item.id}
           type="button"
-          className={`student-dashboard-nav-item ${item.id === activeItem ? "is-active" : ""}`}
+          className={`student-dashboard-nav-item ${item.id === activeItem ? "is-active" : ""} ${
+            item.path ? "" : "is-disabled"
+          }`}
+          disabled={!item.path}
+          aria-disabled={!item.path}
           onClick={() => {
             if (item.path) {
               navigate(item.path);

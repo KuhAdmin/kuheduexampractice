@@ -3,7 +3,7 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { getAdminOrders, getAdminOrdersSummary, fetchAdminOrdersExportBlob } from "../api/client";
 import { AdminOrdersDateRangeFilter } from "../components/AdminOrdersDateRangeFilter";
 import { thisMonthRange } from "../lib/dateRangePresets";
-import { plans } from "../content/pricingContent";
+import { pricingCards, trial } from "../content/pricingContent";
 
 const PAGE_SIZE = 20;
 
@@ -39,8 +39,14 @@ const PAYMENT_METHOD_OPTIONS = [
 
 const PLAN_OPTIONS = [
   { value: "", label: "All plans" },
-  ...Object.values(plans).map((plan) => ({ value: plan.id, label: plan.label })),
+  ...pricingCards.flatMap((card) => [
+    { value: `${card.id}-monthly`, label: `${card.name} (Monthly)` },
+    { value: `${card.id}-yearly`, label: `${card.name} (Yearly)` },
+  ]),
+  { value: trial.id, label: trial.label },
 ];
+
+const PLAN_LABEL_BY_ID = Object.fromEntries(PLAN_OPTIONS.map((option) => [option.value, option.label]));
 
 const STATUS_BADGE_CLASS = {
   success: "is-completed",
@@ -80,7 +86,7 @@ const capitalize = (value) => (value ? value.charAt(0).toUpperCase() + value.sli
 
 const subscriptionStatusLabel = (status) => SUBSCRIPTION_STATUS_LABEL[status] || capitalize(status);
 
-const planLabel = (planId) => plans[planId]?.label || capitalize(planId);
+const planLabel = (planId) => PLAN_LABEL_BY_ID[planId] || capitalize(planId);
 
 const formatRupees = (paise) =>
   paise === null || paise === undefined
