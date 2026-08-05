@@ -211,6 +211,24 @@ const handleSubscriptionResumed = async (payload) => {
   await markSubscriptionActiveAndActivatePremium({ razorpaySubscriptionId: subscription.id });
 };
 
+// A charge attempt (cycle 1 or any renewal) failed and Razorpay is
+// auto-retrying -- status only, no premium change. Mirrors how most
+// subscription products handle a single failed attempt: don't yank access
+// mid-retry, only subscription.halted below (retries exhausted) does that.
+const handleSubscriptionPending = async (payload) => {
+  const subscription = payload.payload.subscription.entity;
+  await updateSubscriptionStatus(subscription.id, "pending");
+};
+
+// Razorpay has exhausted its retry schedule (4 consecutive failed attempts)
+// and given up on this subscription -- the definitive "this charge is never
+// going through" signal, so revoke immediately, same as
+// cancelled/paused/completed above.
+const handleSubscriptionHalted = async (payload) => {
+  const subscription = payload.payload.subscription.entity;
+  await updateSubscriptionStatusAndRevokePremium(subscription.id, "halted");
+};
+
 // Razorpay's invoice.paid/invoice.partially_paid deliveries carry a sibling
 // payment entity alongside invoice.entity (the charge that paid this
 // invoice) -- accessed defensively since that's inferred from Razorpay's
@@ -248,6 +266,8 @@ const EVENT_HANDLERS = {
   "subscription.cancelled": handleSubscriptionCancelled,
   "subscription.paused": handleSubscriptionPaused,
   "subscription.resumed": handleSubscriptionResumed,
+  "subscription.pending": handleSubscriptionPending,
+  "subscription.halted": handleSubscriptionHalted,
   "invoice.paid": handleInvoicePaid,
   "invoice.partially_paid": handleInvoicePartiallyPaid,
 };

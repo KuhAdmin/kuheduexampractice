@@ -23,6 +23,13 @@ const PLAN_AMOUNTS_PAISE = {
 const CURRENCY = "INR";
 const TRIAL_DURATION_MS = 60 * 60 * 1000;
 
+// Only English is on sale for now -- mirrors PricingPage.jsx's TEMPORARY
+// visiblePricingCards filter and subscriptionService.js's matching
+// ENABLED_MONTHLY_CARDS gate, enforced here too so a direct API call can't
+// buy Yearly for a subject that isn't actually launched yet. "trial" is
+// unrelated to any pricing card and stays exempt.
+const ENABLED_YEARLY_PLANS = new Set(["english-yearly", "trial"]);
+
 export class PaymentError extends Error {
   constructor(message, statusCode = 500) {
     super(message);
@@ -67,6 +74,9 @@ export const createPremiumOrder = async ({ userId, plan = "yearly" }) => {
   const amount = PLAN_AMOUNTS_PAISE[plan];
   if (!amount) {
     throw new PaymentError("Invalid plan.", 400);
+  }
+  if (!ENABLED_YEARLY_PLANS.has(plan)) {
+    throw new PaymentError("This subject isn't available for purchase yet.", 403);
   }
 
   const razorpay = getRazorpayClient();

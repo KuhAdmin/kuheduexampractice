@@ -20,6 +20,15 @@ const CARD_MONTHLY_AMOUNTS_PAISE = {
 const MONTHLY_TOTAL_COUNT = 12;
 const CURRENCY = "INR";
 
+// Only English is on sale for now -- mirrors PricingPage.jsx's TEMPORARY
+// visiblePricingCards filter (client/src/pages/PricingPage.jsx), enforced
+// here too so a direct API call can't provision a Plan/subscription for a
+// card that isn't actually for sale yet. Scoped to NEW checkouts only --
+// existing subscriptions and their webhook-driven renewals for other cards
+// (if any) go through verifyPremiumSubscription/razorpayWebhookService.js,
+// not this function, so they're untouched.
+const ENABLED_MONTHLY_CARDS = new Set(["english"]);
+
 const isRazorpayConfigured = () => Boolean(env.razorpayKeyId && env.razorpayKeySecret);
 
 let razorpayClient = null;
@@ -45,6 +54,9 @@ const getOrCreateMonthlyPlanId = async (cardId) => {
   const amount = CARD_MONTHLY_AMOUNTS_PAISE[cardId];
   if (!amount) {
     throw new PaymentError("Invalid plan.", 400);
+  }
+  if (!ENABLED_MONTHLY_CARDS.has(cardId)) {
+    throw new PaymentError("This subject isn't available for purchase yet.", 403);
   }
 
   const cached = await getSetting(planCacheKey(cardId));
@@ -83,6 +95,13 @@ export const createPremiumSubscription = async ({ userId, cardId }) => {
       plan_id: planId,
       total_count: MONTHLY_TOTAL_COUNT,
       customer_notify: 1,
+      // Explicit rather than relying on the implicit default -- paid
+      // upfront, not postpaid: Razorpay bills cycle 1 as the authorization
+      // transaction itself (not a refunded token amount) when start_at is
+      // "now," same as omitting it, but pinning it removes any ambiguity
+      // about which behavior is in effect. Every subsequent cycle (2-12)
+      // still auto-bills on schedule via the mandate as normal.
+      start_at: Math.floor(Date.now() / 1000),
       notes: { user_id: String(userId), card_id: cardId },
     });
   } catch (error) {
