@@ -95,13 +95,18 @@ export const createPremiumSubscription = async ({ userId, cardId }) => {
       plan_id: planId,
       total_count: MONTHLY_TOTAL_COUNT,
       customer_notify: 1,
-      // Explicit rather than relying on the implicit default -- paid
-      // upfront, not postpaid: Razorpay bills cycle 1 as the authorization
-      // transaction itself (not a refunded token amount) when start_at is
-      // "now," same as omitting it, but pinning it removes any ambiguity
-      // about which behavior is in effect. Every subsequent cycle (2-12)
-      // still auto-bills on schedule via the mandate as normal.
-      start_at: Math.floor(Date.now() / 1000),
+      // start_at deliberately omitted, NOT pinned to Date.now() -- a fixed
+      // "now" timestamp goes stale during the gap between subscription
+      // creation and the customer actually completing checkout (script
+      // load, method selection, UPI QR scan/approval can easily take
+      // 10-30s+), and a UPI Autopay mandate whose requested start time has
+      // already elapsed by the time it reaches NPCI/the bank is invalid --
+      // this caused the checkout's UPI QR to refresh endlessly instead of
+      // ever completing. Per Razorpay's docs, omitting start_at already
+      // means "starts immediately after the authorisation payment" (cycle 1
+      // billed as the authorization transaction itself, same paid-upfront
+      // outcome), just with Razorpay handling the timing internally instead
+      // of the app pinning a timestamp that can go stale mid-checkout.
       notes: { user_id: String(userId), card_id: cardId },
     });
   } catch (error) {
