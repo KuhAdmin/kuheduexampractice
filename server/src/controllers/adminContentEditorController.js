@@ -42,6 +42,18 @@ export const getCardsHandler = async (req, res, next) => {
   }
 };
 
+// content_card.details is always Array<{ label: string, value: string |
+// string[] }> in practice (see AdminContentDetailsEditor.jsx, the only
+// client-side producer of this shape now that the raw-JSON textarea is
+// admin-only). Guards data integrity for any caller -- not a role check,
+// since a moderator's requests never contain anything but this shape to
+// begin with.
+const isValidDetailsShape = (details) =>
+  Array.isArray(details) &&
+  details.every(
+    (entry) => entry !== null && typeof entry === "object" && !Array.isArray(entry) && typeof entry.label === "string"
+  );
+
 export const putCardHandler = async (req, res, next) => {
   try {
     let details = req.body?.details;
@@ -51,6 +63,12 @@ export const putCardHandler = async (req, res, next) => {
       } catch {
         return res.status(400).json({ message: "Details must be valid JSON." });
       }
+    }
+
+    if (details !== undefined && !isValidDetailsShape(details)) {
+      return res
+        .status(400)
+        .json({ message: "Details must be a list of fields, each with a label." });
     }
 
     const card = await updateContentCard(req.params.cardId, {

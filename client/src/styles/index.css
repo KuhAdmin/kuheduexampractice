@@ -3894,6 +3894,213 @@ a {
   font-weight: 600;
 }
 
+/* Admin Content Editor -- mirrors .student-chapter-detail-action* above
+   (same color tokens/markup shape) so moderators, who use the student app
+   daily, see a familiar color-coded action-row list instead of a flat
+   table. Kept as its own admin-* class family per this file's existing
+   convention: shell chrome (admin-sidebar-*) is shared with the student
+   app, but content-body classes are namespaced per surface. */
+.admin-content-editor-concept {
+  margin-top: 20px;
+}
+
+.admin-content-editor-concept-title {
+  margin: 0 0 10px;
+  font-size: 1.1em;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.admin-content-editor-action-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-content-editor-action-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-content-editor-action {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  border: 1px solid rgb(from var(--green) r g b / 0.1);
+  border-radius: 18px;
+  background: var(--surface-strong);
+  color: var(--text);
+  text-align: left;
+  box-shadow: 0 10px 24px rgb(from var(--green) r g b / 0.06);
+  width: 100%;
+  cursor: pointer;
+}
+
+.admin-content-editor-action.is-violet {
+  --purple: #c64ab8;
+  --purple-bg: #fde5fc;
+  background: var(--purple-bg);
+  border-color: rgb(from var(--purple) r g b / 0.2);
+}
+
+[data-theme="dusk"] .admin-content-editor-action.is-violet {
+  --purple: #e08fd6;
+  --purple-bg: #3a2438;
+}
+
+.admin-content-editor-action.is-lilac {
+  background: #f8f3ff;
+  border-color: rgb(from var(--indigo) r g b / 0.2);
+}
+
+.admin-content-editor-action.is-amber {
+  background: var(--warning-bg);
+  border-color: rgb(from var(--warning) r g b / 0.2);
+}
+
+.admin-content-editor-action.is-green {
+  background: var(--success-bg);
+  border-color: rgb(from var(--green) r g b / 0.2);
+}
+
+.admin-content-editor-action.is-blue {
+  background: rgb(from var(--teal) r g b / 0.12);
+  border-color: rgb(from var(--teal) r g b / 0.2);
+}
+
+.admin-content-editor-action.is-rose {
+  background: var(--danger-bg);
+  border-color: rgb(from var(--danger) r g b / 0.2);
+}
+
+.admin-content-editor-action.is-teal {
+  background: var(--success-bg);
+  border-color: rgb(from var(--teal) r g b / 0.2);
+}
+
+.admin-content-editor-action-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+}
+
+.admin-content-editor-action-mark.is-green {
+  background: var(--success-bg);
+  color: var(--green);
+}
+
+.admin-content-editor-action-mark.is-amber {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.admin-content-editor-action-mark.is-violet {
+  background: rgb(from var(--indigo) r g b / 0.12);
+  color: var(--indigo);
+}
+
+.admin-content-editor-action-mark.is-lilac {
+  --lilac-bg: #f3ecff;
+  background: var(--lilac-bg);
+  color: var(--indigo);
+}
+
+[data-theme="dusk"] .admin-content-editor-action-mark.is-lilac {
+  --lilac-bg: #2c2444;
+}
+
+.admin-content-editor-action-mark.is-blue {
+  background: rgb(from var(--teal) r g b / 0.12);
+  color: var(--teal);
+}
+
+.admin-content-editor-action-mark.is-rose {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.admin-content-editor-action-mark.is-teal {
+  background: var(--success-bg);
+  color: var(--teal);
+}
+
+.admin-content-editor-action-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.admin-content-editor-action-copy {
+  min-width: 0;
+}
+
+.admin-content-editor-action-copy strong {
+  display: block;
+  font-size: 1.05em;
+  color: var(--text);
+}
+
+.admin-content-editor-action-copy small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.92em;
+  font-weight: 600;
+}
+
+.admin-content-editor-action-chevron {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.15s ease;
+}
+
+.admin-content-editor-action-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* Details editor (AdminContentDetailsEditor.jsx) -- the no-JSON default
+   editor for content_card.details, Array<{label, value}>. */
+.admin-content-details-fields {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-content-details-field {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1.5px solid rgba(31, 41, 51, 0.14);
+  border-radius: 16px;
+}
+
+.admin-content-details-field-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-content-details-label-input {
+  flex: 1;
+  font-weight: 600;
+}
+
+.admin-content-details-list {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-content-details-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-content-details-list-item input {
+  flex: 1;
+}
+
 .student-section-detail-phone {
   gap: 18px;
 }
@@ -14122,6 +14329,17 @@ a {
    cell elsewhere in this app -- mirrored here with justify-content added
    for right-alignment. */
 .admin-ai-demo-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* Content Editor's per-group card table -- same width:1% + flex clash as
+   .admin-exam-types-row-actions above (see that comment), just discovered
+   here when the flat table got split into per-group tables. Same fix. */
+.admin-content-editor-row-actions {
   display: flex;
   justify-content: flex-end;
   align-items: center;

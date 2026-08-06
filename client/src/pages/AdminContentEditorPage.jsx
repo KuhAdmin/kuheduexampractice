@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   getContentEditorBooks,
   getContentEditorChapters,
@@ -16,6 +16,120 @@ import {
   getAdminExercisesActivitiesTabVisible,
   updateAdminExercisesActivitiesTabVisible,
 } from "../api/client";
+import { AdminContentDetailsEditor } from "../components/AdminContentDetailsEditor";
+import { useAuth } from "../context/authHooks";
+import { isAdmin } from "../roles";
+
+// Mirrors the student "Deep Learn" action-row groups (StudentSectionDetailPage.jsx)
+// so moderators -- who use the student app daily -- see the same shape of
+// list here: color-coded, one row per content type, instead of one long
+// flat table. Order here is also the display order. "Other" (below) catches
+// any contentuitab that doesn't match one of these, so a future/unknown
+// type is never silently dropped from the list.
+const CONTENT_TYPE_GROUPS = [
+  {
+    key: "assessment",
+    label: "Assessment",
+    description: "MCQ, True/False, Case Study & more",
+    colorClass: "is-violet",
+    match: (card) => card.contentuitab === "assessment",
+  },
+  {
+    key: "revision",
+    label: "Revision",
+    description: "Cheat sheets, mnemonics & flashcards",
+    colorClass: "is-rose",
+    match: (card) => card.contentuitab === "revision",
+  },
+  {
+    key: "tutor",
+    label: "Tutor Notes",
+    description: "Interview, viva & coach prep",
+    colorClass: "is-teal",
+    match: (card) => card.contentuitab === "tutor",
+  },
+  {
+    key: "teaching",
+    label: "Teaching",
+    description: "Explain, ELI5, analogy & story mode",
+    colorClass: "is-green",
+    match: (card) => card.contentuitab === "teaching",
+  },
+  {
+    key: "extraction",
+    label: "Concepts",
+    description: "Extracted characters, setting & ideas",
+    colorClass: "is-blue",
+    match: (card) => card.contentuitab === "extraction",
+  },
+  {
+    key: "deeplearning",
+    label: "Deep Learning",
+    description: "Misconceptions",
+    colorClass: "is-lilac",
+    match: (card) => card.contentuitab === "deeplearning",
+  },
+  {
+    key: "textbook",
+    label: "Exercises & Activities",
+    description: "Textbook exercises & activities",
+    colorClass: "is-amber",
+    match: (card) => card.contentuitab === "textbook",
+  },
+];
+
+const OTHER_GROUP = {
+  key: "other",
+  label: "Other",
+  description: "Additional content",
+  colorClass: "",
+  match: () => true,
+};
+
+const getCardGroup = (card) => CONTENT_TYPE_GROUPS.find((group) => group.match(card)) || OTHER_GROUP;
+
+// One card belongs to exactly one group (first match wins); groups with no
+// cards for this concept are omitted, but the canonical order above is
+// preserved for the ones that do have cards.
+const groupCardsByType = (conceptCards) => {
+  const byKey = new Map();
+  conceptCards.forEach((card) => {
+    const group = getCardGroup(card);
+    if (!byKey.has(group.key)) byKey.set(group.key, { group, cards: [] });
+    byKey.get(group.key).cards.push(card);
+  });
+  return [...CONTENT_TYPE_GROUPS, OTHER_GROUP].map((group) => byKey.get(group.key)).filter(Boolean);
+};
+
+const ContentGroupIcon = ({ type }) => {
+  const paths = {
+    assessment: <path d="M9 12.5 11 14.5 15 9.5 M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />,
+    revision: <path d="M6 4h9a2 2 0 0 1 2 2v14l-6.5-3.5L4 20V6a2 2 0 0 1 2-2Z" />,
+    tutor: <path d="M4 5h16v11H8l-4 4V5Z" />,
+    teaching: <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11.2c.6.4 1 1 1 1.8h4c0-.8.4-1.4 1-1.8A6 6 0 0 0 12 3Z" />,
+    extraction: <path d="M20.6 12 12 20.6 3.4 12 12 3.4 20.6 12ZM12 9.5v.01" />,
+    deeplearning: <path d="M9 3a3 3 0 0 0-3 3v.3A3.5 3.5 0 0 0 4 9.5 3.5 3.5 0 0 0 6 16h.5A2.5 2.5 0 0 0 9 18.5V21m6-18a3 3 0 0 1 3 3v.3a3.5 3.5 0 0 1 2 3.2 3.5 3.5 0 0 1-2 3.2V13a2.5 2.5 0 0 1-2.5 2.5V21" />,
+    textbook: <path d="M6 4h8l4 4v12H6V4ZM9 10h6M9 13h6M9 16h4" />,
+    other: <path d="M12 12m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0" />,
+  };
+  return (
+    <svg viewBox="0 0 24 24" className="admin-content-editor-action-icon" aria-hidden="true">
+      <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6">
+        {paths[type] || paths.other}
+      </g>
+    </svg>
+  );
+};
+
+const ChevronIcon = ({ open }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={`admin-content-editor-action-chevron ${open ? "is-open" : ""}`}
+    aria-hidden="true"
+  >
+    <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+  </svg>
+);
 
 // Mirrors contentReadService.js's getDiagramsForSection filter -- only these
 // cards actually have a content_card_media row to regenerate/upload against.
@@ -356,6 +470,9 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
 };
 
 export const AdminContentEditorPage = () => {
+  const { user } = useAuth();
+  const canEditJson = isAdmin(user);
+
   const [books, setBooks] = useState([]);
   const [booksLoading, setBooksLoading] = useState(true);
   const [selectedBookId, setSelectedBookId] = useState("");
@@ -368,9 +485,10 @@ export const AdminContentEditorPage = () => {
   const [cardsLoading, setCardsLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [expandedGroups, setExpandedGroups] = useState(() => new Set());
 
   const [editingCard, setEditingCard] = useState(null);
-  const [form, setForm] = useState({ title: "", summary: "", detailsText: "", isHidden: false });
+  const [form, setForm] = useState({ title: "", summary: "", details: [], isHidden: false });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -456,7 +574,7 @@ export const AdminContentEditorPage = () => {
     setForm({
       title: card.title || "",
       summary: card.summary || "",
-      detailsText: JSON.stringify(card.details ?? [], null, 2),
+      details: card.details ?? [],
       isHidden: Boolean(card.isHidden),
     });
     setFormError("");
@@ -469,13 +587,6 @@ export const AdminContentEditorPage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    let details;
-    try {
-      details = form.detailsText.trim() ? JSON.parse(form.detailsText) : [];
-    } catch {
-      setFormError("Details must be valid JSON.");
-      return;
-    }
 
     setSubmitting(true);
     setFormError("");
@@ -483,7 +594,7 @@ export const AdminContentEditorPage = () => {
       await updateContentEditorCard(editingCard.id, {
         title: form.title.trim(),
         summary: form.summary.trim(),
-        details,
+        details: form.details,
         isHidden: form.isHidden,
       });
       setNotice(`Saved "${form.title.trim()}".`);
@@ -496,6 +607,18 @@ export const AdminContentEditorPage = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const toggleGroup = (groupKey) => {
+    setExpandedGroups((current) => {
+      const next = new Set(current);
+      if (next.has(groupKey)) {
+        next.delete(groupKey);
+      } else {
+        next.add(groupKey);
+      }
+      return next;
+    });
   };
 
   const toggleHidden = async (card) => {
@@ -525,7 +648,21 @@ export const AdminContentEditorPage = () => {
     return Array.from(seen.entries()).map(([assessmentUnitId, label]) => ({ assessmentUnitId, label }));
   }, [cards]);
 
-  let lastConcept = null;
+  // Same outer grouping the flat table used (first-seen concept order),
+  // with cards inside each concept now further split into the color-coded
+  // content-type action-rows below (mirrors the student "Deep Learn" tab).
+  const conceptGroups = useMemo(() => {
+    const byConcept = new Map();
+    cards.forEach((card) => {
+      const key = card.primaryConcept || "";
+      if (!byConcept.has(key)) byConcept.set(key, []);
+      byConcept.get(key).push(card);
+    });
+    return Array.from(byConcept.entries()).map(([concept, conceptCards]) => ({
+      concept,
+      typeGroups: groupCardsByType(conceptCards),
+    }));
+  }, [cards]);
 
   return (
     <section className="admin-bulk-pipeline-page">
@@ -597,59 +734,79 @@ export const AdminContentEditorPage = () => {
         ) : cards.length === 0 ? (
           <div className="admin-bulk-pipeline-empty">No content cards found for this section.</div>
         ) : (
-          <table className="admin-exam-types-table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th aria-label="Actions" />
-              </tr>
-            </thead>
-            <tbody>
-              {cards.map((card) => {
-                const showConceptHeader = card.primaryConcept !== lastConcept;
-                lastConcept = card.primaryConcept;
-                return (
-                  <Fragment key={card.id}>
-                    {showConceptHeader && card.primaryConcept && (
-                      <tr>
-                        <td colSpan={4} style={{ fontWeight: 600, opacity: 0.75 }}>
-                          {card.primaryConcept}
-                        </td>
-                      </tr>
-                    )}
-                    <tr>
-                      <td>{card.title || "(untitled)"}</td>
-                      <td>
-                        <span className="admin-exam-types-code-badge">
-                          {card.contentuitab}
-                          {card.processorkey ? ` / ${card.processorkey}` : ""}
+          conceptGroups.map(({ concept, typeGroups }) => (
+            <div key={concept || "__no_concept"} className="admin-content-editor-concept">
+              {concept && <h3 className="admin-content-editor-concept-title">{concept}</h3>}
+              <div className="admin-content-editor-action-list">
+                {typeGroups.map(({ group, cards: groupCards }) => {
+                  const groupKey = `${concept}::${group.key}`;
+                  const isOpen = expandedGroups.has(groupKey);
+                  return (
+                    <div key={groupKey} className="admin-content-editor-action-wrap">
+                      <button
+                        type="button"
+                        className={`admin-content-editor-action ${group.colorClass}`}
+                        onClick={() => toggleGroup(groupKey)}
+                      >
+                        <span className={`admin-content-editor-action-mark ${group.colorClass}`}>
+                          <ContentGroupIcon type={group.key} />
                         </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`admin-bulk-pipeline-status-badge ${
-                            card.isHidden ? "is-aborted" : "is-completed"
-                          }`}
-                        >
-                          {card.isHidden ? "Hidden" : "Visible"}
+                        <span className="admin-content-editor-action-copy">
+                          <strong>{group.label}</strong>
+                          <small>
+                            {groupCards.length} card{groupCards.length === 1 ? "" : "s"} · {group.description}
+                          </small>
                         </span>
-                      </td>
-                      <td className="admin-exam-types-row-actions">
-                        <button type="button" className="ghost-button" onClick={() => toggleHidden(card)}>
-                          {card.isHidden ? "Show" : "Hide"}
-                        </button>
-                        <button type="button" className="primary-button" onClick={() => openEditModal(card)}>
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  </Fragment>
-                );
-              })}
-            </tbody>
-          </table>
+                        <ChevronIcon open={isOpen} />
+                      </button>
+                      {isOpen && (
+                        <table className="admin-exam-types-table">
+                          <thead>
+                            <tr>
+                              <th>Title</th>
+                              <th>Type</th>
+                              <th>Status</th>
+                              <th aria-label="Actions" />
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {groupCards.map((card) => (
+                              <tr key={card.id}>
+                                <td>{card.title || "(untitled)"}</td>
+                                <td>
+                                  <span className="admin-exam-types-code-badge">
+                                    {card.contentuitab}
+                                    {card.processorkey ? ` / ${card.processorkey}` : ""}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span
+                                    className={`admin-bulk-pipeline-status-badge ${
+                                      card.isHidden ? "is-aborted" : "is-completed"
+                                    }`}
+                                  >
+                                    {card.isHidden ? "Hidden" : "Visible"}
+                                  </span>
+                                </td>
+                                <td className="admin-content-editor-row-actions">
+                                  <button type="button" className="ghost-button" onClick={() => toggleHidden(card)}>
+                                    {card.isHidden ? "Show" : "Hide"}
+                                  </button>
+                                  <button type="button" className="primary-button" onClick={() => openEditModal(card)}>
+                                    Edit
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))
         )}
       </div>
 
@@ -677,15 +834,11 @@ export const AdminContentEditorPage = () => {
                   onChange={(event) => setForm((current) => ({ ...current, summary: event.target.value }))}
                 />
               </label>
-              <label className="admin-studio-field">
-                <span>Details (JSON)</span>
-                <textarea
-                  rows={10}
-                  value={form.detailsText}
-                  onChange={(event) => setForm((current) => ({ ...current, detailsText: event.target.value }))}
-                  style={{ fontFamily: "monospace", fontSize: 13 }}
-                />
-              </label>
+              <AdminContentDetailsEditor
+                details={form.details}
+                onChange={(details) => setForm((current) => ({ ...current, details }))}
+                canEditJson={canEditJson}
+              />
               <label className="admin-exam-types-checkbox-field">
                 <input
                   type="checkbox"
