@@ -2,13 +2,6 @@ import crypto from "node:crypto";
 import { pool } from "../db/pool.js";
 import { env } from "../config/env.js";
 import { markOrderPaidAndActivatePremium } from "./paymentService.js";
-import {
-  markSubscriptionActiveAndActivatePremium,
-  updateSubscriptionStatus,
-  updateSubscriptionStatusAndRevokePremium,
-  recordSubscriptionCharge,
-  upsertSubscriptionInvoice,
-} from "./subscriptionService.js";
 
 // rawBody must be the exact bytes Razorpay signed (a Buffer from
 // express.raw(), not a re-serialized JSON.stringify of the parsed body --
@@ -32,7 +25,7 @@ export const verifyWebhookSignature = (rawBody, signature) => {
 // Razorpay doesn't guarantee a stable top-level event id on every payload,
 // so the dedup key is event_type + the id of whichever entity the event is
 // actually about.
-const ENTITY_PRIORITY = ["payment", "order", "refund", "dispute", "subscription", "invoice"];
+const ENTITY_PRIORITY = ["payment", "order", "refund", "dispute"];
 const entityIdForEvent = (payload) => {
   const contained = payload.payload ?? {};
   for (const key of ENTITY_PRIORITY) {
@@ -161,92 +154,6 @@ const handleDispute = async (payload) => {
 
 const noop = async () => {};
 
-// Mandate verified, first charge hasn't necessarily happened yet -- status
-// only, no premium change (subscription.activated grants premium once the
-// first charge actually clears).
-const handleSubscriptionAuthenticated = async (payload) => {
-  const subscription = payload.payload.subscription.entity;
-  await updateSubscriptionStatus(subscription.id, "authenticated");
-};
-
-const handleSubscriptionActivated = async (payload) => {
-  const subscription = payload.payload.subscription.entity;
-  await markSubscriptionActiveAndActivatePremium({ razorpaySubscriptionId: subscription.id });
-};
-
-// Each successful recurring charge -- keep paid_count/current_start/
-// current_end in sync and treat it as a renewal safety net (idempotent) in
-// case the activated event was ever missed.
-const handleSubscriptionCharged = async (payload) => {
-  const subscription = payload.payload.subscription.entity;
-  await recordSubscriptionCharge({
-    razorpaySubscriptionId: subscription.id,
-    paidCount: subscription.paid_count,
-    currentStart: subscription.current_start ? new Date(subscription.current_start * 1000) : null,
-    currentEnd: subscription.current_end ? new Date(subscription.current_end * 1000) : null,
-  });
-  await markSubscriptionActiveAndActivatePremium({ razorpaySubscriptionId: subscription.id });
-};
-
-// All 12 charges completed -- no further auto-charging, so unlike the
-// one-time Yearly purchase this access ends here (see PRD completion
-// decision) rather than staying on permanently.
-const handleSubscriptionCompleted = async (payload) => {
-  const subscription = payload.payload.subscription.entity;
-  await updateSubscriptionStatusAndRevokePremium(subscription.id, "completed");
-};
-
-const handleSubscriptionCancelled = async (payload) => {
-  const subscription = payload.payload.subscription.entity;
-  await updateSubscriptionStatusAndRevokePremium(subscription.id, "cancelled");
-};
-
-const handleSubscriptionPaused = async (payload) => {
-  const subscription = payload.payload.subscription.entity;
-  await updateSubscriptionStatusAndRevokePremium(subscription.id, "paused");
-};
-
-const handleSubscriptionResumed = async (payload) => {
-  const subscription = payload.payload.subscription.entity;
-  await markSubscriptionActiveAndActivatePremium({ razorpaySubscriptionId: subscription.id });
-};
-
-// A charge attempt (cycle 1 or any renewal) failed and Razorpay is
-// auto-retrying -- status only, no premium change. Mirrors how most
-// subscription products handle a single failed attempt: don't yank access
-// mid-retry, only subscription.halted below (retries exhausted) does that.
-const handleSubscriptionPending = async (payload) => {
-  const subscription = payload.payload.subscription.entity;
-  await updateSubscriptionStatus(subscription.id, "pending");
-};
-
-// Razorpay has exhausted its retry schedule (4 consecutive failed attempts)
-// and given up on this subscription -- the definitive "this charge is never
-// going through" signal, so revoke immediately, same as
-// cancelled/paused/completed above.
-const handleSubscriptionHalted = async (payload) => {
-  const subscription = payload.payload.subscription.entity;
-  await updateSubscriptionStatusAndRevokePremium(subscription.id, "halted");
-};
-
-// Razorpay's invoice.paid/invoice.partially_paid deliveries carry a sibling
-// payment entity alongside invoice.entity (the charge that paid this
-// invoice) -- accessed defensively since that's inferred from Razorpay's
-// general webhook shape, not confirmed against a live delivery for this
-// specific event; a missing entity just leaves payment_method null rather
-// than throwing.
-const handleInvoicePaid = async (payload) => {
-  const invoice = payload.payload.invoice.entity;
-  const paymentMethod = payload.payload.payment?.entity?.method ?? null;
-  await upsertSubscriptionInvoice(invoice, "paid", paymentMethod);
-};
-
-const handleInvoicePartiallyPaid = async (payload) => {
-  const invoice = payload.payload.invoice.entity;
-  const paymentMethod = payload.payload.payment?.entity?.method ?? null;
-  await upsertSubscriptionInvoice(invoice, "partially_paid", paymentMethod);
-};
-
 const EVENT_HANDLERS = {
   "payment.captured": handlePaymentCaptured,
   "order.paid": handleOrderPaid,
@@ -259,17 +166,6 @@ const EVENT_HANDLERS = {
   "payment.dispute.created": handleDispute,
   "payment.dispute.won": handleDispute,
   "payment.dispute.lost": handleDispute,
-  "subscription.authenticated": handleSubscriptionAuthenticated,
-  "subscription.activated": handleSubscriptionActivated,
-  "subscription.charged": handleSubscriptionCharged,
-  "subscription.completed": handleSubscriptionCompleted,
-  "subscription.cancelled": handleSubscriptionCancelled,
-  "subscription.paused": handleSubscriptionPaused,
-  "subscription.resumed": handleSubscriptionResumed,
-  "subscription.pending": handleSubscriptionPending,
-  "subscription.halted": handleSubscriptionHalted,
-  "invoice.paid": handleInvoicePaid,
-  "invoice.partially_paid": handleInvoicePartiallyPaid,
 };
 
 export const processWebhookEvent = async (payload) => {

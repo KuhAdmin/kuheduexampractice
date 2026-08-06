@@ -407,6 +407,11 @@ export const StudentSectionDetailPage = () => {
     };
   }, [detail]);
 
+  // Each button (besides Section Assessment, always available) only shows
+  // once contentFlags confirms that content actually exists -- otherwise it
+  // just linked to a page whose only content was its own "nothing
+  // generated yet" empty state (see getSectionContentFlags on the server).
+  const flags = detail?.contentFlags || {};
   const deepLearnActions = detail && (
     <section className="student-section-detail-actions">
       <button type="button" className="student-chapter-detail-action is-violet" onClick={() => navigate(`${basePath}/assessment`)}>
@@ -419,66 +424,78 @@ export const StudentSectionDetailPage = () => {
         </span>
         <SectionDetailIcon type="chevron" />
       </button>
-      <button type="button" className="student-chapter-detail-action is-lilac" onClick={() => navigate(`${basePath}/memory-booster`)}>
-        <span className="student-chapter-detail-action-mark is-lilac">
-          <SectionDetailIcon type="memory" />
-        </span>
-        <span className="student-chapter-detail-action-copy">
-          <strong>Memory Booster</strong>
-          <small>Strengthen your memory</small>
-        </span>
-        <SectionDetailIcon type="chevron" />
-      </button>
-      <button type="button" className="student-chapter-detail-action is-amber" onClick={() => navigate(`${basePath}/flashcards`)}>
-        <span className="student-chapter-detail-action-mark is-amber">
-          <SectionDetailIcon type="cards" />
-        </span>
-        <span className="student-chapter-detail-action-copy">
-          <strong>Flashcards</strong>
-          <small>Key terms for this section</small>
-        </span>
-        <SectionDetailIcon type="chevron" />
-      </button>
-      <button type="button" className="student-chapter-detail-action is-rose" onClick={() => navigate(`${basePath}/revision`)}>
-        <span className="student-chapter-detail-action-mark is-rose">
-          <SectionDetailIcon type="revision" />
-        </span>
-        <span className="student-chapter-detail-action-copy">
-          <strong>Revision</strong>
-          <small>Cheat sheets, mnemonics &amp; exam notes</small>
-        </span>
-        <SectionDetailIcon type="chevron" />
-      </button>
-      <button type="button" className="student-chapter-detail-action is-teal" onClick={() => navigate(`${basePath}/tutor-notes`)}>
-        <span className="student-chapter-detail-action-mark is-teal">
-          <SectionDetailIcon type="tutor" />
-        </span>
-        <span className="student-chapter-detail-action-copy">
-          <strong>Tutor Notes</strong>
-          <small>Coach, interview &amp; viva prep</small>
-        </span>
-        <SectionDetailIcon type="chevron" />
-      </button>
-      <button type="button" className="student-chapter-detail-action is-green" onClick={() => navigate(`${basePath}/diagrams`)}>
-        <span className="student-chapter-detail-action-mark is-green">
-          <SectionDetailIcon type="diagram" />
-        </span>
-        <span className="student-chapter-detail-action-copy">
-          <strong>Diagrams</strong>
-          <small>Labeled parts to review</small>
-        </span>
-        <SectionDetailIcon type="chevron" />
-      </button>
-      <button type="button" className="student-chapter-detail-action is-blue" onClick={() => navigate(`${basePath}/mind-map`)}>
-        <span className="student-chapter-detail-action-mark is-blue">
-          <SectionDetailIcon type="tree" />
-        </span>
-        <span className="student-chapter-detail-action-copy">
-          <strong>Mind Map</strong>
-          <small>See how concepts connect</small>
-        </span>
-        <SectionDetailIcon type="chevron" />
-      </button>
+      {flags.hasMemoryBooster && (
+        <button type="button" className="student-chapter-detail-action is-lilac" onClick={() => navigate(`${basePath}/memory-booster`)}>
+          <span className="student-chapter-detail-action-mark is-lilac">
+            <SectionDetailIcon type="memory" />
+          </span>
+          <span className="student-chapter-detail-action-copy">
+            <strong>Memory Booster</strong>
+            <small>Strengthen your memory</small>
+          </span>
+          <SectionDetailIcon type="chevron" />
+        </button>
+      )}
+      {flags.hasFlashcards && (
+        <button type="button" className="student-chapter-detail-action is-amber" onClick={() => navigate(`${basePath}/flashcards`)}>
+          <span className="student-chapter-detail-action-mark is-amber">
+            <SectionDetailIcon type="cards" />
+          </span>
+          <span className="student-chapter-detail-action-copy">
+            <strong>Flashcards</strong>
+            <small>Key terms for this section</small>
+          </span>
+          <SectionDetailIcon type="chevron" />
+        </button>
+      )}
+      {flags.hasRevision && (
+        <button type="button" className="student-chapter-detail-action is-rose" onClick={() => navigate(`${basePath}/revision`)}>
+          <span className="student-chapter-detail-action-mark is-rose">
+            <SectionDetailIcon type="revision" />
+          </span>
+          <span className="student-chapter-detail-action-copy">
+            <strong>Revision</strong>
+            <small>Cheat sheets, mnemonics &amp; exam notes</small>
+          </span>
+          <SectionDetailIcon type="chevron" />
+        </button>
+      )}
+      {flags.hasTutorNotes && (
+        <button type="button" className="student-chapter-detail-action is-teal" onClick={() => navigate(`${basePath}/tutor-notes`)}>
+          <span className="student-chapter-detail-action-mark is-teal">
+            <SectionDetailIcon type="tutor" />
+          </span>
+          <span className="student-chapter-detail-action-copy">
+            <strong>Tutor Notes</strong>
+            <small>Coach, interview &amp; viva prep</small>
+          </span>
+          <SectionDetailIcon type="chevron" />
+        </button>
+      )}
+      {flags.hasDiagrams && (
+        <button type="button" className="student-chapter-detail-action is-green" onClick={() => navigate(`${basePath}/diagrams`)}>
+          <span className="student-chapter-detail-action-mark is-green">
+            <SectionDetailIcon type="diagram" />
+          </span>
+          <span className="student-chapter-detail-action-copy">
+            <strong>Diagrams</strong>
+            <small>Labeled parts to review</small>
+          </span>
+          <SectionDetailIcon type="chevron" />
+        </button>
+      )}
+      {flags.hasMindMap && (
+        <button type="button" className="student-chapter-detail-action is-blue" onClick={() => navigate(`${basePath}/mind-map`)}>
+          <span className="student-chapter-detail-action-mark is-blue">
+            <SectionDetailIcon type="tree" />
+          </span>
+          <span className="student-chapter-detail-action-copy">
+            <strong>Mind Map</strong>
+            <small>See how concepts connect</small>
+          </span>
+          <SectionDetailIcon type="chevron" />
+        </button>
+      )}
     </section>
   );
 

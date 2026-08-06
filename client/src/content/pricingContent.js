@@ -1,8 +1,8 @@
-// Shared across every card below -- Smart Tutor usage and every other core
-// study tool are common to all 4 subjects, not subject-specific.
+// One universal plan -- no more per-subject cards, no recurring billing.
+// Every feature applies to every purchaser regardless of which one-time
+// tier they pick.
 const BASE_FEATURES = [
   "AI-powered Smart Tutor for instant doubt-solving",
-  "30 hours Smart Tutor usage/month",
   "Concept-wise learning modules mapped to your CBSE syllabus",
   "Unlimited practice questions with instant explanations",
   "Full-length mock tests and assessments with performance analysis",
@@ -11,63 +11,38 @@ const BASE_FEATURES = [
   "Daily Study Streak and progress tracking on your dashboard",
   "Personalized weak-concept identification and revision plans",
   "Downloadable study materials and chapter-wise revision notes",
+  "Access to Virtual Labs",
 ];
-
-// "Save X%" badge for the Yearly tab -- yearly price vs. what 12 months at
-// the monthly price would cost, rounded to the nearest whole percent.
-const yearlySavingsBadge = (monthlyPrice, yearlyPrice) => {
-  const fullYearAtMonthlyRate = monthlyPrice * 12;
-  const savingsPercent = Math.round((1 - yearlyPrice / fullYearAtMonthlyRate) * 100);
-  return savingsPercent > 0 ? `Save ${savingsPercent}%` : null;
-};
 
 const CBSE_SUBTITLE = "CBSE Board | Class 6, 7 & 8";
 
+// Both options are one-time, fixed payments -- no auto-renewal, nothing
+// recurring. planId matches server/src/services/paymentService.js's
+// PLAN_AMOUNTS_PAISE/PLAN_EXPIRY keys exactly.
 export const pricingCards = [
   {
-    id: "english",
-    name: "English",
+    id: "premium",
+    name: "STEMLab Premium",
     subtitle: CBSE_SUBTITLE,
-    monthlyPrice: 99,
-    yearlyPrice: 999,
+    options: [
+      {
+        key: "2weeks",
+        planId: "premium-2weeks",
+        label: "2 Weeks",
+        price: 49,
+        billingNote: "One-time · access for 14 days",
+      },
+      {
+        key: "full",
+        planId: "premium-12months",
+        label: "Full Access",
+        price: 999,
+        billingNote: "One-time · 12 months of access",
+      },
+    ],
     features: BASE_FEATURES,
   },
-  {
-    id: "social-science",
-    name: "Social Science",
-    subtitle: CBSE_SUBTITLE,
-    monthlyPrice: 199,
-    yearlyPrice: 1999,
-    features: BASE_FEATURES,
-  },
-  {
-    id: "science",
-    name: "Science",
-    subtitle: CBSE_SUBTITLE,
-    monthlyPrice: 399,
-    yearlyPrice: 3999,
-    features: [...BASE_FEATURES, "Access to Virtual Labs"],
-  },
-  {
-    id: "mathematics",
-    name: "Mathematics",
-    subtitle: CBSE_SUBTITLE,
-    monthlyPrice: 399,
-    yearlyPrice: 3999,
-    features: [...BASE_FEATURES, "Access to Virtual Labs"],
-  },
-].map((card) => ({
-  ...card,
-  yearlyBadge: yearlySavingsBadge(card.monthlyPrice, card.yearlyPrice),
-}));
-
-// Informational only -- there's no Smart Tutor hours-usage-tracking backend
-// yet to apply a top-up to, so this isn't wired to a purchase flow.
-export const smartTutorRecharge = {
-  label: "Extra 30 hrs Smart Tutor recharge",
-  price: 49,
-  description: "Run out of monthly Smart Tutor hours? Top up with 30 more, anytime.",
-};
+];
 
 // Testing-only plan (see server/src/services/paymentService.js's
 // PLAN_AMOUNTS_PAISE.trial) -- a one-time ₹9 charge, premium auto-expires 1

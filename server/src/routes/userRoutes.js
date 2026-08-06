@@ -9,7 +9,7 @@ import {
   markNotificationsSeen,
 } from "../services/studentDashboardService.js";
 import { listClassSubjectOptionsWithContent } from "../services/catalogService.js";
-import { createOrder, verifyPayment, getSubscription, cancelMySubscription } from "../controllers/paymentController.js";
+import { createOrder, verifyPayment, getLastPaymentAttemptHandler } from "../controllers/paymentController.js";
 import {
   getMicroActivityResponseHandler,
   getStudentBookQuestions,
@@ -66,6 +66,7 @@ import {
 } from "../controllers/conceptPracticeCaptureController.js";
 import { postEinsteinChallenge, postEinsteinRecognize } from "../controllers/einsteinModeController.js";
 import { postVivaFeedback, postVivaQuestions } from "../controllers/vivaController.js";
+import { getExercisesActivitiesTabVisible } from "../services/contentEditorSettingsService.js";
 
 const router = Router();
 
@@ -190,12 +191,11 @@ router.get("/dashboard-for-selection", async (req, res, next) => {
   }
 });
 
-// STEMLab Premium purchase (Razorpay Standard Checkout) -- see
-// services/paymentService.js for order creation + signature verification.
+// STEMLab Premium purchase (Razorpay Standard Checkout, one-time only) --
+// see services/paymentService.js for order creation + signature verification.
 router.post("/payments/create-order", createOrder);
 router.post("/payments/verify", verifyPayment);
-router.get("/payments/subscription", getSubscription);
-router.post("/payments/subscription/cancel", cancelMySubscription);
+router.get("/payments/last-attempt", getLastPaymentAttemptHandler);
 
 router.get("/goals/remaining-concepts", async (req, res, next) => {
   try {
@@ -231,6 +231,18 @@ router.post("/notifications/mark-seen", async (req, res, next) => {
   try {
     await markNotificationsSeen({ userId: req.user.id });
     res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Read-only mirror of the moderator toggle in AdminContentEditorPage.jsx --
+// gates whether StudentConceptLearningPage.jsx renders the Exercises/
+// Activities tab at all.
+router.get("/settings/exercises-activities-tab", async (_req, res, next) => {
+  try {
+    const visible = await getExercisesActivitiesTabVisible();
+    res.json({ visible });
   } catch (error) {
     next(error);
   }

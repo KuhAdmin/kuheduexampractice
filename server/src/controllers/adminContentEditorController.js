@@ -10,6 +10,10 @@ import {
   updateMemoryHookPromptText,
   generateMemoryHookPrompt,
 } from "../services/memoryHookImageService.js";
+import {
+  getExercisesActivitiesTabVisible,
+  setExercisesActivitiesTabVisible,
+} from "../services/contentEditorSettingsService.js";
 
 export const getBooksHandler = async (_req, res, next) => {
   try {
@@ -124,6 +128,26 @@ export const putMemoryHookPromptHandler = async (req, res, next) => {
     if (error.statusCode) {
       return res.status(error.statusCode).json({ message: error.message });
     }
+    return next(error);
+  }
+};
+
+export const getExercisesActivitiesTabVisibleHandler = async (_req, res, next) => {
+  try {
+    const visible = await getExercisesActivitiesTabVisible();
+    return res.json({ visible });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const putExercisesActivitiesTabVisibleHandler = async (req, res, next) => {
+  try {
+    const visible = await setExercisesActivitiesTabVisible(Boolean(req.body?.visible), {
+      updatedBy: req.user?.id || null,
+    });
+    return res.json({ visible });
+  } catch (error) {
     return next(error);
   }
 };

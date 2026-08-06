@@ -29,7 +29,7 @@ export const privacyPolicy = {
       heading: "Automatically Collected Information",
       paragraphs: [
         "The Application/products/Services may collect certain information automatically, including device type, unique device ID, IP address, operating system, browser type and information about the way you use the Application/Services/products.",
-        "We may require camera and microphone access while you avail products/services/subscriptions to improve the in-classroom experience. Video, audio and telecalls between you/your ward and our tutors/representatives/agents may be recorded for quality and training purposes.",
+        "We may require camera and microphone access while you avail products/services to improve the in-classroom experience. Video, audio and telecalls between you/your ward and our tutors/representatives/agents may be recorded for quality and training purposes.",
       ],
     },
     {
@@ -128,32 +128,24 @@ export const termsAndConditions = {
       ],
     },
     {
-      heading: "4. Subscription and Payments",
+      heading: "4. Payments",
       paragraphs: [
-        "Certain Services require payment of subscription fees.",
-        "By purchasing a subscription, you agree to:",
+        "Certain Services require a one-time payment for premium access.",
+        "By making a purchase, you agree to:",
         "• pay all applicable charges;",
         "• provide accurate payment information;",
         "• comply with the payment terms displayed during checkout.",
-        "Subscription fees are exclusive of applicable taxes unless otherwise stated.",
+        "Fees are exclusive of applicable taxes unless otherwise stated.",
       ],
     },
     {
-      heading: "5. Auto-Renewal",
-      paragraphs: [
-        "Some subscriptions renew automatically.",
-        "You may disable auto-renewal before the next billing cycle.",
-        "Failure to cancel before renewal may result in automatic billing.",
-      ],
-    },
-    {
-      heading: "6. Refunds and Cancellations",
+      heading: "5. Refunds and Cancellations",
       paragraphs: [
         "Refunds and cancellations are governed exclusively by our Refund & Cancellation Policy, which forms an integral part of these Terms.",
       ],
     },
     {
-      heading: "7. Acceptable Use",
+      heading: "6. Acceptable Use",
       paragraphs: [
         "You agree not to:",
         "• share your account credentials;",
@@ -168,7 +160,7 @@ export const termsAndConditions = {
       ],
     },
     {
-      heading: "8. AI Services",
+      heading: "7. AI Services",
       paragraphs: [
         "Certain Services use Artificial Intelligence.",
         "AI-generated explanations, recommendations, hints, summaries, and learning suggestions are provided solely for educational assistance.",
@@ -177,7 +169,7 @@ export const termsAndConditions = {
       ],
     },
     {
-      heading: "9. User Content",
+      heading: "8. User Content",
       paragraphs: [
         "Users retain ownership of content submitted by them.",
         "By uploading content, you grant the Company a worldwide, royalty-free, non-exclusive license to host, process, analyse, display, and use such content solely for providing and improving the Services.",
@@ -185,14 +177,14 @@ export const termsAndConditions = {
       ],
     },
     {
-      heading: "10. Intellectual Property",
+      heading: "9. Intellectual Property",
       paragraphs: [
         "All intellectual property rights in the Services, including software, AI models, databases, assessments, graphics, logos, videos, designs, trademarks, and educational materials, belong exclusively to Kuhedu Technologies Private Limited or its licensors.",
         "No content may be reproduced, copied, distributed, sold, modified, or commercially exploited without prior written permission.",
       ],
     },
     {
-      heading: "11. Learning Outcomes",
+      heading: "10. Learning Outcomes",
       paragraphs: [
         "The Company provides educational tools intended to support learning.",
         "We do not guarantee:",
@@ -205,14 +197,14 @@ export const termsAndConditions = {
       ],
     },
     {
-      heading: "12. Third-Party Services",
+      heading: "11. Third-Party Services",
       paragraphs: [
         "The Services may integrate third-party providers, including payment gateways, cloud hosting providers, communication services, and analytics platforms.",
         "We are not responsible for the content, availability, or practices of third-party services.",
       ],
     },
     {
-      heading: "13. Availability of Services",
+      heading: "12. Availability of Services",
       paragraphs: [
         "We strive to maintain uninterrupted Services.",
         "However, we do not guarantee continuous availability.",
@@ -220,7 +212,7 @@ export const termsAndConditions = {
       ],
     },
     {
-      heading: "14. Suspension and Termination",
+      heading: "13. Suspension and Termination",
       paragraphs: [
         "We may suspend or terminate any account without prior notice if:",
         "• these Terms are violated;",
@@ -232,28 +224,28 @@ export const termsAndConditions = {
       ],
     },
     {
-      heading: "15. Privacy",
+      heading: "14. Privacy",
       paragraphs: [
         "Collection and processing of personal information are governed by our Privacy Policy.",
         "By using our Services, you consent to such collection and processing.",
       ],
     },
     {
-      heading: "16. Disclaimer of Warranties",
+      heading: "15. Disclaimer of Warranties",
       paragraphs: [
         "The Services are provided on an \"AS IS\" and \"AS AVAILABLE\" basis.",
         "To the maximum extent permitted by law, the Company disclaims all warranties, including implied warranties of merchantability, fitness for a particular purpose, non-infringement, uninterrupted availability, and freedom from errors.",
       ],
     },
     {
-      heading: "17. Limitation of Liability",
+      heading: "16. Limitation of Liability",
       paragraphs: [
         "To the fullest extent permitted by applicable law, Kuhedu Technologies Private Limited, its directors, employees, officers, affiliates, and partners shall not be liable for any indirect, incidental, consequential, special, punitive, or exemplary damages arising out of or relating to the use of the Services.",
         "Where liability cannot be excluded by law, the Company's aggregate liability shall not exceed the amount actually paid by the user for the Services during the preceding twelve (12) months.",
       ],
     },
     {
-      heading: "18. Indemnification",
+      heading: "17. Indemnification",
       paragraphs: [
         "You agree to indemnify and hold harmless Kuhedu Technologies Private Limited and its affiliates from any claims, damages, liabilities, losses, or expenses arising from:",
         "• your violation of these Terms;",
@@ -263,19 +255,19 @@ export const termsAndConditions = {
       ],
     },
     {
-      heading: "19. Force Majeure",
+      heading: "18. Force Majeure",
       paragraphs: [
         "The Company shall not be liable for delays or failure to perform caused by events beyond its reasonable control, including natural disasters, pandemics, cyberattacks, internet outages, governmental actions, labor disputes, or failures of third-party service providers.",
       ],
     },
     {
-      heading: "20. Changes to the Services",
+      heading: "19. Changes to the Services",
       paragraphs: [
         "We may modify, enhance, discontinue, or replace any part of the Services at our sole discretion without prior notice.",
       ],
     },
     {
-      heading: "21. Amendments",
+      heading: "20. Amendments",
       paragraphs: [
         "These Terms may be updated from time to time.",
         "The revised version shall become effective upon publication on the website.",
@@ -283,32 +275,32 @@ export const termsAndConditions = {
       ],
     },
     {
-      heading: "22. Governing Law",
+      heading: "21. Governing Law",
       paragraphs: [
         "These Terms shall be governed by and construed in accordance with the laws of India.",
       ],
     },
     {
-      heading: "23. Dispute Resolution",
+      heading: "22. Dispute Resolution",
       paragraphs: [
         "Any dispute arising out of these Terms shall first be attempted to be resolved through good-faith negotiations.",
         "If unresolved, the dispute shall be subject to the exclusive jurisdiction of the competent courts located in Kolkata, West Bengal, India.",
       ],
     },
     {
-      heading: "24. Severability",
+      heading: "23. Severability",
       paragraphs: [
         "If any provision of these Terms is held to be invalid or unenforceable, the remaining provisions shall continue in full force and effect.",
       ],
     },
     {
-      heading: "25. Entire Agreement",
+      heading: "24. Entire Agreement",
       paragraphs: [
         "These Terms, together with the Privacy Policy and Refund & Cancellation Policy, constitute the complete agreement between the user and the Company regarding the Services.",
       ],
     },
     {
-      heading: "26. Contact Information",
+      heading: "25. Contact Information",
       paragraphs: [
         "Kuhedu Technologies Private Limited",
         "Email: support@kuhedu.com",
@@ -342,7 +334,7 @@ export const refundAndCancellation = {
     {
       paragraphs: [
         "Effective Date: July 27, 2026",
-        "At KUHEDUSTUDYBUDDY, we strive to provide high-quality digital learning experiences. Before purchasing any subscription or course, we encourage users to review the course details, features, and system requirements carefully.",
+        "At KUHEDUSTUDYBUDDY, we strive to provide high-quality digital learning experiences. Before making any purchase, we encourage users to review the course details, features, and system requirements carefully.",
         "This Refund & Cancellation Policy explains the conditions under which refunds may or may not be granted.",
       ],
     },
@@ -350,7 +342,7 @@ export const refundAndCancellation = {
       heading: "1. Digital Products & Services",
       paragraphs: [
         "Our products include, but are not limited to:",
-        "• Online learning subscriptions",
+        "• One-time premium access passes",
         "• AI-powered tutoring services",
         "• Mock tests and assessments",
         "• Practice question banks",
@@ -362,27 +354,18 @@ export const refundAndCancellation = {
       ],
     },
     {
-      heading: "2. Subscription Cancellation",
-      paragraphs: [
-        "You may cancel your subscription at any time.",
-        "Cancellation will prevent automatic renewal of future billing cycles.",
-        "Your access to paid content will continue until the end of the current subscription period.",
-        "No partial refunds will be issued for the unused portion of an active subscription.",
-      ],
-    },
-    {
-      heading: "3. Refund Eligibility",
+      heading: "2. Refund Eligibility",
       paragraphs: [
         "Refund requests may be considered only in the following situations:",
         "• Duplicate payment made due to technical error.",
         "• Incorrect amount charged due to system error.",
-        "• Payment successfully deducted but subscription was not activated.",
+        "• Payment successfully deducted but premium access was not activated.",
         "• Service could not be delivered because of a verified technical issue attributable to KUHEDUSTUDYBUDDY.",
         "Eligible refund requests must be submitted within 7 calendar days from the date of payment.",
       ],
     },
     {
-      heading: "4. Non-Refundable Situations",
+      heading: "3. Non-Refundable Situations",
       paragraphs: [
         "Refunds will generally not be provided in the following cases:",
         "• Change of mind after purchase.",
@@ -390,34 +373,26 @@ export const refundAndCancellation = {
         "• User has accessed or consumed a substantial portion of the purchased content.",
         "• Poor internet connectivity or device-related issues at the user's end.",
         "• Incompatibility caused by unsupported devices or outdated software.",
-        "• Failure to use the subscription during its validity period.",
+        "• Failure to use the premium access during its validity period.",
         "• Violation of our Terms & Conditions.",
         "• Promotional, discounted, bundled, scholarship, or special-offer purchases unless explicitly stated otherwise.",
       ],
     },
     {
-      heading: "5. Free Trials",
+      heading: "4. Free Trials",
       paragraphs: [
         "Where a free trial is offered, users are encouraged to evaluate the platform before purchasing.",
         "Once the trial period ends and payment is successfully processed, the purchase shall be governed by this Refund Policy.",
       ],
     },
     {
-      heading: "6. Auto-Renewal",
-      paragraphs: [
-        "Certain subscriptions may automatically renew.",
-        "Users may disable auto-renewal at any time before the next billing cycle.",
-        "Charges for successfully renewed subscriptions are generally non-refundable.",
-      ],
-    },
-    {
-      heading: "7. Payment Failures",
+      heading: "5. Payment Failures",
       paragraphs: [
         "If payment fails or remains pending, access to premium services may not be activated until successful payment confirmation is received.",
       ],
     },
     {
-      heading: "8. Refund Processing",
+      heading: "6. Refund Processing",
       paragraphs: [
         "Approved refunds will be processed through the original payment method.",
         "Typical processing time is 7–10 business days, depending on the payment gateway, issuing bank, or financial institution.",
@@ -425,7 +400,7 @@ export const refundAndCancellation = {
       ],
     },
     {
-      heading: "9. How to Request a Refund",
+      heading: "7. How to Request a Refund",
       paragraphs: [
         "To request a refund, please email:",
         "Email: support@kuhedu.com",
@@ -441,7 +416,7 @@ export const refundAndCancellation = {
       ],
     },
     {
-      heading: "10. Right to Reject Refund Requests",
+      heading: "8. Right to Reject Refund Requests",
       paragraphs: [
         "KUHEDUSTUDYBUDDY reserves the right to decline refund requests that:",
         "• do not satisfy this policy,",
@@ -452,18 +427,18 @@ export const refundAndCancellation = {
       ],
     },
     {
-      heading: "11. Exceptional Circumstances",
+      heading: "9. Exceptional Circumstances",
       paragraphs: [
         "In rare and genuine cases involving prolonged platform outages, duplicate transactions, or verified technical failures attributable to KUHEDUSTUDYBUDDY, we may, at our sole discretion:",
         "• provide a full refund,",
         "• provide a partial refund,",
-        "• extend the subscription period,",
+        "• extend the access period,",
         "• offer equivalent learning credits,",
         "• or provide an alternative remedy.",
       ],
     },
     {
-      heading: "12. Policy Updates",
+      heading: "10. Policy Updates",
       paragraphs: [
         "KUHEDUSTUDYBUDDY reserves the right to modify this Refund & Cancellation Policy at any time.",
         "The latest version published on our website shall supersede all previous versions.",
@@ -487,7 +462,7 @@ export const contactUs = {
   sections: [
     {
       paragraphs: [
-        "We'd love to hear from you. Reach out with any questions about your account, subscription, or the KUHEDUSTUDYBUDDY platform.",
+        "We'd love to hear from you. Reach out with any questions about your account, purchase, or the KUHEDUSTUDYBUDDY platform.",
       ],
     },
     {
@@ -593,25 +568,13 @@ export const faqAndHelp = {
     {
       heading: "Is there a free trial?",
       paragraphs: [
-        "Yes -- a low-cost, time-limited Trial plan lets you explore Smart Tutor and the full learning experience before committing to a subscription.",
+        "Yes -- a low-cost, time-limited Trial plan lets you explore Smart Tutor and the full learning experience before making a purchase.",
       ],
     },
     {
-      heading: "What's the difference between Monthly and Yearly billing?",
+      heading: "What if I'm charged but my premium access doesn't activate?",
       paragraphs: [
-        "Monthly billing renews automatically each month; Yearly billing is a single upfront payment at a discounted rate (up to ~16% cheaper than paying monthly all year).",
-      ],
-    },
-    {
-      heading: "Can I cancel anytime?",
-      paragraphs: [
-        "Yes. Cancelling stops future auto-renewal, and access continues until the end of your current billing period; no partial refund is issued for the unused portion (see our Refund & Cancellation Policy).",
-      ],
-    },
-    {
-      heading: "How many Smart Tutor hours do I get, and can I add more?",
-      paragraphs: [
-        "Every subscription includes 30 hours of Smart Tutor usage per month. If you need more in a given month, a 30-hour recharge is available for ₹49.",
+        "This is explicitly covered under our Refund & Cancellation Policy. Email support@kuhedu.com within 7 days of the charge with your Order ID/Transaction ID, and it will be reviewed for a refund.",
       ],
     },
     {
@@ -624,12 +587,6 @@ export const faqAndHelp = {
       heading: "Is payment and personal data handled securely?",
       paragraphs: [
         "Yes -- payments are processed through Razorpay and KUHEDU never stores your card/UPI details directly; data handling is governed by our Privacy Policy.",
-      ],
-    },
-    {
-      heading: "What if I'm charged but my subscription doesn't activate?",
-      paragraphs: [
-        "This is explicitly covered under our Refund & Cancellation Policy. Email support@kuhedu.com within 7 days of the charge with your Order ID/Transaction ID, and it will be reviewed for a refund.",
       ],
     },
     {

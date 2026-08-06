@@ -36,6 +36,42 @@ const defaultUsers = [
     role: "moderator",
     isPremium: true,
   },
+  // QA demo student accounts, one per class -- premium enabled with no
+  // expiry (NULL premium_expires_at, same as above -- userService.js's
+  // expirePremiumIfLapsed treats a null expiry as "never lapses") so testers
+  // aren't blocked by premium-gated content. board/studentClass/subject are
+  // pre-filled and onboarding marked complete so these land straight on the
+  // dashboard instead of the onboarding flow.
+  {
+    name: "Demo Student (Class 6)",
+    email: "student06@demo.com",
+    password: "Pass~1@#$%",
+    role: "student",
+    isPremium: true,
+    board: "cbse",
+    studentClass: "6",
+    subject: "english",
+  },
+  {
+    name: "Demo Student (Class 7)",
+    email: "student07@demo.com",
+    password: "Pass~1@#$%",
+    role: "student",
+    isPremium: true,
+    board: "cbse",
+    studentClass: "7",
+    subject: "english",
+  },
+  {
+    name: "Demo Student (Class 8)",
+    email: "student08@demo.com",
+    password: "Pass~1@#$%",
+    role: "student",
+    isPremium: true,
+    board: "cbse",
+    studentClass: "8",
+    subject: "english",
+  },
 ];
 
 const seedDefaultUsers = async () => {
@@ -44,17 +80,40 @@ const seedDefaultUsers = async () => {
 
     await pool.query(
       `
-        INSERT INTO users (name, email, password_hash, provider, role, is_premium, premium_expires_at)
-        VALUES ($1, $2, $3, 'local', $4, $5, NULL)
+        INSERT INTO users (
+          name, email, password_hash, provider, role, is_premium, premium_expires_at,
+          board, student_class, subject, onboarding_completed_at
+        )
+        VALUES (
+          $1, $2, $3, 'local', $4, $5, NULL,
+          $6, $7, $8, CASE WHEN $6::varchar IS NOT NULL THEN NOW() ELSE NULL END
+        )
         ON CONFLICT (email) DO UPDATE
         SET name = EXCLUDED.name,
             password_hash = EXCLUDED.password_hash,
             provider = EXCLUDED.provider,
             role = EXCLUDED.role,
             is_premium = EXCLUDED.is_premium,
+            -- Only overwrite when this seed entry actually specifies a
+            -- value; accounts that don't (Default Student/Admin/Content
+            -- Moderator) must keep whatever real onboarding has since set,
+            -- not get reset to NULL on every server restart.
+            board = COALESCE(EXCLUDED.board, users.board),
+            student_class = COALESCE(EXCLUDED.student_class, users.student_class),
+            subject = COALESCE(EXCLUDED.subject, users.subject),
+            onboarding_completed_at = COALESCE(users.onboarding_completed_at, EXCLUDED.onboarding_completed_at),
             updated_at = NOW()
       `,
-      [user.name, user.email, passwordHash, user.role, user.isPremium]
+      [
+        user.name,
+        user.email,
+        passwordHash,
+        user.role,
+        user.isPremium,
+        user.board ?? null,
+        user.studentClass ?? null,
+        user.subject ?? null,
+      ]
     );
   }
 };

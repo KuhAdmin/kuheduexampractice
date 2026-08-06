@@ -23,30 +23,9 @@ import {
   getStudentVisualLearningItems,
   getTextbookActivityResponse,
   submitTextbookActivityResponse,
-  uploadStudentConceptSectionMedia,
+  getExercisesActivitiesTabVisible,
 } from "../api/client";
 import { decodeSelectionChapterId } from "./studentChapterData";
-
-// Mirrors server/src/services/memoryHookImageService.js's SECTION_CONFIG --
-// drives the accept="" filter and button copy for the upload placeholder
-// below, the server is still the source of truth for validation.
-const MEDIA_TYPE_BY_STEP_KEY = {
-  analogy: "image",
-  visualHook: "image",
-  curiosityHook: "image",
-  memoryTrick: "image",
-  story: "video",
-  realWorldConnection: "video",
-  microActivity: "video",
-};
-
-const readFileAsDataUrl = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Could not read the selected file."));
-    reader.readAsDataURL(file);
-  });
 
 const ConceptLearningIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -668,6 +647,17 @@ export const StudentConceptLearningPage = () => {
   // just read `tab === activeTab`, which meant TABS[0] ("Learn") was always
   // pre-expanded, pushing every other option below the fold on a phone.
   const [mobileExpandedTab, setMobileExpandedTab] = useState(null);
+  // Moderator/admin toggle (AdminContentEditorPage.jsx) -- defaults to
+  // hidden (opt-in) so a slow/failed fetch never shows a tab that hasn't
+  // been explicitly turned on.
+  const [exercisesActivitiesTabVisible, setExercisesActivitiesTabVisible] = useState(false);
+
+  useEffect(() => {
+    getExercisesActivitiesTabVisible()
+      .then((result) => setExercisesActivitiesTabVisible(result?.visible ?? false))
+      .catch(() => {});
+  }, []);
+
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [activeLearnMode, setActiveLearnMode] = useState(null);
   const [expandedSections, setExpandedSections] = useState(() => new Set());
@@ -711,14 +701,6 @@ export const StudentConceptLearningPage = () => {
   // synchronously, so a fast double-toggle/double-navigation can't fire the
   // same request twice while the first one is still pending.
   const requestedMediaKeysRef = useRef(new Set());
-  // Student-facing upload for a missing Explore-step visual/video -- becomes
-  // the shared, official media for this concept section (see
-  // uploadStudentConceptSectionMedia). One file input shared across every
-  // step; which section key it uploads to is resolved at change-time from
-  // the currently active Explore step.
-  const mediaUploadInputRef = useRef(null);
-  const [uploadingMedia, setUploadingMedia] = useState(false);
-  const [mediaUploadError, setMediaUploadError] = useState("");
   // Visual Learning (mind maps/flowcharts/etc) is section-scoped, not part of
   // the concept card -- fetched once per section instead of once per concept,
   // since every concept in the same section shares the same set of cards.
@@ -1045,8 +1027,14 @@ export const StudentConceptLearningPage = () => {
   // own optional image, rather than one media slot + one text block like
   // every other Explore step.
   const renderVisualLearningGrid = () => {
+    // Only items with actual media -- an item with no image has nothing to
+    // show in this grid (each card is purely the image, no caption/text of
+    // its own), so it's dropped rather than rendered as an empty/placeholder
+    // tile.
     const categoryItems =
-      visualLearningItems?.filter((item) => item.mode === activeVisualLearningCategory) || [];
+      visualLearningItems
+        ?.filter((item) => item.mode === activeVisualLearningCategory)
+        .filter((item) => visualLearningMediaByCardId[item.cardId]) || [];
     const activeCategoryLabel =
       VISUAL_LEARNING_CATEGORIES.find((category) => category.key === activeVisualLearningCategory)?.label ||
       "visual aids";
@@ -1091,24 +1079,15 @@ export const StudentConceptLearningPage = () => {
               const media = visualLearningMediaByCardId[item.cardId];
               return (
                 <div className="student-concept-visual-learning-card" key={item.cardId}>
-                  {media ? (
-                    <>
-                      <img src={media.mediaData} alt={item.title || "Visual aid"} />
-                      <button
-                        type="button"
-                        className="student-concept-visual-learning-maximize"
-                        aria-label="View full size"
-                        onClick={() => setMaximizedVisualItem(item)}
-                      >
-                        <ConceptLearningIcon type="maximize" />
-                      </button>
-                    </>
-                  ) : (
-                    <div className="student-memory-booster-media-placeholder">
-                      <ConceptLearningIcon type="image" />
-                      <span>Visual coming soon</span>
-                    </div>
-                  )}
+                  <img src={media.mediaData} alt={item.title || "Visual aid"} />
+                  <button
+                    type="button"
+                    className="student-concept-visual-learning-maximize"
+                    aria-label="View full size"
+                    onClick={() => setMaximizedVisualItem(item)}
+                  >
+                    <ConceptLearningIcon type="maximize" />
+                  </button>
                 </div>
               );
             })}
@@ -1135,64 +1114,6 @@ export const StudentConceptLearningPage = () => {
             />
           </div>
         )}
-      </div>
-    );
-  };
-
-  const handleMediaUploadClick = () => {
-    setMediaUploadError("");
-    mediaUploadInputRef.current?.click();
-  };
-
-  const handleMediaFileChange = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-
-    const step = exploreSteps[activeExploreStepIndex];
-    if (!step) return;
-
-    setUploadingMedia(true);
-    setMediaUploadError("");
-    try {
-      const dataUrl = await readFileAsDataUrl(file);
-      const result = await uploadStudentConceptSectionMedia(assessmentUnitId, step.key, {
-        dataUrl,
-        fileName: file.name,
-      });
-      setSectionMediaByKey((current) => ({ ...current, [step.key]: result }));
-    } catch (uploadError) {
-      setMediaUploadError(uploadError.message || "Upload failed. Please try again.");
-    } finally {
-      setUploadingMedia(false);
-    }
-  };
-
-  // Shared "no media yet" placeholder for any Explore step with a media slot
-  // -- lets a student fill the gap themselves; the upload becomes the shared,
-  // official media for this concept section (see uploadStudentConceptSectionMedia).
-  const renderMediaUploadPlaceholder = (step) => {
-    const mediaKind = MEDIA_TYPE_BY_STEP_KEY[step.key] || "image";
-    return (
-      <div className="student-memory-booster-media-placeholder">
-        <ConceptLearningIcon type="image" />
-        <span>{mediaKind === "video" ? "Video" : "Visual"} coming soon</span>
-        <button
-          type="button"
-          className="student-concept-media-upload-cta"
-          onClick={handleMediaUploadClick}
-          disabled={uploadingMedia}
-        >
-          {uploadingMedia ? "Uploading..." : `Upload ${mediaKind}`}
-        </button>
-        {mediaUploadError && <p className="student-concept-media-upload-error">{mediaUploadError}</p>}
-        <input
-          ref={mediaUploadInputRef}
-          type="file"
-          accept={`${mediaKind}/*`}
-          className="student-concept-media-upload-input"
-          onChange={handleMediaFileChange}
-        />
       </div>
     );
   };
@@ -1298,9 +1219,7 @@ export const StudentConceptLearningPage = () => {
                   alt={`${step.label} illustration`}
                   speechText={speechText}
                 />
-              ) : (
-                renderMediaUploadPlaceholder(step)
-              )}
+              ) : null}
             </div>
           ) : (
             <div className="student-concept-step-copy is-full-width">
@@ -1426,9 +1345,7 @@ export const StudentConceptLearningPage = () => {
                 alt={`${step.label} illustration`}
                 speechText={text}
               />
-            ) : (
-              renderMediaUploadPlaceholder(step)
-            )}
+            ) : null}
           </div>
         ) : (
           <div className="student-concept-step-copy is-full-width">
@@ -1558,7 +1475,13 @@ export const StudentConceptLearningPage = () => {
 
     return (
       <div className="student-explore-grid">
-        {renderTeachingModeSection({ sectionKey: "analogy", title: "Compare", mediaType: "image", teachingMode: "analogy" })}
+        {renderTeachingModeSection({
+          sectionKey: "simple",
+          title: "Simple",
+          mediaType: null,
+          iconType: "lightbulb",
+          teachingMode: "eli5",
+        })}
 
         {renderTeachingModeSection({
           sectionKey: "story",
@@ -1573,13 +1496,7 @@ export const StudentConceptLearningPage = () => {
           teachingMode: "storymode",
         })}
 
-        {renderTeachingModeSection({
-          sectionKey: "simple",
-          title: "Simple",
-          mediaType: null,
-          iconType: "lightbulb",
-          teachingMode: "eli5",
-        })}
+        {renderTeachingModeSection({ sectionKey: "analogy", title: "Compare", mediaType: "image", teachingMode: "analogy" })}
 
         {card.visualHook && (
           <ExploreSection
@@ -1959,6 +1876,12 @@ export const StudentConceptLearningPage = () => {
     return renderComingSoon(tab);
   };
 
+  // Moderator/admin can hide Exercises/Activities app-wide in one toggle
+  // (AdminContentEditorPage.jsx) -- filtered here rather than in the TABS
+  // constant itself so activeTab/mobileExpandedTab's default (TABS[0]) and
+  // MOBILE_TAB_ICON lookups stay untouched regardless of this setting.
+  const visibleTabs = TABS.filter((tab) => tab !== "Exercises/Activities" || exercisesActivitiesTabVisible);
+
   // Desktop/tablet only: breadcrumb + hero card + tab bar as persistent
   // chrome, matching the reference design's Notion/Duolingo-style layout.
   // Only the Explore tab's content structure actually changes (accordion ->
@@ -2005,7 +1928,7 @@ export const StudentConceptLearningPage = () => {
           </header>
 
           <nav className="student-concept-tabbar" aria-label="Concept modes">
-            {TABS.map((tab) => (
+            {visibleTabs.map((tab) => (
               <button
                 key={tab}
                 type="button"
@@ -2139,7 +2062,7 @@ export const StudentConceptLearningPage = () => {
           // section here -- selectTab navigates straight to the assessment
           // page for it, so its header never actually expands.
           <div className="student-concept-accordion">
-            {TABS.map((tab) => {
+            {visibleTabs.map((tab) => {
               const isOpen = tab === mobileExpandedTab;
               return (
                 <section key={tab} className={`student-concept-accordion-item ${isOpen ? "is-open" : ""}`}>

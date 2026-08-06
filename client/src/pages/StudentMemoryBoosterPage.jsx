@@ -31,13 +31,6 @@ const ChevronIcon = ({ direction }) => (
   </svg>
 );
 
-const MediaPlaceholderIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" strokeWidth="1.6" />
-    <path d="m10 9.5 5 3-5 3z" fill="currentColor" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
-  </svg>
-);
-
 // Same brain/bulb glyph used for "Memory Booster" elsewhere in the app (e.g.
 // the section detail page's action list), kept consistent here.
 const MemoryIcon = () => (
@@ -291,22 +284,17 @@ export const StudentMemoryBoosterPage = () => {
               onPointerDown={handleSwipeStart}
               onPointerUp={handleSwipeEnd}
             >
-              {activeTabKey === "retrievalCues" || activeTabKey === "microActivity" ? null : activeAid?.[
-                  `${activeTabKey}Media`
-                ] ? (
-                <StudentMediaViewer
-                  mediaType={activeAid[`${activeTabKey}Media`].mediaType}
-                  src={activeAid[`${activeTabKey}Media`].mediaData}
-                  alt={`${tabs.find((tab) => tab.key === activeTabKey)?.label || "Memory hook"} illustration`}
-                  speechText={activeAid[activeTabKey]}
-                  className="student-memory-booster-media-wrap"
-                />
-              ) : (
-                <div className="student-memory-booster-media-placeholder">
-                  <MediaPlaceholderIcon />
-                  <span>Visual coming soon</span>
-                </div>
-              )}
+              {activeTabKey !== "retrievalCues" &&
+                activeTabKey !== "microActivity" &&
+                activeAid?.[`${activeTabKey}Media`] && (
+                  <StudentMediaViewer
+                    mediaType={activeAid[`${activeTabKey}Media`].mediaType}
+                    src={activeAid[`${activeTabKey}Media`].mediaData}
+                    alt={`${tabs.find((tab) => tab.key === activeTabKey)?.label || "Memory hook"} illustration`}
+                    speechText={activeAid[activeTabKey]}
+                    className="student-memory-booster-media-wrap"
+                  />
+                )}
 
               {activeTabKey === "retrievalCues" ? (
                 <div className="student-memory-booster-cue-chips">

@@ -257,12 +257,6 @@ export const getDiagramsForSection = async (sourceSectionId) => {
   }));
 };
 
-// No equivalent of layer1_terminology in the content app's schema -- always
-// empty. StudentFlashcardsPage.jsx (fed by this) will show its empty state;
-// the separate Revision page's "flashcards" mode tab (content_card,
-// contentuitab='revision') is the populated flashcard source going forward.
-export const getTerminologyForSection = async () => [];
-
 // visual/{mindmap,flowchart,infographics,notebooknotes,visualposter} cards --
 // section-scoped like pdfassets/visual are for getDiagramsForSection, but
 // kept as its own query (contentuitab='visual' only, no 'pdfassets') so the

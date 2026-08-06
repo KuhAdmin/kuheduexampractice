@@ -7,7 +7,6 @@ import {
   getLayer1Context,
   getLayer2Memory,
   getSectionKnowledgeSummary,
-  getTerminologyForSection,
   getTextbookContentForSection,
   getVisualLearningCardsForSection,
 } from "./contentReadService.js";
@@ -247,6 +246,71 @@ const getSectionDisplayMeta = async (sourceSectionId) => {
   };
 };
 
+// Powers StudentSectionDetailPage.jsx's Deep Learn action list -- each
+// button (Memory Booster/Flashcards/Revision/Tutor Notes/Diagrams/Mind Map)
+// should only render if that content actually exists for this section,
+// instead of linking to a page that just shows its own "nothing generated
+// yet" empty state. Cheap existence checks (EXISTS, not a full row fetch)
+// mirroring each feature's own read query exactly: getMemoryBoosterForSection
+// reads content_concept_memory by assessment_unit_id, getFlashcardsForSection/
+// getRevisionForSection/getTutorNotesForSection all read content_card rows
+// scoped the same way (just different contentuitab/processorkey), and
+// getDiagramsForSection is the only section-scoped (not assessment-unit-
+// scoped) one. Mind Map is NOT "assessmentUnitIds.length > 0" -- looked
+// wrong in practice: StudentMindMapPage.jsx's buildTree treats any node
+// with no incoming edge as its own root, so with zero
+// assessment_unit_dependency rows every concept becomes an isolated
+// "root" and tree.length equals the concept count, never 0 -- i.e. that
+// naive check is true whenever the section has concepts at all,
+// regardless of whether there's a real dependency graph to show. The
+// actual signal is whether any dependency edge exists.
+const getSectionContentFlags = async ({ sourceSectionId, assessmentUnitIds }) => {
+  const [conceptScoped, diagrams] = await Promise.all([
+    pool.query(
+      `
+        SELECT
+          EXISTS(
+            SELECT 1 FROM content_concept_memory WHERE assessment_unit_id = ANY($1)
+          ) AS "hasMemoryBooster",
+          EXISTS(
+            SELECT 1 FROM content_card
+            WHERE contentuitab = 'revision' AND processorkey = 'flashcards'
+              AND assessment_unit_id = ANY($1) AND is_hidden = FALSE
+          ) AS "hasFlashcards",
+          EXISTS(
+            SELECT 1 FROM content_card
+            WHERE contentuitab = 'revision' AND processorkey IN ('cheatsheet', 'mnemonics', 'examnotes')
+              AND assessment_unit_id = ANY($1) AND is_hidden = FALSE
+          ) AS "hasRevision",
+          EXISTS(
+            SELECT 1 FROM content_card
+            WHERE contentuitab = 'tutor' AND processorkey IN ('coach', 'interview', 'viva', 'debate')
+              AND assessment_unit_id = ANY($1) AND is_hidden = FALSE
+          ) AS "hasTutorNotes",
+          EXISTS(
+            SELECT 1 FROM assessment_unit_dependency WHERE assessment_unit_id = ANY($1)
+          ) AS "hasMindMap"
+      `,
+      [assessmentUnitIds]
+    ),
+    pool.query(
+      `
+        SELECT EXISTS(
+          SELECT 1 FROM content_card
+          WHERE source_section_id = $1 AND contentuitab IN ('pdfassets', 'visual')
+            AND processorkey <> 'ocr' AND is_hidden = FALSE
+        ) AS "hasDiagrams"
+      `,
+      [sourceSectionId]
+    ),
+  ]);
+
+  return {
+    ...conceptScoped.rows[0],
+    ...diagrams.rows[0],
+  };
+};
+
 export const getSectionOverview = async ({ sourceSectionId, userId }) => {
   if (!sourceSectionId) {
     return null;
@@ -263,10 +327,11 @@ export const getSectionOverview = async ({ sourceSectionId, userId }) => {
   }
 
   const assessmentUnitIds = units.map((unit) => unit.assessmentUnitId);
-  const [masteryByUnit, lastActivityByUnit, competenciesByUnit] = await Promise.all([
+  const [masteryByUnit, lastActivityByUnit, competenciesByUnit, contentFlags] = await Promise.all([
     getMasteryByAssessmentUnitId({ userId, assessmentUnitIds }),
     getLastActivityByAssessmentUnitId({ userId, assessmentUnitIds }),
     getConceptLearningPillars(assessmentUnitIds),
+    getSectionContentFlags({ sourceSectionId, assessmentUnitIds }),
   ]);
   const masteredCount = units.filter(
     (unit) => (masteryByUnit.get(unit.assessmentUnitId) || 0) >= MASTERY_COMPLETE_THRESHOLD
@@ -279,6 +344,7 @@ export const getSectionOverview = async ({ sourceSectionId, userId }) => {
     overview: overview || "",
     conceptCount: units.length,
     progress: Math.round((masteredCount / units.length) * 100),
+    contentFlags,
     concepts: units.map((unit) => {
       const isMastered = (masteryByUnit.get(unit.assessmentUnitId) || 0) >= MASTERY_COMPLETE_THRESHOLD;
       const status = isMastered
@@ -485,12 +551,33 @@ export const getMemoryBoosterForSection = async ({ sourceSectionId }) => {
   return { ...displayMeta, memoryAids };
 };
 
+// Flashcard content (contentuitab='revision', processorkey='flashcards') --
+// imported via the same admin Concept Import pipeline as cheatsheet/
+// mnemonics/examnotes (see LEGACY_REVISION_MODES in conceptImportService.js)
+// but deliberately excluded from getRevisionForSection below, since it has
+// its own dedicated page/shape (term/definition flip cards, not a
+// title/summary/details detail card). title/summary already match
+// StudentFlashcardsPage.jsx's expected {term, definition} shape directly.
 export const getFlashcardsForSection = async ({ sourceSectionId }) => {
-  const terms = await getTerminologyForSection(sourceSectionId);
-  return terms.map((term) => ({
-    term: term.term,
-    definition: term.definition,
-    relatedConcepts: term.relatedConcepts,
+  const assessmentUnitIds = await getAssessmentUnitsForSourceSection(sourceSectionId);
+  if (!assessmentUnitIds.length) {
+    return [];
+  }
+
+  const result = await pool.query(
+    `
+      SELECT title, summary
+      FROM content_card
+      WHERE contentuitab = 'revision' AND processorkey = 'flashcards'
+        AND assessment_unit_id = ANY($1) AND is_hidden = FALSE
+      ORDER BY assessment_unit_id ASC, sort_order ASC
+    `,
+    [assessmentUnitIds]
+  );
+
+  return result.rows.map((row) => ({
+    term: row.title,
+    definition: row.summary,
   }));
 };
 

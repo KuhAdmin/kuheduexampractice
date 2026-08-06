@@ -4,31 +4,37 @@ import { pool } from "../db/pool.js";
 import { env } from "../config/env.js";
 import { toPublicUser } from "./userService.js";
 
-// STEMLab Premium's one-time purchases: each pricing card's Yearly tier
-// (its Monthly tier is a real recurring subscription instead -- see
-// subscriptionService.js). "is_premium" is a one-way flag set on any
-// successful purchase, EXCEPT the "trial" plan below, which self-expires
-// after TRIAL_DURATION_MS (see markOrderPaidAndActivatePremium). Amounts
-// must match client/src/content/pricingContent.js's pricingCards.
+// STEMLab Premium's one-time purchases -- the ONLY purchase path now
+// (recurring subscriptions removed entirely, see subscriptionService.js's
+// deletion). "is_premium" is a one-way flag set on any successful purchase;
+// every plan below has a real expiry via PLAN_EXPIRY (no permanent-access
+// plan exists anymore). Amounts must match
+// client/src/content/pricingContent.js's pricingCards.
 const PLAN_AMOUNTS_PAISE = {
-  "english-yearly": 99900,
-  "social-science-yearly": 199900,
-  "science-yearly": 399900,
-  "mathematics-yearly": 399900,
+  "premium-2weeks": 4900, // ₹49, 14 days
+  "premium-12months": 99900, // ₹999, 12 months
   // Testing-only plan: ₹9 for 1 hour of premium access, then auto-expires
-  // (see markOrderPaidAndActivatePremium's premiumExpiresAt below) -- never
-  // a recurring subscription, always the one-time order path.
+  // (see PLAN_EXPIRY below).
   trial: 900,
 };
 const CURRENCY = "INR";
 const TRIAL_DURATION_MS = 60 * 60 * 1000;
 
-// Only English is on sale for now -- mirrors PricingPage.jsx's TEMPORARY
-// visiblePricingCards filter and subscriptionService.js's matching
-// ENABLED_MONTHLY_CARDS gate, enforced here too so a direct API call can't
-// buy Yearly for a subject that isn't actually launched yet. "trial" is
-// unrelated to any pricing card and stays exempt.
-const ENABLED_YEARLY_PLANS = new Set(["english-yearly", "trial"]);
+// Every plan's expiry, computed at the moment it's granted (see
+// markOrderPaidAndActivatePremium below). Both real plans are relative to
+// the purchase date, not a fixed calendar date -- premium-12months uses
+// calendar-month arithmetic (Date.setMonth) rather than a fixed day-count
+// add, so it correctly lands on "the same date 12 months later" across
+// leap years/differing month lengths.
+const PLAN_EXPIRY = {
+  trial: () => new Date(Date.now() + TRIAL_DURATION_MS),
+  "premium-2weeks": () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+  "premium-12months": () => {
+    const expiry = new Date();
+    expiry.setMonth(expiry.getMonth() + 12);
+    return expiry;
+  },
+};
 
 export class PaymentError extends Error {
   constructor(message, statusCode = 500) {
@@ -50,12 +56,9 @@ const getRazorpayClient = () => {
   return razorpayClient;
 };
 
-// Most recent one-time order attempt (Yearly/Trial), regardless of outcome --
-// lets the profile page tell a student "your last attempt failed" instead of
-// silently showing the generic "Subscribe" state with no explanation. Only
-// covers payment_order (not the subscription table): a Monthly signup either
-// reaches 'active' or just never completes, there's no equivalent "failed"
-// status to surface the same way.
+// Most recent purchase attempt, regardless of outcome -- lets the profile
+// page tell a student "your last attempt failed" instead of silently
+// showing the generic "Subscribe" state with no explanation.
 export const getLastPaymentAttempt = async (userId) => {
   const result = await pool.query(
     `
@@ -70,13 +73,10 @@ export const getLastPaymentAttempt = async (userId) => {
   return result.rows[0] || null;
 };
 
-export const createPremiumOrder = async ({ userId, plan = "yearly" }) => {
+export const createPremiumOrder = async ({ userId, plan }) => {
   const amount = PLAN_AMOUNTS_PAISE[plan];
   if (!amount) {
     throw new PaymentError("Invalid plan.", 400);
-  }
-  if (!ENABLED_YEARLY_PLANS.has(plan)) {
-    throw new PaymentError("This subject isn't available for purchase yet.", 403);
   }
 
   const razorpay = getRazorpayClient();
@@ -143,8 +143,7 @@ export const markOrderPaidAndActivatePremium = async ({
     return null;
   }
 
-  const premiumExpiresAt =
-    updateResult.rows[0].plan === "trial" ? new Date(Date.now() + TRIAL_DURATION_MS) : null;
+  const premiumExpiresAt = PLAN_EXPIRY[updateResult.rows[0].plan]?.() ?? null;
 
   const userResult = await pool.query(
     "UPDATE users SET is_premium = TRUE, premium_expires_at = $2, updated_at = NOW() WHERE id = $1 RETURNING *",

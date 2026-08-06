@@ -3966,7 +3966,16 @@ a {
   border-radius: 13px;
   background: transparent;
   color: var(--muted);
-  font-size: 1.2132em;
+  /* Auto-scales down as more tabs share the row (each column gets
+     narrower) instead of a fixed size that wraps 2-word labels like
+     "Cheat Sheet"/"Exam Notes" (3-tab Revision) or "Interview" (4-tab
+     Tutor Notes) onto a second line on mobile. --tab-count is set inline
+     by whichever page renders this nav (StudentRevisionPage.jsx,
+     StudentTutorNotesPage.jsx) alongside its matching grid-template-columns
+     override; consumers that don't set it (StudentChallengesTab.jsx's
+     fixed 2-column nav) fall back to the unscaled 1.2132em via the var()
+     default, unchanged from before. */
+  font-size: max(0.85em, calc(1.2132em - (var(--tab-count, 2) - 2) * 0.15em));
   font-weight: 700;
   text-align: center;
   transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
@@ -4447,10 +4456,16 @@ a {
    sideways, just a vertical list where one section is open at a time. */
 .student-concept-accordion {
   display: grid;
+  /* minmax(0, 1fr) pins the single implicit column to this container's own
+     width -- without it, any tab's expanded panel content wide enough
+     (e.g. Exercises/Activities' DetailCard grid) can grow this track past
+     the viewport instead of wrapping within it. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
 
 .student-concept-accordion-item {
+  min-width: 0;
   border-radius: 16px;
   background: rgb(from var(--muted) r g b / 0.06);
   overflow: hidden;
@@ -4862,14 +4877,14 @@ a {
 
 .student-concept-step-view-tab {
   padding: 6px 18px;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
   color: var(--muted-strong);
   font-size: 1.1305em;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
 }
 
 .student-concept-step-view-tab:focus-visible {
@@ -4877,8 +4892,13 @@ a {
   outline-offset: 2px;
 }
 
+/* Tinted background + border, not just var(--surface-strong) (identical to
+   this pill's own container, so it read as barely-there against the
+   inactive pills) -- matches .student-learn-mode-tab.is-active's treatment
+   for the same "which mode pill is active" pattern elsewhere on this page. */
 .student-concept-step-view-tab.is-active {
-  background: var(--surface-strong);
+  background: var(--success-bg);
+  border-color: var(--green);
   color: var(--green);
   box-shadow: 0 4px 10px rgb(from var(--green) r g b / 0.16);
 }
@@ -5335,6 +5355,13 @@ a {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  /* Symmetric 20px top/bottom -- was margin-top only, which read as
+     off-center (all the breathing room above the counter, none below it
+     before the concept title). StudentRevisionPage.jsx renders this
+     directly under the mode tab bar with nothing else between them, and
+     Memory Booster (this class's original home) has no ancestor margin
+     here either, so both still get real spacing on both sides. */
+  margin: 20px 0;
 }
 
 .student-memory-booster-counter-nav {
@@ -5516,42 +5543,6 @@ a {
   color: var(--muted);
   font-size: 1.1029em;
   font-weight: 600;
-}
-
-.student-concept-media-upload-cta {
-  min-height: 38px;
-  padding: 0 18px;
-  border: none;
-  border-radius: 999px;
-  background: var(--green);
-  color: #ffffff;
-  font-size: 0.82em;
-  font-weight: 700;
-  box-shadow: 0 8px 20px rgb(from var(--green) r g b / 0.2);
-}
-
-.student-concept-media-upload-cta:disabled {
-  opacity: 0.7;
-}
-
-.student-concept-media-upload-error {
-  margin: 0;
-  color: var(--danger);
-  font-size: 0.78em;
-  font-weight: 600;
-  text-align: center;
-}
-
-.student-concept-media-upload-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 .student-memory-booster-media-placeholder svg {
@@ -5757,6 +5748,13 @@ a {
 }
 
 .student-flashcard-viewport {
+  /* .student-section-detail-header (the back arrow + "Flashcards" title
+     above) has no margin-bottom of its own -- scoped here rather than on
+     that shared header class, since it's reused by several other pages
+     (Section Detail, Revision, Tutor Notes, Mind Map, ...) that don't have
+     this gap problem. Also benefits StudentDiagramsPage.jsx, the only
+     other consumer of this class. */
+  margin-top: 24px;
   perspective: 1400px;
 }
 
@@ -5764,7 +5762,7 @@ a {
   display: block;
   position: relative;
   width: 100%;
-  min-height: 240px;
+  min-height: 280px;
   padding: 0;
   border: none;
   outline: none;
@@ -5788,7 +5786,7 @@ a {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 240px;
+  min-height: 280px;
   transform-style: preserve-3d;
   transition: transform 0.55s cubic-bezier(0.4, 0.15, 0.2, 1);
 }
@@ -5800,13 +5798,20 @@ a {
 .student-flashcard-face {
   position: absolute;
   inset: 0;
-  margin-top: 15px;
   display: grid;
   gap: 10px;
   align-content: center;
   justify-items: center;
   text-align: center;
-  padding: 28px 24px;
+  /* Equal padding on every side -- was 28px/24px plus a stray 15px
+     margin-top that made the effective top gap ~43px vs 28px at the
+     bottom. overflow-y: auto is the safety net for a long definition: it
+     scrolls within the padded box instead of visually breaching the card's
+     rounded corners (which is what happened before with a fixed
+     min-height and no overflow handling). */
+  padding: 24px;
+  overflow-y: auto;
+  overflow-wrap: break-word;
   border-radius: 24px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -5892,6 +5897,22 @@ a {
   font-size: 1.5855em;
   font-weight: 700;
   color: var(--text);
+}
+
+/* Auto-scale steps for longer term/definition text (class picked by
+   character-count bucket, see textScaleClass in StudentFlashcardsPage.jsx)
+   -- keeps a full-sentence definition legible and within the card's padded
+   bounds instead of the fixed 1.5855em size overflowing it. */
+.student-flashcard-text.is-text-md {
+  font-size: 1.25em;
+}
+
+.student-flashcard-text.is-text-sm {
+  font-size: 1.05em;
+}
+
+.student-flashcard-text.is-text-xs {
+  font-size: 0.92em;
 }
 
 .student-flashcard-face-back .student-flashcard-text {
@@ -6035,8 +6056,29 @@ a {
 
 .student-detail-card-list-page {
   display: grid;
+  /* minmax(0, 1fr), not a bare implicit auto column -- without it this
+     single-column mobile track sizes to its widest child's max-content
+     width instead of the container's actual width, letting a DetailCard's
+     content push the whole accordion panel past the viewport edge (matches
+     the fix the >=920px 2-column rule above already uses). */
+  grid-template-columns: minmax(0, 1fr);
   gap: 4px;
   margin-top: 16px;
+}
+
+/* Shared by StudentRevisionPage.jsx and StudentTutorNotesPage.jsx's
+   one-card-at-a-time pager (Previous/Next + swipe) -- deliberately NOT
+   .student-detail-card-list-page, since that class switches to a 2-column
+   grid at >=920px (right, for the multi-item Challenges/Exercises lists
+   it's shared with; wrong here, where there's always exactly one card
+   showing and a second empty column would just look broken). touch-action:
+   pan-y lets the page keep scrolling vertically while each page's own
+   swipe handlers read the horizontal gesture themselves, same as
+   .student-memory-booster-card. */
+.student-detail-pager-viewport {
+  display: grid;
+  margin-top: 16px;
+  touch-action: pan-y;
 }
 
 .student-challenge-question {
@@ -6157,7 +6199,11 @@ a {
   justify-items: end;
 }
 
+/* Now a non-interactive status badge (a <span>, not a <button>) -- found
+   status is only ever set by attaching a photo, never toggled directly, so
+   this always renders combined with .is-active below. */
 .student-object-hunt-toggle {
+  display: inline-block;
   border-radius: 10px;
   border: 1px solid rgb(from var(--green) r g b / 0.3);
   background: var(--surface-strong);
@@ -6165,7 +6211,6 @@ a {
   font-size: 1.0754em;
   font-weight: 700;
   padding: 6px 10px;
-  cursor: pointer;
 }
 
 .student-object-hunt-toggle.is-active {
@@ -6500,6 +6545,11 @@ a {
    this codebase's existing visual language for AI-generated content. */
 .student-ai-tutor-panel {
   display: grid;
+  /* minmax(0, 1fr) -- without it this grid's implicit column sizes to its
+     widest child's max-content width (the usage meter row, ask-form, voice
+     row) instead of the accordion panel's actual width, pushing the whole
+     card past the viewport on mobile. Same fix as .student-concept-accordion. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   margin-top: 4px;
   padding: 16px;
@@ -6559,6 +6609,7 @@ a {
    rules aren't actually admin-scoped, just admin-demo-authored). */
 .student-concept-practice-capture {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   margin-top: 12px;
   padding: 16px;
@@ -6612,6 +6663,7 @@ a {
    card treatment as the two sections above it, own accent color. */
 .student-einstein-mode {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   margin-top: 12px;
   padding: 16px;
@@ -6632,6 +6684,7 @@ a {
 /* Viva -- bottom-most section on the concept Explore tab. */
 .student-viva-mode {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   margin-top: 12px;
   padding: 16px;
@@ -6657,6 +6710,7 @@ a {
 
 .student-viva-listening {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   gap: 8px;
   padding: 12px 0;
@@ -6695,6 +6749,7 @@ a {
 
 .student-viva-summary {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   margin: 0;
   padding: 0;
@@ -6735,6 +6790,10 @@ a {
 
 .student-ai-tutor-ask-form input {
   flex: 1;
+  /* flex: 1 alone still lets the UA's default text-input intrinsic width
+     act as a shrink floor -- min-width: 0 lets it actually shrink to fit
+     narrow mobile widths instead of pushing the "Ask" button off-screen. */
+  min-width: 0;
   min-height: 44px;
   padding: 0 14px;
   border-radius: 14px;
@@ -6801,15 +6860,24 @@ a {
 
 .student-ai-tutor-voice {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 4px;
   padding: 10px 12px;
   border-radius: 14px;
   background: var(--surface-strong);
   border: 1px dashed rgb(from var(--indigo) r g b / 0.3);
+  /* Defensive clip -- none of the voice-action buttons defined an explicit
+     :focus-visible outline until now, so the browser default focus ring
+     (unclipped, drawn outside the button's border box) could poke past
+     this card's rounded corner. Kept even now that the buttons below have
+     their own contained focus style, as a backstop against any other
+     stray box-shadow/outline bleed. */
+  overflow: hidden;
 }
 
 .student-ai-tutor-voice-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
@@ -6819,6 +6887,7 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   font-size: 1.1305em;
   font-weight: 600;
   color: var(--text);
@@ -6852,6 +6921,7 @@ a {
 
 .student-ai-tutor-voice-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
@@ -6872,6 +6942,13 @@ a {
   border-color: transparent;
   background: var(--warning);
   color: #ffffff;
+}
+
+.student-ai-tutor-voice-mute:focus-visible,
+.student-ai-tutor-voice-start:focus-visible,
+.student-ai-tutor-voice-stop:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: -3px;
 }
 
 .student-ai-tutor-voice-start {

@@ -27,18 +27,15 @@ const loadRazorpayScript = () => {
   return loadPromise;
 };
 
-// order: response from POST /user/payments/create-order -- either
-// { mode: "order", orderId, amount, currency } for the one-time Yearly plan,
-// or { mode: "subscription", subscriptionId, amount, currency } for the
-// recurring Monthly plan (Razorpay Checkout takes subscription_id instead of
-// order_id/amount in that mode -- the plan itself determines the charge).
-// onSuccess receives the raw Razorpay handler response, which in
-// subscription mode carries razorpay_subscription_id instead of
-// razorpay_order_id.
+// order: response from POST /user/payments/create-order -- always
+// { mode: "order", orderId, amount, currency } now (one-time purchases
+// only, no recurring subscriptions). onSuccess receives the raw Razorpay
+// handler response, which carries razorpay_order_id/razorpay_payment_id/
+// razorpay_signature.
 export const openRazorpayCheckout = async ({ order, user, onSuccess, onFailure, onDismiss }) => {
   await loadRazorpayScript();
 
-  const baseOptions = {
+  const razorpayOptions = {
     key: import.meta.env.VITE_RAZORPAY_KEY_ID,
     name: "KUHEDU STUDY BUDDY",
     description: "Kuhedu Study Buddy Premium",
@@ -51,12 +48,10 @@ export const openRazorpayCheckout = async ({ order, user, onSuccess, onFailure, 
     modal: {
       ondismiss: () => onDismiss?.(),
     },
+    order_id: order.orderId,
+    amount: order.amount,
+    currency: order.currency,
   };
-
-  const razorpayOptions =
-    order.mode === "subscription"
-      ? { ...baseOptions, subscription_id: order.subscriptionId }
-      : { ...baseOptions, order_id: order.orderId, amount: order.amount, currency: order.currency };
 
   const razorpay = new window.Razorpay(razorpayOptions);
 

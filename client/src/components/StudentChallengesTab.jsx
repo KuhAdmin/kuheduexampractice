@@ -35,6 +35,11 @@ const getDetailValue = (details, label) => details?.find((detail) => detail.labe
 const CaseStudyCard = ({ item }) => {
   const [showHints, setShowHints] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
+  // "Show answer" only becomes available once the student has submitted
+  // their own attempt for feedback (below) -- true both right after a
+  // fresh submit and when a prior session's feedback loads on mount, via
+  // StudentOpenResponsePanel's onFeedbackChange.
+  const [hasFeedback, setHasFeedback] = useState(false);
   const scenario = getDetailValue(item.details, "Scenario");
   const question = getDetailValue(item.details, "Question");
   const hints = getDetailValue(item.details, "Hints");
@@ -65,7 +70,7 @@ const CaseStudyCard = ({ item }) => {
           )}
         </div>
       )}
-      {(answer || rubric) && (
+      {(answer || rubric) && hasFeedback && (
         <div className="student-challenge-reveal">
           <button type="button" className="ghost-button" onClick={() => setShowAnswer((current) => !current)}>
             {showAnswer ? "Hide answer" : "Show answer"}
@@ -92,6 +97,7 @@ const CaseStudyCard = ({ item }) => {
           fetchResponse={getChallengeResponse}
           submitResponse={submitChallengeResponse}
           placeholder="Type your own answer, or capture a photo of your handwritten answer above"
+          onFeedbackChange={(feedbackValue) => setHasFeedback(Boolean(feedbackValue))}
         />
       )}
     </article>
@@ -160,8 +166,9 @@ const ObjectHuntCard = ({ item }) => {
   const [foundState, setFoundState] = useState({});
   const [cameraObjectId, setCameraObjectId] = useState(null);
 
-  const markFound = (id) =>
-    setFoundState((current) => ({ ...current, [id]: { ...current[id], found: true } }));
+  // Attaching a photo is the only way to mark an object found -- there's no
+  // separate "I found it, trust me" toggle, so foundState.found and .photo
+  // are always set together (never found:true with no photo attached).
   const attachPhoto = (id, dataUrl) =>
     setFoundState((current) => ({ ...current, [id]: { ...current[id], found: true, photo: dataUrl } }));
 
@@ -190,13 +197,11 @@ const ObjectHuntCard = ({ item }) => {
                 <button type="button" className="ghost-button" onClick={() => setCameraObjectId(object.id)}>
                   {entry.photo ? "Retake photo" : "Attach a photo"}
                 </button>
-                <button
-                  type="button"
-                  className={`student-object-hunt-toggle ${entry.found ? "is-active" : ""}`}
-                  onClick={() => markFound(object.id)}
-                >
-                  {entry.found ? "Found it" : "Mark found"}
-                </button>
+                {entry.found && (
+                  <span className="student-object-hunt-toggle is-active" aria-label="Found">
+                    Found it
+                  </span>
+                )}
               </div>
             </li>
           );

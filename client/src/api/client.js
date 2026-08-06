@@ -88,19 +88,7 @@ export const verifyPremiumPayment = async ({ razorpayOrderId, razorpayPaymentId,
     body: JSON.stringify({ razorpayOrderId, razorpayPaymentId, razorpaySignature }),
   });
 
-export const verifyPremiumSubscription = async ({ razorpaySubscriptionId, razorpayPaymentId, razorpaySignature }) =>
-  apiRequest("/user/payments/verify", {
-    method: "POST",
-    body: JSON.stringify({ razorpaySubscriptionId, razorpayPaymentId, razorpaySignature }),
-  });
-
-export const getMySubscription = async () => apiRequest("/user/payments/subscription");
-
-export const cancelMySubscription = async ({ razorpaySubscriptionId }) =>
-  apiRequest("/user/payments/subscription/cancel", {
-    method: "POST",
-    body: JSON.stringify({ razorpaySubscriptionId }),
-  });
+export const getLastPaymentAttempt = async () => apiRequest("/user/payments/last-attempt");
 
 export const getNotifications = async () => apiRequest("/user/notifications");
 
@@ -566,6 +554,18 @@ export const generateMemoryHookPrompt = async (assessmentUnitId, sectionKey) =>
   apiRequest(`/admin/content-editor/memory-hooks/${assessmentUnitId}/${sectionKey}/generate-prompt`, {
     method: "POST",
   });
+
+export const getAdminExercisesActivitiesTabVisible = async () =>
+  apiRequest("/admin/content-editor/settings/exercises-activities-tab");
+
+export const updateAdminExercisesActivitiesTabVisible = async (visible) =>
+  apiRequest("/admin/content-editor/settings/exercises-activities-tab", {
+    method: "PUT",
+    body: JSON.stringify({ visible }),
+  });
+
+export const getExercisesActivitiesTabVisible = async () =>
+  apiRequest("/user/settings/exercises-activities-tab");
 
 export const uploadChapterExercise = async (bookId, chapterNumber, { dataUrl, mimeType, chapterName }) =>
   apiRequest(`/admin/chapter-exercises/${bookId}/${chapterNumber}/upload`, {

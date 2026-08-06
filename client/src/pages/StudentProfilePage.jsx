@@ -3,12 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { EditProfileModal } from "../components/EditProfileModal";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
-import { PaymentStatusModal } from "../components/PaymentStatusModal";
 import { StudentNotificationPanel } from "../components/StudentNotificationPanel";
 import { useAuth } from "../context/AuthContext";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
-import { getMySubscription, cancelMySubscription, getNotifications, markNotificationsSeen } from "../api/client";
+import { getLastPaymentAttempt, getNotifications, markNotificationsSeen } from "../api/client";
 import {
   getAvatarVisibleServerSnapshot,
   getAvatarVisibleSnapshot,
@@ -32,11 +31,9 @@ const avatarLetters = (name) =>
     .map((part) => part.charAt(0).toUpperCase())
     .join("");
 
-// Real countdown from a real end date -- Monthly's activeSubscription.current_end
-// (snake_case, straight off the subscription table, see subscriptionService.js's
-// getActiveSubscriptionForUser) or Trial's user.premiumExpiresAt (the only other
-// plan with a real expiry; Yearly is permanent and has neither, so this returns
-// null and no countdown renders at all). There is no "free trial" plan.
+// Real countdown from user.premiumExpiresAt -- every current plan (2-week,
+// 12-month, or Trial) has a real expiry now that recurring subscriptions
+// are gone, so this always has something to show while premium is active.
 const formatSubscriptionCountdown = (endDateIso) => {
   if (!endDateIso) {
     return null;
@@ -53,11 +50,8 @@ const formatSubscriptionCountdown = (endDateIso) => {
   return `Ends in ${days}d ${hours}h`;
 };
 
-// Only Trial's user.premiumExpiresAt is ever a real past end date we can read
-// client-side -- once a Monthly subscription leaves active status,
-// getMySubscription no longer returns it (only active/authenticated/created
-// rows), so there's no accessible "ended at" for that case, and Yearly never
-// ends at all. Returns null rather than guessing for anyone else.
+// user.premiumExpiresAt once it's in the past -- shown after premium lapses
+// so a student sees when their access ended, not just that it's gone.
 const formatSubscriptionEndedAgo = (endDateIso) => {
   if (!endDateIso) {
     return null;
@@ -401,7 +395,7 @@ const AccountThemeRow = ({ theme, onChange }) => (
 );
 
 export const StudentProfilePage = ({ user, onLogout }) => {
-  const { updateProfile, changePassword, setTheme, persistUser } = useAuth();
+  const { updateProfile, changePassword, setTheme } = useAuth();
   const navigate = useNavigate();
   const isMobile = useBreakpoint() === "mobile";
   const { platform } = useInstallPrompt();
@@ -411,11 +405,7 @@ export const StudentProfilePage = ({ user, onLogout }) => {
   const [activeInstallTab, setActiveInstallTab] = useState(platform === "android" ? "android" : "ios");
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState(null);
-  const [paymentError, setPaymentError] = useState("");
-  const [activeSubscription, setActiveSubscription] = useState(null);
   const [lastPaymentAttempt, setLastPaymentAttempt] = useState(null);
-  const [cancelling, setCancelling] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
@@ -464,19 +454,17 @@ export const StudentProfilePage = ({ user, onLogout }) => {
   };
 
   // Fetched regardless of isPremium now -- lastAttempt (the most recent
-  // payment_order, whatever its outcome) is exactly what a NOT-subscribed
+  // payment_order, whatever its outcome) is exactly what a NOT-premium
   // student needs to see, e.g. "your last attempt failed."
   useEffect(() => {
     let cancelled = false;
-    getMySubscription()
+    getLastPaymentAttempt()
       .then((result) => {
         if (cancelled) return;
-        setActiveSubscription(result?.subscription || null);
         setLastPaymentAttempt(result?.lastAttempt || null);
       })
       .catch(() => {
         if (cancelled) return;
-        setActiveSubscription(null);
         setLastPaymentAttempt(null);
       });
     return () => {
@@ -484,28 +472,7 @@ export const StudentProfilePage = ({ user, onLogout }) => {
     };
   }, [user?.isPremium]);
 
-  const handleCancelSubscription = async () => {
-    if (!activeSubscription || !window.confirm("Cancel your monthly subscription? Premium access ends immediately.")) {
-      return;
-    }
-    setCancelling(true);
-    try {
-      const result = await cancelMySubscription({
-        razorpaySubscriptionId: activeSubscription.razorpay_subscription_id,
-      });
-      persistUser(result.user);
-      setActiveSubscription(null);
-    } catch (error) {
-      setPaymentError(error?.message || "We couldn't cancel your subscription.");
-      setPaymentStatus("error");
-    } finally {
-      setCancelling(false);
-    }
-  };
-
-  const subscriptionCountdown = formatSubscriptionCountdown(
-    activeSubscription?.current_end || user?.premiumExpiresAt || null
-  );
+  const subscriptionCountdown = formatSubscriptionCountdown(user?.premiumExpiresAt || null);
   const subscriptionEndedAgo = formatSubscriptionEndedAgo(user?.premiumExpiresAt);
   const lastAttemptFailed = !user?.isPremium && lastPaymentAttempt?.status === "failed";
 
@@ -596,16 +563,6 @@ export const StudentProfilePage = ({ user, onLogout }) => {
                 {subscriptionCountdown ? (
                   <div className="student-profile-premium-trial">{subscriptionCountdown}</div>
                 ) : null}
-                {activeSubscription ? (
-                  <button
-                    type="button"
-                    className="student-profile-premium-cancel"
-                    onClick={handleCancelSubscription}
-                    disabled={cancelling}
-                  >
-                    {cancelling ? "Cancelling..." : "Cancel"}
-                  </button>
-                ) : null}
               </>
             ) : (
               <>
@@ -626,17 +583,6 @@ export const StudentProfilePage = ({ user, onLogout }) => {
             )}
           </div>
         </section>
-
-        <PaymentStatusModal
-          open={Boolean(paymentStatus)}
-          status={paymentStatus}
-          errorMessage={paymentError}
-          onClose={() => setPaymentStatus(null)}
-          onRetry={() => {
-            setPaymentStatus(null);
-            handleCancelSubscription();
-          }}
-        />
 
         <section className="student-profile-section">
           <h2>Smart Tutor</h2>

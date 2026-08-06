@@ -3,15 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { AuthModal } from "../components/AuthModal";
 import { PaymentStatusModal } from "../components/PaymentStatusModal";
-import { createPremiumOrder, verifyPremiumPayment, verifyPremiumSubscription } from "../api/client";
+import { createPremiumOrder, verifyPremiumPayment } from "../api/client";
 import { openRazorpayCheckout } from "../lib/razorpayCheckout";
-import { pricingCards, smartTutorRecharge } from "../content/pricingContent";
-
-// TEMPORARY: only English is on sale for now -- Social Science/Science/
-// Mathematics stay defined in pricingContent.js (and still show up in the
-// admin Orders plan filter/labels for past purchases), just not rendered
-// here. Remove this filter to bring all 4 cards back.
-const visiblePricingCards = pricingCards.filter((card) => card.id === "english");
+import { pricingCards } from "../content/pricingContent";
 
 const CheckBadge = () => (
   <span className="pricing-feature-check" aria-hidden="true">
@@ -28,12 +22,11 @@ const CheckBadge = () => (
   </span>
 );
 
-// Each card owns its own Monthly/Yearly toggle -- independent from the other
-// 3 cards, since a visitor might want to compare e.g. Science yearly against
-// Mathematics monthly side by side.
+// Two one-time options per card (currently just the one universal card) --
+// no recurring cycle anymore, just which duration to buy.
 const PricingCard = ({ card, onSubscribe, processing }) => {
-  const [selectedCycle, setSelectedCycle] = useState("yearly");
-  const price = selectedCycle === "yearly" ? card.yearlyPrice : card.monthlyPrice;
+  const [selectedOptionKey, setSelectedOptionKey] = useState("full");
+  const selectedOption = card.options.find((option) => option.key === selectedOptionKey) || card.options[0];
 
   return (
     <div className="pricing-card">
@@ -42,45 +35,33 @@ const PricingCard = ({ card, onSubscribe, processing }) => {
         <span className="pricing-card-subtitle">{card.subtitle}</span>
       </div>
 
-      <div className="pricing-toggle" role="tablist" aria-label={`${card.name} billing cycle`}>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={selectedCycle === "monthly"}
-          className={`pricing-toggle-option${selectedCycle === "monthly" ? " is-active" : ""}`}
-          onClick={() => setSelectedCycle("monthly")}
-        >
-          Monthly
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={selectedCycle === "yearly"}
-          className={`pricing-toggle-option${selectedCycle === "yearly" ? " is-active" : ""}`}
-          onClick={() => setSelectedCycle("yearly")}
-        >
-          Yearly
-        </button>
+      <div className="pricing-toggle" role="tablist" aria-label={`${card.name} access duration`}>
+        {card.options.map((option) => (
+          <button
+            key={option.key}
+            type="button"
+            role="tab"
+            aria-selected={selectedOptionKey === option.key}
+            className={`pricing-toggle-option${selectedOptionKey === option.key ? " is-active" : ""}`}
+            onClick={() => setSelectedOptionKey(option.key)}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
 
       <div className="pricing-price">
-        <span className="pricing-price-amount">₹{price}</span>
-        <span className="pricing-price-period">/{selectedCycle === "yearly" ? "year" : "month"}</span>
-        {selectedCycle === "yearly" && card.yearlyBadge ? (
-          <span className="pricing-price-badge">{card.yearlyBadge}</span>
-        ) : null}
+        <span className="pricing-price-amount">₹{selectedOption.price}</span>
       </div>
-      {selectedCycle === "monthly" ? (
-        <p className="pricing-billing-note">Billed monthly, auto-renews until cancelled</p>
-      ) : null}
+      <p className="pricing-billing-note">{selectedOption.billingNote}</p>
 
       <button
         type="button"
         className="pricing-cta"
-        onClick={() => onSubscribe(card.id, selectedCycle)}
+        onClick={() => onSubscribe(selectedOption.planId)}
         disabled={processing}
       >
-        {processing ? "Please wait..." : "Subscribe"}
+        {processing ? "Please wait..." : "Get Premium"}
       </button>
 
       <div className="pricing-card-features">
@@ -97,45 +78,37 @@ const PricingCard = ({ card, onSubscribe, processing }) => {
 
 // Public page (no login required to view) -- payment gateway/marketing needs
 // a stable URL prospective students can land on before registering. Clicking
-// Subscribe while logged out opens AuthModal inline, then the purchase
+// the CTA while logged out opens AuthModal inline, then the purchase
 // continues automatically once auth completes (see the useEffect below).
 export const PricingPage = () => {
   const { user, isAuthenticated, login, register, persistUser } = useAuth();
   const location = useLocation();
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  // { cardId, cycle } while a logged-out visitor's Subscribe click is
-  // waiting on AuthModal to complete -- resumed by the effect below.
+  // planId while a logged-out visitor's CTA click is waiting on AuthModal to
+  // complete -- resumed by the effect below.
   const [pendingSubscribe, setPendingSubscribe] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [paymentError, setPaymentError] = useState("");
-  // Remembers the last card/cycle a checkout was started for, so the
-  // PaymentStatusModal's Retry button can re-run the same purchase without
-  // needing to know which of the 4 cards it came from.
+  // Remembers the last planId a checkout was started for, so the
+  // PaymentStatusModal's Retry button can re-run the same purchase.
   const [lastAttempt, setLastAttempt] = useState(null);
 
-  const startCheckout = async (cardId, cycle) => {
-    setLastAttempt({ cardId, cycle });
+  const startCheckout = async (planId) => {
+    setLastAttempt(planId);
     setPaymentError("");
     setPaymentStatus("processing");
     try {
-      const order = await createPremiumOrder({ plan: `${cardId}-${cycle}` });
+      const order = await createPremiumOrder({ plan: planId });
       await openRazorpayCheckout({
         order,
         user,
         onSuccess: async (response) => {
           try {
-            const result =
-              order.mode === "subscription"
-                ? await verifyPremiumSubscription({
-                    razorpaySubscriptionId: response.razorpay_subscription_id,
-                    razorpayPaymentId: response.razorpay_payment_id,
-                    razorpaySignature: response.razorpay_signature,
-                  })
-                : await verifyPremiumPayment({
-                    razorpayOrderId: response.razorpay_order_id,
-                    razorpayPaymentId: response.razorpay_payment_id,
-                    razorpaySignature: response.razorpay_signature,
-                  });
+            const result = await verifyPremiumPayment({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
             persistUser(result.user);
             setPaymentStatus("success");
           } catch (error) {
@@ -155,21 +128,21 @@ export const PricingPage = () => {
     }
   };
 
-  const handleSubscribe = (cardId, cycle) => {
+  const handleSubscribe = (planId) => {
     if (!isAuthenticated) {
-      setPendingSubscribe({ cardId, cycle });
+      setPendingSubscribe(planId);
       setAuthModalOpen(true);
       return;
     }
-    startCheckout(cardId, cycle);
+    startCheckout(planId);
   };
 
   useEffect(() => {
     if (isAuthenticated && pendingSubscribe) {
-      const { cardId, cycle } = pendingSubscribe;
+      const planId = pendingSubscribe;
       setPendingSubscribe(null);
       setAuthModalOpen(false);
-      startCheckout(cardId, cycle);
+      startCheckout(planId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, pendingSubscribe]);
@@ -199,7 +172,7 @@ export const PricingPage = () => {
       <div className="legal-page-content pricing-page-content">
         <div className="pricing-hero">
           <h1>Choose your plan</h1>
-          <p>Subject-wise CBSE plans for Class 6, 7 & 8 — pick exactly what you need.</p>
+          <p>One-time payment, full access — pick the duration that works for you.</p>
         </div>
 
         {user?.isPremium ? (
@@ -211,8 +184,8 @@ export const PricingPage = () => {
             <p>Enjoy full access to Kuhedu Study Buddy Premium.</p>
           </div>
         ) : (
-          <div className={`pricing-cards-grid${visiblePricingCards.length === 1 ? " pricing-cards-grid--single" : ""}`}>
-            {visiblePricingCards.map((card) => (
+          <div className={`pricing-cards-grid${pricingCards.length === 1 ? " pricing-cards-grid--single" : ""}`}>
+            {pricingCards.map((card) => (
               <PricingCard
                 key={card.id}
                 card={card}
@@ -222,14 +195,6 @@ export const PricingPage = () => {
             ))}
           </div>
         )}
-
-        <div className="pricing-recharge-strip">
-          <span className="pricing-recharge-price">₹{smartTutorRecharge.price}</span>
-          <div className="pricing-recharge-copy">
-            <strong>{smartTutorRecharge.label}</strong>
-            <p>{smartTutorRecharge.description}</p>
-          </div>
-        </div>
       </div>
 
       <AuthModal
@@ -249,7 +214,7 @@ export const PricingPage = () => {
         onClose={() => setPaymentStatus(null)}
         onRetry={() => {
           setPaymentStatus(null);
-          if (lastAttempt) startCheckout(lastAttempt.cardId, lastAttempt.cycle);
+          if (lastAttempt) startCheckout(lastAttempt);
         }}
       />
     </div>

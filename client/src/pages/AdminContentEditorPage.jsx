@@ -13,6 +13,8 @@ import {
   getMemoryHookMedia,
   uploadMemoryHookMedia,
   getStudentMemoryBoosterForUnit,
+  getAdminExercisesActivitiesTabVisible,
+  updateAdminExercisesActivitiesTabVisible,
 } from "../api/client";
 
 // Mirrors contentReadService.js's getDiagramsForSection filter -- only these
@@ -372,6 +374,35 @@ export const AdminContentEditorPage = () => {
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Global, not scoped to the book/chapter picker below -- one switch turns
+  // the Exercises/Activities tab on/off for every student everywhere (see
+  // StudentConceptLearningPage.jsx's TABS filtering). null while loading so
+  // the checkbox doesn't flash an initial state before the real value
+  // arrives.
+  const [exercisesActivitiesTabVisible, setExercisesActivitiesTabVisibleState] = useState(null);
+  const [exercisesActivitiesTabSaving, setExercisesActivitiesTabSaving] = useState(false);
+
+  useEffect(() => {
+    getAdminExercisesActivitiesTabVisible()
+      .then((result) => setExercisesActivitiesTabVisibleState(result?.visible ?? false))
+      .catch(() => setExercisesActivitiesTabVisibleState(false));
+  }, []);
+
+  const handleToggleExercisesActivitiesTab = async (event) => {
+    const next = event.target.checked;
+    setExercisesActivitiesTabVisibleState(next);
+    setExercisesActivitiesTabSaving(true);
+    setError("");
+    try {
+      await updateAdminExercisesActivitiesTabVisible(next);
+    } catch (toggleError) {
+      setExercisesActivitiesTabVisibleState(!next);
+      setError(toggleError.message || "Failed to update Exercises/Activities tab visibility.");
+    } finally {
+      setExercisesActivitiesTabSaving(false);
+    }
+  };
+
   useEffect(() => {
     getContentEditorBooks()
       .then((result) => setBooks(result?.books || []))
@@ -504,6 +535,15 @@ export const AdminContentEditorPage = () => {
           <h1>Content Editor</h1>
           <p>Edit card text, show/hide content, and generate or replace images.</p>
         </div>
+        <label className="admin-exam-types-checkbox-field">
+          <input
+            type="checkbox"
+            checked={Boolean(exercisesActivitiesTabVisible)}
+            disabled={exercisesActivitiesTabVisible === null || exercisesActivitiesTabSaving}
+            onChange={handleToggleExercisesActivitiesTab}
+          />
+          <span>Show Exercises/Activities tab to students</span>
+        </label>
       </header>
 
       {notice && <div className="admin-bulk-pipeline-concurrency">{notice}</div>}

@@ -51,6 +51,13 @@ export const StudentOpenResponsePanel = ({
   fetchResponse,
   submitResponse,
   placeholder = "Type your answer, or capture a photo of your handwritten/drawn work above",
+  // Optional -- lets a parent gate its own UI (e.g. CaseStudyCard's "Show
+  // answer" reveal, only meant to appear once the student has submitted
+  // their own attempt) on whether feedback exists yet. Fires both when a
+  // prior submission's feedback loads on mount and right after a fresh
+  // submit, so "already answered in an earlier session" counts too, not
+  // just "just submitted this session."
+  onFeedbackChange,
 }) => {
   const [responseText, setResponseText] = useState("");
   const [sourcePageImages, setSourcePageImages] = useState([]);
@@ -59,6 +66,11 @@ export const StudentOpenResponsePanel = ({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => {
+    onFeedbackChange?.(feedback);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedback]);
 
   const speakFeedback = (text) => {
     if (typeof window === "undefined" || !window.speechSynthesis || !text) return;

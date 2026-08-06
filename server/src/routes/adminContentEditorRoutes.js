@@ -9,6 +9,8 @@ import {
   postRegenerateMemoryHookHandler,
   postGenerateMemoryHookPromptHandler,
   putMemoryHookPromptHandler,
+  getExercisesActivitiesTabVisibleHandler,
+  putExercisesActivitiesTabVisibleHandler,
 } from "../controllers/adminContentEditorController.js";
 
 const router = Router();
@@ -34,5 +36,7 @@ router.put(
   "/memory-hooks/:assessmentUnitId/:sectionKey/prompt",
   putMemoryHookPromptHandler
 );
+router.get("/settings/exercises-activities-tab", getExercisesActivitiesTabVisibleHandler);
+router.put("/settings/exercises-activities-tab", putExercisesActivitiesTabVisibleHandler);
 
 export default router;

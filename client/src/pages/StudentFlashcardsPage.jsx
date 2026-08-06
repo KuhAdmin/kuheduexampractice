@@ -4,6 +4,20 @@ import { StudentPageShell } from "../components/StudentPageShell";
 import { FocusLayout } from "../components/FocusLayout";
 import { getStudentFlashcards } from "../api/client";
 
+// Definitions in particular can run to a full sentence or two -- a fixed
+// font-size either overflows the card's rounded corners (breaching the
+// padding) or looks awkwardly cramped on a two-word term. Buckets by
+// character count instead of measuring rendered size (no layout-thrash /
+// ResizeObserver needed) since flashcard text is plain short-form copy, not
+// arbitrary rich content.
+const textScaleClass = (text) => {
+  const length = text?.length || 0;
+  if (length > 220) return "is-text-xs";
+  if (length > 140) return "is-text-sm";
+  if (length > 80) return "is-text-md";
+  return "";
+};
+
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
     <path
@@ -89,12 +103,16 @@ export const StudentFlashcardsPage = () => {
                 <div className="student-flashcard-inner">
                   <div className="student-flashcard-face student-flashcard-face-front">
                     <span className="student-flashcard-label">Term</span>
-                    <p className="student-flashcard-text">{activeCard.term}</p>
+                    <p className={`student-flashcard-text ${textScaleClass(activeCard.term)}`}>
+                      {activeCard.term}
+                    </p>
                     <span className="student-flashcard-hint">Tap to flip</span>
                   </div>
                   <div className="student-flashcard-face student-flashcard-face-back">
                     <span className="student-flashcard-label">Definition</span>
-                    <p className="student-flashcard-text">{activeCard.definition}</p>
+                    <p className={`student-flashcard-text ${textScaleClass(activeCard.definition)}`}>
+                      {activeCard.definition}
+                    </p>
                     {activeCard.relatedConcepts?.length > 0 && (
                       <p className="student-flashcard-related">
                         Related: {activeCard.relatedConcepts.join(", ")}
