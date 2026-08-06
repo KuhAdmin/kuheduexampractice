@@ -353,6 +353,21 @@ const MOBILE_TAB_ICON = {
 // Order here drives the Explore tab's step rail (exploreSteps filters this
 // list down to whichever steps have content for the active concept,
 // preserving this relative order -- see the exploreSteps useMemo below).
+// The "Story" step has no image pipeline of its own -- no admin tool ever
+// writes media under sectionKey "story", so its Visual tab would otherwise
+// stay permanently empty. Memory Trick is in the same position as Story
+// content-wise (see EXPLORE_STEPS' memoryTrick entry below: content_concept_memory
+// has no memory_trick column, so card.memoryTrick text is always null and
+// that step never even makes it into exploreSteps) except it DOES have a
+// real image, generated via the admin Content Editor's Memory Hook panel,
+// with nowhere reachable to show it. Aliasing Story's media lookup to
+// "memoryTrick" gives that image a home without touching the
+// Compare/Analogy step or the (separately identified, still independently
+// expandable) standalone Memory Trick accordion section further down --
+// this only redirects WHICH media key Story's Visual tab resolves to.
+const MEDIA_SECTION_KEY_ALIASES = { story: "memoryTrick" };
+const resolveMediaSectionKey = (sectionKey) => MEDIA_SECTION_KEY_ALIASES[sectionKey] || sectionKey;
+
 const EXPLORE_STEPS = [
   {
     key: "simple",
@@ -729,17 +744,18 @@ export const StudentConceptLearningPage = () => {
   };
 
   const ensureSectionMedia = (sectionKey) => {
-    if (requestedMediaKeysRef.current.has(sectionKey)) {
+    const mediaKey = resolveMediaSectionKey(sectionKey);
+    if (requestedMediaKeysRef.current.has(mediaKey)) {
       return;
     }
-    requestedMediaKeysRef.current.add(sectionKey);
+    requestedMediaKeysRef.current.add(mediaKey);
 
-    getStudentConceptSectionMedia(assessmentUnitId, sectionKey)
+    getStudentConceptSectionMedia(assessmentUnitId, mediaKey)
       .then((result) => {
-        setSectionMediaByKey((current) => ({ ...current, [sectionKey]: result?.media || null }));
+        setSectionMediaByKey((current) => ({ ...current, [mediaKey]: result?.media || null }));
       })
       .catch(() => {
-        setSectionMediaByKey((current) => ({ ...current, [sectionKey]: null }));
+        setSectionMediaByKey((current) => ({ ...current, [mediaKey]: null }));
       });
   };
 
@@ -1198,7 +1214,7 @@ export const StudentConceptLearningPage = () => {
     if (step.teachingMode || step.notesField) {
       const slides = getStepSlides(card, step);
       const activeStepSlide = slides[activeExploreSlideIndex] || slides[0];
-      const media = step.hasMediaSlot === false ? null : sectionMediaByKey[step.key];
+      const media = step.hasMediaSlot === false ? null : sectionMediaByKey[resolveMediaSectionKey(step.key)];
       const speechText = [activeStepSlide?.heading, ...(activeStepSlide?.body || [])].filter(Boolean).join(". ");
 
       const showVisual = step.hasMediaSlot !== false && activeStepView === "visual";
@@ -1434,7 +1450,7 @@ export const StudentConceptLearningPage = () => {
     const renderTeachingModeSection = ({ sectionKey, title, mediaType, iconType, teachingMode, notesField }) => {
       const slides = notesField ? getStepSlides(card, { notesField }) : getTeachingSlidesForMode(card, teachingMode);
       if (!slides.length) return null;
-      const media = mediaType ? sectionMediaByKey[sectionKey] : null;
+      const media = mediaType ? sectionMediaByKey[resolveMediaSectionKey(sectionKey)] : null;
       const speechText = slides
         .map((slide) => [slide.heading, ...(slide.body || [])].filter(Boolean).join(". "))
         .join(" ");

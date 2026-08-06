@@ -136,11 +136,16 @@ const ChevronIcon = ({ open }) => (
 const isDiagramCard = (card) =>
   card.contentuitab === "pdfassets" || (card.contentuitab === "visual" && card.processorkey !== "ocr");
 
+// Labels reflect where each section actually renders to students today
+// (see StudentConceptLearningPage.jsx's MEDIA_SECTION_KEY_ALIASES) rather
+// than the raw field name: "analogy" backs the Explore tab's "Compare"
+// step, and "memoryTrick" is aliased to the Story step's Visual tab (it
+// has no display of its own -- see that file's comment on the alias).
 const MEMORY_HOOK_SECTIONS = [
-  { key: "analogy", label: "Analogy" },
+  { key: "analogy", label: "Analogy/Compare" },
   { key: "visualHook", label: "Visual Hook" },
   { key: "curiosityHook", label: "Curiosity Hook" },
-  { key: "memoryTrick", label: "Memory Trick" },
+  { key: "memoryTrick", label: "Story Visual" },
 ];
 
 // Sections the server can draft a prompt for from the concept's existing
