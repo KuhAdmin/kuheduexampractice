@@ -1,15 +1,11 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  startTransition,
-} from "react";
+import { useEffect, useState, startTransition } from "react";
 import { apiRequest } from "../api/client";
 import { applyTheme } from "../lib/theme";
+import { AuthContext } from "./authHooks";
 
-const AuthContext = createContext(null);
-
+// This file exports ONLY the AuthProvider component -- see authHooks.js for
+// why useAuth/the raw context object live in a separate, non-component file
+// (Vite Fast Refresh requirement, not just style).
 const storageKeys = {
   token: "kuhedu_token",
   user: "kuhedu_user",
@@ -38,7 +34,21 @@ export const AuthProvider = ({ children }) => {
   // call (login, purchase verify, profile edit, ...), so a tab left open
   // through e.g. a Trial plan's 1-hour window would keep showing "Premium
   // Active" indefinitely with no way to learn the server-side flag flipped.
-  const fetchAndSetUser = () => {
+  // `useTransition` must stay false for the initial-mount call below --
+  // that call is what flips `loading` (an urgent, non-transition update)
+  // to false and lets StudentLayout/ClassSubjectProvider mount for the
+  // first time. Wrapping its setUser in startTransition (as this used to
+  // unconditionally do) put that mount's context-providing render on the
+  // concurrent/interruptible lane while `loading` flipped on the sync
+  // lane, and React's concurrent renderer hit the resulting inconsistency
+  // and threw "useClassSubject must be used within a ClassSubjectProvider"
+  // (visible as `recoverFromConcurrentError` in the thrown stack) --
+  // reproducible specifically on the Google OAuth redirect landing (a
+  // fresh mount with loading:true) and not on in-app email login (where
+  // loading has already long settled before navigate("/dashboard") runs).
+  // The two background revalidation call sites below don't gate any
+  // mount, so they keep opting into the transition to avoid jank.
+  const fetchAndSetUser = ({ useTransition = false } = {}) => {
     const token = localStorage.getItem(storageKeys.token);
     if (!token) {
       return Promise.resolve(null);
@@ -47,10 +57,15 @@ export const AuthProvider = ({ children }) => {
     return apiRequest("/auth/me")
       .then((data) => {
         applyTheme(data.user?.theme);
-        startTransition(() => {
+        const applyUser = () => {
           setUser(data.user);
           localStorage.setItem(storageKeys.user, JSON.stringify(data.user));
-        });
+        };
+        if (useTransition) {
+          startTransition(applyUser);
+        } else {
+          applyUser();
+        }
         return data.user;
       })
       .catch(() => {
@@ -71,7 +86,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        fetchAndSetUser();
+        fetchAndSetUser({ useTransition: true });
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -90,7 +105,7 @@ export const AuthProvider = ({ children }) => {
     if (msUntilExpiry <= 0) {
       return undefined;
     }
-    const timer = window.setTimeout(fetchAndSetUser, msUntilExpiry + 500);
+    const timer = window.setTimeout(() => fetchAndSetUser({ useTransition: true }), msUntilExpiry + 500);
     return () => window.clearTimeout(timer);
   }, [user?.premiumExpiresAt]);
 
@@ -195,12 +210,4 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const value = useContext(AuthContext);
-  if (!value) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
-  return value;
 };

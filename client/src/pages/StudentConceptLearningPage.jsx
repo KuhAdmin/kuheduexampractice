@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authHooks";
 import { StudentMediaViewer } from "../components/StudentMediaViewer";
 import { StudentMicroActivityPanel } from "../components/StudentMicroActivityPanel";
 import { StudentAiTutorPanel } from "../components/StudentAiTutorPanel";

@@ -4,7 +4,7 @@ import { StudentPageShell } from "../components/StudentPageShell";
 import { EditProfileModal } from "../components/EditProfileModal";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { StudentNotificationPanel } from "../components/StudentNotificationPanel";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authHooks";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
 import { getLastPaymentAttempt, getNotifications, markNotificationsSeen } from "../api/client";

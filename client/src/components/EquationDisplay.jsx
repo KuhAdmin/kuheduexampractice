@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { parseMathSegments, renderMathSegments } from "./MathPreview";
 import { MathEquationEditorDialog } from "./MathEquationEditorDialog";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authHooks";
 
 // Equation notation (fractions, integrals, Greek letters, etc.) only ever
 // comes up for these subjects -- students in Biology/English/etc. never need

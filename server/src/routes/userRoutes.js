@@ -8,7 +8,7 @@ import {
   listRemainingConceptsForUser,
   markNotificationsSeen,
 } from "../services/studentDashboardService.js";
-import { listClassSubjectOptionsWithContent } from "../services/catalogService.js";
+import { listClassSubjectOptionsWithContent, resolveDashboardAcademicFilters } from "../services/catalogService.js";
 import { createOrder, verifyPayment, getLastPaymentAttemptHandler } from "../controllers/paymentController.js";
 import {
   getMicroActivityResponseHandler,
@@ -71,6 +71,33 @@ import { getExercisesActivitiesTabVisible } from "../services/contentEditorSetti
 const router = Router();
 
 router.use(requireAuth);
+
+// Shared by /chapters-for-selection and /dashboard-for-selection: a caller
+// with a resolvable board/class/subject of their own (i.e. not a moderator
+// -- see resolveDashboardAcademicFilters' isValid) may only request their
+// own combo, not an arbitrary one, even though the client normally never
+// asks for anything else (see ClassSubjectContext.jsx/
+// StudentClassSubjectSwitcher.jsx, whose options list is itself scoped by
+// /class-subject-options below).
+const assertOwnSelectionOrDeny = async (req, res) => {
+  const ownFilters = await resolveDashboardAcademicFilters({
+    board: req.user.board,
+    studentClass: req.user.studentClass,
+    subject: req.user.subject,
+  });
+
+  if (
+    ownFilters.isValid &&
+    (req.query.examGoalCode !== ownFilters.examGoalCode ||
+      req.query.levelCode !== ownFilters.levelCode ||
+      req.query.subjectCode !== ownFilters.subjectCode)
+  ) {
+    res.status(403).json({ message: "You can only view your own registered class and subject." });
+    return false;
+  }
+
+  return true;
+};
 
 router.get("/sections", getStudentSections);
 router.get("/sections/:sourceSectionId/overview", getStudentSectionOverview);
@@ -144,12 +171,25 @@ router.get("/dashboard", async (req, res, next) => {
   }
 });
 
-// Powers the class/subject switcher on StudentChaptersPage.jsx -- lists
-// every board/class/subject combo that actually has content, independent of
-// the requesting student's own profile.
+// Powers the class/subject switcher on StudentClassSubjectSwitcher.jsx /
+// StudentChaptersPage.jsx -- scoped to the requesting student's own
+// board/class/subject when they have a resolvable one; callers with no
+// resolvable profile (e.g. moderators) still get every combo that has
+// content, since there's nothing of their own to scope to.
 router.get("/class-subject-options", async (req, res, next) => {
   try {
-    const options = await listClassSubjectOptionsWithContent();
+    const ownFilters = await resolveDashboardAcademicFilters({
+      board: req.user.board,
+      studentClass: req.user.studentClass,
+      subject: req.user.subject,
+    });
+
+    const options = await listClassSubjectOptionsWithContent(
+      ownFilters.isValid
+        ? { examGoalCode: ownFilters.examGoalCode, levelCode: ownFilters.levelCode, subjectCode: ownFilters.subjectCode }
+        : undefined
+    );
+
     res.json({ options });
   } catch (error) {
     next(error);
@@ -158,6 +198,8 @@ router.get("/class-subject-options", async (req, res, next) => {
 
 router.get("/chapters-for-selection", async (req, res, next) => {
   try {
+    if (!(await assertOwnSelectionOrDeny(req, res))) return;
+
     const result = await getChaptersForClassSubjectSelection({
       userId: req.user.id,
       examGoalCode: req.query.examGoalCode,
@@ -178,6 +220,8 @@ router.get("/chapters-for-selection", async (req, res, next) => {
 // the client reuses the values from its own /dashboard fetch instead.
 router.get("/dashboard-for-selection", async (req, res, next) => {
   try {
+    if (!(await assertOwnSelectionOrDeny(req, res))) return;
+
     const dashboard = await getReturningDashboardForSelection({
       userId: req.user.id,
       examGoalCode: req.query.examGoalCode,

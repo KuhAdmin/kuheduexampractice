@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authHooks";
 import { AuthModal } from "../components/AuthModal";
 import { PaymentStatusModal } from "../components/PaymentStatusModal";
 import { createPremiumOrder, verifyPremiumPayment } from "../api/client";

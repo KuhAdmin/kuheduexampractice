@@ -16,7 +16,7 @@ import { AdminBooksPage } from "./pages/AdminBooksPage";
 import { AdminConceptImportPage } from "./pages/AdminConceptImportPage";
 import { AdminContentEditorPage } from "./pages/AdminContentEditorPage";
 import { StudentLayout } from "./components/StudentLayout";
-import { useAuth } from "./context/AuthContext";
+import { useAuth } from "./context/authHooks";
 import { AdminOverviewPage } from "./pages/AdminOverviewPage";
 import { AdminSectionPage } from "./pages/AdminSectionPage";
 import { AuthSuccessPage } from "./pages/AuthSuccessPage";

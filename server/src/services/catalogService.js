@@ -193,14 +193,24 @@ export const getDashboardCatalogForUser = async ({ board, studentClass, subject 
   return getDashboardCatalogForCodes({ examGoalCode, levelCode, subjectCode });
 };
 
-// Powers the class/subject switcher on StudentChaptersPage.jsx -- every
-// (exam goal, level, subject) combination that has at least one active
-// chapter, regardless of which board/class/subject the requesting student's
-// own profile is set to. Unlike the rest of this file's student-facing
-// queries, this one is intentionally not scoped to a single user.
-export const listClassSubjectOptionsWithContent = async () => {
-  const result = await pool.query(`
-    SELECT DISTINCT
+// Powers the class/subject switcher on StudentClassSubjectSwitcher.jsx /
+// StudentChaptersPage.jsx -- every (exam goal, level, subject) combination
+// that has at least one active chapter. Callers pass the requesting
+// student's own resolved examGoalCode/levelCode/subjectCode (see
+// resolveDashboardAcademicFilters below) to scope the list to just their
+// registration; omitting the filter returns every combo, which
+// userRoutes.js only does for callers with no resolvable profile of their
+// own (e.g. moderators), who need cross-class visibility.
+export const listClassSubjectOptionsWithContent = async ({ examGoalCode, levelCode, subjectCode } = {}) => {
+  const values = [];
+  let scopeClause = "";
+  if (examGoalCode && levelCode && subjectCode) {
+    values.push(examGoalCode, levelCode, subjectCode);
+    scopeClause = "AND exam_goal_code = $1 AND level_code = $2 AND subject_code = $3";
+  }
+
+  const result = await pool.query(
+    `SELECT DISTINCT
       exam_goal_code AS "examGoalCode",
       exam_goal_name AS "examGoalName",
       level_code AS "levelCode",
@@ -208,8 +218,9 @@ export const listClassSubjectOptionsWithContent = async () => {
       subject_code AS "subjectCode",
       subject_name AS "subjectName"
     FROM mv_chapter_catalog
-    WHERE book_is_active = TRUE AND chapter_is_active = TRUE
-    ORDER BY level_name ASC, subject_name ASC
-  `);
+    WHERE book_is_active = TRUE AND chapter_is_active = TRUE ${scopeClause}
+    ORDER BY level_name ASC, subject_name ASC`,
+    values
+  );
   return result.rows;
 };
