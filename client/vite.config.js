@@ -11,10 +11,21 @@ export default defineConfig({
       // stale-cache footgun with this plugin).
       devOptions: { enabled: false },
       registerType: "autoUpdate",
-      // Default 2 MiB limit is too small once the AI Tutor avatar
-      // (@spatialwalk/avatarkit, WASM-backed rendering) is in the bundle --
-      // raised to cover the main chunk's current size with headroom.
-      workbox: { maximumFileSizeToCacheInBytes: 4 * 1024 * 1024 },
+      workbox: {
+        // Default 2 MiB limit is too small once the AI Tutor avatar
+        // (@spatialwalk/avatarkit, WASM-backed rendering) is in the bundle --
+        // raised to cover the main chunk's current size with headroom.
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // Without this, the SW's default SPA navigateFallback intercepts
+        // EVERY top-level navigation -- including /api/auth/google, whose
+        // whole job is a server-side 302 redirect to accounts.google.com.
+        // The SW serving the cached index.html instead of letting that
+        // request reach Passport breaks Google Sign-In in production only
+        // (the SW is dev-disabled, see devOptions above) and throws Chrome's
+        // "Unsafe attempt to load URL ... Domains, protocols and ports must
+        // match" error. API routes must always hit the network untouched.
+        navigateFallbackDenylist: [/^\/api\//],
+      },
       includeAssets: [
         "icons/icon-192.png",
         "icons/icon-512.png",
