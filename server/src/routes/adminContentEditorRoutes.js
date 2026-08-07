@@ -2,7 +2,10 @@ import { Router } from "express";
 import { requireAuth, requireRole } from "../middleware/authMiddleware.js";
 import {
   getBooksHandler,
-  getChaptersHandler,
+  getContentTreeHandler,
+  putChapterNameHandler,
+  putSectionNameHandler,
+  putConceptNameHandler,
   getCardsHandler,
   putCardHandler,
   postRegenerateDiagramHandler,
@@ -20,7 +23,10 @@ const router = Router();
 router.use(requireAuth, requireRole("admin", "moderator"));
 
 router.get("/books", getBooksHandler);
-router.get("/books/:bookId/chapters", getChaptersHandler);
+router.get("/books/:bookId/tree", getContentTreeHandler);
+router.put("/books/:bookId/chapters/:chapterNumber/name", putChapterNameHandler);
+router.put("/chapters/:id/name", putSectionNameHandler);
+router.put("/concepts/:assessmentUnitId/name", putConceptNameHandler);
 router.get("/sections/:sourceSectionId/cards", getCardsHandler);
 router.put("/cards/:cardId", putCardHandler);
 router.post("/cards/:cardId/regenerate-image", postRegenerateDiagramHandler);

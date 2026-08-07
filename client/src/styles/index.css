@@ -4101,6 +4101,119 @@ a {
   flex: 1;
 }
 
+/* Chapter -> Section -> Concept tree (AdminContentTree.jsx). Indentation
+   via a left-bordered .admin-content-tree-children wrapper per level
+   instead of per-row padding, so nesting depth reads visually without
+   fighting the row's own internal flex layout. */
+.admin-content-tree {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-content-tree-node {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-content-tree-children {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+  padding-left: 20px;
+  border-left: 2px solid rgba(31, 41, 51, 0.08);
+}
+
+.admin-content-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(31, 41, 51, 0.1);
+  border-radius: 14px;
+  background: var(--surface-strong);
+  cursor: pointer;
+}
+
+.admin-content-tree-row:hover {
+  background: rgba(200, 76, 9, 0.04);
+}
+
+.admin-content-tree-row.is-chapter {
+  font-weight: 600;
+}
+
+.admin-content-tree-row.is-selected {
+  border-color: rgba(200, 76, 9, 0.4);
+  background: rgba(255, 122, 24, 0.08);
+}
+
+.admin-content-tree-chevron {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.admin-content-tree-chevron.is-open {
+  transform: rotate(90deg);
+}
+
+.admin-content-tree-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-content-tree-pencil {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.admin-content-tree-pencil:hover {
+  background: rgba(31, 41, 51, 0.08);
+  color: var(--text);
+}
+
+.admin-content-tree-pencil-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.admin-content-tree-edit {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-content-tree-edit input {
+  flex: 1;
+  min-width: 120px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(31, 41, 51, 0.22);
+}
+
+.admin-content-tree-edit-error {
+  width: 100%;
+  color: var(--danger);
+  font-size: 0.85em;
+}
+
+.admin-content-tree-empty {
+  padding: 8px 12px;
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
 .student-section-detail-phone {
   gap: 18px;
 }

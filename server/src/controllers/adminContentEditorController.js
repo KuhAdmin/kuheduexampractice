@@ -1,8 +1,11 @@
 import {
   listBooksForPicker,
-  listChaptersForBook,
+  getContentTreeForBook,
   listContentCardsForSection,
   updateContentCard,
+  renameChapter,
+  renameSection,
+  renameConcept,
 } from "../services/contentEditorService.js";
 import { regenerateDiagramMedia } from "../services/diagramImageService.js";
 import {
@@ -24,11 +27,57 @@ export const getBooksHandler = async (_req, res, next) => {
   }
 };
 
-export const getChaptersHandler = async (req, res, next) => {
+export const getContentTreeHandler = async (req, res, next) => {
   try {
-    const chapters = await listChaptersForBook(req.params.bookId);
+    const chapters = await getContentTreeForBook(req.params.bookId);
     return res.json({ chapters });
   } catch (error) {
+    return next(error);
+  }
+};
+
+export const putChapterNameHandler = async (req, res, next) => {
+  try {
+    const chapter = await renameChapter({
+      bookId: req.params.bookId,
+      chapterNumber: req.params.chapterNumber,
+      chapterName: req.body?.chapterName,
+    });
+    return res.json({ chapter });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const putSectionNameHandler = async (req, res, next) => {
+  try {
+    const section = await renameSection({
+      id: req.params.id,
+      topicName: req.body?.topicName,
+    });
+    return res.json({ section });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const putConceptNameHandler = async (req, res, next) => {
+  try {
+    const concept = await renameConcept({
+      assessmentUnitId: req.params.assessmentUnitId,
+      primaryConcept: req.body?.primaryConcept,
+    });
+    return res.json({ concept });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
     return next(error);
   }
 };

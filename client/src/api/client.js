@@ -520,8 +520,26 @@ export const uploadDiagramMedia = async (diagramId, dataUrl, fileName) =>
 
 export const getContentEditorBooks = async () => apiRequest("/admin/content-editor/books");
 
-export const getContentEditorChapters = async (bookId) =>
-  apiRequest(`/admin/content-editor/books/${bookId}/chapters`);
+export const getContentEditorTree = async (bookId) =>
+  apiRequest(`/admin/content-editor/books/${bookId}/tree`);
+
+export const renameContentEditorChapter = async (bookId, chapterNumber, chapterName) =>
+  apiRequest(`/admin/content-editor/books/${bookId}/chapters/${chapterNumber}/name`, {
+    method: "PUT",
+    body: JSON.stringify({ chapterName }),
+  });
+
+export const renameContentEditorSection = async (id, topicName) =>
+  apiRequest(`/admin/content-editor/chapters/${id}/name`, {
+    method: "PUT",
+    body: JSON.stringify({ topicName }),
+  });
+
+export const renameContentEditorConcept = async (assessmentUnitId, primaryConcept) =>
+  apiRequest(`/admin/content-editor/concepts/${assessmentUnitId}/name`, {
+    method: "PUT",
+    body: JSON.stringify({ primaryConcept }),
+  });
 
 export const getContentEditorCards = async (sourceSectionId) =>
   apiRequest(`/admin/content-editor/sections/${sourceSectionId}/cards`);

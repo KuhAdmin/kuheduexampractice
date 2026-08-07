@@ -47,6 +47,17 @@ export const resolveDashboardAcademicFilters = async ({ board, studentClass, sub
   };
 };
 
+// Best-effort, non-throwing -- mirrors the identical precedent in
+// conceptImportCatalogService.js (called after a chapter import), reused
+// here after an admin renames a chapter/section so mv_chapter_catalog
+// (what student-facing reads go through) doesn't stay stale until the next
+// server restart. A rename should still succeed even if this hiccups.
+export const refreshChapterCatalogView = async () => {
+  await pool.query("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_chapter_catalog").catch((error) => {
+    console.error("Failed to refresh mv_chapter_catalog:", error);
+  });
+};
+
 export const listChapters = async ({
   bookId,
   chapterNumber,

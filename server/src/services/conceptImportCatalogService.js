@@ -15,6 +15,7 @@
 // over strict curation) was a deliberate choice for this import path; the
 // admin master-data pages remain the place to fix anything it gets wrong.
 import { pool } from "../db/pool.js";
+import { refreshChapterCatalogView } from "./catalogService.js";
 
 const normalize = (value) => String(value ?? "").trim();
 
@@ -380,9 +381,7 @@ export const resolveOrCreateCatalogTarget = async ({
     // still self-heal on the next successful refresh (import or restart),
     // this is just so a *persistent* failure is actually diagnosable next
     // time instead of invisible.
-    await pool.query("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_chapter_catalog").catch((error) => {
-      console.error("Failed to refresh mv_chapter_catalog after concept import:", error);
-    });
+    await refreshChapterCatalogView();
   }
 
   return { fkMstChapterId: chapter.id, sourceSectionId };

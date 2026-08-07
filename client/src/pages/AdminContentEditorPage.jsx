@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   getContentEditorBooks,
-  getContentEditorChapters,
+  getContentEditorTree,
+  renameContentEditorChapter,
+  renameContentEditorSection,
+  renameContentEditorConcept,
   getContentEditorCards,
   updateContentEditorCard,
   regenerateContentCardImage,
@@ -17,6 +20,7 @@ import {
   updateAdminExercisesActivitiesTabVisible,
 } from "../api/client";
 import { AdminContentDetailsEditor } from "../components/AdminContentDetailsEditor";
+import { AdminContentTree } from "../components/AdminContentTree";
 import { useAuth } from "../context/authHooks";
 import { isAdmin } from "../roles";
 
@@ -482,9 +486,10 @@ export const AdminContentEditorPage = () => {
   const [booksLoading, setBooksLoading] = useState(true);
   const [selectedBookId, setSelectedBookId] = useState("");
 
-  const [chapters, setChapters] = useState([]);
-  const [chaptersLoading, setChaptersLoading] = useState(false);
-  const [selectedChapterId, setSelectedChapterId] = useState("");
+  const [tree, setTree] = useState([]);
+  const [treeLoading, setTreeLoading] = useState(false);
+  const [selectedSectionId, setSelectedSectionId] = useState("");
+  const [selectedConceptId, setSelectedConceptId] = useState(null);
 
   const [cards, setCards] = useState([]);
   const [cardsLoading, setCardsLoading] = useState(false);
@@ -535,23 +540,28 @@ export const AdminContentEditorPage = () => {
 
   useEffect(() => {
     if (!selectedBookId) {
-      setChapters([]);
-      setSelectedChapterId("");
+      setTree([]);
+      setSelectedSectionId("");
+      setSelectedConceptId(null);
       return;
     }
-    setChaptersLoading(true);
-    setSelectedChapterId("");
+    setTreeLoading(true);
+    setSelectedSectionId("");
+    setSelectedConceptId(null);
     setCards([]);
-    getContentEditorChapters(selectedBookId)
-      .then((result) => setChapters(result?.chapters || []))
+    getContentEditorTree(selectedBookId)
+      .then((result) => setTree(result?.chapters || []))
       .catch((loadError) => setError(loadError.message || "Failed to load chapters."))
-      .finally(() => setChaptersLoading(false));
+      .finally(() => setTreeLoading(false));
   }, [selectedBookId]);
 
-  const selectedChapter = useMemo(
-    () => chapters.find((chapter) => String(chapter.id) === String(selectedChapterId)) || null,
-    [chapters, selectedChapterId]
-  );
+  const selectedSection = useMemo(() => {
+    for (const chapter of tree) {
+      const section = chapter.sections.find((s) => String(s.id) === String(selectedSectionId));
+      if (section) return section;
+    }
+    return null;
+  }, [tree, selectedSectionId]);
 
   const loadCards = useCallback(async (sourceSectionId) => {
     setCardsLoading(true);
@@ -567,12 +577,72 @@ export const AdminContentEditorPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!selectedChapter?.sourceSectionId) {
+    if (!selectedSection?.sourceSectionId) {
       setCards([]);
       return;
     }
-    loadCards(selectedChapter.sourceSectionId);
-  }, [selectedChapter, loadCards]);
+    loadCards(selectedSection.sourceSectionId);
+  }, [selectedSection, loadCards]);
+
+  const handleSelectSection = (section) => {
+    setSelectedSectionId(section.id);
+    setSelectedConceptId(null);
+  };
+
+  const handleSelectConcept = (section, concept) => {
+    setSelectedSectionId(section.id);
+    setSelectedConceptId(concept.assessmentUnitId);
+  };
+
+  const handleRenameChapter = async (chapterNumber, chapterName) => {
+    const result = await renameContentEditorChapter(selectedBookId, chapterNumber, chapterName);
+    setTree((current) =>
+      current.map((chapter) =>
+        chapter.chapterNumber === chapterNumber
+          ? { ...chapter, chapterName: result.chapter.chapterName }
+          : chapter
+      )
+    );
+  };
+
+  const handleRenameSection = async (id, topicName) => {
+    const result = await renameContentEditorSection(id, topicName);
+    setTree((current) =>
+      current.map((chapter) => ({
+        ...chapter,
+        sections: chapter.sections.map((section) =>
+          section.id === id ? { ...section, topicName: result.section.topicName } : section
+        ),
+      }))
+    );
+  };
+
+  const handleRenameConcept = async (assessmentUnitId, primaryConcept) => {
+    const result = await renameContentEditorConcept(assessmentUnitId, primaryConcept);
+    setTree((current) =>
+      current.map((chapter) => ({
+        ...chapter,
+        sections: chapter.sections.map((section) => ({
+          ...section,
+          concepts: section.concepts.map((concept) =>
+            concept.assessmentUnitId === assessmentUnitId
+              ? { ...concept, primaryConcept: result.concept.primaryConcept }
+              : concept
+          ),
+        })),
+      }))
+    );
+    // Already-loaded cards carry their own primaryConcept (from the
+    // assessment_unit JOIN in listContentCardsForSection) -- patch those too
+    // so the card list's group heading updates without a refetch.
+    setCards((current) =>
+      current.map((card) =>
+        card.assessmentUnitId === assessmentUnitId
+          ? { ...card, primaryConcept: result.concept.primaryConcept }
+          : card
+      )
+    );
+  };
 
   const openEditModal = (card) => {
     setEditingCard(card);
@@ -604,8 +674,8 @@ export const AdminContentEditorPage = () => {
       });
       setNotice(`Saved "${form.title.trim()}".`);
       setEditingCard(null);
-      if (selectedChapter?.sourceSectionId) {
-        await loadCards(selectedChapter.sourceSectionId);
+      if (selectedSection?.sourceSectionId) {
+        await loadCards(selectedSection.sourceSectionId);
       }
     } catch (submitError) {
       setFormError(submitError.message || "Failed to save card.");
@@ -635,8 +705,8 @@ export const AdminContentEditorPage = () => {
         details: card.details,
         isHidden: !card.isHidden,
       });
-      if (selectedChapter?.sourceSectionId) {
-        await loadCards(selectedChapter.sourceSectionId);
+      if (selectedSection?.sourceSectionId) {
+        await loadCards(selectedSection.sourceSectionId);
       }
     } catch (toggleError) {
       setError(toggleError.message || "Failed to update visibility.");
@@ -656,18 +726,32 @@ export const AdminContentEditorPage = () => {
   // Same outer grouping the flat table used (first-seen concept order),
   // with cards inside each concept now further split into the color-coded
   // content-type action-rows below (mirrors the student "Deep Learn" tab).
+  // Keyed by assessmentUnitId, NOT the primaryConcept display text -- two
+  // different concepts can share identical text, and the tree above
+  // selects/scopes by assessmentUnitId, so grouping by text could silently
+  // merge or mis-scope cards from a different concept that happens to have
+  // the same label.
   const conceptGroups = useMemo(() => {
     const byConcept = new Map();
     cards.forEach((card) => {
-      const key = card.primaryConcept || "";
-      if (!byConcept.has(key)) byConcept.set(key, []);
-      byConcept.get(key).push(card);
+      const key = card.assessmentUnitId || "";
+      if (!byConcept.has(key)) byConcept.set(key, { label: card.primaryConcept || "", cards: [] });
+      byConcept.get(key).cards.push(card);
     });
-    return Array.from(byConcept.entries()).map(([concept, conceptCards]) => ({
-      concept,
+    return Array.from(byConcept.entries()).map(([assessmentUnitId, { label, cards: conceptCards }]) => ({
+      assessmentUnitId,
+      concept: label,
       typeGroups: groupCardsByType(conceptCards),
     }));
   }, [cards]);
+
+  const visibleConceptGroups = useMemo(
+    () =>
+      selectedConceptId
+        ? conceptGroups.filter((group) => group.assessmentUnitId === selectedConceptId)
+        : conceptGroups,
+    [conceptGroups, selectedConceptId]
+  );
 
   return (
     <section className="admin-bulk-pipeline-page">
@@ -707,25 +791,27 @@ export const AdminContentEditorPage = () => {
             ))}
           </select>
         </label>
-
-        <label className="admin-studio-field" style={{ minWidth: 260 }}>
-          <span>Chapter / Section</span>
-          <select
-            value={selectedChapterId}
-            onChange={(event) => setSelectedChapterId(event.target.value)}
-            disabled={!selectedBookId || chaptersLoading}
-          >
-            <option value="">Select a chapter...</option>
-            {chapters.map((chapter) => (
-              <option key={chapter.id} value={chapter.id} disabled={!chapter.sourceSectionId}>
-                {chapter.chapterNumber}
-                {chapter.sectionNumber ? `.${chapter.sectionNumber}` : ""} — {chapter.topicName || chapter.chapterName}
-                {!chapter.sourceSectionId ? " (not imported)" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
+
+      {selectedBookId && (
+        <div className="admin-studio-field" style={{ marginTop: 16 }}>
+          <span>Chapters</span>
+          {treeLoading ? (
+            <div className="admin-bulk-pipeline-empty">Loading chapters...</div>
+          ) : (
+            <AdminContentTree
+              tree={tree}
+              selectedSectionId={selectedSectionId}
+              selectedConceptId={selectedConceptId}
+              onSelectSection={handleSelectSection}
+              onSelectConcept={handleSelectConcept}
+              onRenameChapter={handleRenameChapter}
+              onRenameSection={handleRenameSection}
+              onRenameConcept={handleRenameConcept}
+            />
+          )}
+        </div>
+      )}
 
       {memoryHookUnits.map((unit) => (
         <MemoryHookPanel key={unit.assessmentUnitId} assessmentUnitId={unit.assessmentUnitId} label={unit.label} />
@@ -734,17 +820,17 @@ export const AdminContentEditorPage = () => {
       <div className="admin-bulk-pipeline-grid-shell" style={{ marginTop: 16 }}>
         {cardsLoading ? (
           <div className="admin-bulk-pipeline-empty">Loading cards...</div>
-        ) : !selectedChapter?.sourceSectionId ? (
-          <div className="admin-bulk-pipeline-empty">Select a book and chapter to browse its content cards.</div>
+        ) : !selectedSection?.sourceSectionId ? (
+          <div className="admin-bulk-pipeline-empty">Select a book and a section from the tree to browse its content cards.</div>
         ) : cards.length === 0 ? (
           <div className="admin-bulk-pipeline-empty">No content cards found for this section.</div>
         ) : (
-          conceptGroups.map(({ concept, typeGroups }) => (
-            <div key={concept || "__no_concept"} className="admin-content-editor-concept">
+          visibleConceptGroups.map(({ assessmentUnitId, concept, typeGroups }) => (
+            <div key={assessmentUnitId || "__no_concept"} className="admin-content-editor-concept">
               {concept && <h3 className="admin-content-editor-concept-title">{concept}</h3>}
               <div className="admin-content-editor-action-list">
                 {typeGroups.map(({ group, cards: groupCards }) => {
-                  const groupKey = `${concept}::${group.key}`;
+                  const groupKey = `${assessmentUnitId}::${group.key}`;
                   const isOpen = expandedGroups.has(groupKey);
                   return (
                     <div key={groupKey} className="admin-content-editor-action-wrap">
