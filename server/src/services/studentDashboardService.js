@@ -270,6 +270,7 @@ const getSyllabusRowsForUser = async ({ examGoalCode, levelCode, subjectCode, us
         AND chapter.book_is_active = TRUE
         AND chapter.chapter_is_active = TRUE
         AND au.is_active = TRUE
+        AND au.is_hidden = FALSE
       ORDER BY chapter.chapter_display_order ASC, chapter.chapter_number ASC, chapter.section_number ASC
     `,
     [examGoalCode, levelCode, subjectCode, userId]

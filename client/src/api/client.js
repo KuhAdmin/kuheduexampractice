@@ -541,6 +541,18 @@ export const renameContentEditorConcept = async (assessmentUnitId, primaryConcep
     body: JSON.stringify({ primaryConcept }),
   });
 
+export const setContentEditorSectionVisibility = async (id, isHidden) =>
+  apiRequest(`/admin/content-editor/chapters/${id}/visibility`, {
+    method: "PUT",
+    body: JSON.stringify({ isHidden }),
+  });
+
+export const setContentEditorConceptVisibility = async (assessmentUnitId, isHidden) =>
+  apiRequest(`/admin/content-editor/concepts/${assessmentUnitId}/visibility`, {
+    method: "PUT",
+    body: JSON.stringify({ isHidden }),
+  });
+
 export const getContentEditorCards = async (sourceSectionId) =>
   apiRequest(`/admin/content-editor/sections/${sourceSectionId}/cards`);
 

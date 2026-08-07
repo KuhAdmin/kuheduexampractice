@@ -6,6 +6,8 @@ import {
   renameChapter,
   renameSection,
   renameConcept,
+  setSectionVisibility,
+  setConceptVisibility,
 } from "../services/contentEditorService.js";
 import { regenerateDiagramMedia } from "../services/diagramImageService.js";
 import {
@@ -72,6 +74,33 @@ export const putConceptNameHandler = async (req, res, next) => {
     const concept = await renameConcept({
       assessmentUnitId: req.params.assessmentUnitId,
       primaryConcept: req.body?.primaryConcept,
+    });
+    return res.json({ concept });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const putSectionVisibilityHandler = async (req, res, next) => {
+  try {
+    const section = await setSectionVisibility({ id: req.params.id, isHidden: req.body?.isHidden });
+    return res.json({ section });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const putConceptVisibilityHandler = async (req, res, next) => {
+  try {
+    const concept = await setConceptVisibility({
+      assessmentUnitId: req.params.assessmentUnitId,
+      isHidden: req.body?.isHidden,
     });
     return res.json({ concept });
   } catch (error) {

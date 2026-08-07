@@ -94,7 +94,7 @@ const listAssessmentUnitsWithMeta = async (sourceSectionId) => {
     `
       SELECT assessment_unit_id, primary_concept, curriculum_importance
       FROM assessment_unit
-      WHERE source_section_id = $1 AND is_active = TRUE
+      WHERE source_section_id = $1 AND is_active = TRUE AND is_hidden = FALSE
       ORDER BY id ASC
     `,
     [sourceSectionId]

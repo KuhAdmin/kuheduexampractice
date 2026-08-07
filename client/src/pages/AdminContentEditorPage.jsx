@@ -5,6 +5,8 @@ import {
   renameContentEditorChapter,
   renameContentEditorSection,
   renameContentEditorConcept,
+  setContentEditorSectionVisibility,
+  setContentEditorConceptVisibility,
   getContentEditorCards,
   updateContentEditorCard,
   regenerateContentCardImage,
@@ -30,6 +32,26 @@ import { isAdmin } from "../roles";
 // flat table. Order here is also the display order. "Other" (below) catches
 // any contentuitab that doesn't match one of these, so a future/unknown
 // type is never silently dropped from the list.
+// "Explore" mirrors the student Explore tab exactly (StudentConceptLearningPage.jsx's
+// EXPLORE_STEPS): Simple/Story/Compare are the SAME contentuitab="teaching"
+// cards as "Learn" below, just different processorkeys, and "Deep Dive" is
+// contentuitab="deeplearning" (that pipeline only ever produces
+// processorkey="misconceptions" today, so no further split needed there).
+// "Learn" is what's left of "teaching" once those three processorkeys are
+// pulled out -- explain (the student Learn tab's own content).
+const EXPLORE_SUB_GROUPS = [
+  { key: "simple", label: "Simple", match: (card) => card.contentuitab === "teaching" && card.processorkey === "eli5" },
+  { key: "story", label: "Story", match: (card) => card.contentuitab === "teaching" && card.processorkey === "storymode" },
+  { key: "deepdive", label: "Deep Dive", match: (card) => card.contentuitab === "deeplearning" },
+  { key: "compare", label: "Compare", match: (card) => card.contentuitab === "teaching" && card.processorkey === "analogy" },
+];
+
+// Mirrors the student "Deep Learn" action-row groups (StudentSectionDetailPage.jsx)
+// so moderators -- who use the student app daily -- see the same shape of
+// list here: color-coded, one row per content type, instead of one long
+// flat table. Order here is also the display order. "Other" (below) catches
+// any contentuitab that doesn't match one of these, so a future/unknown
+// type is never silently dropped from the list.
 const CONTENT_TYPE_GROUPS = [
   {
     key: "assessment",
@@ -37,6 +59,21 @@ const CONTENT_TYPE_GROUPS = [
     description: "MCQ, True/False, Case Study & more",
     colorClass: "is-violet",
     match: (card) => card.contentuitab === "assessment",
+  },
+  {
+    key: "learn",
+    label: "Learn",
+    description: "Core structured explanation",
+    colorClass: "is-green",
+    match: (card) => card.contentuitab === "teaching" && card.processorkey === "explain",
+  },
+  {
+    key: "explore",
+    label: "Explore",
+    description: "Simple, Story, Deep Dive & Compare",
+    colorClass: "is-lilac",
+    match: (card) => EXPLORE_SUB_GROUPS.some((sub) => sub.match(card)),
+    subGroups: EXPLORE_SUB_GROUPS,
   },
   {
     key: "revision",
@@ -53,25 +90,11 @@ const CONTENT_TYPE_GROUPS = [
     match: (card) => card.contentuitab === "tutor",
   },
   {
-    key: "teaching",
-    label: "Teaching",
-    description: "Explain, ELI5, analogy & story mode",
-    colorClass: "is-green",
-    match: (card) => card.contentuitab === "teaching",
-  },
-  {
     key: "extraction",
     label: "Concepts",
     description: "Extracted characters, setting & ideas",
     colorClass: "is-blue",
     match: (card) => card.contentuitab === "extraction",
-  },
-  {
-    key: "deeplearning",
-    label: "Deep Learning",
-    description: "Misconceptions",
-    colorClass: "is-lilac",
-    match: (card) => card.contentuitab === "deeplearning",
   },
   {
     key: "textbook",
@@ -92,9 +115,13 @@ const OTHER_GROUP = {
 
 const getCardGroup = (card) => CONTENT_TYPE_GROUPS.find((group) => group.match(card)) || OTHER_GROUP;
 
-// One card belongs to exactly one group (first match wins); groups with no
-// cards for this concept are omitted, but the canonical order above is
-// preserved for the ones that do have cards.
+// One card belongs to exactly one top-level group (first match wins), same
+// as before. Groups declaring `subGroups` (currently just "Explore") ALSO
+// get their cards split a second time within that group, one match-wins
+// pass against their own sub-list -- cards matching none of a group's
+// subGroups fall into a synthetic "Other" bucket for that group so nothing
+// silently disappears if a new processorkey shows up under an existing
+// contentuitab later.
 const groupCardsByType = (conceptCards) => {
   const byKey = new Map();
   conceptCards.forEach((card) => {
@@ -102,38 +129,27 @@ const groupCardsByType = (conceptCards) => {
     if (!byKey.has(group.key)) byKey.set(group.key, { group, cards: [] });
     byKey.get(group.key).cards.push(card);
   });
-  return [...CONTENT_TYPE_GROUPS, OTHER_GROUP].map((group) => byKey.get(group.key)).filter(Boolean);
-};
 
-const ContentGroupIcon = ({ type }) => {
-  const paths = {
-    assessment: <path d="M9 12.5 11 14.5 15 9.5 M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />,
-    revision: <path d="M6 4h9a2 2 0 0 1 2 2v14l-6.5-3.5L4 20V6a2 2 0 0 1 2-2Z" />,
-    tutor: <path d="M4 5h16v11H8l-4 4V5Z" />,
-    teaching: <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11.2c.6.4 1 1 1 1.8h4c0-.8.4-1.4 1-1.8A6 6 0 0 0 12 3Z" />,
-    extraction: <path d="M20.6 12 12 20.6 3.4 12 12 3.4 20.6 12ZM12 9.5v.01" />,
-    deeplearning: <path d="M9 3a3 3 0 0 0-3 3v.3A3.5 3.5 0 0 0 4 9.5 3.5 3.5 0 0 0 6 16h.5A2.5 2.5 0 0 0 9 18.5V21m6-18a3 3 0 0 1 3 3v.3a3.5 3.5 0 0 1 2 3.2 3.5 3.5 0 0 1-2 3.2V13a2.5 2.5 0 0 1-2.5 2.5V21" />,
-    textbook: <path d="M6 4h8l4 4v12H6V4ZM9 10h6M9 13h6M9 16h4" />,
-    other: <path d="M12 12m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0" />,
-  };
-  return (
-    <svg viewBox="0 0 24 24" className="admin-content-editor-action-icon" aria-hidden="true">
-      <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6">
-        {paths[type] || paths.other}
-      </g>
-    </svg>
-  );
+  return [...CONTENT_TYPE_GROUPS, OTHER_GROUP]
+    .map((group) => byKey.get(group.key))
+    .filter(Boolean)
+    .map((entry) => {
+      if (!entry.group.subGroups) return entry;
+      const bySubKey = new Map();
+      entry.cards.forEach((card) => {
+        const subGroup = entry.group.subGroups.find((sub) => sub.match(card));
+        const subKey = subGroup?.key || "other";
+        if (!bySubKey.has(subKey)) {
+          bySubKey.set(subKey, { subGroup: subGroup || { key: "other", label: "Other" }, cards: [] });
+        }
+        bySubKey.get(subKey).cards.push(card);
+      });
+      const subGroups = [...entry.group.subGroups, { key: "other", label: "Other" }]
+        .map((sub) => bySubKey.get(sub.key))
+        .filter(Boolean);
+      return { ...entry, subGroups };
+    });
 };
-
-const ChevronIcon = ({ open }) => (
-  <svg
-    viewBox="0 0 24 24"
-    className={`admin-content-editor-action-chevron ${open ? "is-open" : ""}`}
-    aria-hidden="true"
-  >
-    <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-  </svg>
-);
 
 // Mirrors contentReadService.js's getDiagramsForSection filter -- only these
 // cards actually have a content_card_media row to regenerate/upload against.
@@ -489,13 +505,11 @@ export const AdminContentEditorPage = () => {
   const [tree, setTree] = useState([]);
   const [treeLoading, setTreeLoading] = useState(false);
   const [selectedSectionId, setSelectedSectionId] = useState("");
-  const [selectedConceptId, setSelectedConceptId] = useState(null);
 
   const [cards, setCards] = useState([]);
   const [cardsLoading, setCardsLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [expandedGroups, setExpandedGroups] = useState(() => new Set());
 
   const [editingCard, setEditingCard] = useState(null);
   const [form, setForm] = useState({ title: "", summary: "", details: [], isHidden: false });
@@ -542,12 +556,10 @@ export const AdminContentEditorPage = () => {
     if (!selectedBookId) {
       setTree([]);
       setSelectedSectionId("");
-      setSelectedConceptId(null);
       return;
     }
     setTreeLoading(true);
     setSelectedSectionId("");
-    setSelectedConceptId(null);
     setCards([]);
     getContentEditorTree(selectedBookId)
       .then((result) => setTree(result?.chapters || []))
@@ -586,12 +598,14 @@ export const AdminContentEditorPage = () => {
 
   const handleSelectSection = (section) => {
     setSelectedSectionId(section.id);
-    setSelectedConceptId(null);
   };
 
-  const handleSelectConcept = (section, concept) => {
+  // A concept's content only becomes visible once its OWN section's cards
+  // are loaded (cards are fetched once per section, shared by every
+  // concept in it) -- so expanding a concept still needs to trigger the
+  // same section-level load as clicking the section itself would.
+  const handleSelectConcept = (section) => {
     setSelectedSectionId(section.id);
-    setSelectedConceptId(concept.assessmentUnitId);
   };
 
   const handleRenameChapter = async (chapterNumber, chapterName) => {
@@ -644,6 +658,75 @@ export const AdminContentEditorPage = () => {
     );
   };
 
+  // Bulk-writing content_card.is_hidden (the server's cascade) always
+  // leaves every affected card at the SAME is_hidden value, so the
+  // resulting visible count is deterministic without a refetch: hiding ->
+  // visible = 0, un-hiding -> visible = total.
+  const handleToggleSectionVisibility = async (section, nextHidden) => {
+    setError("");
+    try {
+      const result = await setContentEditorSectionVisibility(section.id, nextHidden);
+      const isHidden = result.section.isHidden;
+      setTree((current) =>
+        current.map((chapter) => ({
+          ...chapter,
+          sections: chapter.sections.map((s) =>
+            s.id !== section.id
+              ? s
+              : {
+                  ...s,
+                  isHidden,
+                  cardCount: { ...s.cardCount, visible: isHidden ? 0 : s.cardCount.total },
+                  concepts: s.concepts.map((c) => ({
+                    ...c,
+                    isHidden,
+                    cardCount: { ...c.cardCount, visible: isHidden ? 0 : c.cardCount.total },
+                  })),
+                }
+          ),
+        }))
+      );
+      if (selectedSection?.id === section.id) {
+        setCards((current) => current.map((card) => ({ ...card, isHidden })));
+      }
+    } catch (toggleError) {
+      setError(toggleError.message || "Failed to update visibility.");
+    }
+  };
+
+  const handleToggleConceptVisibility = async (section, concept, nextHidden) => {
+    setError("");
+    try {
+      const result = await setContentEditorConceptVisibility(concept.assessmentUnitId, nextHidden);
+      const isHidden = result.concept.isHidden;
+      setTree((current) =>
+        current.map((chapter) => ({
+          ...chapter,
+          sections: chapter.sections.map((s) => {
+            if (s.id !== section.id) return s;
+            let visibleDelta = 0;
+            const concepts = s.concepts.map((c) => {
+              if (c.assessmentUnitId !== concept.assessmentUnitId) return c;
+              const newVisible = isHidden ? 0 : c.cardCount.total;
+              visibleDelta = newVisible - c.cardCount.visible;
+              return { ...c, isHidden, cardCount: { ...c.cardCount, visible: newVisible } };
+            });
+            return { ...s, concepts, cardCount: { ...s.cardCount, visible: s.cardCount.visible + visibleDelta } };
+          }),
+        }))
+      );
+      if (selectedSection?.id === section.id) {
+        setCards((current) =>
+          current.map((card) =>
+            card.assessmentUnitId === concept.assessmentUnitId ? { ...card, isHidden } : card
+          )
+        );
+      }
+    } catch (toggleError) {
+      setError(toggleError.message || "Failed to update visibility.");
+    }
+  };
+
   const openEditModal = (card) => {
     setEditingCard(card);
     setForm({
@@ -684,18 +767,6 @@ export const AdminContentEditorPage = () => {
     }
   };
 
-  const toggleGroup = (groupKey) => {
-    setExpandedGroups((current) => {
-      const next = new Set(current);
-      if (next.has(groupKey)) {
-        next.delete(groupKey);
-      } else {
-        next.add(groupKey);
-      }
-      return next;
-    });
-  };
-
   const toggleHidden = async (card) => {
     setError("");
     try {
@@ -710,6 +781,39 @@ export const AdminContentEditorPage = () => {
       }
     } catch (toggleError) {
       setError(toggleError.message || "Failed to update visibility.");
+    }
+  };
+
+  // Content-type groups (Assessment/Explore/Simple/etc.) aren't real
+  // entities in the database -- unlike Section/Concept, there's no
+  // mst_chapter.is_hidden-style column to toggle. "Hide this group" just
+  // means bulk-hiding every card currently in it, reusing the existing
+  // per-card endpoint (which already enforces the same concept/section
+  // ancestry lock -- see contentEditorService.js's assertCardAncestryVisible)
+  // rather than adding a new bulk endpoint for what's ultimately N of the
+  // same PUT calls in parallel.
+  const toggleGroupHidden = async (groupCards, nextHidden) => {
+    setError("");
+    const results = await Promise.allSettled(
+      groupCards.map((card) =>
+        updateContentEditorCard(card.id, {
+          title: card.title,
+          summary: card.summary,
+          details: card.details,
+          isHidden: nextHidden,
+        })
+      )
+    );
+    const failures = results.filter((result) => result.status === "rejected");
+    if (failures.length) {
+      setError(
+        `Failed to update ${failures.length} of ${groupCards.length} card(s): ${
+          failures[0].reason?.message || "unknown error"
+        }`
+      );
+    }
+    if (selectedSection?.sourceSectionId) {
+      await loadCards(selectedSection.sourceSectionId);
     }
   };
 
@@ -745,12 +849,14 @@ export const AdminContentEditorPage = () => {
     }));
   }, [cards]);
 
-  const visibleConceptGroups = useMemo(
-    () =>
-      selectedConceptId
-        ? conceptGroups.filter((group) => group.assessmentUnitId === selectedConceptId)
-        : conceptGroups,
-    [conceptGroups, selectedConceptId]
+  // Keyed the same way as conceptGroups above -- "" is the root/section-scoped
+  // (not concept-specific) group. AdminContentTree renders this directly as
+  // each concept's (or the section's "General Content" pseudo-concept's)
+  // own tree children now, so it's passed down as a lookup rather than
+  // rendered here.
+  const conceptGroupsByAssessmentUnitId = useMemo(
+    () => new Map(conceptGroups.map((group) => [group.assessmentUnitId, group.typeGroups])),
+    [conceptGroups]
   );
 
   return (
@@ -802,12 +908,18 @@ export const AdminContentEditorPage = () => {
             <AdminContentTree
               tree={tree}
               selectedSectionId={selectedSectionId}
-              selectedConceptId={selectedConceptId}
+              cardsLoading={cardsLoading}
+              conceptGroupsByAssessmentUnitId={conceptGroupsByAssessmentUnitId}
               onSelectSection={handleSelectSection}
               onSelectConcept={handleSelectConcept}
               onRenameChapter={handleRenameChapter}
               onRenameSection={handleRenameSection}
               onRenameConcept={handleRenameConcept}
+              onToggleSectionVisibility={handleToggleSectionVisibility}
+              onToggleConceptVisibility={handleToggleConceptVisibility}
+              onEditCard={openEditModal}
+              onToggleCardHidden={toggleHidden}
+              onToggleGroupHidden={toggleGroupHidden}
             />
           )}
         </div>
@@ -817,93 +929,9 @@ export const AdminContentEditorPage = () => {
         <MemoryHookPanel key={unit.assessmentUnitId} assessmentUnitId={unit.assessmentUnitId} label={unit.label} />
       ))}
 
-      <div className="admin-bulk-pipeline-grid-shell" style={{ marginTop: 16 }}>
-        {cardsLoading ? (
-          <div className="admin-bulk-pipeline-empty">Loading cards...</div>
-        ) : !selectedSection?.sourceSectionId ? (
-          <div className="admin-bulk-pipeline-empty">Select a book and a section from the tree to browse its content cards.</div>
-        ) : cards.length === 0 ? (
-          <div className="admin-bulk-pipeline-empty">No content cards found for this section.</div>
-        ) : (
-          visibleConceptGroups.map(({ assessmentUnitId, concept, typeGroups }) => (
-            <div key={assessmentUnitId || "__no_concept"} className="admin-content-editor-concept">
-              {concept && <h3 className="admin-content-editor-concept-title">{concept}</h3>}
-              <div className="admin-content-editor-action-list">
-                {typeGroups.map(({ group, cards: groupCards }) => {
-                  const groupKey = `${assessmentUnitId}::${group.key}`;
-                  const isOpen = expandedGroups.has(groupKey);
-                  return (
-                    <div key={groupKey} className="admin-content-editor-action-wrap">
-                      <button
-                        type="button"
-                        className={`admin-content-editor-action ${group.colorClass}`}
-                        onClick={() => toggleGroup(groupKey)}
-                      >
-                        <span className={`admin-content-editor-action-mark ${group.colorClass}`}>
-                          <ContentGroupIcon type={group.key} />
-                        </span>
-                        <span className="admin-content-editor-action-copy">
-                          <strong>{group.label}</strong>
-                          <small>
-                            {groupCards.length} card{groupCards.length === 1 ? "" : "s"} · {group.description}
-                          </small>
-                        </span>
-                        <ChevronIcon open={isOpen} />
-                      </button>
-                      {isOpen && (
-                        <table className="admin-exam-types-table">
-                          <thead>
-                            <tr>
-                              <th>Title</th>
-                              <th>Type</th>
-                              <th>Status</th>
-                              <th aria-label="Actions" />
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {groupCards.map((card) => (
-                              <tr key={card.id}>
-                                <td>{card.title || "(untitled)"}</td>
-                                <td>
-                                  <span className="admin-exam-types-code-badge">
-                                    {card.contentuitab}
-                                    {card.processorkey ? ` / ${card.processorkey}` : ""}
-                                  </span>
-                                </td>
-                                <td>
-                                  <span
-                                    className={`admin-bulk-pipeline-status-badge ${
-                                      card.isHidden ? "is-aborted" : "is-completed"
-                                    }`}
-                                  >
-                                    {card.isHidden ? "Hidden" : "Visible"}
-                                  </span>
-                                </td>
-                                <td className="admin-content-editor-row-actions">
-                                  <button type="button" className="ghost-button" onClick={() => toggleHidden(card)}>
-                                    {card.isHidden ? "Show" : "Hide"}
-                                  </button>
-                                  <button type="button" className="primary-button" onClick={() => openEditModal(card)}>
-                                    Edit
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
       {editingCard && (
         <div className="modal-backdrop" onClick={closeEditModal}>
-          <div className="modal-panel" onClick={(event) => event.stopPropagation()}>
+          <div className="modal-panel admin-content-editor-edit-modal" onClick={(event) => event.stopPropagation()}>
             <button type="button" className="close-button" aria-label="Close" onClick={closeEditModal}>
               &times;
             </button>

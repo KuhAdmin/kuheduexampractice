@@ -266,6 +266,13 @@ DROP CONSTRAINT IF EXISTS mst_chapter_fk_mst_book_id_chapter_number_section_numb
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mst_chapter_book_chapter_section_topic
 ON mst_chapter (fk_mst_book_id, chapter_number, section_number, topic_name);
 
+-- Content-moderator show/hide toggle for a Section, independent of any
+-- individual content_card's own is_hidden -- source of truth for the
+-- tree's toggle UI and the server-side cascade lock (see
+-- contentEditorService.js's setSectionVisibility/setConceptVisibility).
+ALTER TABLE IF EXISTS mst_chapter
+ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN NOT NULL DEFAULT FALSE;
+
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 DROP TABLE IF EXISTS student_mastery CASCADE;
@@ -395,6 +402,12 @@ CREATE TABLE IF NOT EXISTS assessment_unit (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Same relationship to content_card.is_hidden as mst_chapter.is_hidden
+-- above. Un-hiding is rejected server-side while the owning section is
+-- hidden -- see setConceptVisibility's parent-lock check.
+ALTER TABLE IF EXISTS assessment_unit
+ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE TABLE IF NOT EXISTS assessment_unit_supporting_concept (
   id BIGSERIAL PRIMARY KEY,

@@ -6,6 +6,8 @@ import {
   putChapterNameHandler,
   putSectionNameHandler,
   putConceptNameHandler,
+  putSectionVisibilityHandler,
+  putConceptVisibilityHandler,
   getCardsHandler,
   putCardHandler,
   postRegenerateDiagramHandler,
@@ -27,6 +29,8 @@ router.get("/books/:bookId/tree", getContentTreeHandler);
 router.put("/books/:bookId/chapters/:chapterNumber/name", putChapterNameHandler);
 router.put("/chapters/:id/name", putSectionNameHandler);
 router.put("/concepts/:assessmentUnitId/name", putConceptNameHandler);
+router.put("/chapters/:id/visibility", putSectionVisibilityHandler);
+router.put("/concepts/:assessmentUnitId/visibility", putConceptVisibilityHandler);
 router.get("/sections/:sourceSectionId/cards", getCardsHandler);
 router.put("/cards/:cardId", putCardHandler);
 router.post("/cards/:cardId/regenerate-image", postRegenerateDiagramHandler);

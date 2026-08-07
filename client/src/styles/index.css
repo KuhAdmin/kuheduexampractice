@@ -4214,6 +4214,70 @@ a {
   font-size: 0.9em;
 }
 
+/* Section/Concept cascading show/hide (visibility toggle added alongside
+   the tree's rename feature) -- count badge mirrors the existing
+   admin-exam-types-code-badge pill convention; is-hidden dims a row
+   independent of whether its VisibilityButton is also locked/disabled. */
+.admin-content-tree-count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(31, 41, 51, 0.08);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.admin-content-tree-row.is-hidden {
+  opacity: 0.6;
+}
+
+.admin-content-tree-row.is-hidden .admin-content-tree-label {
+  text-decoration: line-through;
+  text-decoration-color: rgba(31, 41, 51, 0.35);
+}
+
+.admin-content-tree-visibility {
+  flex-shrink: 0;
+}
+
+.admin-content-tree-visibility:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* A concept's content-type groups now render as its own tree children
+   (previously a separate area below the tree) -- reuses the existing
+   admin-content-editor-action-mark color-mark styling as-is (same visual
+   language), just constrained to not shrink/overflow inside the tree
+   row's flex layout, and the nested card table gets the tree's own
+   indent treatment via the shared .admin-content-tree-children rule. */
+.admin-content-tree-row.is-group .admin-content-editor-action-mark {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+}
+
+.admin-content-tree-children .admin-exam-types-table {
+  margin-top: 6px;
+}
+
+/* Explore's Simple/Story/Deep Dive/Compare (a group with subGroups) --
+   no color mark at this depth (the parent "Explore" row already carries
+   the color), smaller/muted label reinforces it's one level deeper than a
+   normal top-level content-type group. */
+.admin-content-tree-row.is-sub-group {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.admin-content-tree-row.is-sub-group .admin-content-tree-label {
+  font-size: 0.95em;
+  color: var(--muted-strong);
+}
+
 .student-section-detail-phone {
   gap: 18px;
 }
@@ -13264,6 +13328,14 @@ a {
 
 .modal-panel.is-wide {
   width: min(940px, 92vw);
+}
+
+/* Content Editor's Edit Card modal -- wide enough that the Details editor's
+   labeled fields (AdminContentDetailsEditor.jsx) aren't cramped into a
+   narrow column, per explicit request: 90% of viewport width, no smaller
+   upper cap like .is-wide above. */
+.admin-content-editor-edit-modal {
+  width: 90vw;
 }
 
 .admin-books-bulk-results-list {

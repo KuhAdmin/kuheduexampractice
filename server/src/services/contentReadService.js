@@ -222,6 +222,7 @@ export const getAssessmentUnitsForSourceSection = async (sourceSectionId) => {
       FROM assessment_unit
       WHERE source_section_id = $1
         AND is_active = TRUE
+        AND is_hidden = FALSE
       ORDER BY id ASC
     `,
     [sourceSectionId]
@@ -355,7 +356,7 @@ export const getSectionKnowledgeSummary = async (sourceSectionId) => {
     `
       SELECT COUNT(*)::int AS count
       FROM assessment_unit
-      WHERE source_section_id = $1 AND is_active = TRUE
+      WHERE source_section_id = $1 AND is_active = TRUE AND is_hidden = FALSE
     `,
     [sourceSectionId]
   );
