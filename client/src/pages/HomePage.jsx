@@ -12,6 +12,17 @@ import { LEGAL_DOC_SLUGS, legalDocsBySlug } from "../content/legalContent";
 const GOOGLE_AUTH_URL =
  "/api/auth/google";
 
+const SpecialOfferBadge = ({ className = "", onClick }) => (
+  <button
+    type="button"
+    className={`home-special-offer-badge ${className}`.trim()}
+    onClick={onClick}
+    aria-label="View pricing and special offer"
+  >
+    <img src="/special_offer.png" alt="Special offer" />
+  </button>
+);
+
 const homeScreens = [
   {
     id: "splash",
@@ -1207,6 +1218,10 @@ export const HomePage = ({
             </Link>
           </nav>
         </nav>
+        <SpecialOfferBadge
+          className="home-special-offer-badge--desktop"
+          onClick={() => navigate("/pricing", { state: { pricingEntryScreenId: activeScreen.id } })}
+        />
         <AnimatePresence mode="wait">
           <motion.div
             key={activeScreen.id}
@@ -1301,6 +1316,10 @@ export const HomePage = ({
 
   return (
     <main className="home-gallery-page">
+      <SpecialOfferBadge
+        className="home-special-offer-badge--mobile"
+        onClick={() => navigate("/pricing", { state: { pricingEntryScreenId: activeScreen.id } })}
+      />
       <section className="home-gallery-shell">
         <motion.div
           className="home-gallery-stage"

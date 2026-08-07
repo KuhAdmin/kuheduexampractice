@@ -22,22 +22,23 @@ const CBSE_SUBTITLE = "CBSE Board | Class 6, 7 & 8";
 export const pricingCards = [
   {
     id: "premium",
-    name: "STEMLab Premium",
+    name: "Kuhedu Study Buddy Premium",
     subtitle: CBSE_SUBTITLE,
     options: [
       {
         key: "2weeks",
         planId: "premium-2weeks",
-        label: "2 Weeks",
+        label: "Limited Period Plan",
         price: 49,
         billingNote: "One-time · access for 14 days",
       },
       {
         key: "full",
         planId: "premium-12months",
-        label: "Full Access",
+        label: "Premium Plan",
         price: 999,
         billingNote: "One-time · 12 months of access",
+        badge: "crown",
       },
     ],
     features: BASE_FEATURES,

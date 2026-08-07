@@ -1677,6 +1677,44 @@ a {
   background: rgb(from var(--green) r g b / 0.22);
 }
 
+.home-special-offer-badge {
+  position: fixed;
+  right: clamp(12px, 2.5vw, 32px);
+  z-index: 30;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  transition: transform 0.15s ease;
+}
+
+.home-special-offer-badge:hover {
+  transform: scale(1.04);
+}
+
+.home-special-offer-badge img {
+  display: block;
+  width: clamp(122px, 15.21vw, 270px);
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
+
+.home-special-offer-badge--desktop {
+  top: 96px;
+}
+
+.home-special-offer-badge--mobile {
+  top: clamp(12px, 4vw, 24px);
+  right: clamp(10px, 4vw, 20px);
+}
+
+.home-special-offer-badge--mobile img {
+  width: clamp(64px, 22vw, 110px);
+  border-radius: 10px;
+}
+
 .home-desktop-shell {
   flex: 1;
   min-height: calc(100vh - 140px);
@@ -9468,6 +9506,35 @@ a {
   color: var(--muted);
 }
 
+.admin-image-drop-zone {
+  display: grid;
+  place-items: center;
+  min-height: 64px;
+  padding: 14px 16px;
+  margin: 10px 0;
+  border-radius: 14px;
+  border: 1.5px dashed rgba(31, 41, 51, 0.22);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 248, 243, 0.9));
+  color: var(--muted);
+  font-size: 0.95em;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.admin-image-drop-zone:focus {
+  outline: none;
+  border-color: rgba(200, 76, 9, 0.42);
+  box-shadow: 0 0 0 3px rgba(255, 122, 24, 0.12);
+}
+
+.admin-image-drop-zone.is-drag-over {
+  border-color: rgba(200, 76, 9, 0.5);
+  background: linear-gradient(180deg, rgba(255, 244, 235, 0.95), rgba(255, 238, 222, 0.92));
+  color: var(--brand-dark);
+}
+
 .admin-studio-source-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -10865,9 +10932,34 @@ a {
   color: var(--muted-strong);
 }
 
+.pricing-toggle-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.pricing-toggle-crown {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  object-position: center center;
+  flex-shrink: 0;
+}
+
+/* silver_crown.png is cropped tight to the crown glyph (little empty
+   margin) while crown.png has a wide ambient glow above/below it -- at the
+   same object-fit:contain box, default centering puts the silver crown's
+   glyph visibly lower than the gold one's. Nudge it up so both glyphs land
+   at the same vertical position. */
+.pricing-toggle-crown--silver {
+  object-position: center 27%;
+}
+
 .pricing-toggle {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   padding: 4px;
   border-radius: 999px;
@@ -10884,6 +10976,7 @@ a {
   color: var(--muted-strong);
   font-weight: 700;
   font-size: 0.95em;
+  white-space: nowrap;
 }
 
 .pricing-toggle-option.is-active {
@@ -10891,6 +10984,7 @@ a {
   color: #ffffff;
   box-shadow: 0 8px 20px rgb(from var(--green) r g b / 0.2);
 }
+
 
 .pricing-price {
   display: flex;

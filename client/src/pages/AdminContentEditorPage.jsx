@@ -181,6 +181,46 @@ const readFileAsDataUrl = (file) =>
     reader.readAsDataURL(file);
   });
 
+const ImageDropZone = ({ onFile, busy }) => {
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setIsDragOver(false);
+    const file = event.dataTransfer?.files?.[0];
+    if (file) onFile(file);
+  };
+
+  const handlePaste = (event) => {
+    const item = Array.from(event.clipboardData?.items || []).find((entry) =>
+      entry.type.startsWith("image/")
+    );
+    const file = item?.getAsFile();
+    if (file) {
+      event.preventDefault();
+      onFile(file);
+    }
+  };
+
+  return (
+    <div
+      className={`admin-image-drop-zone${isDragOver ? " is-drag-over" : ""}`}
+      tabIndex={0}
+      role="button"
+      aria-label="Drop or paste an image to upload"
+      onDragOver={(event) => {
+        event.preventDefault();
+        setIsDragOver(true);
+      }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={handleDrop}
+      onPaste={handlePaste}
+    >
+      {busy ? "Working..." : "Drag & drop an image here, or click and paste (Ctrl+V)"}
+    </div>
+  );
+};
+
 const CardImagePanel = ({ card }) => {
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -223,9 +263,7 @@ const CardImagePanel = ({ card }) => {
     }
   };
 
-  const handleUpload = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
+  const uploadFile = async (file) => {
     if (!file) return;
     setBusy(true);
     setError("");
@@ -238,6 +276,12 @@ const CardImagePanel = ({ card }) => {
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleUpload = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    uploadFile(file);
   };
 
   return (
@@ -265,6 +309,7 @@ const CardImagePanel = ({ card }) => {
         placeholder="Describe the image to generate..."
         onChange={(event) => setPrompt(event.target.value)}
       />
+      <ImageDropZone onFile={uploadFile} busy={busy} />
       <div className="admin-bulk-pipeline-dialog-actions">
         <label className="ghost-button" style={{ cursor: "pointer" }}>
           Upload file
@@ -386,9 +431,7 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
     }
   };
 
-  const handleUpload = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
+  const uploadFile = async (file) => {
     if (!file) return;
     setBusy(true);
     setError("");
@@ -401,6 +444,12 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleUpload = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    uploadFile(file);
   };
 
   const activeMedia = activeSection ? media?.[activeSection] : null;
@@ -444,6 +493,7 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
                 placeholder="Describe the image to generate..."
                 onChange={(event) => setPrompt(event.target.value)}
               />
+              <ImageDropZone onFile={uploadFile} busy={busy} />
               <div className="admin-bulk-pipeline-dialog-actions">
                 {activeMedia?.mediaData && (
                   <button type="button" className="ghost-button" onClick={() => setViewImageOpen(true)}>

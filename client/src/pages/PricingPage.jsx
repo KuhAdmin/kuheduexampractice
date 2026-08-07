@@ -25,7 +25,7 @@ const CheckBadge = () => (
 // Two one-time options per card (currently just the one universal card) --
 // no recurring cycle anymore, just which duration to buy.
 const PricingCard = ({ card, onSubscribe, processing }) => {
-  const [selectedOptionKey, setSelectedOptionKey] = useState("full");
+  const [selectedOptionKey, setSelectedOptionKey] = useState("2weeks");
   const selectedOption = card.options.find((option) => option.key === selectedOptionKey) || card.options[0];
 
   return (
@@ -35,19 +35,27 @@ const PricingCard = ({ card, onSubscribe, processing }) => {
         <span className="pricing-card-subtitle">{card.subtitle}</span>
       </div>
 
-      <div className="pricing-toggle" role="tablist" aria-label={`${card.name} access duration`}>
-        {card.options.map((option) => (
-          <button
-            key={option.key}
-            type="button"
-            role="tab"
-            aria-selected={selectedOptionKey === option.key}
-            className={`pricing-toggle-option${selectedOptionKey === option.key ? " is-active" : ""}`}
-            onClick={() => setSelectedOptionKey(option.key)}
-          >
-            {option.label}
-          </button>
-        ))}
+      <div className="pricing-toggle-row">
+        <img
+          src={selectedOption.badge === "crown" ? "/crown.png" : "/silver_crown.png"}
+          alt=""
+          className={`pricing-toggle-crown${selectedOption.badge === "crown" ? "" : " pricing-toggle-crown--silver"}`}
+          aria-hidden="true"
+        />
+        <div className="pricing-toggle" role="tablist" aria-label={`${card.name} access duration`}>
+          {card.options.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              role="tab"
+              aria-selected={selectedOptionKey === option.key}
+              className={`pricing-toggle-option${selectedOptionKey === option.key ? " is-active" : ""}`}
+              onClick={() => setSelectedOptionKey(option.key)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="pricing-price">
@@ -61,7 +69,7 @@ const PricingCard = ({ card, onSubscribe, processing }) => {
         onClick={() => onSubscribe(selectedOption.planId)}
         disabled={processing}
       >
-        {processing ? "Please wait..." : "Get Premium"}
+        {processing ? "Please wait..." : "Subscribe Now"}
       </button>
 
       <div className="pricing-card-features">
