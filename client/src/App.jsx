@@ -145,7 +145,21 @@ const App = () => {
         />
         <Route
           element={
-            authPending ? null : isAuthenticated ? (
+            // NOT `null` -- react-router's _renderMatches only substitutes a
+            // route's own element when it's truthy (`else if (match.route.element)`,
+            // not `!== undefined` as its docs/older versions implied); a
+            // `null` element is treated as "no element provided" and it
+            // renders the outlet (this route's nested children, i.e.
+            // StudentDashboardPage etc.) DIRECTLY instead, completely
+            // skipping StudentLayout/ClassSubjectProvider below. That was
+            // the real cause of "useClassSubject must be used within a
+            // ClassSubjectProvider" crashing on any fresh page load that
+            // lands on /dashboard (or any nested route) while `loading` is
+            // still true -- confirmed via node_modules/react-router/dist/
+            // react-router.development.js. An empty fragment is a real,
+            // truthy React element, so it renders nothing while still being
+            // used as this route's own element.
+            authPending ? <></> : isAuthenticated ? (
               user?.role === "admin" ? (
                 <Navigate replace to="/admin" />
               ) : !isStudentOnboardingComplete(user) ? (
@@ -235,7 +249,9 @@ const App = () => {
         <Route
           path="/admin"
           element={
-            authPending ? null : isAuthenticated ? (
+            // See the matching comment on the other authPending gate above --
+            // must be a truthy empty element, not null.
+            authPending ? <></> : isAuthenticated ? (
               user?.role === "admin" || user?.role === "moderator" ? (
                 <div className="app-shell admin-app-shell" data-theme="dawn">
                   <AdminLayout onLogout={handleLogout} user={user} />
