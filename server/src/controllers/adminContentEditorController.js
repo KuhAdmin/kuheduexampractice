@@ -218,6 +218,7 @@ export const putMemoryHookPromptHandler = async (req, res, next) => {
       assessmentUnitId: req.params.assessmentUnitId,
       sectionKey: req.params.sectionKey,
       promptText: req.body?.prompt,
+      userId: req.user?.id || null,
     });
     return res.json(result);
   } catch (error) {

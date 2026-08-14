@@ -173,6 +173,24 @@ const MEMORY_HOOK_SECTIONS = [
 // Analogy is excluded -- it already pre-fills from real backing text below.
 const PROMPT_GENERATABLE_SECTIONS = new Set(["visualHook", "curiosityHook", "memoryTrick"]);
 
+// All three concept-drafted memory hook images (Visual Hook, Curiosity
+// Hook, Story Visual) render inside the same tall mobile card layout, so
+// every generated prompt is steered toward that same look/aspect ratio
+// rather than leaving it up to whatever the concept-derived prompt happens
+// to describe. Matches the actual "9:16" passed to the image API as
+// IMAGE_ASPECT_RATIO (memoryHookImageService.js) -- that config param, not
+// this text, is what really shapes the output; "9:21" isn't a ratio Gemini's
+// image API documents supporting.
+const MEMORY_HOOK_IMAGE_STYLE_SUFFIX = "Pixar 3D animation style, 9:16 aspect ratio";
+
+const withMemoryHookImageStyle = (prompt) => {
+  const trimmed = (prompt || "").trim();
+  if (!trimmed || trimmed.toLowerCase().includes("pixar 3d animation")) {
+    return trimmed;
+  }
+  return `${trimmed}, ${MEMORY_HOOK_IMAGE_STYLE_SUFFIX}`;
+};
+
 const readFileAsDataUrl = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -345,6 +363,10 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
   const [prompt, setPrompt] = useState("");
+  // The last value actually persisted to the server for activeSection --
+  // compared against the live `prompt` textarea to drive the Save button's
+  // enabled state (only "dirty" once the moderator edits past what's saved).
+  const [savedPrompt, setSavedPrompt] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [viewImageOpen, setViewImageOpen] = useState(false);
@@ -376,8 +398,41 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
     setActiveSection(sectionKey);
     setViewImageOpen(false);
     const sourceField = MEMORY_HOOK_PROMPT_SOURCE_FIELD[sectionKey];
-    setPrompt(media?.[sectionKey]?.promptText || conceptMemory?.[sourceField] || "");
+    const persistedPrompt = media?.[sectionKey]?.promptText || "";
+    const backingText = conceptMemory?.[sourceField] || "";
     setError("");
+
+    if (persistedPrompt) {
+      setPrompt(persistedPrompt);
+      setSavedPrompt(persistedPrompt);
+      return;
+    }
+
+    // These sections have no backing text to prefill from (see the comment
+    // on MEMORY_HOOK_PROMPT_SOURCE_FIELD), so draft the prompt from the
+    // concept automatically instead of making the admin find and click the
+    // "Generate prompt from concept" button every time.
+    if (PROMPT_GENERATABLE_SECTIONS.has(sectionKey)) {
+      setPrompt("");
+      setSavedPrompt("");
+      handleGeneratePrompt(sectionKey);
+      return;
+    }
+
+    // Analogy prefills from real backing text (content_concept_memory.analogy)
+    // instead of an AI draft -- style it the same way and persist it the
+    // same way the other three sections do, so it doesn't need a separate
+    // manual "Save prompt" click the first time either.
+    if (backingText) {
+      const styledPrompt = withMemoryHookImageStyle(backingText);
+      setPrompt(styledPrompt);
+      setSavedPrompt("");
+      persistPrompt(sectionKey, styledPrompt);
+      return;
+    }
+
+    setPrompt("");
+    setSavedPrompt("");
   };
 
   const handleGenerate = async () => {
@@ -389,6 +444,7 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
     setError("");
     try {
       await regenerateMemoryHookImage(assessmentUnitId, activeSection, prompt.trim());
+      setSavedPrompt(prompt.trim());
       await loadMedia();
     } catch (genError) {
       setError(genError.message || "Image generation failed.");
@@ -397,39 +453,45 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
     }
   };
 
-  const handleGeneratePrompt = async () => {
+  // Persist immediately -- the server upserts a draft row (no image yet) or
+  // updates the existing selected row's prompt_text, so a concept-drafted
+  // prompt survives a reload even before "Generate image" has ever been
+  // clicked for this section. Shared by the AI-drafted sections
+  // (handleGeneratePrompt) and Analogy's real-backing-text prefill
+  // (openSection) -- both persist the very first prompt a section shows
+  // without a manual "Save prompt" click.
+  const persistPrompt = async (sectionKey, finalPrompt) => {
     setBusy(true);
     setError("");
     try {
-      const result = await generateMemoryHookPrompt(assessmentUnitId, activeSection);
-      setPrompt(result.prompt);
-      // Persist immediately when there's already an image to attach the
-      // prompt to (the update-prompt endpoint has nothing to save against
-      // otherwise -- for a first-ever image, this prompt is saved as part
-      // of the "Generate image" call below instead).
-      if (media?.[activeSection]) {
-        const saved = await updateMemoryHookPrompt(assessmentUnitId, activeSection, result.prompt);
-        setMedia((current) => ({ ...current, [activeSection]: saved }));
-      }
-    } catch (genError) {
-      setError(genError.message || "Prompt generation failed.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleSavePrompt = async () => {
-    setBusy(true);
-    setError("");
-    try {
-      const result = await updateMemoryHookPrompt(assessmentUnitId, activeSection, prompt.trim());
-      setMedia((current) => ({ ...current, [activeSection]: result }));
+      const saved = await updateMemoryHookPrompt(assessmentUnitId, sectionKey, finalPrompt);
+      setMedia((current) => ({ ...current, [sectionKey]: saved }));
+      setSavedPrompt(finalPrompt);
     } catch (saveError) {
       setError(saveError.message || "Failed to save prompt.");
     } finally {
       setBusy(false);
     }
   };
+
+  const handleGeneratePrompt = async (sectionKeyOverride) => {
+    const sectionKey = typeof sectionKeyOverride === "string" ? sectionKeyOverride : activeSection;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await generateMemoryHookPrompt(assessmentUnitId, sectionKey);
+      const finalPrompt = PROMPT_GENERATABLE_SECTIONS.has(sectionKey)
+        ? withMemoryHookImageStyle(result.prompt)
+        : result.prompt;
+      setPrompt(finalPrompt);
+      await persistPrompt(sectionKey, finalPrompt);
+    } catch (genError) {
+      setError(genError.message || "Prompt generation failed.");
+      setBusy(false);
+    }
+  };
+
+  const handleSavePrompt = () => persistPrompt(activeSection, prompt.trim());
 
   const uploadFile = async (file) => {
     if (!file) return;
@@ -472,7 +534,7 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
                   className="ghost-button"
                   onClick={() => openSection(section.key)}
                 >
-                  {section.label} {media?.[section.key] ? "✓" : ""}
+                  {section.label} {media?.[section.key]?.mediaData ? "✓" : ""}
                 </button>
               ))}
             </div>
@@ -501,21 +563,25 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
                   </button>
                 )}
                 {PROMPT_GENERATABLE_SECTIONS.has(activeSection) && (
-                  <button type="button" className="ghost-button" onClick={handleGeneratePrompt} disabled={busy}>
+                  <button type="button" className="ghost-button" onClick={() => handleGeneratePrompt()} disabled={busy}>
                     {busy ? "Working..." : "Generate prompt from concept"}
                   </button>
                 )}
-                {activeMedia && (
-                  <button type="button" className="ghost-button" onClick={handleSavePrompt} disabled={busy}>
-                    Save prompt
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={handleSavePrompt}
+                  disabled={busy || prompt.trim() === savedPrompt}
+                  title={prompt.trim() === savedPrompt ? "No changes to save" : undefined}
+                >
+                  Save prompt
+                </button>
                 <label className="ghost-button" style={{ cursor: "pointer" }}>
                   Upload file
                   <input type="file" accept="image/*" onChange={handleUpload} disabled={busy} hidden />
                 </label>
                 <button type="button" className="primary-button" onClick={handleGenerate} disabled={busy}>
-                  {busy ? "Working..." : activeMedia ? "Regenerate image" : "Generate image"}
+                  {busy ? "Working..." : activeMedia?.mediaData ? "Regenerate image" : "Generate image"}
                 </button>
               </div>
               {error && <p className="error-text">{error}</p>}

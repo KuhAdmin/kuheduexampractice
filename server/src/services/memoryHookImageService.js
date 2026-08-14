@@ -3,7 +3,10 @@ import { generateImage, createStructuredCompletion } from "./openAiService.js";
 import { getLayer1Context } from "./contentReadService.js";
 
 const IMAGE_MODEL_ID = "gemini-image";
-const IMAGE_ASPECT_RATIO = "16:9";
+// Tall/portrait for the memory-hook cards' mobile layout -- "9:16" is the
+// closest ratio Gemini's image API actually documents supporting (there is
+// no "9:21"; requesting it isn't guaranteed to be honored).
+const IMAGE_ASPECT_RATIO = "9:16";
 
 // All 7 Layer 2 memory-hook fields, each with a fixed expected media type
 // (matches the image/video icon classification already established on the
@@ -303,12 +306,18 @@ export const generateMemoryHookPrompt = async ({ assessmentUnitId, sectionKey })
   return { sectionKey, prompt };
 };
 
-export const getMemoryHookMedia = async (assessmentUnitId) => {
+// includeDrafts defaults to false so every existing (student-facing) caller
+// keeps seeing exactly what it always has -- a prompt-only 'draft' row (see
+// updateMemoryHookPromptText below) is a moderator-in-progress state, never
+// something a student should be served as if it were real media. Only the
+// admin workbench (mediaAdminController.js) opts into includeDrafts: true.
+export const getMemoryHookMedia = async (assessmentUnitId, { includeDrafts = false } = {}) => {
   const result = await pool.query(
     `SELECT section_key, media_type, source, version_number, prompt_text, media_data,
             mime_type, original_file_name, created_at
      FROM memory_hook_media
-     WHERE assessment_unit_id = $1 AND is_selected = TRUE`,
+     WHERE assessment_unit_id = $1 AND is_selected = TRUE
+       ${includeDrafts ? "" : "AND media_data IS NOT NULL"}`,
     [assessmentUnitId]
   );
 
@@ -332,35 +341,65 @@ export const getMemoryHookMedia = async (assessmentUnitId) => {
 };
 
 // Lets a moderator fix/refine a prompt on the currently-selected image
-// without spending an Azure OpenAI call to regenerate it (see
-// regenerateMemoryHookMedia above for the generate path, which already
-// saves whatever prompt was used) -- e.g. editing a typo or wording before
-// the next regenerate. No-op-shaped 404 when nothing has been generated yet
-// for this section, since there's no row to attach the prompt to (schema
-// requires media_data NOT NULL, so a prompt can't be saved standalone).
-export const updateMemoryHookPromptText = async ({ assessmentUnitId, sectionKey, promptText }) => {
-  if (!ALL_SECTION_KEYS.includes(sectionKey)) {
+// without spending an AI call to regenerate it (see regenerateMemoryHookMedia
+// above for the generate path, which already saves whatever prompt was
+// used) -- e.g. editing a typo or wording before the next regenerate.
+// Upserts: if a selected row already exists (draft or real image alike) its
+// prompt_text is updated in place; otherwise a new source='draft' row is
+// created with media_data/mime_type left NULL, purely to hold the prompt
+// until "Generate image"/upload gives it real media -- that next
+// regenerate/upload call creates its own new version and flips is_selected,
+// naturally superseding the draft (see persistMemoryHookMedia). This is what
+// lets a concept-drafted prompt survive a reload before any image exists.
+// Still 404s on "nothing to save" (no row, no text) -- there'd be nothing
+// meaningful to persist.
+export const updateMemoryHookPromptText = async ({ assessmentUnitId, sectionKey, promptText, userId }) => {
+  const config = SECTION_CONFIG[sectionKey];
+  if (!config) {
     const error = new Error(`Invalid section key: ${sectionKey}`);
     error.statusCode = 400;
     throw error;
   }
 
-  const result = await pool.query(
+  const trimmed = typeof promptText === "string" ? promptText.trim() : "";
+
+  const updateResult = await pool.query(
     `
       UPDATE memory_hook_media SET prompt_text = $3
       WHERE assessment_unit_id = $1 AND section_key = $2 AND is_selected = TRUE
       RETURNING id
     `,
-    [assessmentUnitId, sectionKey, promptText || null]
+    [assessmentUnitId, sectionKey, trimmed || null]
   );
 
-  if (!result.rows[0]) {
-    const error = new Error("No existing image to update the prompt for -- generate one first.");
-    error.statusCode = 404;
-    throw error;
+  if (!updateResult.rows[0]) {
+    if (!trimmed) {
+      const error = new Error("No existing image to update the prompt for -- generate one first.");
+      error.statusCode = 404;
+      throw error;
+    }
+    if (config.mediaType !== "image") {
+      const error = new Error(
+        `${config.label} is a video section and can't be AI-generated -- upload a file instead.`
+      );
+      error.statusCode = 422;
+      throw error;
+    }
+    await persistMemoryHookMedia({
+      assessmentUnitId,
+      sectionKey,
+      mediaType: config.mediaType,
+      source: "draft",
+      promptText: trimmed,
+      mediaDataUrl: null,
+      mimeType: null,
+      originalFileName: null,
+      modelName: null,
+      userId,
+    });
   }
 
-  return getMemoryHookMediaForSection(assessmentUnitId, sectionKey);
+  return getMemoryHookMediaForSection(assessmentUnitId, sectionKey, { includeDrafts: true });
 };
 
 // Single-section variant for student-facing lazy loading -- the Concept
@@ -368,8 +407,11 @@ export const updateMemoryHookPromptText = async ({ assessmentUnitId, sectionKey,
 // time (the active Explore step / expanded accordion panel), so fetching
 // all 7 sections' base64 media_data up front (getMemoryHookMedia above,
 // still used by the admin workbench and the Memory Booster pages) wastes
-// most of the transfer on sections the student never opens.
-export const getMemoryHookMediaForSection = async (assessmentUnitId, sectionKey) => {
+// most of the transfer on sections the student never opens. Same
+// includeDrafts default/rationale as getMemoryHookMedia above -- the admin
+// "save prompt" flow (updateMemoryHookPromptText) is the one caller that
+// opts into includeDrafts: true, to read back the draft row it just wrote.
+export const getMemoryHookMediaForSection = async (assessmentUnitId, sectionKey, { includeDrafts = false } = {}) => {
   if (!ALL_SECTION_KEYS.includes(sectionKey)) {
     return null;
   }
@@ -379,6 +421,7 @@ export const getMemoryHookMediaForSection = async (assessmentUnitId, sectionKey)
             mime_type, original_file_name, created_at
      FROM memory_hook_media
      WHERE assessment_unit_id = $1 AND section_key = $2 AND is_selected = TRUE
+       ${includeDrafts ? "" : "AND media_data IS NOT NULL"}
      LIMIT 1`,
     [assessmentUnitId, sectionKey]
   );

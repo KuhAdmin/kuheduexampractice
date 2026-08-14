@@ -7,7 +7,7 @@ import {
 
 export const getMemoryHookMediaHandler = async (req, res, next) => {
   try {
-    const result = await getMemoryHookMedia(req.params.assessmentUnitId);
+    const result = await getMemoryHookMedia(req.params.assessmentUnitId, { includeDrafts: true });
     return res.json({ assessmentUnitId: req.params.assessmentUnitId, media: result });
   } catch (error) {
     return next(error);

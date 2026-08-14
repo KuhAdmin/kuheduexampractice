@@ -564,13 +564,13 @@ CREATE TABLE IF NOT EXISTS memory_hook_media (
     'story', 'realWorldConnection', 'microActivity'
   )),
   media_type VARCHAR(10) NOT NULL CHECK (media_type IN ('image', 'video')),
-  source VARCHAR(10) NOT NULL CHECK (source IN ('generated', 'uploaded')),
+  source VARCHAR(10) NOT NULL CHECK (source IN ('generated', 'uploaded', 'draft')),
   version_number INTEGER NOT NULL,
   is_selected BOOLEAN NOT NULL DEFAULT FALSE,
   prompt_text TEXT,
   aspect_ratio VARCHAR(10) DEFAULT '3:2',
-  media_data TEXT NOT NULL,
-  mime_type VARCHAR(60) NOT NULL,
+  media_data TEXT,
+  mime_type VARCHAR(60),
   original_file_name VARCHAR(255),
   model_name VARCHAR(120),
   status VARCHAR(20) NOT NULL DEFAULT 'completed' CHECK (status IN ('completed', 'failed')),
@@ -582,6 +582,18 @@ CREATE TABLE IF NOT EXISTS memory_hook_media (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_memory_hook_media_selected
 ON memory_hook_media (assessment_unit_id, section_key) WHERE is_selected;
+
+-- 'draft' source (below) lets a moderator's AI-drafted or hand-edited
+-- prompt persist before any image exists yet -- media_data/mime_type made
+-- nullable to support that row shape (see memoryHookImageService.js's
+-- updateMemoryHookPromptText). Every student-facing read still filters
+-- media_data IS NOT NULL, so a draft is invisible until an image is
+-- actually generated/uploaded for it.
+ALTER TABLE IF EXISTS memory_hook_media ALTER COLUMN media_data DROP NOT NULL;
+ALTER TABLE IF EXISTS memory_hook_media ALTER COLUMN mime_type DROP NOT NULL;
+ALTER TABLE IF EXISTS memory_hook_media DROP CONSTRAINT IF EXISTS memory_hook_media_source_check;
+ALTER TABLE IF EXISTS memory_hook_media ADD CONSTRAINT memory_hook_media_source_check
+CHECK (source IN ('generated', 'uploaded', 'draft'));
 
 -- Append-only log of a student's own responses to the Layer 2 "Try This"
 -- micro-activity prompt, plus the qualitative AI feedback each one got. No

@@ -8718,6 +8718,8 @@ a {
   gap: 8px;
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .admin-sidebar-link {
