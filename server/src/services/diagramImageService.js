@@ -1,9 +1,17 @@
 import { pool } from "../db/pool.js";
 import { getDiagramsForSection } from "./contentReadService.js";
 import { generateImage } from "./openAiService.js";
+import {
+  getAzureImageSize,
+  resolveAspectRatio,
+  resolveQuality,
+  resolveStyle,
+  applyStyleToPrompt,
+  DEFAULT_ASPECT_RATIO_DIAGRAM,
+} from "./imageGenerationOptions.js";
 
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
-const IMAGE_MODEL_ID = "azure-image-gpt-image-1";
+const IMAGE_MODEL_ID = "azure-image-gpt-image-2";
 
 const getDiagram = async (contentCardId) => {
   const result = await pool.query(
@@ -31,6 +39,9 @@ const persistDiagramMedia = async ({
   source = "uploaded",
   promptText = null,
   modelName = null,
+  aspectRatio = null,
+  quality = null,
+  style = null,
 }) => {
   const client = await pool.connect();
   try {
@@ -53,8 +64,8 @@ const persistDiagramMedia = async ({
       `INSERT INTO content_card_media (
          content_card_id, version_number, is_selected,
          media_data, mime_type, original_file_name, created_by,
-         source, prompt_text, model_name
-       ) VALUES ($1, $2, TRUE, $3, $4, $5, $6, $7, $8, $9)
+         source, prompt_text, model_name, aspect_ratio, quality, style
+       ) VALUES ($1, $2, TRUE, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING id, version_number, created_at`,
       [
         contentCardId,
@@ -66,6 +77,9 @@ const persistDiagramMedia = async ({
         source,
         promptText,
         modelName,
+        aspectRatio,
+        quality,
+        style,
       ]
     );
 
@@ -148,7 +162,7 @@ export const uploadDiagramMedia = async ({ contentCardId, dataUrl, fileName, use
 // via the exact same version-increment/is_selected-flip transaction as a
 // manual upload, just tagged source='generated' with the prompt/model kept
 // for the editor UI to show.
-export const regenerateDiagramMedia = async ({ contentCardId, prompt, userId }) => {
+export const regenerateDiagramMedia = async ({ contentCardId, prompt, userId, aspectRatio, quality, style }) => {
   const diagram = await getDiagram(contentCardId);
   if (!diagram) {
     const error = new Error("Diagram not found.");
@@ -162,7 +176,18 @@ export const regenerateDiagramMedia = async ({ contentCardId, prompt, userId }) 
     throw error;
   }
 
-  const result = await generateImage({ prompt: prompt.trim(), modelId: IMAGE_MODEL_ID });
+  const resolvedAspectRatio = resolveAspectRatio(aspectRatio, DEFAULT_ASPECT_RATIO_DIAGRAM);
+  const resolvedQuality = resolveQuality(quality);
+  const resolvedStyle = resolveStyle(style);
+  const trimmedPrompt = prompt.trim();
+
+  const result = await generateImage({
+    prompt: applyStyleToPrompt(trimmedPrompt, resolvedStyle),
+    modelId: IMAGE_MODEL_ID,
+    size: getAzureImageSize(resolvedAspectRatio),
+    aspectRatio: resolvedAspectRatio,
+    quality: resolvedQuality,
+  });
 
   const saved = await persistDiagramMedia({
     contentCardId,
@@ -171,8 +196,11 @@ export const regenerateDiagramMedia = async ({ contentCardId, prompt, userId }) 
     originalFileName: null,
     userId,
     source: "generated",
-    promptText: prompt.trim(),
+    promptText: trimmedPrompt,
     modelName: result.model,
+    aspectRatio: resolvedAspectRatio,
+    quality: resolvedQuality,
+    style: resolvedStyle,
   });
 
   return {
@@ -181,8 +209,11 @@ export const regenerateDiagramMedia = async ({ contentCardId, prompt, userId }) 
     versionNumber: saved.version_number,
     mediaData: result.imageDataUrl,
     mimeType: result.mimeType,
-    promptText: prompt.trim(),
+    promptText: trimmedPrompt,
     modelName: result.model,
+    aspectRatio: resolvedAspectRatio,
+    quality: resolvedQuality,
+    style: resolvedStyle,
     createdAt: saved.created_at,
   };
 };
@@ -207,7 +238,7 @@ export const getDiagramsForAssessmentUnit = async (assessmentUnitId) => {
 export const getDiagramMedia = async (contentCardId) => {
   const result = await pool.query(
     `SELECT version_number, media_data, mime_type, original_file_name, created_at,
-            source, prompt_text, model_name
+            source, prompt_text, model_name, aspect_ratio, quality, style
      FROM content_card_media
      WHERE content_card_id = $1 AND is_selected = TRUE
      LIMIT 1`,
@@ -227,6 +258,9 @@ export const getDiagramMedia = async (contentCardId) => {
     originalFileName: row.original_file_name,
     promptText: row.prompt_text,
     modelName: row.model_name,
+    aspectRatio: row.aspect_ratio,
+    quality: row.quality,
+    style: row.style,
     createdAt: row.created_at,
   };
 };

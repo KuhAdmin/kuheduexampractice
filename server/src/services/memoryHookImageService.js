@@ -1,12 +1,16 @@
 import { pool } from "../db/pool.js";
 import { generateImage, createStructuredCompletion } from "./openAiService.js";
 import { getLayer1Context } from "./contentReadService.js";
+import {
+  getAzureImageSize,
+  resolveAspectRatio,
+  resolveQuality,
+  resolveStyle,
+  applyStyleToPrompt,
+  DEFAULT_ASPECT_RATIO_MEMORY_HOOK,
+} from "./imageGenerationOptions.js";
 
-const IMAGE_MODEL_ID = "gemini-image";
-// Tall/portrait for the memory-hook cards' mobile layout -- "9:16" is the
-// closest ratio Gemini's image API actually documents supporting (there is
-// no "9:21"; requesting it isn't guaranteed to be honored).
-const IMAGE_ASPECT_RATIO = "9:16";
+const IMAGE_MODEL_ID = "azure-image-gpt-image-2";
 
 // All 7 Layer 2 memory-hook fields, each with a fixed expected media type
 // (matches the image/video icon classification already established on the
@@ -41,6 +45,9 @@ const persistMemoryHookMedia = async ({
   originalFileName,
   modelName,
   userId,
+  aspectRatio = null,
+  quality = null,
+  style = null,
 }) => {
   const client = await pool.connect();
   try {
@@ -62,8 +69,8 @@ const persistMemoryHookMedia = async ({
     const insertResult = await client.query(
       `INSERT INTO memory_hook_media (
          assessment_unit_id, section_key, media_type, source, version_number, is_selected,
-         prompt_text, aspect_ratio, media_data, mime_type, original_file_name, model_name, status, created_by
-       ) VALUES ($1, $2, $3, $4, $5, TRUE, $6, $7, $8, $9, $10, $11, 'completed', $12)
+         prompt_text, aspect_ratio, media_data, mime_type, original_file_name, model_name, status, created_by, quality, style
+       ) VALUES ($1, $2, $3, $4, $5, TRUE, $6, $7, $8, $9, $10, $11, 'completed', $12, $13, $14)
        RETURNING id, version_number, created_at`,
       [
         assessmentUnitId,
@@ -72,12 +79,14 @@ const persistMemoryHookMedia = async ({
         source,
         nextVersion,
         promptText || null,
-        mediaType === "image" ? "3:2" : null,
+        mediaType === "image" ? aspectRatio : null,
         mediaDataUrl,
         mimeType,
         originalFileName || null,
         modelName || null,
         userId || null,
+        mediaType === "image" ? quality : null,
+        mediaType === "image" ? style : null,
       ]
     );
 
@@ -173,7 +182,15 @@ export const uploadMemoryHookMedia = async ({ assessmentUnitId, sectionKey, data
 // path (generateImage is images-only), upload remains the only source for
 // those. Reuses the exact same persistMemoryHookMedia transaction as upload,
 // just tagged source='generated'.
-export const regenerateMemoryHookMedia = async ({ assessmentUnitId, sectionKey, prompt, userId }) => {
+export const regenerateMemoryHookMedia = async ({
+  assessmentUnitId,
+  sectionKey,
+  prompt,
+  userId,
+  aspectRatio,
+  quality,
+  style,
+}) => {
   const config = SECTION_CONFIG[sectionKey];
   if (!config) {
     const error = new Error(`Invalid section key: ${sectionKey}`);
@@ -193,10 +210,17 @@ export const regenerateMemoryHookMedia = async ({ assessmentUnitId, sectionKey, 
     throw error;
   }
 
+  const resolvedAspectRatio = resolveAspectRatio(aspectRatio, DEFAULT_ASPECT_RATIO_MEMORY_HOOK);
+  const resolvedQuality = resolveQuality(quality);
+  const resolvedStyle = resolveStyle(style);
+  const trimmedPrompt = prompt.trim();
+
   const result = await generateImage({
-    prompt: prompt.trim(),
+    prompt: applyStyleToPrompt(trimmedPrompt, resolvedStyle),
     modelId: IMAGE_MODEL_ID,
-    aspectRatio: IMAGE_ASPECT_RATIO,
+    size: getAzureImageSize(resolvedAspectRatio),
+    aspectRatio: resolvedAspectRatio,
+    quality: resolvedQuality,
   });
 
   const saved = await persistMemoryHookMedia({
@@ -204,12 +228,15 @@ export const regenerateMemoryHookMedia = async ({ assessmentUnitId, sectionKey, 
     sectionKey,
     mediaType: "image",
     source: "generated",
-    promptText: prompt.trim(),
+    promptText: trimmedPrompt,
     mediaDataUrl: result.imageDataUrl,
     mimeType: result.mimeType,
     originalFileName: null,
     modelName: result.model,
     userId,
+    aspectRatio: resolvedAspectRatio,
+    quality: resolvedQuality,
+    style: resolvedStyle,
   });
 
   return {
@@ -219,8 +246,11 @@ export const regenerateMemoryHookMedia = async ({ assessmentUnitId, sectionKey, 
     versionNumber: saved.version_number,
     mediaData: result.imageDataUrl,
     mimeType: result.mimeType,
-    promptText: prompt.trim(),
+    promptText: trimmedPrompt,
     modelName: result.model,
+    aspectRatio: resolvedAspectRatio,
+    quality: resolvedQuality,
+    style: resolvedStyle,
     createdAt: saved.created_at,
   };
 };
@@ -252,17 +282,21 @@ const PROMPT_GENERATION_SECTIONS = {
   },
 };
 
-// Style/aspect ratio are baked into the generated prompt text itself (not
-// just passed as separate generation params) so the art direction survives
-// even if a moderator copies the prompt elsewhere or hand-edits it before
-// generating.
+// Neither style nor aspect ratio is mentioned here -- both are real,
+// structured, admin-selectable params now (see imageGenerationOptions.js):
+// aspect ratio flows into generateImage's size/aspectRatio args, and style
+// is composed onto the prompt separately at generation time
+// (applyStyleToPrompt, in regenerateMemoryHookMedia) rather than being
+// baked into the drafted prompt text itself. Keeping this AI-drafted text
+// to a pure scene description means the moderator's saved promptText never
+// contains stale style/ratio wording that could drift out of sync with
+// whatever's actually selected in the UI.
 const PROMPT_GENERATION_SYSTEM =
   "You write short, vivid prompts for an AI image generator that illustrates school concepts for students. " +
-  "Every prompt must render in warm, rounded Pixar-style 3D animation -- expressive character/object design, " +
-  "soft cinematic lighting -- composed for a 16:9 widescreen frame. Describe a single concrete scene in 2-4 " +
-  'sentences: what\'s in it, the style, the mood. Always end the prompt with the exact phrase "Pixar-style 3D ' +
-  'animation, 16:9 widescreen." Never include any text, letters, numbers, or labels to render inside the ' +
-  "image. Return only valid JSON matching the schema.";
+  "Describe a single concrete scene in 2-4 sentences: what's in it, the setting, the mood -- concrete, " +
+  "visual, and specific to the concept. Do not describe an art style or rendering technique; that is applied " +
+  "separately. Never include any text, letters, numbers, or labels to render inside the image. Return only " +
+  "valid JSON matching the schema.";
 
 export const generateMemoryHookPrompt = async ({ assessmentUnitId, sectionKey }) => {
   const config = PROMPT_GENERATION_SECTIONS[sectionKey];
@@ -314,7 +348,7 @@ export const generateMemoryHookPrompt = async ({ assessmentUnitId, sectionKey })
 export const getMemoryHookMedia = async (assessmentUnitId, { includeDrafts = false } = {}) => {
   const result = await pool.query(
     `SELECT section_key, media_type, source, version_number, prompt_text, media_data,
-            mime_type, original_file_name, created_at
+            mime_type, original_file_name, created_at, aspect_ratio, quality, style
      FROM memory_hook_media
      WHERE assessment_unit_id = $1 AND is_selected = TRUE
        ${includeDrafts ? "" : "AND media_data IS NOT NULL"}`,
@@ -334,6 +368,9 @@ export const getMemoryHookMedia = async (assessmentUnitId, { includeDrafts = fal
       mediaData: row.media_data,
       mimeType: row.mime_type,
       originalFileName: row.original_file_name,
+      aspectRatio: row.aspect_ratio,
+      quality: row.quality,
+      style: row.style,
       createdAt: row.created_at,
     };
   }
@@ -353,7 +390,7 @@ export const getMemoryHookMedia = async (assessmentUnitId, { includeDrafts = fal
 // lets a concept-drafted prompt survive a reload before any image exists.
 // Still 404s on "nothing to save" (no row, no text) -- there'd be nothing
 // meaningful to persist.
-export const updateMemoryHookPromptText = async ({ assessmentUnitId, sectionKey, promptText, userId }) => {
+export const updateMemoryHookPromptText = async ({ assessmentUnitId, sectionKey, promptText, userId, aspectRatio }) => {
   const config = SECTION_CONFIG[sectionKey];
   if (!config) {
     const error = new Error(`Invalid section key: ${sectionKey}`);
@@ -362,14 +399,15 @@ export const updateMemoryHookPromptText = async ({ assessmentUnitId, sectionKey,
   }
 
   const trimmed = typeof promptText === "string" ? promptText.trim() : "";
+  const resolvedAspectRatio = resolveAspectRatio(aspectRatio, DEFAULT_ASPECT_RATIO_MEMORY_HOOK);
 
   const updateResult = await pool.query(
     `
-      UPDATE memory_hook_media SET prompt_text = $3
+      UPDATE memory_hook_media SET prompt_text = $3, aspect_ratio = $4
       WHERE assessment_unit_id = $1 AND section_key = $2 AND is_selected = TRUE
       RETURNING id
     `,
-    [assessmentUnitId, sectionKey, trimmed || null]
+    [assessmentUnitId, sectionKey, trimmed || null, resolvedAspectRatio]
   );
 
   if (!updateResult.rows[0]) {
@@ -396,6 +434,7 @@ export const updateMemoryHookPromptText = async ({ assessmentUnitId, sectionKey,
       originalFileName: null,
       modelName: null,
       userId,
+      aspectRatio: resolvedAspectRatio,
     });
   }
 
@@ -418,7 +457,7 @@ export const getMemoryHookMediaForSection = async (assessmentUnitId, sectionKey,
 
   const result = await pool.query(
     `SELECT section_key, media_type, source, version_number, prompt_text, media_data,
-            mime_type, original_file_name, created_at
+            mime_type, original_file_name, created_at, aspect_ratio, quality, style
      FROM memory_hook_media
      WHERE assessment_unit_id = $1 AND section_key = $2 AND is_selected = TRUE
        ${includeDrafts ? "" : "AND media_data IS NOT NULL"}
@@ -439,6 +478,9 @@ export const getMemoryHookMediaForSection = async (assessmentUnitId, sectionKey,
     mediaData: row.media_data,
     mimeType: row.mime_type,
     originalFileName: row.original_file_name,
+    aspectRatio: row.aspect_ratio,
+    quality: row.quality,
+    style: row.style,
     createdAt: row.created_at,
   };
 };

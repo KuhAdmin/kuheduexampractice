@@ -562,22 +562,22 @@ export const updateContentEditorCard = async (cardId, { title, summary, details,
     body: JSON.stringify({ title, summary, details, isHidden }),
   });
 
-export const regenerateContentCardImage = async (cardId, prompt) =>
+export const regenerateContentCardImage = async (cardId, prompt, aspectRatio, quality, style) =>
   apiRequest(`/admin/content-editor/cards/${cardId}/regenerate-image`, {
     method: "POST",
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, aspectRatio, quality, style }),
   });
 
-export const regenerateMemoryHookImage = async (assessmentUnitId, sectionKey, prompt) =>
+export const regenerateMemoryHookImage = async (assessmentUnitId, sectionKey, prompt, aspectRatio, quality, style) =>
   apiRequest(`/admin/content-editor/memory-hooks/${assessmentUnitId}/${sectionKey}/regenerate-image`, {
     method: "POST",
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, aspectRatio, quality, style }),
   });
 
-export const updateMemoryHookPrompt = async (assessmentUnitId, sectionKey, prompt) =>
+export const updateMemoryHookPrompt = async (assessmentUnitId, sectionKey, prompt, aspectRatio) =>
   apiRequest(`/admin/content-editor/memory-hooks/${assessmentUnitId}/${sectionKey}/prompt`, {
     method: "PUT",
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, aspectRatio }),
   });
 
 export const generateMemoryHookPrompt = async (assessmentUnitId, sectionKey) =>

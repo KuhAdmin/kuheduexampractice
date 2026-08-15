@@ -25,6 +25,15 @@ import { AdminContentDetailsEditor } from "../components/AdminContentDetailsEdit
 import { AdminContentTree } from "../components/AdminContentTree";
 import { useAuth } from "../context/authHooks";
 import { isAdmin } from "../roles";
+import {
+  ASPECT_RATIO_OPTIONS,
+  QUALITY_OPTIONS,
+  STYLE_OPTIONS,
+  DEFAULT_ASPECT_RATIO_DIAGRAM,
+  DEFAULT_ASPECT_RATIO_MEMORY_HOOK,
+  DEFAULT_QUALITY,
+  DEFAULT_STYLE,
+} from "../content/imageGenerationOptions";
 
 // Mirrors the student "Deep Learn" action-row groups (StudentSectionDetailPage.jsx)
 // so moderators -- who use the student app daily -- see the same shape of
@@ -173,24 +182,6 @@ const MEMORY_HOOK_SECTIONS = [
 // Analogy is excluded -- it already pre-fills from real backing text below.
 const PROMPT_GENERATABLE_SECTIONS = new Set(["visualHook", "curiosityHook", "memoryTrick"]);
 
-// All three concept-drafted memory hook images (Visual Hook, Curiosity
-// Hook, Story Visual) render inside the same tall mobile card layout, so
-// every generated prompt is steered toward that same look/aspect ratio
-// rather than leaving it up to whatever the concept-derived prompt happens
-// to describe. Matches the actual "9:16" passed to the image API as
-// IMAGE_ASPECT_RATIO (memoryHookImageService.js) -- that config param, not
-// this text, is what really shapes the output; "9:21" isn't a ratio Gemini's
-// image API documents supporting.
-const MEMORY_HOOK_IMAGE_STYLE_SUFFIX = "Pixar 3D animation style, 9:16 aspect ratio";
-
-const withMemoryHookImageStyle = (prompt) => {
-  const trimmed = (prompt || "").trim();
-  if (!trimmed || trimmed.toLowerCase().includes("pixar 3d animation")) {
-    return trimmed;
-  }
-  return `${trimmed}, ${MEMORY_HOOK_IMAGE_STYLE_SUFFIX}`;
-};
-
 const readFileAsDataUrl = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -243,6 +234,9 @@ const CardImagePanel = ({ card }) => {
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(true);
   const [prompt, setPrompt] = useState("");
+  const [aspectRatio, setAspectRatio] = useState(DEFAULT_ASPECT_RATIO_DIAGRAM);
+  const [quality, setQuality] = useState(DEFAULT_QUALITY);
+  const [style, setStyle] = useState(DEFAULT_STYLE);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -253,6 +247,9 @@ const CardImagePanel = ({ card }) => {
       const result = await getDiagramMedia(card.id);
       setMedia(result?.media || null);
       setPrompt(result?.media?.promptText || "");
+      setAspectRatio(result?.media?.aspectRatio || DEFAULT_ASPECT_RATIO_DIAGRAM);
+      setQuality(result?.media?.quality || DEFAULT_QUALITY);
+      setStyle(result?.media?.style || DEFAULT_STYLE);
     } catch (loadError) {
       setError(loadError.message || "Failed to load image.");
     } finally {
@@ -272,7 +269,7 @@ const CardImagePanel = ({ card }) => {
     setBusy(true);
     setError("");
     try {
-      await regenerateContentCardImage(card.id, prompt.trim());
+      await regenerateContentCardImage(card.id, prompt.trim(), aspectRatio, quality, style);
       await loadMedia();
     } catch (genError) {
       setError(genError.message || "Image generation failed.");
@@ -305,37 +302,83 @@ const CardImagePanel = ({ card }) => {
   return (
     <div className="admin-studio-field">
       <span>Image</span>
-      {loading ? (
-        <p>Loading image...</p>
-      ) : media ? (
-        <div>
-          <img
-            src={media.mediaData}
-            alt={card.title || "Card image"}
-            style={{ maxWidth: "100%", maxHeight: 220, borderRadius: 8, display: "block", marginBottom: 8 }}
-          />
-          <p style={{ fontSize: 12, opacity: 0.75 }}>
-            Source: {media.source} {media.modelName ? `· ${media.modelName}` : ""}
-          </p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 3fr", gap: 16, alignItems: "start" }}>
+        <div style={{ display: "grid", gap: 10 }}>
+          {loading ? (
+            <p>Loading image...</p>
+          ) : media ? (
+            <div>
+              <img
+                src={media.mediaData}
+                alt={card.title || "Card image"}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 180,
+                  borderRadius: 8,
+                  display: "block",
+                  margin: "0 auto 8px",
+                }}
+              />
+              <p style={{ fontSize: 12, opacity: 0.75, textAlign: "center" }}>
+                Source: {media.source} {media.modelName ? `· ${media.modelName}` : ""}
+              </p>
+            </div>
+          ) : (
+            <p>No image yet.</p>
+          )}
+          <ImageDropZone onFile={uploadFile} busy={busy} />
         </div>
-      ) : (
-        <p>No image yet.</p>
-      )}
-      <textarea
-        rows={3}
-        value={prompt}
-        placeholder="Describe the image to generate..."
-        onChange={(event) => setPrompt(event.target.value)}
-      />
-      <ImageDropZone onFile={uploadFile} busy={busy} />
-      <div className="admin-bulk-pipeline-dialog-actions">
-        <label className="ghost-button" style={{ cursor: "pointer" }}>
-          Upload file
-          <input type="file" accept="image/*" onChange={handleUpload} disabled={busy} hidden />
-        </label>
-        <button type="button" className="primary-button" onClick={handleGenerate} disabled={busy}>
-          {busy ? "Working..." : media ? "Regenerate image" : "Generate image"}
-        </button>
+        <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
+          <textarea
+            rows={5}
+            value={prompt}
+            placeholder="Describe the image to generate..."
+            onChange={(event) => setPrompt(event.target.value)}
+          />
+          <div className="admin-studio-field" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+            <label>
+              Aspect ratio
+              <select value={aspectRatio} onChange={(event) => setAspectRatio(event.target.value)} disabled={busy}>
+                {ASPECT_RATIO_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Quality
+              <select value={quality} onChange={(event) => setQuality(event.target.value)} disabled={busy}>
+                {QUALITY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Style
+              <select value={style} onChange={(event) => setStyle(event.target.value)} disabled={busy}>
+                {STYLE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div style={{ display: "grid", gap: 10 }}>
+            <div className="admin-bulk-pipeline-dialog-actions admin-image-gen-actions">
+              <label className="ghost-button" style={{ cursor: "pointer" }}>
+                Upload file
+                <input type="file" accept="image/*" onChange={handleUpload} disabled={busy} hidden />
+              </label>
+              <button type="button" className="primary-button" onClick={handleGenerate} disabled={busy}>
+                {busy ? "Working..." : media?.mediaData ? "Regenerate image" : "Generate image"}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
       {error && <p className="error-text">{error}</p>}
     </div>
@@ -367,9 +410,16 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
   // compared against the live `prompt` textarea to drive the Save button's
   // enabled state (only "dirty" once the moderator edits past what's saved).
   const [savedPrompt, setSavedPrompt] = useState("");
+  // Aspect ratio/quality/style are purely staged, not dirty-tracked --
+  // whatever's currently selected is what the next Generate/Save persists
+  // (see persistPrompt/handleGenerate), no separate save affordance.
+  const [aspectRatio, setAspectRatio] = useState(DEFAULT_ASPECT_RATIO_MEMORY_HOOK);
+  const [quality, setQuality] = useState(DEFAULT_QUALITY);
+  const [style, setStyle] = useState(DEFAULT_STYLE);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [viewImageOpen, setViewImageOpen] = useState(false);
+  const [fitToWindow, setFitToWindow] = useState(true);
 
   const loadMedia = useCallback(async () => {
     setLoading(true);
@@ -400,7 +450,17 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
     const sourceField = MEMORY_HOOK_PROMPT_SOURCE_FIELD[sectionKey];
     const persistedPrompt = media?.[sectionKey]?.promptText || "";
     const backingText = conceptMemory?.[sourceField] || "";
+    // Resolved as locals (not read back from state) since setAspectRatio/
+    // setQuality below won't be visible to handleGeneratePrompt/persistPrompt
+    // if they run synchronously later in this same call -- React state
+    // updates don't apply until the next render.
+    const resolvedAspectRatio = media?.[sectionKey]?.aspectRatio || DEFAULT_ASPECT_RATIO_MEMORY_HOOK;
+    const resolvedQuality = media?.[sectionKey]?.quality || DEFAULT_QUALITY;
+    const resolvedStyle = media?.[sectionKey]?.style || DEFAULT_STYLE;
     setError("");
+    setAspectRatio(resolvedAspectRatio);
+    setQuality(resolvedQuality);
+    setStyle(resolvedStyle);
 
     if (persistedPrompt) {
       setPrompt(persistedPrompt);
@@ -415,19 +475,19 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
     if (PROMPT_GENERATABLE_SECTIONS.has(sectionKey)) {
       setPrompt("");
       setSavedPrompt("");
-      handleGeneratePrompt(sectionKey);
+      handleGeneratePrompt(sectionKey, resolvedAspectRatio);
       return;
     }
 
     // Analogy prefills from real backing text (content_concept_memory.analogy)
-    // instead of an AI draft -- style it the same way and persist it the
-    // same way the other three sections do, so it doesn't need a separate
-    // manual "Save prompt" click the first time either.
+    // instead of an AI draft -- persist it the same way the other three
+    // sections do, so it doesn't need a separate manual "Save prompt" click
+    // the first time either. Used as-is, no style wording added -- style is
+    // a UI-selectable param applied separately at generation time.
     if (backingText) {
-      const styledPrompt = withMemoryHookImageStyle(backingText);
-      setPrompt(styledPrompt);
+      setPrompt(backingText);
       setSavedPrompt("");
-      persistPrompt(sectionKey, styledPrompt);
+      persistPrompt(sectionKey, backingText, resolvedAspectRatio);
       return;
     }
 
@@ -443,7 +503,7 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
     setBusy(true);
     setError("");
     try {
-      await regenerateMemoryHookImage(assessmentUnitId, activeSection, prompt.trim());
+      await regenerateMemoryHookImage(assessmentUnitId, activeSection, prompt.trim(), aspectRatio, quality, style);
       setSavedPrompt(prompt.trim());
       await loadMedia();
     } catch (genError) {
@@ -460,11 +520,16 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
   // (handleGeneratePrompt) and Analogy's real-backing-text prefill
   // (openSection) -- both persist the very first prompt a section shows
   // without a manual "Save prompt" click.
-  const persistPrompt = async (sectionKey, finalPrompt) => {
+  const persistPrompt = async (sectionKey, finalPrompt, aspectRatioOverride) => {
     setBusy(true);
     setError("");
     try {
-      const saved = await updateMemoryHookPrompt(assessmentUnitId, sectionKey, finalPrompt);
+      const saved = await updateMemoryHookPrompt(
+        assessmentUnitId,
+        sectionKey,
+        finalPrompt,
+        aspectRatioOverride || aspectRatio
+      );
       setMedia((current) => ({ ...current, [sectionKey]: saved }));
       setSavedPrompt(finalPrompt);
     } catch (saveError) {
@@ -474,17 +539,15 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
     }
   };
 
-  const handleGeneratePrompt = async (sectionKeyOverride) => {
+  const handleGeneratePrompt = async (sectionKeyOverride, aspectRatioOverride) => {
     const sectionKey = typeof sectionKeyOverride === "string" ? sectionKeyOverride : activeSection;
     setBusy(true);
     setError("");
     try {
       const result = await generateMemoryHookPrompt(assessmentUnitId, sectionKey);
-      const finalPrompt = PROMPT_GENERATABLE_SECTIONS.has(sectionKey)
-        ? withMemoryHookImageStyle(result.prompt)
-        : result.prompt;
+      const finalPrompt = result.prompt;
       setPrompt(finalPrompt);
-      await persistPrompt(sectionKey, finalPrompt);
+      await persistPrompt(sectionKey, finalPrompt, aspectRatioOverride);
     } catch (genError) {
       setError(genError.message || "Prompt generation failed.");
       setBusy(false);
@@ -542,47 +605,103 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
           {activeSection && (
             <div className="admin-studio-field" style={{ marginTop: 12 }}>
               <span>{MEMORY_HOOK_SECTIONS.find((s) => s.key === activeSection)?.label}</span>
-              {activeMedia?.mediaData && (
-                <img
-                  src={activeMedia.mediaData}
-                  alt={activeSection}
-                  style={{ maxWidth: "100%", maxHeight: 180, borderRadius: 8, display: "block", marginBottom: 8 }}
-                />
-              )}
-              <textarea
-                rows={3}
-                value={prompt}
-                placeholder="Describe the image to generate..."
-                onChange={(event) => setPrompt(event.target.value)}
-              />
-              <ImageDropZone onFile={uploadFile} busy={busy} />
-              <div className="admin-bulk-pipeline-dialog-actions">
-                {activeMedia?.mediaData && (
-                  <button type="button" className="ghost-button" onClick={() => setViewImageOpen(true)}>
-                    View image
-                  </button>
-                )}
-                {PROMPT_GENERATABLE_SECTIONS.has(activeSection) && (
-                  <button type="button" className="ghost-button" onClick={() => handleGeneratePrompt()} disabled={busy}>
-                    {busy ? "Working..." : "Generate prompt from concept"}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="ghost-button"
-                  onClick={handleSavePrompt}
-                  disabled={busy || prompt.trim() === savedPrompt}
-                  title={prompt.trim() === savedPrompt ? "No changes to save" : undefined}
-                >
-                  Save prompt
-                </button>
-                <label className="ghost-button" style={{ cursor: "pointer" }}>
-                  Upload file
-                  <input type="file" accept="image/*" onChange={handleUpload} disabled={busy} hidden />
-                </label>
-                <button type="button" className="primary-button" onClick={handleGenerate} disabled={busy}>
-                  {busy ? "Working..." : activeMedia?.mediaData ? "Regenerate image" : "Generate image"}
-                </button>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 3fr", gap: 16, alignItems: "start" }}>
+                <div style={{ display: "grid", gap: 10 }}>
+                  {activeMedia?.mediaData && (
+                    <img
+                      src={activeMedia.mediaData}
+                      alt={activeSection}
+                      style={{ maxWidth: "100%", maxHeight: 180, borderRadius: 8, display: "block", margin: "0 auto" }}
+                    />
+                  )}
+                  <ImageDropZone onFile={uploadFile} busy={busy} />
+                </div>
+                <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
+                  <textarea
+                    rows={5}
+                    value={prompt}
+                    placeholder="Describe the image to generate..."
+                    onChange={(event) => setPrompt(event.target.value)}
+                  />
+                  <div className="admin-studio-field" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                    <label>
+                      Aspect ratio
+                      <select
+                        value={aspectRatio}
+                        onChange={(event) => setAspectRatio(event.target.value)}
+                        disabled={busy}
+                      >
+                        {ASPECT_RATIO_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Quality
+                      <select value={quality} onChange={(event) => setQuality(event.target.value)} disabled={busy}>
+                        {QUALITY_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Style
+                      <select value={style} onChange={(event) => setStyle(event.target.value)} disabled={busy}>
+                        {STYLE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div style={{ display: "grid", gap: 10 }}>
+                    <div className="admin-bulk-pipeline-dialog-actions admin-image-gen-actions">
+                      {activeMedia?.mediaData && (
+                        <button
+                          type="button"
+                          className="ghost-button"
+                          onClick={() => {
+                            setFitToWindow(true);
+                            setViewImageOpen(true);
+                          }}
+                        >
+                          View image
+                        </button>
+                      )}
+                      {PROMPT_GENERATABLE_SECTIONS.has(activeSection) && (
+                        <button
+                          type="button"
+                          className="ghost-button"
+                          onClick={() => handleGeneratePrompt()}
+                          disabled={busy}
+                        >
+                          {busy ? "Working..." : "Generate prompt from concept"}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="ghost-button"
+                        onClick={handleSavePrompt}
+                        disabled={busy || prompt.trim() === savedPrompt}
+                        title={prompt.trim() === savedPrompt ? "No changes to save" : undefined}
+                      >
+                        Save prompt
+                      </button>
+                      <label className="ghost-button" style={{ cursor: "pointer" }}>
+                        Upload file
+                        <input type="file" accept="image/*" onChange={handleUpload} disabled={busy} hidden />
+                      </label>
+                      <button type="button" className="primary-button" onClick={handleGenerate} disabled={busy}>
+                        {busy ? "Working..." : activeMedia?.mediaData ? "Regenerate image" : "Generate image"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
               {error && <p className="error-text">{error}</p>}
             </div>
@@ -602,7 +721,39 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
               &times;
             </button>
             <h2>{MEMORY_HOOK_SECTIONS.find((s) => s.key === activeSection)?.label}</h2>
-            <img src={activeMedia.mediaData} alt={activeSection} style={{ maxWidth: "100%", borderRadius: 8 }} />
+            <div className="admin-bulk-pipeline-header-actions" style={{ marginBottom: 12 }}>
+              <button
+                type="button"
+                className={`ghost-button${fitToWindow ? " is-active" : ""}`}
+                onClick={() => setFitToWindow(true)}
+              >
+                Fit to Window
+              </button>
+              <button
+                type="button"
+                className={`ghost-button${fitToWindow ? "" : " is-active"}`}
+                onClick={() => setFitToWindow(false)}
+              >
+                Actual Size
+              </button>
+            </div>
+            <img
+              src={activeMedia.mediaData}
+              alt={activeSection}
+              style={
+                fitToWindow
+                  ? {
+                      display: "block",
+                      margin: "0 auto",
+                      maxWidth: "100%",
+                      maxHeight: "75vh",
+                      width: "auto",
+                      height: "auto",
+                      borderRadius: 8,
+                    }
+                  : { display: "block", margin: "0 auto", borderRadius: 8 }
+              }
+            />
           </div>
         </div>
       )}

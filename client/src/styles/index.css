@@ -9518,7 +9518,7 @@ a {
   border: 1.5px dashed rgba(31, 41, 51, 0.22);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 248, 243, 0.9));
   color: var(--muted);
-  font-size: 0.95em;
+  font-size: 0.85em;
   font-weight: 600;
   text-align: center;
   cursor: pointer;
@@ -12666,6 +12666,11 @@ a {
   min-height: auto;
 }
 
+.ghost-button.is-active {
+  background: var(--teal);
+  color: #ffffff;
+}
+
 @media (max-width: 920px) {
   .hero-grid,
   .dashboard-section,
@@ -14000,6 +14005,22 @@ a {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 20px;
+}
+
+/* Image-generation action rows (CardImagePanel/MemoryHookPanel in
+   AdminContentEditorPage.jsx) pack more, longer-labeled buttons into a
+   narrower column than this row was originally designed for -- shrink the
+   text and stop it wrapping mid-word instead of letting labels like
+   "Generate prompt from concept" break across two lines. */
+.admin-image-gen-actions.admin-bulk-pipeline-dialog-actions {
+  flex-wrap: wrap;
+}
+
+.admin-image-gen-actions .ghost-button,
+.admin-image-gen-actions .primary-button {
+  padding: 10px 14px;
+  font-size: 0.85em;
+  white-space: nowrap;
 }
 
 .admin-add-user-form {

@@ -374,6 +374,7 @@ export const generateImage = async ({
   prompt,
   size = "1536x1024",
   aspectRatio = "16:9",
+  quality,
   modelId,
   modelName,
   signal,
@@ -412,7 +413,7 @@ export const generateImage = async ({
   // DALL-E-3-shaped instead, this request body will need response_format:
   // "b64_json" added; a failure here is a config/deployment mismatch, not a
   // bug in the surrounding retry/parsing plumbing.
-  const requestBody = JSON.stringify({ prompt, size, n: 1 });
+  const requestBody = JSON.stringify({ prompt, size, n: 1, ...(quality ? { quality } : {}) });
 
   let data = null;
   let rawText = "";

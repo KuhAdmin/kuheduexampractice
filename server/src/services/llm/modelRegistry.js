@@ -27,10 +27,10 @@ const AI_MODEL_REGISTRY = [
     isDefault: false,
   },
   {
-    id: "azure-image-gpt-image-1",
-    label: "Azure OpenAI — Image (gpt-image-1)",
+    id: "azure-image-gpt-image-2",
+    label: "Azure OpenAI — Image (gpt-image-2)",
     provider: "azure-openai-image",
-    modelName: env.azureOpenAiDeploymentImage || "gpt-image-1",
+    modelName: env.azureOpenAiDeploymentImage || "gpt-image-2",
     isDefault: false,
   },
   {

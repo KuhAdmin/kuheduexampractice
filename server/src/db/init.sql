@@ -556,6 +556,19 @@ ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'completed';
 ALTER TABLE IF EXISTS content_card_media
 ADD COLUMN IF NOT EXISTS error_message TEXT;
 
+-- Admin-selectable per-generation options (see
+-- server/src/services/imageGenerationOptions.js) -- nullable, no default:
+-- an uploaded image's real aspect ratio/quality isn't tracked by this
+-- feature, so NULL (not a guessed default) is correct for those rows.
+ALTER TABLE IF EXISTS content_card_media
+ADD COLUMN IF NOT EXISTS aspect_ratio VARCHAR(10);
+
+ALTER TABLE IF EXISTS content_card_media
+ADD COLUMN IF NOT EXISTS quality VARCHAR(10);
+
+ALTER TABLE IF EXISTS content_card_media
+ADD COLUMN IF NOT EXISTS style VARCHAR(20);
+
 CREATE TABLE IF NOT EXISTS memory_hook_media (
   id BIGSERIAL PRIMARY KEY,
   assessment_unit_id VARCHAR(80) NOT NULL REFERENCES assessment_unit(assessment_unit_id) ON DELETE CASCADE,
@@ -594,6 +607,16 @@ ALTER TABLE IF EXISTS memory_hook_media ALTER COLUMN mime_type DROP NOT NULL;
 ALTER TABLE IF EXISTS memory_hook_media DROP CONSTRAINT IF EXISTS memory_hook_media_source_check;
 ALTER TABLE IF EXISTS memory_hook_media ADD CONSTRAINT memory_hook_media_source_check
 CHECK (source IN ('generated', 'uploaded', 'draft'));
+
+-- Admin-selectable image quality/style (see
+-- server/src/services/imageGenerationOptions.js) -- nullable, no default;
+-- NULL on draft rows (nothing generated yet) and on historical rows
+-- predating this feature.
+ALTER TABLE IF EXISTS memory_hook_media
+ADD COLUMN IF NOT EXISTS quality VARCHAR(10);
+
+ALTER TABLE IF EXISTS memory_hook_media
+ADD COLUMN IF NOT EXISTS style VARCHAR(20);
 
 -- Append-only log of a student's own responses to the Layer 2 "Try This"
 -- micro-activity prompt, plus the qualitative AI feedback each one got. No

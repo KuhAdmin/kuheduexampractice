@@ -170,6 +170,9 @@ export const postRegenerateDiagramHandler = async (req, res, next) => {
       contentCardId: req.params.cardId,
       prompt: req.body?.prompt,
       userId: req.user?.id || null,
+      aspectRatio: req.body?.aspectRatio,
+      quality: req.body?.quality,
+      style: req.body?.style,
     });
     return res.json(result);
   } catch (error) {
@@ -187,6 +190,9 @@ export const postRegenerateMemoryHookHandler = async (req, res, next) => {
       sectionKey: req.params.sectionKey,
       prompt: req.body?.prompt,
       userId: req.user?.id || null,
+      aspectRatio: req.body?.aspectRatio,
+      quality: req.body?.quality,
+      style: req.body?.style,
     });
     return res.json(result);
   } catch (error) {
@@ -219,6 +225,7 @@ export const putMemoryHookPromptHandler = async (req, res, next) => {
       sectionKey: req.params.sectionKey,
       promptText: req.body?.prompt,
       userId: req.user?.id || null,
+      aspectRatio: req.body?.aspectRatio,
     });
     return res.json(result);
   } catch (error) {
