@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getVivaFeedback, getVivaQuestions } from "../api/client";
+import { applyPreferredVoice } from "../utils/speechVoice";
 
 const REPLY_WINDOW_SECONDS = 6;
 
@@ -61,7 +62,7 @@ export const StudentVivaMode = ({ assessmentUnitId }) => {
         resolve();
         return;
       }
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = applyPreferredVoice(new SpeechSynthesisUtterance(text));
       utterance.onend = resolve;
       utterance.onerror = resolve;
       window.speechSynthesis.cancel();
@@ -209,7 +210,7 @@ export const StudentVivaMode = ({ assessmentUnitId }) => {
     <section className="student-viva-mode" aria-label="Viva">
       <header className="student-ai-tutor-header">
         <h2>Viva</h2>
-        <p>A quick spoken Q&amp;A on this concept -- 5 questions, answer out loud (or type) when asked.</p>
+        <p>A quick spoken Q&amp;A on this micro learning unit -- 5 questions, answer out loud (or type) when asked.</p>
       </header>
 
       {state.stage === "idle" && (

@@ -15,9 +15,9 @@ export const PERSONALIZATION_FEATURES = [
   },
   {
     id: "weak-concepts",
-    title: "Weak Concepts, Auto-Surfaced",
+    title: "Weak Micro Learning Units, Auto-Surfaced",
     description:
-      "The app quietly flags the concepts you're struggling with, so you always know exactly what to revisit next.",
+      "The app quietly flags the micro learning units you're struggling with, so you always know exactly what to revisit next.",
     accent: "var(--warning)",
   },
   {
@@ -33,7 +33,7 @@ export const AI_TOOLS_HOWTO = [
     id: "smart-tutor",
     title: "Smart Tutor",
     description:
-      "Open any concept, tap the Smart Tutor tab, then type or speak your question — the AI Tutor walks you through it right away.",
+      "Open any micro learning unit, tap the Smart Tutor tab, then type or speak your question — the AI Tutor walks you through it right away.",
     accent: "var(--blue)",
   },
   {
@@ -61,7 +61,7 @@ export const AI_TOOLS_HOWTO = [
 
 export const EXPLORE_STYLES = [
   { id: "eli5", label: "ELI5", description: "Plain, simple explanations anyone can follow" },
-  { id: "story", label: "Story Mode", description: "Concepts wrapped into a story that's easy to remember" },
+  { id: "story", label: "Story Mode", description: "Micro Learning Units wrapped into a story that's easy to remember" },
   { id: "deep-dive", label: "Deep Dive", description: "Go beyond the basics into the full reasoning" },
   {
     id: "compare",
@@ -76,7 +76,7 @@ export const EXPLORE_STYLES = [
   {
     id: "real-life",
     label: "Real-Life Connection",
-    description: "See exactly where the concept shows up in everyday life",
+    description: "See exactly where the micro learning unit shows up in everyday life",
   },
   {
     id: "try-this",
@@ -101,7 +101,7 @@ export const REVISION_TOOLS = [
   {
     id: "mind-maps",
     title: "Mind Maps",
-    description: "See exactly how concepts connect and build on one another.",
+    description: "See exactly how micro learning units connect and build on one another.",
     accent: "var(--warning)",
   },
   {

@@ -23,7 +23,7 @@ export const SCHOOL_FEATURES = [
   {
     id: "ai-throughout",
     title: "AI-Powered Throughout",
-    description: "Smart Tutor, Einstein Mode, and Viva Mode bring AI-guided learning into every concept, for every student.",
+    description: "Smart Tutor, Einstein Mode, and Viva Mode bring AI-guided learning into every micro learning unit, for every student.",
     accent: "var(--indigo)",
   },
 ];
@@ -32,7 +32,7 @@ export const NEP_GOALS = [
   {
     id: "multidisciplinary",
     label: "Multidisciplinary & Integrated Learning",
-    description: "Breaks subject silos by connecting concepts across disciplines and real-life contexts.",
+    description: "Breaks subject silos by connecting micro learning units across disciplines and real-life contexts.",
   },
   {
     id: "critical-thinking",
@@ -52,7 +52,7 @@ export const NEP_GOALS = [
   {
     id: "formative",
     label: "Formative & Continuous Assessment",
-    description: "Instant quizzes, concept checks, and progress tracking reduce reliance on final exams alone.",
+    description: "Instant quizzes, micro learning unit checks, and progress tracking reduce reliance on final exams alone.",
   },
   {
     id: "21st-century",

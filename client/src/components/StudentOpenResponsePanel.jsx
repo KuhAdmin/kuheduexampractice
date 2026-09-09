@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { extractSourcePageImages, StudentMultiPageAnswerInput } from "./StudentMultiPageAnswerInput";
+import { StudentVoiceTextAnswerPanel } from "./StudentVoiceTextAnswerPanel";
+import { StudentAnnotatedAnswer } from "./StudentAnnotatedAnswer";
+import { applyPreferredVoice } from "../utils/speechVoice";
 
 const SpeakerIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -58,10 +61,46 @@ export const StudentOpenResponsePanel = ({
   // submit, so "already answered in an earlier session" counts too, not
   // just "just submitted this session."
   onFeedbackChange,
+  // Optional -- cue/hint questions shown above the input (e.g. Experiential
+  // Warm-Up's "What were you trying to achieve?" style prompts) and a live
+  // countdown badge (see responseCapture.countdownTimer in
+  // PreWarmupContentPreview.jsx's ResponseCaptureBadges, which this mirrors
+  // for real instead of just labelling it). Both no-ops for every other
+  // caller of this panel, which don't pass them.
+  cues,
+  countdownSeconds,
+  // Optional -- "photo" (default, StudentMultiPageAnswerInput's Capture
+  // Photo/OCR flow) or "voice" (StudentVoiceTextAnswerPanel: record + play
+  // back + auto-fill via the Web Speech API, same one Story Anchor
+  // Questions uses). Every other caller of this panel keeps "photo"
+  // unchanged.
+  captureMode = "photo",
+  // Controlled, not internal state -- so a sibling outside this panel (the
+  // "Start Timer" button/badge overlaid on StudentMediaViewer's expanded
+  // image, see StudentPreLessonWarmupPage.jsx) can trigger and display the
+  // SAME countdown this panel does, both driven by state the parent owns.
+  // Undefined for every caller that doesn't pass countdownSeconds either.
+  timerStarted,
+  onStartTimer,
+  secondsLeft,
+  // Passed through to StudentVoiceTextAnswerPanel when captureMode="voice"
+  // (undefined elsewhere, letting it keep its own 5s default).
+  voiceMaxSeconds,
+  // Also passed through when captureMode="voice" -- lets a parent (the
+  // "Start Recording" button/countdown overlaid on StudentMediaViewer's
+  // expanded image) trigger recording and mirror its stage/countdown.
+  voiceRef,
+  onVoiceStageChange,
+  onVoiceCountdownChange,
 }) => {
   const [responseText, setResponseText] = useState("");
   const [sourcePageImages, setSourcePageImages] = useState([]);
   const [feedback, setFeedback] = useState(null);
+  // AI-flagged spelling/grammar issues, optional -- only populated when
+  // fetchResponse/submitResponse include an `issues` array (Sensory/
+  // Experiential Warm-Up today, see StudentPreLessonWarmupPage.jsx). Every
+  // other caller of this panel never sets this, so it stays empty for them.
+  const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -76,7 +115,7 @@ export const StudentOpenResponsePanel = ({
     if (typeof window === "undefined" || !window.speechSynthesis || !text) return;
 
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    const utterance = applyPreferredVoice(new SpeechSynthesisUtterance(text));
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utterance);
@@ -99,6 +138,7 @@ export const StudentOpenResponsePanel = ({
     let cancelled = false;
     setLoading(true);
     setFeedback(null);
+    setIssues([]);
     setResponseText("");
     setSourcePageImages([]);
     setSubmitError("");
@@ -109,6 +149,7 @@ export const StudentOpenResponsePanel = ({
         if (result) {
           setResponseText(result.responseText || "");
           setFeedback(result.feedback || null);
+          setIssues(result.issues || []);
         }
       })
       .catch(() => {})
@@ -133,6 +174,7 @@ export const StudentOpenResponsePanel = ({
     try {
       const result = await submitResponse(responseKey, responseText, sourcePageImages);
       setFeedback(result.feedback);
+      setIssues(result.issues || []);
       speakFeedback(result.feedback);
     } catch (error) {
       setSubmitError(error.message || "Failed to get feedback. Please try again.");
@@ -147,15 +189,52 @@ export const StudentOpenResponsePanel = ({
 
   return (
     <div className="student-micro-activity-panel">
-      <StudentMultiPageAnswerInput
-        value={responseText}
-        onChange={(text, pages) => {
-          setResponseText(truncateToWordLimit(text));
-          setSourcePageImages(extractSourcePageImages(pages));
-        }}
-        resetKey={responseKey}
-        placeholder={placeholder}
-      />
+      {(cues?.length > 0 || countdownSeconds) && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 10 }}>
+          {countdownSeconds && !timerStarted && !feedback && (
+            <button type="button" className="student-ocr-upload-button" onClick={onStartTimer}>
+              Start Timer
+            </button>
+          )}
+          {countdownSeconds && timerStarted && secondsLeft !== null && secondsLeft !== undefined && (
+            <span className="student-countdown-pill">
+              {secondsLeft > 0 ? `${secondsLeft}s` : "Time's up"}
+            </span>
+          )}
+          {cues?.length > 0 && (
+            <div className="student-instant-feedback is-neutral">
+              <strong>Cues</strong>
+              <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                {cues.map((cue, index) => (
+                  <li key={index}>{cue}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+      {captureMode === "voice" ? (
+        <StudentVoiceTextAnswerPanel
+          ref={voiceRef}
+          value={responseText}
+          onChange={(text) => setResponseText(truncateToWordLimit(text))}
+          resetKey={responseKey}
+          placeholder={placeholder}
+          maxSeconds={voiceMaxSeconds}
+          onStageChange={onVoiceStageChange}
+          onCountdownChange={onVoiceCountdownChange}
+        />
+      ) : (
+        <StudentMultiPageAnswerInput
+          value={responseText}
+          onChange={(text, pages) => {
+            setResponseText(truncateToWordLimit(text));
+            setSourcePageImages(extractSourcePageImages(pages));
+          }}
+          resetKey={responseKey}
+          placeholder={placeholder}
+        />
+      )}
 
       <button
         type="button"
@@ -181,6 +260,7 @@ export const StudentOpenResponsePanel = ({
             </button>
           </div>
           <p>{feedback}</p>
+          {issues.length > 0 && <StudentAnnotatedAnswer text={responseText} issues={issues} />}
         </div>
       )}
     </div>

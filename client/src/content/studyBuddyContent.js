@@ -67,14 +67,14 @@ export const AI_FEATURES = [
     id: "einstein",
     title: "Einstein Mode",
     description:
-      "AI gives a real-world challenge — find and photograph a matching object, and AI checks and connects the concept to real life.",
+      "AI gives a real-world challenge — find and photograph a matching object, and AI checks and connects the micro learning unit to real life.",
     accent: "var(--warning)",
   },
   {
     id: "viva",
     title: "Viva Mode",
     description:
-      "Speak and explain concepts out loud — AI listens, asks follow-up questions, evaluates understanding, and builds confidence.",
+      "Speak and explain micro learning units out loud — AI listens, asks follow-up questions, evaluates understanding, and builds confidence.",
     accent: "var(--indigo)",
   },
 ];
@@ -89,7 +89,7 @@ export const ASSESSMENT_TYPES = [
   },
   { id: "short-answer", label: "Short Answer", description: "Brief, direct-recall or explain response" },
   { id: "true-false", label: "True / False", description: "Evaluate the statement" },
-  { id: "hots", label: "HOTS", description: "Apply the concept to a new scenario — Higher-Order Thinking" },
+  { id: "hots", label: "HOTS", description: "Apply the micro learning unit to a new scenario — Higher-Order Thinking" },
   { id: "hotspot", label: "Hotspot Diagram", description: "Tap the correctly labelled part of a diagram" },
   { id: "case-study", label: "Case Study", description: "Realistic scenario, apply knowledge in context" },
 ];
@@ -105,7 +105,7 @@ export const EXERCISE_ACTIVITY_REVISION_TYPES = [
     label: "Exercises",
     description: "End-of-section reflection questions — write your answer and get AI feedback",
   },
-  { id: "cheatsheet", label: "Cheat Sheet", description: "Compact, exam-ready key facts for every concept" },
+  { id: "cheatsheet", label: "Cheat Sheet", description: "Compact, exam-ready key facts for every micro learning unit" },
   { id: "mnemonics", label: "Mnemonics", description: "Memory hooks that make facts stick" },
-  { id: "examnotes", label: "Exam Notes", description: "What examiners actually check for, concept by concept" },
+  { id: "examnotes", label: "Exam Notes", description: "What examiners actually check for, micro learning unit by micro learning unit" },
 ];

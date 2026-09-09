@@ -3,6 +3,7 @@ import { getAssessmentUnitsForSourceSection, getLayer6Items } from "./contentRea
 import { createStructuredCompletion } from "./openAiService.js";
 import { resolveBookIdForChapter } from "./chapterExerciseService.js";
 import { listSectionsForChapter } from "./studentContentService.js";
+import { ISSUES_PROMPT_INSTRUCTION, ISSUES_SCHEMA_FRAGMENT, normalizeAiTextIssues } from "./aiTextIssueUtils.js";
 
 const MASTERY_COMPLETE_THRESHOLD = 0.8;
 const MASTERY_DEVELOPING_THRESHOLD = 0.5;
@@ -14,7 +15,16 @@ const FREE_TEXT_GRADING_MODEL_ID = "deepseek-v4-flash";
 // throws) on any failure -- missing API key, network error, malformed model
 // output -- so the caller can safely fall back to the existing acceptable-
 // answers string match instead of blocking submission.
-const gradeFreeTextAnswerWithAi = async ({ question, correctAnswer, acceptableAnswers, studentAnswer }) => {
+export const gradeFreeTextAnswerWithAi = async ({
+  question,
+  correctAnswer,
+  acceptableAnswers,
+  studentAnswer,
+  // Opt-in -- only Story Anchor Questions (studentPreWarmupService.js) ask
+  // for this today. The other caller (Section Assessment, below) leaves it
+  // false and keeps the exact prior schema/return shape.
+  includeIssues = false,
+}) => {
   if (!studentAnswer?.trim()) {
     return null;
   }
@@ -23,16 +33,18 @@ const gradeFreeTextAnswerWithAi = async ({ question, correctAnswer, acceptableAn
     const acceptableAnswersText = acceptableAnswers.length
       ? `\nOther accepted answers: ${acceptableAnswers.join("; ")}`
       : "";
+    const issuesInstruction = includeIssues ? `\n\n${ISSUES_PROMPT_INSTRUCTION}` : "";
+    const issuesSchema = includeIssues ? ISSUES_SCHEMA_FRAGMENT : "";
     const userPrompt = `Question: ${question || "(question text unavailable)"}
 Expected answer: ${correctAnswer || "(not specified)"}${acceptableAnswersText}
 Student's answer: ${studentAnswer}
 
-Grade the student's answer against the expected answer. Judge by meaning, not exact wording -- accept correct paraphrases and partially-worded-but-substantively-correct answers as correct.
+Grade the student's answer against the expected answer. Judge by meaning, not exact wording -- accept correct paraphrases and partially-worded-but-substantively-correct answers as correct.${issuesInstruction}
 
 Schema:
 {
   "isCorrect": true or false,
-  "feedback": "1-2 sentences, addressed directly to the student, explaining why their specific answer is right or wrong"
+  "feedback": "1-2 sentences, addressed directly to the student, explaining why their specific answer is right or wrong"${issuesSchema}
 }`;
 
     const { parsed } = await createStructuredCompletion({
@@ -47,10 +59,14 @@ Schema:
       return null;
     }
 
-    return {
+    const result = {
       isCorrect: parsed.isCorrect,
       feedback: typeof parsed.feedback === "string" && parsed.feedback.trim() ? parsed.feedback.trim() : null,
     };
+    if (includeIssues) {
+      result.issues = normalizeAiTextIssues(parsed.issues, studentAnswer);
+    }
+    return result;
   } catch {
     return null;
   }
@@ -71,7 +87,7 @@ const withTransaction = async (work) => {
   }
 };
 
-const normalizeAnswer = (value) => String(value ?? "").trim().toLowerCase();
+export const normalizeAnswer = (value) => String(value ?? "").trim().toLowerCase();
 
 const shuffleInPlace = (array) => {
   for (let i = array.length - 1; i > 0; i -= 1) {
@@ -393,16 +409,44 @@ const materializePracticeSetForConcept = async (assessmentUnitId) =>
 // resolveBookIdForChapter), so "book + chapter number" is the closest stable
 // identity for "this chapter's content," same as chapterExerciseService.js
 // uses for book questions.
+// Shared by materializePracticeSetForChapter (which also upserts the
+// practice_set/question_bank rows) and getChapterAssessmentPreview (which
+// doesn't touch the DB at all) -- both need the EXACT same section -> concept
+// -> answerable-item enumeration so the preview's question count on the
+// chapter page never drifts from what the real assessment actually contains.
+const collectAnswerableChapterItems = async ({ board, studentClass, subject, chapterNumber, userId }) => {
+  const { sections } = await listSectionsForChapter({ board, studentClass, subject, chapterNumber, userId });
+  const sourceSectionIds = sections
+    .filter((section) => section.hasContent && section.sourceSectionId)
+    .map((section) => section.sourceSectionId);
+
+  let conceptCount = 0;
+  const currentItems = [];
+  for (const sourceSectionId of sourceSectionIds) {
+    const assessmentUnitIds = await getAssessmentUnitsForSourceSection(sourceSectionId);
+    conceptCount += assessmentUnitIds.length;
+    for (const assessmentUnitId of assessmentUnitIds) {
+      const items = (await getLayer6Items(assessmentUnitId)).filter(isAnswerableItem);
+      currentItems.push(...items);
+    }
+  }
+
+  return { sourceSectionIds, conceptCount, items: currentItems };
+};
+
 const materializePracticeSetForChapter = async ({ board, studentClass, subject, chapterNumber, userId }) => {
   const fkMstBookId = await resolveBookIdForChapter({ board, studentClass, subject, chapterNumber });
   if (!fkMstBookId) {
     return { practiceSetId: null, items: [] };
   }
 
-  const { sections } = await listSectionsForChapter({ board, studentClass, subject, chapterNumber, userId });
-  const sourceSectionIds = sections
-    .filter((section) => section.hasContent && section.sourceSectionId)
-    .map((section) => section.sourceSectionId);
+  const { items: currentItems } = await collectAnswerableChapterItems({
+    board,
+    studentClass,
+    subject,
+    chapterNumber,
+    userId,
+  });
 
   return withTransaction(async (client) => {
     // Upsert instead of select-then-insert -- see materializePracticeSetForSection's
@@ -421,17 +465,29 @@ const materializePracticeSetForChapter = async ({ board, studentClass, subject, 
     );
     const practiceSetId = upserted.rows[0].id;
 
-    const currentItems = [];
-    for (const sourceSectionId of sourceSectionIds) {
-      const assessmentUnitIds = await getAssessmentUnitsForSourceSection(sourceSectionId);
-      for (const assessmentUnitId of assessmentUnitIds) {
-        const items = (await getLayer6Items(assessmentUnitId)).filter(isAnswerableItem);
-        currentItems.push(...items);
-      }
-    }
-
     return syncPracticeSetItems(client, practiceSetId, currentItems);
   });
+};
+
+// Read-only counterpart to materializePracticeSetForChapter, for the "Question
+// Bank (3 sections -> 32 concepts -> 681 questions)" preview shown on the
+// chapter detail page before the student ever opens the assessment -- must
+// never write to practice_set/question_bank_item (that only happens once the
+// student actually starts the assessment).
+export const getChapterAssessmentPreview = async ({ board, studentClass, subject, chapterNumber, userId }) => {
+  const { sourceSectionIds, conceptCount, items } = await collectAnswerableChapterItems({
+    board,
+    studentClass,
+    subject,
+    chapterNumber,
+    userId,
+  });
+
+  return {
+    sectionCount: sourceSectionIds.length,
+    conceptCount,
+    questionCount: items.length,
+  };
 };
 
 // Recovers the exact item order an attempt was originally presented in --
@@ -625,7 +681,7 @@ export const startOrResumeConceptAssessment = async ({ assessmentUnitId, userId 
   ]);
 
   if (!items.length) {
-    const error = new Error("This concept has no generated assessment items yet.");
+    const error = new Error("This micro learning unit has no generated assessment items yet.");
     error.statusCode = 404;
     throw error;
   }
@@ -679,7 +735,7 @@ export const restartConceptAssessment = async ({ assessmentUnitId, userId }) => 
   ]);
 
   if (!items.length) {
-    const error = new Error("This concept has no generated assessment items yet.");
+    const error = new Error("This micro learning unit has no generated assessment items yet.");
     error.statusCode = 404;
     throw error;
   }

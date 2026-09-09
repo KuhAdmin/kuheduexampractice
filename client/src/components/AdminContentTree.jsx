@@ -180,7 +180,7 @@ const CardTable = ({ cards, section, concept, onEditCard, onToggleCardHidden }) 
                 type="button"
                 className="ghost-button"
                 disabled={lockedByAncestor}
-                title={lockedByAncestor ? "This card's concept or section is hidden -- un-hide that first." : undefined}
+                title={lockedByAncestor ? "This card's micro learning unit or section is hidden -- un-hide that first." : undefined}
                 onClick={() => onToggleCardHidden(card)}
               >
                 {card.isHidden ? "Show" : "Hide"}
@@ -221,7 +221,7 @@ const ConceptChildren = ({
     return <div className="admin-content-tree-empty">Loading...</div>;
   }
   if (!typeGroups.length) {
-    return <div className="admin-content-tree-empty">No cards for this concept.</div>;
+    return <div className="admin-content-tree-empty">No cards for this micro learning unit.</div>;
   }
 
   // A group/sub-group has no is_hidden of its own (it isn't a real
@@ -252,7 +252,7 @@ const ConceptChildren = ({
               <VisibilityButton
                 isHidden={groupIsHidden}
                 disabled={ancestorLocked}
-                lockedReason="This concept or its section is hidden — un-hide that to change this group."
+                lockedReason="This micro learning unit or its section is hidden — un-hide that to change this group."
                 onToggle={(next) => onToggleGroupHidden(groupCards, next)}
               />
             </div>
@@ -276,7 +276,7 @@ const ConceptChildren = ({
                           <VisibilityButton
                             isHidden={subIsHidden}
                             disabled={ancestorLocked}
-                            lockedReason="This concept or its section is hidden — un-hide that to change this group."
+                            lockedReason="This micro learning unit or its section is hidden — un-hide that to change this group."
                             onToggle={(next) => onToggleGroupHidden(subCards, next)}
                           />
                         </div>
@@ -443,7 +443,7 @@ export const AdminContentTree = ({
                               <div className="admin-content-tree-node">
                                 <div className="admin-content-tree-row is-concept" onClick={() => toggleConcept(rootKey)}>
                                   <ChevronIcon open={isRootOpen} />
-                                  <span className="admin-content-tree-label">General Content (not concept-specific)</span>
+                                  <span className="admin-content-tree-label">General Content (not micro-learning-unit-specific)</span>
                                 </div>
                                 {isRootOpen && (
                                   <div className="admin-content-tree-children">
@@ -465,7 +465,7 @@ export const AdminContentTree = ({
                             );
                           })()}
                           {section.concepts.length === 0 ? (
-                            <div className="admin-content-tree-empty">No concepts in this section.</div>
+                            <div className="admin-content-tree-empty">No micro learning units in this section.</div>
                           ) : (
                             section.concepts.map((concept) => {
                               const conceptKey = `concept-${concept.assessmentUnitId}`;
@@ -494,7 +494,7 @@ export const AdminContentTree = ({
                                     <VisibilityButton
                                       isHidden={concept.isHidden}
                                       disabled={section.isHidden}
-                                      lockedReason="Section is hidden — un-hide the section to change this concept."
+                                      lockedReason="Section is hidden — un-hide the section to change this micro learning unit."
                                       onToggle={(next) => onToggleConceptVisibility(section, concept, next)}
                                     />
                                   </div>

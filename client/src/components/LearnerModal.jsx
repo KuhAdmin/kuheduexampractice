@@ -32,7 +32,7 @@ export const LearnerModal = ({ open, onClose, onGetStarted }) => (
           <div className="legal-modal-scroll">
             <div className="study-buddy-hero">
               <h2>Learning, Built for You</h2>
-              <p>A personalized journey through every concept, your way — and the tools to make it stick.</p>
+              <p>A personalized journey through every micro learning unit, your way — and the tools to make it stick.</p>
             </div>
 
             <h3 className="study-buddy-section-title-center">Learning Built Around You</h3>
@@ -50,7 +50,7 @@ export const LearnerModal = ({ open, onClose, onGetStarted }) => (
 
             <h3>AI Help, One Tap Away</h3>
             <p className="study-buddy-section-intro">
-              All four live on the Smart Tutor tab of any concept — here's how to use each one.
+              All four live on the Smart Tutor tab of any micro learning unit — here's how to use each one.
             </p>
             <div className="study-buddy-features-grid">
               {AI_TOOLS_HOWTO.map((tool, index) => (
@@ -64,7 +64,7 @@ export const LearnerModal = ({ open, onClose, onGetStarted }) => (
               ))}
             </div>
 
-            <h3>Explore Every Concept, Your Way</h3>
+            <h3>Explore Every Micro Learning Unit, Your Way</h3>
             <div className="study-buddy-assessment-chips">
               {EXPLORE_STYLES.map((style, index) => (
                 <div

@@ -19,6 +19,11 @@ import {
   getExercisesActivitiesTabVisible,
   setExercisesActivitiesTabVisible,
 } from "../services/contentEditorSettingsService.js";
+import {
+  getPreWarmupContentForSection,
+  updatePreWarmupContentPayload,
+} from "../services/preWarmupImportService.js";
+import { generatePreWarmupImage } from "../services/preWarmupImageService.js";
 
 export const getBooksHandler = async (_req, res, next) => {
   try {
@@ -252,6 +257,52 @@ export const putExercisesActivitiesTabVisibleHandler = async (req, res, next) =>
     });
     return res.json({ visible });
   } catch (error) {
+    return next(error);
+  }
+};
+
+export const getPreWarmupHandler = async (req, res, next) => {
+  try {
+    const preWarmup = await getPreWarmupContentForSection(req.params.sourceSectionId);
+    return res.json({ preWarmup });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const putPreWarmupHandler = async (req, res, next) => {
+  try {
+    const preWarmup = await updatePreWarmupContentPayload({
+      sourceSectionId: req.params.sourceSectionId,
+      payload: req.body?.payload,
+    });
+    return res.json({ preWarmup });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const postGeneratePreWarmupImageHandler = async (req, res, next) => {
+  try {
+    const preWarmup = await generatePreWarmupImage({
+      sourceSectionId: req.params.sourceSectionId,
+      path: req.body?.path,
+      prompt: req.body?.prompt,
+      aspectRatio: req.body?.aspectRatio,
+      quality: req.body?.quality,
+      style: req.body?.style,
+    });
+    return res.json({ preWarmup });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
     return next(error);
   }
 };

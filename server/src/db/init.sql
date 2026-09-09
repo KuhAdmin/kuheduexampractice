@@ -458,6 +458,146 @@ ON content_card (assessment_unit_id, contentuitab, processorkey);
 CREATE INDEX IF NOT EXISTS idx_content_card_source_section
 ON content_card (source_section_id, contentuitab, processorkey);
 
+-- One wholesale JSON blob per section (pre-lesson vocabulary/sensory/
+-- experiential warm-up + post-lesson holistic assessment/transferable
+-- patterns/story-anchor questions -- see preWarmupImportService.js). Not
+-- normalized into content_card like the rest of a section's content
+-- because there's exactly one blob per section, not many independently
+-- addressable cards -- storing it wholesale (mirrors webhook_event.payload)
+-- avoids inventing a card shape for content that's never queried per-item.
+-- content_key is deliberately NOT generated here: it's fetched from an
+-- existing content_card row for the same source_section_id (the section's
+-- Concept Import must already exist) so both halves of a section's content
+-- share one identity -- see importPreWarmupContent's lookup.
+CREATE TABLE IF NOT EXISTS pre_warmup_content (
+  id BIGSERIAL PRIMARY KEY,
+  fk_mst_chapter_id BIGINT NOT NULL REFERENCES mst_chapter(id),
+  source_section_id BIGINT NOT NULL REFERENCES source_section(id) ON DELETE CASCADE,
+  content_key VARCHAR(160) NOT NULL,
+  payload JSONB NOT NULL,
+  created_by BIGINT REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (source_section_id, content_key)
+);
+
+-- Learner-facing pre-warmup grading/tracking. Deliberately NOT layered on
+-- content_assessment_item/practice_set/student_attempt (the normalized,
+-- versioned question-bank engine behind Section Assessment) -- pre_warmup_content
+-- is a hand-imported, unnormalized JSON blob with no per-question item_id and a
+-- different format vocabulary, so it gets its own small parallel pair of tables
+-- keyed directly by source_section_id instead of being forced through machinery
+-- built for a different content pipeline. See studentPreWarmupService.js.
+CREATE TABLE IF NOT EXISTS pre_warmup_attempt (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id),
+  source_section_id BIGINT NOT NULL REFERENCES source_section(id) ON DELETE CASCADE,
+  phase VARCHAR(20) NOT NULL CHECK (phase IN ('preLessonWarmup', 'postLesson')),
+  status VARCHAR(20) NOT NULL DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'completed')),
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  submitted_at TIMESTAMPTZ,
+  score NUMERIC(5,2)
+);
+
+-- Same one-in-progress-at-a-time pattern as idx_student_attempt_in_progress --
+-- lets a learner retake a completed pre-warmup phase (a new row) while still
+-- preventing two concurrent in-progress attempts at the same phase.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_pre_warmup_attempt_in_progress
+ON pre_warmup_attempt (user_id, source_section_id, phase) WHERE status = 'in_progress';
+
+-- A plain (non-partial) UNIQUE(user_id, source_section_id, phase) constraint
+-- pre-dates the partial index above on some existing databases -- it
+-- contradicts the "retake a completed phase" intent (blocks ever inserting a
+-- second row for the same combo, even after the first is completed), causing
+-- every Pre-Lesson Warm-Up/Post-Lesson start to fail once a learner has
+-- completed it once. Drop it if present; the partial index alone is correct.
+ALTER TABLE pre_warmup_attempt
+DROP CONSTRAINT IF EXISTS pre_warmup_attempt_user_id_source_section_id_phase_key;
+
+-- One row per answered/viewed item within an attempt. item_key is synthesized
+-- from the payload's own array/batch indices (e.g.
+-- "vocabularyWarmup.avsAssessment.batch0.row2","storyAnchorQuestions.q17") --
+-- stable as long as re-imports preserve array order, same assumption
+-- preserveExistingImages() in preWarmupImportService.js already relies on.
+CREATE TABLE IF NOT EXISTS pre_warmup_response (
+  id BIGSERIAL PRIMARY KEY,
+  pre_warmup_attempt_id BIGINT NOT NULL REFERENCES pre_warmup_attempt(id) ON DELETE CASCADE,
+  item_key VARCHAR(160) NOT NULL,
+  item_tier VARCHAR(20) NOT NULL CHECK (item_tier IN ('scored', 'tracked', 'reference')),
+  student_answer TEXT,
+  is_correct BOOLEAN,
+  ai_feedback TEXT,
+  ai_feedback_issues JSONB,
+  time_taken_seconds INTEGER,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (pre_warmup_attempt_id, item_key)
+);
+
+-- Added after the table above shipped -- AI-flagged spelling/grammar issues
+-- for free-text answers (Story Anchor Questions, Sensory/Experiential
+-- Warm-Up), see aiTextIssueUtils.js.
+ALTER TABLE IF EXISTS pre_warmup_response
+ADD COLUMN IF NOT EXISTS ai_feedback_issues JSONB;
+
+-- Transferable Patterns' "write 3 sentences of your own" exercise -- kept
+-- separate from pre_warmup_response rather than exploding transferablePatterns
+-- (one reference-tier "viewed" item) into dozens of scored sub-items, one per
+-- pattern per exercise slot. Practice/feedback here never affects phase
+-- completion or score, only the "viewed" tracking on the transferablePatterns
+-- item itself does. pattern_key is synthesized the same index-based way as
+-- item_key elsewhere (e.g. "p0", "p1") -- stable as long as re-imports
+-- preserve pattern array order.
+CREATE TABLE IF NOT EXISTS pre_warmup_pattern_response (
+  id BIGSERIAL PRIMARY KEY,
+  pre_warmup_attempt_id BIGINT NOT NULL REFERENCES pre_warmup_attempt(id) ON DELETE CASCADE,
+  pattern_key VARCHAR(160) NOT NULL,
+  responses JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (pre_warmup_attempt_id, pattern_key)
+);
+
+-- Chapter-wide "HOTS (n)" combined quiz -- shuffles every section's Story
+-- Anchor Questions (postLesson/storyAnchorQuestions, see buildPhaseItems in
+-- studentPreWarmupService.js) into one continuous attempt, mirroring
+-- practice_set/student_attempt's shuffle-on-create/recover-order-on-resume
+-- pattern but far simpler since there's no shared question_bank_item layer
+-- to sync -- content is always re-derived live from pre_warmup_content per
+-- section, same anti-tamper posture as pre_warmup_response.
+CREATE TABLE IF NOT EXISTS hots_attempt (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  chapter_key VARCHAR(160) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'completed')),
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  submitted_at TIMESTAMPTZ,
+  score NUMERIC(6,2)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_hots_attempt_in_progress
+ON hots_attempt (user_id, chapter_key) WHERE status = 'in_progress';
+
+-- One row per item PRESENTED in this attempt, pre-seeded (empty) for every
+-- item at attempt-creation time in shuffled order -- display_order IS the
+-- shuffle order, so it's recovered directly on resume with no separate
+-- reorder step. item_key alone collides across sections (e.g. two different
+-- sections both have "storyAnchorQuestions.q0"), so source_section_id is
+-- carried per-row rather than folded into the key.
+CREATE TABLE IF NOT EXISTS hots_response (
+  id BIGSERIAL PRIMARY KEY,
+  hots_attempt_id BIGINT NOT NULL REFERENCES hots_attempt(id) ON DELETE CASCADE,
+  source_section_id BIGINT NOT NULL REFERENCES source_section(id),
+  item_key VARCHAR(160) NOT NULL,
+  display_order INTEGER NOT NULL,
+  student_answer TEXT,
+  is_correct BOOLEAN,
+  ai_feedback TEXT,
+  ai_feedback_issues JSONB,
+  time_taken_seconds INTEGER,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (hots_attempt_id, display_order)
+);
+
 -- Content-moderator show/hide toggle (see contentEditorService.js) -- every
 -- student-facing read of content_card must filter WHERE is_hidden = FALSE
 -- for this to actually hide anything, not just cosmetically flag it in the

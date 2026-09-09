@@ -16,6 +16,9 @@ import {
   putMemoryHookPromptHandler,
   getExercisesActivitiesTabVisibleHandler,
   putExercisesActivitiesTabVisibleHandler,
+  getPreWarmupHandler,
+  putPreWarmupHandler,
+  postGeneratePreWarmupImageHandler,
 } from "../controllers/adminContentEditorController.js";
 
 const router = Router();
@@ -48,5 +51,8 @@ router.put(
 );
 router.get("/settings/exercises-activities-tab", getExercisesActivitiesTabVisibleHandler);
 router.put("/settings/exercises-activities-tab", putExercisesActivitiesTabVisibleHandler);
+router.get("/sections/:sourceSectionId/pre-warmup", getPreWarmupHandler);
+router.put("/sections/:sourceSectionId/pre-warmup", putPreWarmupHandler);
+router.post("/sections/:sourceSectionId/pre-warmup/generate-image", postGeneratePreWarmupImageHandler);
 
 export default router;

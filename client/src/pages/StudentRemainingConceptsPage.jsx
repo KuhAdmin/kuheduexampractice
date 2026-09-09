@@ -253,11 +253,11 @@ export const StudentRemainingConceptsPage = () => {
         </header>
 
         {loading ? (
-          <p className="student-empty-state">Loading remaining concepts...</p>
+          <p className="student-empty-state">Loading remaining micro learning units...</p>
         ) : error ? (
           <p className="student-empty-state">{error}</p>
         ) : !remainingConcepts.length ? (
-          <p className="student-empty-state">All concepts completed. Great work!</p>
+          <p className="student-empty-state">All micro learning units completed. Great work!</p>
         ) : (
           <section className="student-section-detail-concepts">
             <div className="student-section-detail-list">

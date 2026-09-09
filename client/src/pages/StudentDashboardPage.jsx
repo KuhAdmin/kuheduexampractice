@@ -38,7 +38,7 @@ const defaultReturningDashboard = {
   },
   todayGoal: {
     title: "Today's Goal",
-    value: "No concepts available yet",
+    value: "No micro learning units available yet",
   },
   weakConcepts: [],
   streak: {
@@ -219,7 +219,7 @@ const FirstTimeDashboard = ({ view }) => {
           <span>{continueCard.eyebrow}</span>
           <strong>{continueCard.title}</strong>
           <p>Section: {continueCard.section}</p>
-          <p>Concept: {continueCard.concept}</p>
+          <p>Micro Learning Unit: {continueCard.concept}</p>
         </div>
         <div className="student-dashboard-continue-actions">
           <button
@@ -278,7 +278,7 @@ const ReturningDashboard = ({ view }) => {
           <span>{continueCard.eyebrow}</span>
           <strong>{continueCard.title}</strong>
           <p>Section: {continueCard.section}</p>
-          <p>Concept: {continueCard.concept}</p>
+          <p>Micro Learning Unit: {continueCard.concept}</p>
         </div>
 
         <div className="student-dashboard-continue-actions">
@@ -325,9 +325,9 @@ const ReturningDashboard = ({ view }) => {
       </section>
 
       <section className="student-dashboard-section">
-        <h2>Weak Concepts</h2>
+        <h2>Weak Micro Learning Units</h2>
         {view.weakConcepts.length === 0 ? (
-          <p className="student-empty-state">No weak concepts yet</p>
+          <p className="student-empty-state">No weak micro learning units yet</p>
         ) : (
           view.weakConcepts.map((concept) => (
             <article

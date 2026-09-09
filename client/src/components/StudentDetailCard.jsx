@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { applyPreferredVoice } from "../utils/speechVoice";
 
 // 8-slot categorical chip palette (fixed hue order -- blue/orange/aqua/
 // yellow/magenta/green/violet/red), matching the app's data-viz color
@@ -98,7 +99,7 @@ export const StudentDetailCard = ({ title, summary, details = [], className = ""
     // narration still in progress -- that card's own onerror fires with an
     // "interrupted" error and resets its isSpeaking state.
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(speechText);
+    const utterance = applyPreferredVoice(new SpeechSynthesisUtterance(speechText));
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utterance);

@@ -250,6 +250,9 @@ export const restartChapterAssessment = async (chapterNumber) =>
 export const getRecentChapterAssessmentAttempts = async (chapterNumber) =>
   apiRequest(`/user/chapters/${chapterNumber}/assessment/attempts`);
 
+export const getChapterAssessmentPreview = async (chapterNumber) =>
+  apiRequest(`/user/chapters/${chapterNumber}/assessment/preview`);
+
 export const submitAssessmentAnswer = async (
   attemptId,
   displayOrder,
@@ -282,6 +285,44 @@ export const submitAssessment = async (attemptId) =>
 
 export const getAssessmentResult = async (attemptId) =>
   apiRequest(`/user/attempts/${attemptId}/result`);
+
+export const startPreWarmupPhase = async (sourceSectionId, phase, subsectionKey) =>
+  apiRequest(`/user/sections/${sourceSectionId}/pre-warmup/${phase}/start?${buildQuery({ subsection: subsectionKey })}`, {
+    method: "POST",
+  });
+
+export const restartPreWarmupPhase = async (sourceSectionId, phase) =>
+  apiRequest(`/user/sections/${sourceSectionId}/pre-warmup/${phase}/restart`, { method: "POST" });
+
+export const submitPreWarmupAnswer = async (attemptId, itemKey, studentAnswer, timeTakenSeconds) =>
+  apiRequest(`/user/pre-warmup-attempts/${attemptId}/items/${encodeURIComponent(itemKey)}/answer`, {
+    method: "POST",
+    body: JSON.stringify({ studentAnswer, timeTakenSeconds }),
+  });
+
+export const submitPatternExercise = async (attemptId, patternKey, pattern, meaning, responses) =>
+  apiRequest(`/user/pre-warmup-attempts/${attemptId}/patterns/${encodeURIComponent(patternKey)}/exercise`, {
+    method: "POST",
+    body: JSON.stringify({ pattern, meaning, responses }),
+  });
+
+export const finishPreWarmupAttempt = async (attemptId) =>
+  apiRequest(`/user/pre-warmup-attempts/${attemptId}/submit`, { method: "POST" });
+
+export const getPreWarmupResult = async (attemptId) =>
+  apiRequest(`/user/pre-warmup-attempts/${attemptId}/result`);
+
+export const getChapterHotsPreview = async (chapterNumber) =>
+  apiRequest(`/user/chapters/${chapterNumber}/hots/preview`);
+
+export const startChapterHots = async (chapterNumber) =>
+  apiRequest(`/user/chapters/${chapterNumber}/hots/start`, { method: "POST" });
+
+export const submitHotsAnswer = async (attemptId, displayOrder, studentAnswer, timeTakenSeconds) =>
+  apiRequest(`/user/hots-attempts/${attemptId}/items/${displayOrder}/answer`, {
+    method: "POST",
+    body: JSON.stringify({ studentAnswer, timeTakenSeconds }),
+  });
 
 export const getAdminUsers = async () => apiRequest("/admin/users");
 
@@ -555,6 +596,27 @@ export const setContentEditorConceptVisibility = async (assessmentUnitId, isHidd
 
 export const getContentEditorCards = async (sourceSectionId) =>
   apiRequest(`/admin/content-editor/sections/${sourceSectionId}/cards`);
+
+export const getSectionPreWarmupContent = async (sourceSectionId) =>
+  apiRequest(`/admin/content-editor/sections/${sourceSectionId}/pre-warmup`);
+
+export const updateSectionPreWarmupContent = async (sourceSectionId, payload) =>
+  apiRequest(`/admin/content-editor/sections/${sourceSectionId}/pre-warmup`, {
+    method: "PUT",
+    body: JSON.stringify({ payload }),
+  });
+
+export const generatePreWarmupImage = async (sourceSectionId, path, prompt, aspectRatio, quality, style) =>
+  apiRequest(`/admin/content-editor/sections/${sourceSectionId}/pre-warmup/generate-image`, {
+    method: "POST",
+    body: JSON.stringify({ path, prompt, aspectRatio, quality, style }),
+  });
+
+export const uploadPreWarmupImport = async (payload) =>
+  apiRequest("/admin/pre-warmup-import", {
+    method: "POST",
+    body: JSON.stringify({ payload }),
+  });
 
 export const updateContentEditorCard = async (cardId, { title, summary, details, isHidden }) =>
   apiRequest(`/admin/content-editor/cards/${cardId}`, {

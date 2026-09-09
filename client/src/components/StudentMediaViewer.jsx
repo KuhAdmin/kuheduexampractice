@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { applyPreferredVoice } from "../utils/speechVoice";
 
 const MaximizeIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -56,7 +57,7 @@ const StopIcon = () => (
 // full-viewport) and, when speechText is provided, a read-aloud button that
 // uses the browser's built-in speech synthesis to narrate the paired text --
 // pairs the visual with a spoken story rather than requiring silent reading.
-export const StudentMediaViewer = ({ mediaType, src, alt, speechText, className = "" }) => {
+export const StudentMediaViewer = ({ mediaType, src, alt, speechText, className = "", expandedOverlay }) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
@@ -84,7 +85,7 @@ export const StudentMediaViewer = ({ mediaType, src, alt, speechText, className 
     }
 
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(speechText);
+    const utterance = applyPreferredVoice(new SpeechSynthesisUtterance(speechText));
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utterance);
@@ -142,6 +143,7 @@ export const StudentMediaViewer = ({ mediaType, src, alt, speechText, className 
             ) : (
               <img src={src} alt={alt} className="student-media-viewer-overlay-media" />
             )}
+            {expandedOverlay && <div className="student-media-viewer-expanded-overlay">{expandedOverlay}</div>}
           </div>
         </div>
       )}

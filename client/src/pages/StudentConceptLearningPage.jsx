@@ -445,8 +445,8 @@ const EXPLORE_STEPS = [
   },
   {
     key: "supportingConcepts",
-    label: "Supporting Concepts",
-    subtitle: "Concepts that support this",
+    label: "Supporting Micro Learning Units",
+    subtitle: "Micro learning units that support this",
     hasContent: (c) => Boolean(c.supportingConcepts?.length),
   },
   {
@@ -457,7 +457,7 @@ const EXPLORE_STEPS = [
   },
   {
     key: "associatedConcepts",
-    label: "Associated Concepts",
+    label: "Associated Micro Learning Units",
     subtitle: "Related ideas",
     hasContent: (c) => Boolean(c.associatedConcepts?.length),
   },
@@ -524,7 +524,7 @@ const ExploreSection = ({ sectionKey, title, mediaType, isExpanded, onToggle, ch
 // content has no modes at all, so it never produces any pages here -- see
 // FALLBACK handling in buildLearnContent.
 const LEARN_MODE_DISPLAY = [
-  { mode: "teachme", label: "Learn", purpose: "Structured concept learning" },
+  { mode: "teachme", label: "Learn", purpose: "Structured learning" },
   { mode: "explain", label: "Understand", purpose: "Detailed classroom explanation" },
 ];
 
@@ -771,7 +771,7 @@ export const StudentConceptLearningPage = () => {
         if (!cancelled) setCard(result);
       })
       .catch((fetchError) => {
-        if (!cancelled) setError(fetchError.message || "This concept has not been generated yet.");
+        if (!cancelled) setError(fetchError.message || "This micro learning unit has not been generated yet.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -1427,8 +1427,8 @@ export const StudentConceptLearningPage = () => {
       return (
         <section className="student-concept-learning-card">
           <div className="student-concept-learning-copy">
-            <h2>Supporting concepts</h2>
-            <p>No supporting concepts recorded for this idea.</p>
+            <h2>Supporting Micro Learning Units</h2>
+            <p>No supporting micro learning units recorded for this idea.</p>
           </div>
         </section>
       );
@@ -1634,7 +1634,7 @@ export const StudentConceptLearningPage = () => {
         {card.supportingConcepts?.length > 0 && (
           <ExploreSection
             sectionKey="supportingConcepts"
-            title="Supporting concepts"
+            title="Supporting Micro Learning Units"
             mediaType={null}
             isExpanded={isExpanded("supportingConcepts")}
             onToggle={toggleSection}
@@ -1668,7 +1668,7 @@ export const StudentConceptLearningPage = () => {
         {card.associatedConcepts?.length > 0 && (
           <ExploreSection
             sectionKey="associatedConcepts"
-            title="Associated Concepts"
+            title="Associated Micro Learning Units"
             mediaType={null}
             isExpanded={isExpanded("associatedConcepts")}
             onToggle={toggleSection}
@@ -1745,7 +1745,7 @@ export const StudentConceptLearningPage = () => {
     <section className="student-concept-learning-card">
       <div className="student-concept-learning-copy">
         <h2>{label}</h2>
-        <p>{label} is coming soon for this concept.</p>
+        <p>{label} is coming soon for this micro learning unit.</p>
       </div>
     </section>
   );
@@ -1760,7 +1760,7 @@ export const StudentConceptLearningPage = () => {
         <section className="student-concept-learning-card">
           <div className="student-concept-learning-copy">
             <h2>Revision</h2>
-            <p>No revision content has been generated for this concept yet.</p>
+            <p>No revision content has been generated for this micro learning unit yet.</p>
           </div>
         </section>
       );
@@ -1927,7 +1927,7 @@ export const StudentConceptLearningPage = () => {
             </button>
             <ConceptLearningIcon type="chevron-right" />
             <span className="is-current">
-              {card?.primaryConcept ? `Concept - ${card.primaryConcept}` : "Concept"}
+              {card?.primaryConcept ? `Micro Learning Unit - ${card.primaryConcept}` : "Micro Learning Unit"}
             </span>
           </nav>
 
@@ -1936,14 +1936,14 @@ export const StudentConceptLearningPage = () => {
               <ConceptLearningIcon type="book" />
             </div>
             <div className="student-concept-hero-copy">
-              <h1>{card?.primaryConcept || "Concept"}</h1>
+              <h1>{card?.primaryConcept || "Micro Learning Unit"}</h1>
               {(card?.learningObjective || card?.contextSummary) && (
                 <p>{card.learningObjective || card.contextSummary}</p>
               )}
             </div>
           </header>
 
-          <nav className="student-concept-tabbar" aria-label="Concept modes">
+          <nav className="student-concept-tabbar" aria-label="Micro Learning Unit modes">
             {visibleTabs.map((tab) => (
               <button
                 key={tab}
@@ -1957,9 +1957,9 @@ export const StudentConceptLearningPage = () => {
           </nav>
 
           {loading ? (
-            <p className="student-empty-state">Loading concept...</p>
+            <p className="student-empty-state">Loading micro learning unit...</p>
           ) : error || !card ? (
-            <p className="student-empty-state">{error || "This concept has not been generated yet."}</p>
+            <p className="student-empty-state">{error || "This micro learning unit has not been generated yet."}</p>
           ) : (
             <>
             <div
@@ -2010,8 +2010,8 @@ export const StudentConceptLearningPage = () => {
                   ) : (
                     <section className="student-concept-learning-card">
                       <div className="student-concept-learning-copy">
-                        <h2>Supporting concepts</h2>
-                        <p>No supporting concepts recorded for this idea.</p>
+                        <h2>Supporting Micro Learning Units</h2>
+                        <p>No supporting micro learning units recorded for this idea.</p>
                       </div>
                     </section>
                   )
@@ -2054,14 +2054,14 @@ export const StudentConceptLearningPage = () => {
           </button>
           <h1>
             {headerPrefix ? <span className="student-concept-learning-header-prefix">{headerPrefix}</span> : null}
-            {card?.primaryConcept || "Concept"}
+            {card?.primaryConcept || "Micro Learning Unit"}
           </h1>
         </header>
 
         {loading ? (
-          <p className="student-empty-state">Loading concept...</p>
+          <p className="student-empty-state">Loading micro learning unit...</p>
         ) : error || !card ? (
-          <p className="student-empty-state">{error || "This concept has not been generated yet."}</p>
+          <p className="student-empty-state">{error || "This micro learning unit has not been generated yet."}</p>
         ) : (
           // Accordion instead of a separate horizontally-scrolling tab bar --
           // 7 tabs never all fit on a phone width, and scrolling (arrows,

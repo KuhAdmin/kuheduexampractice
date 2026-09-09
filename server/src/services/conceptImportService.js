@@ -585,7 +585,7 @@ const resolveConceptPillarLinks = async ({ cards, contentKey, assessmentUnitIdBy
   if (explicitLinks.length > 0) {
     onProgress({
       type: "info",
-      message: `Linked ${explicitLinks.length} concept<->pillar relationship(s) from the file's own concept fields.`,
+      message: `Linked ${explicitLinks.length} micro learning unit<->pillar relationship(s) from the file's own micro learning unit fields.`,
     });
     return explicitLinks;
   }
@@ -596,7 +596,7 @@ const resolveConceptPillarLinks = async ({ cards, contentKey, assessmentUnitIdBy
 
   onProgress({
     type: "info",
-    message: "No explicit concept<->pillar links found in the file -- asking AI to match pillars to concepts...",
+    message: "No explicit micro learning unit<->pillar links found in the file -- asking AI to match pillars to micro learning units...",
   });
 
   try {
@@ -622,12 +622,12 @@ const resolveConceptPillarLinks = async ({ cards, contentKey, assessmentUnitIdBy
       });
     });
 
-    onProgress({ type: "info", message: `AI matched ${resolved.length} concept<->pillar relationship(s).` });
+    onProgress({ type: "info", message: `AI matched ${resolved.length} micro learning unit<->pillar relationship(s).` });
     return resolved;
   } catch (error) {
     onProgress({
       type: "warning",
-      message: `Could not AI-match pillars to concepts: ${error.message || error}. Pillars were imported but left unlinked.`,
+      message: `Could not AI-match pillars to micro learning units: ${error.message || error}. Pillars were imported but left unlinked.`,
     });
     return [];
   }
@@ -710,7 +710,7 @@ export const importConceptContent = async ({ payload: rawPayload, userId = null,
         assessmentUnitId = existingByTitle.rows[0].assessment_unit_id;
         onProgress({
           type: "info",
-          message: `Concept "${title}" matched existing unit ${assessmentUnitId} by title (source id "${card.cardkey}" changed since last import).`,
+          message: `Micro learning unit "${title}" matched existing unit ${assessmentUnitId} by title (source id "${card.cardkey}" changed since last import).`,
         });
       }
     }
@@ -735,9 +735,9 @@ export const importConceptContent = async ({ payload: rawPayload, userId = null,
       `,
       [syncRunId, assessmentUnitId, sourceSectionId, fkMstChapterId, card.title || card.cardkey, card.summary || null]
     );
-    onProgress({ type: "info", message: `Concept "${card.title || card.cardkey}" (${assessmentUnitId}) written.` });
+    onProgress({ type: "info", message: `Micro learning unit "${card.title || card.cardkey}" (${assessmentUnitId}) written.` });
   }
-  onProgress({ type: "success", message: `Wrote ${conceptCards.length} concept(s).` });
+  onProgress({ type: "success", message: `Wrote ${conceptCards.length} micro learning unit(s).` });
 
   // Hard-overwrite purge for pure derived content -- content_card by
   // content_key (covers concept-scoped and section-scoped cards alike),

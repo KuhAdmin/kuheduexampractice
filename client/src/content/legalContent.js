@@ -514,13 +514,13 @@ export const faqAndHelp = {
     {
       heading: "What is Einstein Mode?",
       paragraphs: [
-        "The AI poses a real-world challenge tied to a concept, the student finds and photographs a matching real object, and the AI checks it and explains the connection back to the syllabus -- turning abstract concepts into something tangible.",
+        "The AI poses a real-world challenge tied to a micro learning unit, the student finds and photographs a matching real object, and the AI checks it and explains the connection back to the syllabus -- turning abstract micro learning units into something tangible.",
       ],
     },
     {
       heading: "What is Viva Mode?",
       paragraphs: [
-        "A spoken practice mode: students explain a concept out loud, the AI listens, asks follow-up questions like a real examiner would, and evaluates understanding -- building confidence for school orals and vivas.",
+        "A spoken practice mode: students explain a micro learning unit out loud, the AI listens, asks follow-up questions like a real examiner would, and evaluates understanding -- building confidence for school orals and vivas.",
       ],
     },
     {
@@ -538,7 +538,7 @@ export const faqAndHelp = {
     {
       heading: "What are Cheat Sheets, Mnemonics, and Exam Notes?",
       paragraphs: [
-        "Cheat Sheets give compact, exam-ready key facts per concept; Mnemonics are memory hooks that make facts stick; Exam Notes highlight exactly what examiners check for -- each generated per concept, not a generic chapter summary.",
+        "Cheat Sheets give compact, exam-ready key facts per micro learning unit; Mnemonics are memory hooks that make facts stick; Exam Notes highlight exactly what examiners check for -- each generated per micro learning unit, not a generic chapter summary.",
       ],
     },
     {
@@ -550,7 +550,7 @@ export const faqAndHelp = {
     {
       heading: "How does the app track my progress?",
       paragraphs: [
-        "A Daily Study Streak plus concept-level mastery tracking on the dashboard automatically flags weak concepts and builds a personalized revision plan -- so a student knows what to revisit, not just how much they've done.",
+        "A Daily Study Streak plus micro learning unit-level mastery tracking on the dashboard automatically flags weak micro learning units and builds a personalized revision plan -- so a student knows what to revisit, not just how much they've done.",
       ],
     },
     {

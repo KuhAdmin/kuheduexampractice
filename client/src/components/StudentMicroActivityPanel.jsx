@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getMicroActivityResponse, submitMicroActivityResponse } from "../api/client";
 import { extractSourcePageImages, StudentMultiPageAnswerInput } from "./StudentMultiPageAnswerInput";
+import { applyPreferredVoice } from "../utils/speechVoice";
 
 const SpeakerIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -54,7 +55,7 @@ export const StudentMicroActivityPanel = ({ assessmentUnitId, prompt }) => {
     if (typeof window === "undefined" || !window.speechSynthesis || !text) return;
 
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    const utterance = applyPreferredVoice(new SpeechSynthesisUtterance(text));
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utterance);

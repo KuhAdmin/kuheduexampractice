@@ -295,11 +295,15 @@ const getSectionContentFlags = async ({ sourceSectionId, assessmentUnitIds }) =>
     ),
     pool.query(
       `
-        SELECT EXISTS(
-          SELECT 1 FROM content_card
-          WHERE source_section_id = $1 AND contentuitab IN ('pdfassets', 'visual')
-            AND processorkey <> 'ocr' AND is_hidden = FALSE
-        ) AS "hasDiagrams"
+        SELECT
+          EXISTS(
+            SELECT 1 FROM content_card
+            WHERE source_section_id = $1 AND contentuitab IN ('pdfassets', 'visual')
+              AND processorkey <> 'ocr' AND is_hidden = FALSE
+          ) AS "hasDiagrams",
+          EXISTS(
+            SELECT 1 FROM pre_warmup_content WHERE source_section_id = $1
+          ) AS "hasPreWarmup"
       `,
       [sourceSectionId]
     ),
@@ -309,6 +313,30 @@ const getSectionContentFlags = async ({ sourceSectionId, assessmentUnitIds }) =>
     ...conceptScoped.rows[0],
     ...diagrams.rows[0],
   };
+};
+
+// Deliberately not folded into the concept-mastery progress % above --
+// pre_warmup_content is section-scoped with no assessment_unit_id of its
+// own, so it gets its own status surfaced separately rather than distorting
+// "concepts completed". DISTINCT ON picks each phase's most recent attempt
+// (a learner can retake a completed phase, see restartPreWarmupAttempt in
+// studentPreWarmupService.js).
+const getPreWarmupStatus = async ({ sourceSectionId, userId }) => {
+  const result = await pool.query(
+    `
+      SELECT DISTINCT ON (phase) phase, status
+      FROM pre_warmup_attempt
+      WHERE user_id = $1 AND source_section_id = $2
+      ORDER BY phase, started_at DESC
+    `,
+    [userId, sourceSectionId]
+  );
+
+  const statusByPhase = { preLessonWarmup: "not_started", postLesson: "not_started" };
+  result.rows.forEach((row) => {
+    statusByPhase[row.phase] = row.status === "completed" ? "completed" : "in_progress";
+  });
+  return statusByPhase;
 };
 
 export const getSectionOverview = async ({ sourceSectionId, userId }) => {
@@ -327,11 +355,12 @@ export const getSectionOverview = async ({ sourceSectionId, userId }) => {
   }
 
   const assessmentUnitIds = units.map((unit) => unit.assessmentUnitId);
-  const [masteryByUnit, lastActivityByUnit, competenciesByUnit, contentFlags] = await Promise.all([
+  const [masteryByUnit, lastActivityByUnit, competenciesByUnit, contentFlags, preWarmupStatus] = await Promise.all([
     getMasteryByAssessmentUnitId({ userId, assessmentUnitIds }),
     getLastActivityByAssessmentUnitId({ userId, assessmentUnitIds }),
     getConceptLearningPillars(assessmentUnitIds),
     getSectionContentFlags({ sourceSectionId, assessmentUnitIds }),
+    getPreWarmupStatus({ sourceSectionId, userId }),
   ]);
   const masteredCount = units.filter(
     (unit) => (masteryByUnit.get(unit.assessmentUnitId) || 0) >= MASTERY_COMPLETE_THRESHOLD
@@ -345,6 +374,7 @@ export const getSectionOverview = async ({ sourceSectionId, userId }) => {
     conceptCount: units.length,
     progress: Math.round((masteredCount / units.length) * 100),
     contentFlags,
+    preWarmupStatus,
     concepts: units.map((unit) => {
       const isMastered = (masteryByUnit.get(unit.assessmentUnitId) || 0) >= MASTERY_COMPLETE_THRESHOLD;
       const status = isMastered

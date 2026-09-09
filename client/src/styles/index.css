@@ -2565,7 +2565,9 @@ a {
   .student-page.student-page--goals,
   .student-page.student-page--practice,
   .student-page.student-page--profile,
-  .student-page.student-page--mindmap {
+  .student-page.student-page--mindmap,
+  .student-page.student-page--pre-warmup,
+  .student-page.student-page--post-lesson {
     max-width: none;
     margin: 0;
   }
@@ -3576,6 +3578,26 @@ a {
   background: var(--surface-strong);
   box-shadow: 0 10px 24px rgb(from var(--green) r g b / 0.06);
   text-align: left;
+}
+
+/* Question Bank row on the chapter detail page -- deliberately a stronger
+   tint + a real rectangular border, so it reads as a distinct featured
+   action rather than blending into the plain concept rows above it. */
+.student-drilldown-card.is-highlight {
+  border: 1.5px solid rgb(from var(--warning) r g b / 0.45);
+  border-radius: 14px;
+  background: var(--warning-bg);
+}
+
+/* Accordion sub-item row (Pre-Lesson Warm-Up / Post-Lesson Follow-Up's own
+   sub-sections) -- no leading icon, so the grid needs its own column count
+   rather than inheriting the 3-column leading/copy/trailing template, plus
+   indentation so it visually nests under its parent toggle row. */
+.student-drilldown-card.is-subitem {
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-left: 32px;
+  margin-left: 8px;
+  border-style: dashed;
 }
 
 .student-drilldown-card-leading,
@@ -4598,9 +4620,12 @@ a {
 }
 
 .student-goals-stat-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "icon number" "label label";
   align-items: center;
-  gap: 12px;
+  column-gap: 12px;
+  row-gap: 2px;
   padding: 14px 16px;
   border-radius: 16px;
   background: rgb(from var(--muted) r g b / 0.07);
@@ -4619,6 +4644,7 @@ a {
 }
 
 .student-goals-stat-icon {
+  grid-area: icon;
   display: grid;
   place-items: center;
   width: 40px;
@@ -4650,6 +4676,7 @@ a {
 }
 
 .student-goals-stat-card strong {
+  grid-area: number;
   display: block;
   color: var(--text);
   font-size: 2.068em;
@@ -4658,6 +4685,7 @@ a {
 }
 
 .student-goals-stat-card span:last-child {
+  grid-area: label;
   display: block;
   margin-top: 2px;
   color: var(--muted);
@@ -4693,6 +4721,25 @@ a {
 .student-goals-row.is-disabled {
   opacity: 0.55;
   pointer-events: none;
+}
+
+/* Question Bank row -- same "stand out" treatment as
+   .student-drilldown-card.is-highlight, for the phone layout. */
+.student-goals-row.is-highlight {
+  border: 1.5px solid rgb(from var(--warning) r g b / 0.45);
+  border-radius: 14px;
+  background: var(--warning-bg);
+}
+
+/* Accordion sub-item row -- no rail/circle rendered, so the grid needs its
+   own column count rather than inheriting the 4-column
+   rail/copy/status/chevron template, plus indentation so it visually nests
+   under its parent toggle row (same pairing as .student-drilldown-card.is-subitem). */
+.student-goals-row.is-subitem {
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-left: 32px;
+  margin-left: 8px;
+  border-style: dashed;
 }
 
 .student-goals-row-rail {
@@ -5715,6 +5762,96 @@ a {
   font-weight: 600;
 }
 
+/* Story Anchor Question header: keeps the format chip (e.g. "fill_in_blank")
+   visually distinct from the cognitive-level chip (e.g. "Remember") next to
+   it, which stays on the default green above. */
+.student-concept-explore-tag.is-format {
+  background: rgb(from var(--blue) r g b / 0.14);
+  border-color: rgb(from var(--blue) r g b / 0.3);
+  color: var(--blue);
+}
+
+/* Bloom's-level filter chip row above the Story Anchor Questions card --
+   selected state. Deliberately the amber "stands out" accent (same one
+   .is-highlight rows use elsewhere) rather than a darker shade of the same
+   green every unselected chip already is -- a same-hue variant didn't read
+   as clearly "on" at a glance. */
+.student-concept-explore-tag.is-active {
+  background: var(--warning);
+  border-color: var(--warning);
+  color: #ffffff;
+  box-shadow: 0 0 0 2px rgb(from var(--warning) r g b / 0.25);
+  font-weight: 800;
+}
+
+/* AI-flagged spelling/grammar issue chips (StudentAnnotatedAnswer.jsx) --
+   distinct hues from the format (blue) and level (green/amber) chips above. */
+.student-concept-explore-tag.is-spelling {
+  background: rgb(from var(--danger) r g b / 0.14);
+  border-color: rgb(from var(--danger) r g b / 0.3);
+  color: var(--danger);
+}
+
+.student-concept-explore-tag.is-grammar {
+  background: rgb(from var(--teal) r g b / 0.14);
+  border-color: rgb(from var(--teal) r g b / 0.3);
+  color: var(--teal);
+}
+
+.student-answer-issues {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.student-answer-issues-text {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.student-answer-issue {
+  border-radius: 4px;
+  padding: 0 2px;
+  background: transparent;
+  color: inherit;
+}
+
+.student-answer-issue.is-spelling {
+  text-decoration: underline wavy var(--danger);
+  text-decoration-thickness: 1.5px;
+}
+
+.student-answer-issue.is-grammar {
+  text-decoration: underline wavy var(--teal);
+  text-decoration-thickness: 1.5px;
+}
+
+.student-answer-issues-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.student-answer-issues-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.0754em;
+}
+
+.student-answer-issues-correction s {
+  color: var(--muted);
+  text-decoration-color: var(--danger);
+}
+
+.student-answer-issues-note {
+  color: var(--muted);
+  font-size: 0.95em;
+}
+
 .student-memory-hook-card {
   padding: 14px;
   border-radius: 18px;
@@ -5989,6 +6126,15 @@ a {
   background: #0f172a;
 }
 
+/* Pre-Lesson Warm-Up's reference images (AVS Visual, Sensory Warm-Up) are
+   wide multi-panel infographics meant to be read in full, not photos suited
+   to a cropped 220px-tall thumbnail -- show the whole image at its natural
+   aspect ratio instead. */
+.student-media-viewer--contain .student-media-viewer-media {
+  max-height: none;
+  object-fit: contain;
+}
+
 .student-media-viewer-actions {
   position: absolute;
   top: 10px;
@@ -6043,8 +6189,50 @@ a {
 }
 
 .student-media-viewer-overlay-inner {
+  position: relative;
   max-width: min(100%, 900px);
   max-height: 90vh;
+}
+
+/* Content (e.g. a "Start Timer" button) overlaid on top of the image itself
+   while expanded/maximized, rather than living below it where it'd only be
+   reachable after exiting full-screen. */
+.student-media-viewer-expanded-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+}
+
+/* Solid, high-contrast pill so the button/badge stays legible over any
+   photo/illustration underneath, unlike the app's usual tinted buttons
+   which can blend into a busy image. */
+.student-media-viewer-timer-button,
+.student-media-viewer-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 64px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(17, 24, 39, 0.82);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.05rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.student-media-viewer-timer-button {
+  cursor: pointer;
+}
+
+.student-media-viewer-timer-button:hover {
+  background: rgba(17, 24, 39, 0.92);
 }
 
 .student-media-viewer-overlay-media {
@@ -6853,6 +7041,37 @@ a {
   gap: 10px;
 }
 
+/* Transferable Patterns' "write 3 sentences of your own" exercise
+   (StudentPostLessonPage.jsx). */
+.student-pattern-exercise {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.student-pattern-exercise-prompt {
+  margin: 0;
+  font-weight: 600;
+}
+
+.student-pattern-exercise-row {
+  display: grid;
+  gap: 4px;
+}
+
+.student-pattern-exercise-feedback {
+  margin: 0;
+  font-size: 1.0754em;
+}
+
+.student-pattern-exercise-feedback.is-correct {
+  color: var(--success);
+}
+
+.student-pattern-exercise-feedback.is-incorrect {
+  color: var(--danger);
+}
+
 .student-ocr-upload-button {
   display: inline-flex;
   align-items: center;
@@ -6922,6 +7141,26 @@ a {
 .student-assessment-text-input.is-incorrect {
   background: linear-gradient(180deg, var(--danger-bg), var(--danger-bg));
   border-color: rgb(from var(--danger) r g b / 0.3);
+}
+
+/* Vocabulary Warm-Up -- Anchor Set cards: 1 per row on mobile, 2 on tablet,
+   3 on wider screens -- same breakpoints as useBreakpoint.js (640px/920px). */
+.student-avs-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .student-avs-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 920px) {
+  .student-avs-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .student-instant-feedback {
@@ -7149,6 +7388,22 @@ a {
   background: rgb(from var(--teal) r g b / 0.12);
   color: var(--teal, var(--teal));
   font-size: 2.068em;
+  font-weight: 800;
+}
+
+/* Pill (not a fixed circle like .student-viva-countdown, which only ever
+   holds a bare number elsewhere) so variable-length text -- "5s" through
+   "Time's up" -- always fits without overflowing or wrapping. */
+.student-countdown-pill {
+  display: inline-flex;
+  align-self: start;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgb(from var(--teal) r g b / 0.12);
+  color: var(--teal, var(--teal));
+  font-size: 1.05rem;
   font-weight: 800;
 }
 
@@ -7646,6 +7901,22 @@ a {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 4px 10px;
   align-items: center;
+}
+
+/* Pre-Lesson Warm-Up / Post-Lesson: one-line "hook" caption shown under a
+   step's title, learner-facing equivalent of admin-workbench-muted. */
+.student-hook-caption {
+  color: var(--muted);
+  font-size: 1.7rem;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 4px 0 6px;
+  padding: 4px 14px;
+  border-radius: 10px;
+  /* One color (--warning, the same "stands out" accent used elsewhere this
+     session) fading to transparent, rather than a two-color gradient. */
+  background: linear-gradient(90deg, rgb(from var(--warning) r g b / 0.22), transparent);
 }
 
 .student-concept-practice-head span {
@@ -9459,6 +9730,14 @@ a {
 .admin-studio-field {
   display: grid;
   gap: 8px;
+}
+
+/* When an .admin-studio-field is a <details> (collapsible review sections,
+   e.g. PreWarmupContentPreview.jsx), its <summary> is the click target for
+   expand/collapse -- browsers don't reliably show a pointer cursor on
+   <summary> by default across all of them, so make the affordance explicit. */
+.admin-studio-field > summary {
+  cursor: pointer;
 }
 
 .admin-studio-field-wide {

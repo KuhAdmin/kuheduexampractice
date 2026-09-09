@@ -279,7 +279,7 @@ export const StudentChallengesTab = ({ assessmentUnitId }) => {
       <section className="student-concept-learning-card">
         <div className="student-concept-learning-copy">
           <h2>Challenges</h2>
-          <p>No extra challenges have been generated for this concept yet.</p>
+          <p>No extra challenges have been generated for this micro learning unit yet.</p>
         </div>
       </section>
     );

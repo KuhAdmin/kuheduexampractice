@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 const loopSteps = [
   { label: "Learn", detail: "Understand the chapter." },
-  { label: "Remember", detail: "Lock concepts into memory." },
+  { label: "Remember", detail: "Lock micro learning units into memory." },
   { label: "Practice", detail: "Test your understanding." },
   { label: "Improve", detail: "Return to weak topics." },
 ];

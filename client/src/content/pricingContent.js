@@ -3,13 +3,13 @@
 // tier they pick.
 const BASE_FEATURES = [
   "AI-powered Smart Tutor for instant doubt-solving",
-  "Concept-wise learning modules mapped to your CBSE syllabus",
+  "Micro Learning Unit-wise learning modules mapped to your CBSE syllabus",
   "Unlimited practice questions with instant explanations",
   "Full-length mock tests and assessments with performance analysis",
   "Visual learning aids, diagrams, and mind maps for every chapter",
   "Flashcards and Memory Booster for faster recall",
   "Daily Study Streak and progress tracking on your dashboard",
-  "Personalized weak-concept identification and revision plans",
+  "Personalized weak micro learning unit identification and revision plans",
   "Downloadable study materials and chapter-wise revision notes",
   "Access to Virtual Labs",
 ];

@@ -1,5 +1,6 @@
 import {
   getAssessmentResult,
+  getChapterAssessmentPreview,
   getMindMapForSection,
   listRecentAttemptsForChapter,
   listRecentAttemptsForConcept,
@@ -97,6 +98,18 @@ export const startChapterAssessment = async (req, res, next) => {
 export const restartChapterAssessmentHandler = async (req, res, next) => {
   try {
     const result = await restartChapterAssessment(chapterAssessmentContext(req));
+    return res.json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const getChapterAssessmentPreviewHandler = async (req, res, next) => {
+  try {
+    const result = await getChapterAssessmentPreview(chapterAssessmentContext(req));
     return res.json(result);
   } catch (error) {
     if (error.statusCode) {

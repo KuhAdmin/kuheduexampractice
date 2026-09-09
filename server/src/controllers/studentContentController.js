@@ -90,7 +90,7 @@ export const getStudentConceptCard = async (req, res, next) => {
     const result = await getConceptCard({ assessmentUnitId: req.params.assessmentUnitId });
 
     if (!result) {
-      return res.status(404).json({ message: "This concept has not been generated yet." });
+      return res.status(404).json({ message: "This micro learning unit has not been generated yet." });
     }
 
     return res.json(result);
@@ -150,7 +150,7 @@ export const getStudentMemoryBoosterForUnit = async (req, res, next) => {
     });
 
     if (!result) {
-      return res.status(404).json({ message: "No memory aid has been generated for this concept yet." });
+      return res.status(404).json({ message: "No memory aid has been generated for this micro learning unit yet." });
     }
 
     return res.json(result);

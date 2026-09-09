@@ -41,7 +41,7 @@ export const StudentConceptPracticeCapture = ({ assessmentUnitId }) => {
       if (!result.isRelated) {
         set({
           stage: "question-blocked",
-          blockReason: result.reason || "This question doesn't look related to this concept.",
+          blockReason: result.reason || "This question doesn't look related to this micro learning unit.",
         });
         return;
       }
@@ -127,7 +127,7 @@ export const StudentConceptPracticeCapture = ({ assessmentUnitId }) => {
       )}
 
       {state.stage === "question-loading" && (
-        <p className="admin-workbench-muted">Reading the question and checking it matches this concept...</p>
+        <p className="admin-workbench-muted">Reading the question and checking it matches this micro learning unit...</p>
       )}
 
       {state.stage === "question-error" && (
@@ -151,7 +151,7 @@ export const StudentConceptPracticeCapture = ({ assessmentUnitId }) => {
       {state.stage === "question-blocked" && (
         <div className="admin-ai-demo-panel student-concept-practice-capture-blocked">
           <img src={state.questionImageDataUrl} alt="Captured question" className="admin-ai-demo-review-image" />
-          <p className="error-text">Not related to this concept -- {state.blockReason}</p>
+          <p className="error-text">Not related to this micro learning unit -- {state.blockReason}</p>
           <div className="admin-ai-demo-actions">
             <button type="button" className="primary-button" onClick={() => set({ stage: "question-camera" })}>
               Retake Photo

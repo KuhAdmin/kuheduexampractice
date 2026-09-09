@@ -58,7 +58,7 @@ export const mintTutorVoiceToken = async ({ assessmentUnitId, mode }) => {
 
   const card = await getConceptCard({ assessmentUnitId });
   if (!card) {
-    const error = new Error("This concept has not been generated yet.");
+    const error = new Error("This micro learning unit has not been generated yet.");
     error.statusCode = 404;
     throw error;
   }

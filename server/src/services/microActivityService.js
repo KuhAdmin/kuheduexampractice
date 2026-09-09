@@ -69,7 +69,7 @@ export const gradeMicroActivityResponse = async ({
 
   const prompt = memory.micro_activity;
   if (!prompt || !prompt.trim()) {
-    const error = new Error("This concept has no micro-activity prompt yet.");
+    const error = new Error("This micro learning unit has no micro-activity prompt yet.");
     error.statusCode = 422;
     throw error;
   }

@@ -51,7 +51,7 @@ export const StudentAiTutorPanel = ({ assessmentUnitId }) => {
     <section className="student-ai-tutor-panel" aria-label="Smart Tutor">
       <header className="student-ai-tutor-header">
         <h2>Smart Tutor</h2>
-        <p>Ask a question, or have the tutor walk you through this concept.</p>
+        <p>Ask a question, or have the tutor walk you through this micro learning unit.</p>
       </header>
 
       {usage && (
@@ -85,7 +85,7 @@ export const StudentAiTutorPanel = ({ assessmentUnitId }) => {
           type="text"
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
-          placeholder="Ask a question about this concept…"
+          placeholder="Ask a question about this micro learning unit…"
           disabled={pendingMode !== null}
         />
         <button type="submit" disabled={pendingMode !== null || !question.trim()}>

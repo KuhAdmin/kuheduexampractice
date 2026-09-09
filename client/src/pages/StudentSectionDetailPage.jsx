@@ -5,6 +5,7 @@ import { StudentDrilldownCard } from "../components/StudentDrilldownCard";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getStudentSectionOverview, getStudentSections } from "../api/client";
 import { decodeSelectionChapterId } from "./studentChapterData";
+import { PRE_LESSON_SUBSECTIONS, POST_LESSON_SUBSECTIONS } from "../content/preWarmupSubsections";
 
 const SectionDetailIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -352,6 +353,9 @@ export const StudentSectionDetailPage = () => {
   const [activeTab, setActiveTab] = useState("concepts");
   const [visibleConceptCount, setVisibleConceptCount] = useState(CONCEPTS_PAGE_SIZE);
   const [chapterName, setChapterName] = useState("");
+  // null | "preLessonWarmup" | "postLesson" -- which accordion group (if any)
+  // is currently expanded in the Micro Learning Units list.
+  const [expandedGroup, setExpandedGroup] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -420,7 +424,7 @@ export const StudentSectionDetailPage = () => {
         </span>
         <span className="student-chapter-detail-action-copy">
           <strong>Section Assessment</strong>
-          <small>{detail.conceptCount} concepts covered</small>
+          <small>{detail.conceptCount} micro learning units covered</small>
         </span>
         <SectionDetailIcon type="chevron" />
       </button>
@@ -491,13 +495,37 @@ export const StudentSectionDetailPage = () => {
           </span>
           <span className="student-chapter-detail-action-copy">
             <strong>Mind Map</strong>
-            <small>See how concepts connect</small>
+            <small>See how micro learning units connect</small>
           </span>
           <SectionDetailIcon type="chevron" />
         </button>
       )}
     </section>
   );
+
+  // Pinned as the first row of the Micro Learning Units list (not gated
+  // inside Deep Learn, and not part of `detail.concepts`/`conceptCount` --
+  // same "extra row appended without inflating the real count" pattern as
+  // Question Bank on StudentChapterDetailPage.jsx) so a learner sees it
+  // before starting concepts -- that's the whole point of a warm-up.
+  // preWarmupStatus is per-learner (getPreWarmupStatus in
+  // studentContentService.js), separate from hasPreWarmup (whether the
+  // section has any pre-warmup content at all). Styled with the same
+  // .is-highlight treatment as Question Bank so it stands out the same way.
+  const preWarmupStatusLabel = {
+    completed: "Completed — review anytime",
+    in_progress: "Continue where you left off",
+    not_started: "Get ready before you start",
+  }[detail?.preWarmupStatus?.preLessonWarmup || "not_started"];
+
+  // Pinned as the LAST row of the same list (see the comment above
+  // preWarmupStatusLabel) -- comes after the real concepts since it's meant
+  // to be done once the learner has finished them, not before.
+  const postLessonStatusLabel = {
+    completed: "Completed — review anytime",
+    in_progress: "Continue where you left off",
+    not_started: "Reflect & apply what you read",
+  }[detail?.preWarmupStatus?.postLesson || "not_started"];
 
   if (isDesktop) {
     const visibleConcepts = detail?.concepts?.slice(0, visibleConceptCount) || [];
@@ -539,7 +567,7 @@ export const StudentSectionDetailPage = () => {
                     <span>Overall Progress</span>
                     <strong>{detail.progress}%</strong>
                     <p>
-                      {summary.completed} of {detail.conceptCount} concepts completed
+                      {summary.completed} of {detail.conceptCount} micro learning units completed
                     </p>
                   </div>
 
@@ -580,7 +608,7 @@ export const StudentSectionDetailPage = () => {
                   onClick={() => setActiveTab("concepts")}
                 >
                   <SectionDetailIcon type="list" />
-                  {`Concepts (${detail.conceptCount})`}
+                  {`Micro Learning Units (${detail.conceptCount})`}
                 </button>
                 <button
                   type="button"
@@ -588,13 +616,47 @@ export const StudentSectionDetailPage = () => {
                   onClick={() => setActiveTab("deepLearn")}
                 >
                   <SectionDetailIcon type="atom" />
-                  Deep Learn
+                  Memory Boosters
                 </button>
               </nav>
 
               {activeTab === "concepts" ? (
                 <section className="student-section-detail-concepts">
                   <div className="student-goals-list">
+                    {flags.hasPreWarmup && (
+                      <>
+                        <button
+                          type="button"
+                          className="student-goals-row is-highlight"
+                          onClick={() => setExpandedGroup((current) => (current === "preLessonWarmup" ? null : "preLessonWarmup"))}
+                        >
+                          <span className="student-goals-row-rail">
+                            <span className="student-goals-row-circle">
+                              <SectionDetailIcon type="atom" />
+                            </span>
+                          </span>
+                          <span className="student-goals-row-copy">
+                            <strong>Pre-Lesson Warm-Up</strong>
+                            <small>{preWarmupStatusLabel}</small>
+                          </span>
+                          <SectionDetailIcon type={expandedGroup === "preLessonWarmup" ? "chevron-down" : undefined} />
+                        </button>
+                        {expandedGroup === "preLessonWarmup" &&
+                          PRE_LESSON_SUBSECTIONS.map((subsection) => (
+                            <button
+                              key={subsection.key}
+                              type="button"
+                              className="student-goals-row is-highlight is-subitem"
+                              onClick={() => navigate(`${basePath}/warm-up?section=${subsection.key}`)}
+                            >
+                              <span className="student-goals-row-copy">
+                                <strong>{subsection.title}</strong>
+                              </span>
+                              <SectionDetailIcon />
+                            </button>
+                          ))}
+                      </>
+                    )}
                     {visibleConcepts.map((concept, index) => {
                       const statusClass = STATUS_CLASS[concept.status];
                       return (
@@ -621,6 +683,40 @@ export const StudentSectionDetailPage = () => {
                         </button>
                       );
                     })}
+                    {flags.hasPreWarmup && (
+                      <>
+                        <button
+                          type="button"
+                          className="student-goals-row is-highlight"
+                          onClick={() => setExpandedGroup((current) => (current === "postLesson" ? null : "postLesson"))}
+                        >
+                          <span className="student-goals-row-rail">
+                            <span className="student-goals-row-circle">
+                              <SectionDetailIcon type="quiz" />
+                            </span>
+                          </span>
+                          <span className="student-goals-row-copy">
+                            <strong>Post-Lesson Follow-Up</strong>
+                            <small>{postLessonStatusLabel}</small>
+                          </span>
+                          <SectionDetailIcon type={expandedGroup === "postLesson" ? "chevron-down" : undefined} />
+                        </button>
+                        {expandedGroup === "postLesson" &&
+                          POST_LESSON_SUBSECTIONS.map((subsection) => (
+                            <button
+                              key={subsection.key}
+                              type="button"
+                              className="student-goals-row is-highlight is-subitem"
+                              onClick={() => navigate(`${basePath}/post-lesson?section=${subsection.key}`)}
+                            >
+                              <span className="student-goals-row-copy">
+                                <strong>{subsection.title}</strong>
+                              </span>
+                              <SectionDetailIcon />
+                            </button>
+                          ))}
+                      </>
+                    )}
                   </div>
                   {hasMoreConcepts && (
                     <button
@@ -628,7 +724,7 @@ export const StudentSectionDetailPage = () => {
                       className="student-section-detail-show-more"
                       onClick={() => setVisibleConceptCount(detail.concepts.length)}
                     >
-                      Show more concepts
+                      Show more micro learning units
                       <SectionDetailIcon type="chevron-down" />
                     </button>
                   )}
@@ -676,20 +772,45 @@ export const StudentSectionDetailPage = () => {
                 className={`student-section-detail-tab ${activeTab === "concepts" ? "is-active" : ""}`}
                 onClick={() => setActiveTab("concepts")}
               >
-                Concepts ({detail.conceptCount})
+                Micro Learning Units ({detail.conceptCount})
               </button>
               <button
                 type="button"
                 className={`student-section-detail-tab ${activeTab === "deepLearn" ? "is-active" : ""}`}
                 onClick={() => setActiveTab("deepLearn")}
               >
-                Deep Learn
+                Memory Boosters
               </button>
             </nav>
 
             {activeTab === "concepts" ? (
               <section className="student-section-detail-concepts">
                 <div className="student-section-detail-list">
+                  {flags.hasPreWarmup && (
+                    <>
+                      <StudentDrilldownCard
+                        className="student-section-detail-row is-highlight"
+                        onClick={() => setExpandedGroup((current) => (current === "preLessonWarmup" ? null : "preLessonWarmup"))}
+                        leading={
+                          <div className="student-section-detail-index">
+                            <SectionDetailIcon type="atom" />
+                          </div>
+                        }
+                        title="Pre-Lesson Warm-Up"
+                        subtitle={preWarmupStatusLabel}
+                        trailing={<SectionDetailIcon type={expandedGroup === "preLessonWarmup" ? "chevron-down" : undefined} />}
+                      />
+                      {expandedGroup === "preLessonWarmup" &&
+                        PRE_LESSON_SUBSECTIONS.map((subsection) => (
+                          <StudentDrilldownCard
+                            key={subsection.key}
+                            className="student-section-detail-row is-highlight is-subitem"
+                            onClick={() => navigate(`${basePath}/warm-up?section=${subsection.key}`)}
+                            title={subsection.title}
+                          />
+                        ))}
+                    </>
+                  )}
                   {detail.concepts.map((concept, index) => (
                     <StudentDrilldownCard
                       key={concept.assessmentUnitId}
@@ -702,6 +823,31 @@ export const StudentSectionDetailPage = () => {
                       <ConceptCompetencyChips competencies={concept.competencies} />
                     </StudentDrilldownCard>
                   ))}
+                  {flags.hasPreWarmup && (
+                    <>
+                      <StudentDrilldownCard
+                        className="student-section-detail-row is-highlight"
+                        onClick={() => setExpandedGroup((current) => (current === "postLesson" ? null : "postLesson"))}
+                        leading={
+                          <div className="student-section-detail-index">
+                            <SectionDetailIcon type="quiz" />
+                          </div>
+                        }
+                        title="Post-Lesson Follow-Up"
+                        subtitle={postLessonStatusLabel}
+                        trailing={<SectionDetailIcon type={expandedGroup === "postLesson" ? "chevron-down" : undefined} />}
+                      />
+                      {expandedGroup === "postLesson" &&
+                        POST_LESSON_SUBSECTIONS.map((subsection) => (
+                          <StudentDrilldownCard
+                            key={subsection.key}
+                            className="student-section-detail-row is-highlight is-subitem"
+                            onClick={() => navigate(`${basePath}/post-lesson?section=${subsection.key}`)}
+                            title={subsection.title}
+                          />
+                        ))}
+                    </>
+                  )}
                 </div>
               </section>
             ) : (

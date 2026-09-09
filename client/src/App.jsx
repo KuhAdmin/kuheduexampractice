@@ -14,6 +14,7 @@ import { AdminLevelsPage } from "./pages/AdminLevelsPage";
 import { AdminSubjectsPage } from "./pages/AdminSubjectsPage";
 import { AdminBooksPage } from "./pages/AdminBooksPage";
 import { AdminConceptImportPage } from "./pages/AdminConceptImportPage";
+import { AdminPreWarmupImportPage } from "./pages/AdminPreWarmupImportPage";
 import { AdminContentEditorPage } from "./pages/AdminContentEditorPage";
 import { StudentLayout } from "./components/StudentLayout";
 import { useAuth } from "./context/authHooks";
@@ -25,6 +26,9 @@ import { LegalPage } from "./pages/LegalPage";
 import { PricingPage } from "./pages/PricingPage";
 import { StudentAssessmentPage } from "./pages/StudentAssessmentPage";
 import { StudentAssessmentResultPage } from "./pages/StudentAssessmentResultPage";
+import { StudentPreLessonWarmupPage } from "./pages/StudentPreLessonWarmupPage";
+import { StudentPostLessonPage } from "./pages/StudentPostLessonPage";
+import { StudentHotsPage } from "./pages/StudentHotsPage";
 import { StudentChapterDetailPage } from "./pages/StudentChapterDetailPage";
 import { StudentBookQuestionsPage } from "./pages/StudentBookQuestionsPage";
 import { StudentChaptersPage } from "./pages/StudentChaptersPage";
@@ -196,6 +200,7 @@ const App = () => {
           <Route path="/chapters/:chapterId" element={<StudentChapterDetailPage dashboard={dashboard} user={user} />} />
           <Route path="/chapters/:chapterId/book-questions" element={<StudentBookQuestionsPage />} />
           <Route path="/chapters/:chapterId/assessment" element={<StudentAssessmentPage />} />
+          <Route path="/chapters/:chapterId/hots" element={<StudentHotsPage />} />
           <Route
             path="/chapters/:chapterId/assessment/result/:attemptId"
             element={<StudentAssessmentResultPage />}
@@ -228,6 +233,14 @@ const App = () => {
           <Route
             path="/chapters/:chapterId/sections/:sectionId/mind-map"
             element={<StudentMindMapPage />}
+          />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/warm-up"
+            element={<StudentPreLessonWarmupPage />}
+          />
+          <Route
+            path="/chapters/:chapterId/sections/:sectionId/post-lesson"
+            element={<StudentPostLessonPage />}
           />
           <Route
             path="/chapters/:chapterId/sections/:sectionId/assessment"
@@ -308,6 +321,10 @@ const App = () => {
           <Route
             path="concept-import"
             element={<AdminConceptImportPage />}
+          />
+          <Route
+            path="pre-warmup-import"
+            element={<AdminPreWarmupImportPage />}
           />
           <Route
             path="content-editor"

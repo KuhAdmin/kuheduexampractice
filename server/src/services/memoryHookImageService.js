@@ -308,7 +308,7 @@ export const generateMemoryHookPrompt = async ({ assessmentUnitId, sectionKey })
 
   const context = await getLayer1Context(assessmentUnitId);
   if (!context) {
-    const error = new Error("Concept not found.");
+    const error = new Error("Micro learning unit not found.");
     error.statusCode = 404;
     throw error;
   }

@@ -40,6 +40,7 @@ import {
   answerAssessmentItem,
   finishAssessment,
   getAssessmentResultHandler,
+  getChapterAssessmentPreviewHandler,
   getMindMap,
   getRecentAttempts,
   getRecentChapterAttempts,
@@ -51,6 +52,15 @@ import {
   startChapterAssessment,
   startConceptAssessment,
 } from "../controllers/studentPracticeController.js";
+import {
+  answerPatternExercise,
+  answerPreWarmupItem,
+  finishPreWarmup,
+  getPreWarmupResultHandler,
+  restartPreWarmup,
+  startPreWarmup,
+} from "../controllers/studentPreWarmupController.js";
+import { answerHotsItem, getChapterHotsPreviewHandler, startChapterHots } from "../controllers/hotsController.js";
 import { postHandwrittenNoteOcr } from "../controllers/ocrController.js";
 import {
   getTutorUsageHandler,
@@ -146,9 +156,22 @@ router.get("/concepts/:assessmentUnitId/assessment/attempts", getRecentConceptAt
 router.post("/chapters/:chapterNumber/assessment/start", startChapterAssessment);
 router.post("/chapters/:chapterNumber/assessment/restart", restartChapterAssessmentHandler);
 router.get("/chapters/:chapterNumber/assessment/attempts", getRecentChapterAttempts);
+router.get("/chapters/:chapterNumber/assessment/preview", getChapterAssessmentPreviewHandler);
 router.post("/attempts/:attemptId/items/:displayOrder/answer", answerAssessmentItem);
 router.post("/attempts/:attemptId/submit", finishAssessment);
 router.get("/attempts/:attemptId/result", getAssessmentResultHandler);
+
+router.post("/sections/:sourceSectionId/pre-warmup/:phase/start", startPreWarmup);
+router.post("/sections/:sourceSectionId/pre-warmup/:phase/restart", restartPreWarmup);
+router.post("/pre-warmup-attempts/:attemptId/items/:itemKey/answer", answerPreWarmupItem);
+router.post("/pre-warmup-attempts/:attemptId/patterns/:patternKey/exercise", answerPatternExercise);
+router.post("/pre-warmup-attempts/:attemptId/submit", finishPreWarmup);
+router.get("/pre-warmup-attempts/:attemptId/result", getPreWarmupResultHandler);
+
+router.get("/chapters/:chapterNumber/hots/preview", getChapterHotsPreviewHandler);
+router.post("/chapters/:chapterNumber/hots/start", startChapterHots);
+router.post("/hots-attempts/:attemptId/items/:displayOrder/answer", answerHotsItem);
+
 router.post("/ocr/handwritten-note", postHandwrittenNoteOcr);
 
 router.get("/dashboard", async (req, res, next) => {

@@ -60,7 +60,7 @@ export const StudentEinsteinMode = ({ assessmentUnitId }) => {
     <section className="student-einstein-mode" aria-label="Einstein mode">
       <header className="student-ai-tutor-header">
         <h2>Einstein Mode</h2>
-        <p>Find a real object that shows this concept in action, and let AI check your eye for it.</p>
+        <p>Find a real object that shows this micro learning unit in action, and let AI check your eye for it.</p>
       </header>
 
       {state.stage === "loading-challenge" && (
@@ -81,7 +81,7 @@ export const StudentEinsteinMode = ({ assessmentUnitId }) => {
       {state.stage === "challenge-ready" && (
         <div className="admin-ai-demo-panel">
           <p className="student-einstein-mode-prompt">
-            <strong>Q:</strong> Identify a random concept-related object: <em>{state.object}</em>
+            <strong>Q:</strong> Identify a random micro learning unit-related object: <em>{state.object}</em>
           </p>
           <div className="admin-ai-demo-actions">
             <button type="button" className="student-einstein-mode-cta" onClick={() => set({ stage: "camera" })}>

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentDrilldownCard } from "../components/StudentDrilldownCard";
 import { useBreakpoint } from "../hooks/useBreakpoint";
-import { getBookQuestions, getStudentSections } from "../api/client";
+import { getBookQuestions, getChapterAssessmentPreview, getChapterHotsPreview, getStudentSections } from "../api/client";
 import { decodeSelectionChapterId, isSelectionChapterId } from "./studentChapterData";
 
 const ChapterDetailIcon = ({ type, className = "" }) => {
@@ -37,6 +37,21 @@ const ChapterDetailIcon = ({ type, className = "" }) => {
         />
         <path
           d="M20 5.5c0-.83-.67-1.5-1.5-1.5H12v16h6.5a1.5 1.5 0 0 1 1.5 1.5v-16Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.6"
+        />
+      </svg>
+    );
+  }
+
+  if (type === "spark") {
+    return (
+      <svg viewBox="0 0 24 24" className={classes} aria-hidden="true">
+        <path
+          d="M12 3.5c.6 3.2 1.7 5.4 3.3 6.6 1.6 1.2 3.4 1.5 5.2 1.4-1.8.5-3.4 1.4-4.6 2.9-1.2 1.5-1.9 3.4-2.2 5.6-.6-3.2-1.7-5.4-3.3-6.6-1.6-1.2-3.4-1.5-5.2-1.4 1.8-.5 3.4-1.4 4.6-2.9 1.2-1.5 1.9-3.4 2.2-5.6Z"
           fill="none"
           stroke="currentColor"
           strokeLinecap="round"
@@ -170,6 +185,8 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
   const [bookQuestions, setBookQuestions] = useState([]);
   const [bookQuestionsLoading, setBookQuestionsLoading] = useState(true);
   const [bookQuestionsError, setBookQuestionsError] = useState("");
+  const [assessmentPreview, setAssessmentPreview] = useState(null);
+  const [hotsPreview, setHotsPreview] = useState(null);
 
   const dashboardChapter = (Array.isArray(dashboard?.chapters) ? dashboard.chapters : []).find(
     (chapter) => String(chapter.chapterNumber) === String(chapterNumber)
@@ -240,6 +257,57 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterNumber, isSelection, isLocked]);
 
+  // Same profile-scoped/selection-mode gating as the book-questions effect
+  // above -- the Question Bank row's real section/concept/question counts,
+  // fetched separately from `data` since they require walking every
+  // concept's own generated item bank (getChapterAssessmentPreview in
+  // studentPracticeService.js), not just the section summaries getStudentSections
+  // already returns.
+  useEffect(() => {
+    if (isSelection || isLocked) {
+      setAssessmentPreview(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    getChapterAssessmentPreview(chapterNumber)
+      .then((result) => {
+        if (!cancelled) setAssessmentPreview(result);
+      })
+      .catch(() => {
+        if (!cancelled) setAssessmentPreview(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chapterNumber, isSelection, isLocked]);
+
+  // "HOTS (n)" row's count -- same read-only preview pattern as Question
+  // Bank's own effect above, just for the chapter-wide Story Anchor Questions
+  // aggregation instead (getChapterHotsPreview in studentPreWarmupService.js).
+  useEffect(() => {
+    if (isSelection || isLocked) {
+      setHotsPreview(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    getChapterHotsPreview(chapterNumber)
+      .then((result) => {
+        if (!cancelled) setHotsPreview(result);
+      })
+      .catch(() => {
+        if (!cancelled) setHotsPreview(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chapterNumber, isSelection, isLocked]);
+
   const chapterName = data?.chapterName || dashboardChapter?.title || "Chapter";
   const sections = data?.sections || [];
   const generatedSections = sections.filter((section) => section.hasContent);
@@ -251,6 +319,14 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
     (sum, section) => sum + (section.conceptCount || 0),
     0
   );
+  // Falls back to the concept count alone (the old "(32)" label) until the
+  // separate, heavier preview request resolves -- see the effect above.
+  const questionBankLabel = assessmentPreview
+    ? `${assessmentPreview.sectionCount} section${assessmentPreview.sectionCount === 1 ? "" : "s"} → ` +
+      `${assessmentPreview.conceptCount} micro learning unit${assessmentPreview.conceptCount === 1 ? "" : "s"} → ` +
+      `${assessmentPreview.questionCount} question${assessmentPreview.questionCount === 1 ? "" : "s"}`
+    : `${totalConcepts}`;
+  const hotsQuestionCount = hotsPreview?.questionCount ?? 0;
   const overallProgress = totalConcepts
     ? Math.round(
         generatedSections.reduce(
@@ -312,7 +388,7 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
                       <ChapterDetailIcon type="book" />
                     </span>
                     <strong>{summary.total}</strong>
-                    <span>Total Sections</span>
+                    <span>Sections</span>
                   </div>
                   <div className="student-goals-stat-card is-in-progress">
                     <span className="student-goals-stat-icon is-in-progress">
@@ -395,7 +471,7 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
                       </span>
                       <span className="student-goals-row-copy">
                         <strong>{section.topicName || section.sectionNumber}</strong>
-                        <small>{section.hasContent ? `${section.conceptCount} Concepts` : "Not generated yet"}</small>
+                        <small>{section.hasContent ? `${section.conceptCount} Micro Learning Units` : "Not generated yet"}</small>
                       </span>
                       {section.hasContent ? (
                         <span className={`student-goals-row-status ${statusClass}`}>
@@ -412,15 +488,36 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
                 {!isSelection && !bookQuestionsLoading && !bookQuestionsError && (
                   <button
                     type="button"
-                    className="student-goals-row"
+                    className="student-goals-row is-highlight"
                     onClick={() => navigate(`/chapters/${chapterNumber}/assessment`)}
                   >
                     <span className="student-goals-row-rail">
-                      <span className="student-goals-row-circle">{totalConcepts}</span>
+                      <span className="student-goals-row-circle">
+                        <ChapterDetailIcon type="book" />
+                      </span>
                     </span>
                     <span className="student-goals-row-copy">
-                      <strong>{`Question Bank (${totalConcepts})`}</strong>
-                      <small>All chapter concepts, arranged randomly</small>
+                      <strong>{`Question Bank (${questionBankLabel})`}</strong>
+                      <small>All chapter micro learning units, arranged randomly</small>
+                    </span>
+                    <span />
+                    <ChapterDetailIcon />
+                  </button>
+                )}
+                {!isSelection && hotsPreview && (
+                  <button
+                    type="button"
+                    className="student-goals-row is-highlight"
+                    onClick={() => navigate(`/chapters/${chapterNumber}/hots`)}
+                  >
+                    <span className="student-goals-row-rail">
+                      <span className="student-goals-row-circle">
+                        <ChapterDetailIcon type="spark" />
+                      </span>
+                    </span>
+                    <span className="student-goals-row-copy">
+                      <strong>{`HOTS (${hotsQuestionCount})`}</strong>
+                      <small>All chapter Story Anchor Questions, arranged randomly</small>
                     </span>
                     <span />
                     <ChapterDetailIcon />
@@ -502,7 +599,7 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
                   title={section.topicName || section.sectionNumber}
                   subtitle={
                     section.hasContent
-                      ? `${section.conceptCount} Concepts - ${section.progress}%`
+                      ? `${section.conceptCount} Micro Learning Units - ${section.progress}%`
                       : "Not generated yet"
                   }
                 >
@@ -510,11 +607,29 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
               ))}
               {!isSelection && !bookQuestionsLoading && !bookQuestionsError && (
                 <StudentDrilldownCard
-                  className="student-chapter-detail-row"
+                  className="student-chapter-detail-row is-highlight"
                   onClick={() => navigate(`/chapters/${chapterNumber}/assessment`)}
-                  leading={<div className="student-chapter-detail-index">{totalConcepts}</div>}
-                  title={`Question Bank (${totalConcepts})`}
-                  subtitle="All chapter concepts, arranged randomly"
+                  leading={
+                    <div className="student-chapter-detail-index">
+                      <ChapterDetailIcon type="book" />
+                    </div>
+                  }
+                  title={`Question Bank (${questionBankLabel})`}
+                  subtitle="All chapter micro learning units, arranged randomly"
+                >
+                </StudentDrilldownCard>
+              )}
+              {!isSelection && hotsPreview && (
+                <StudentDrilldownCard
+                  className="student-chapter-detail-row is-highlight"
+                  onClick={() => navigate(`/chapters/${chapterNumber}/hots`)}
+                  leading={
+                    <div className="student-chapter-detail-index">
+                      <ChapterDetailIcon type="spark" />
+                    </div>
+                  }
+                  title={`HOTS (${hotsQuestionCount})`}
+                  subtitle="All chapter Story Anchor Questions, arranged randomly"
                 >
                 </StudentDrilldownCard>
               )}

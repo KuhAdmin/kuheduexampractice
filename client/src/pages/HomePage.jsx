@@ -12,17 +12,6 @@ import { LEGAL_DOC_SLUGS, legalDocsBySlug } from "../content/legalContent";
 const GOOGLE_AUTH_URL =
  "/api/auth/google";
 
-const SpecialOfferBadge = ({ className = "", onClick }) => (
-  <button
-    type="button"
-    className={`home-special-offer-badge ${className}`.trim()}
-    onClick={onClick}
-    aria-label="View pricing and special offer"
-  >
-    <img src="/special_offer.png" alt="Special offer" />
-  </button>
-);
-
 const homeScreens = [
   {
     id: "splash",
@@ -33,7 +22,7 @@ const homeScreens = [
     kind: "onboarding",
     title: "Master Every Subject,\nStep by Step",
     body:
-      "Learn through concepts, practice, and personalized guidance designed for lasting understanding.",
+      "Learn through micro learning units, practice, and personalized guidance designed for lasting understanding.",
     artClass: "is-cell",
   },
   {
@@ -41,7 +30,7 @@ const homeScreens = [
     kind: "onboarding",
     title: "Understand Once.\nRemember Longer.",
     body:
-      "Stories, visuals, and real-life examples help every concept stay with you.",
+      "Stories, visuals, and real-life examples help every micro learning unit stay with you.",
     artClass: "is-plant",
   },
   {
@@ -55,7 +44,7 @@ const homeScreens = [
   {
     id: "welcome",
     kind: "welcome",
-    title: "One Concept at a Time.\nUnlimited Growth.",
+    title: "One Micro Learning Unit at a Time.\nUnlimited Growth.",
     body:
       "Build confidence every day with guided learning designed around your pace.",
     artClass: "is-book",
@@ -246,7 +235,7 @@ const Illustration = ({ variant }) => {
           ) : variant === "is-clipboard" ? (
             <img src="/bulb.png" alt="Bulb illustration" />
           ) : variant === "is-book" ? (
-            <img src="/concept.png" alt="Concept illustration" />
+            <img src="/concept.png" alt="Micro Learning Unit illustration" />
           ) : variant === "is-seed" || variant === "is-portal" || variant === "is-google" ? (
             <img src="/access.png" alt="Access illustration" />
           ) : (
@@ -1218,10 +1207,6 @@ export const HomePage = ({
             </Link>
           </nav>
         </nav>
-        <SpecialOfferBadge
-          className="home-special-offer-badge--desktop"
-          onClick={() => navigate("/pricing", { state: { pricingEntryScreenId: activeScreen.id } })}
-        />
         <AnimatePresence mode="wait">
           <motion.div
             key={activeScreen.id}
@@ -1316,10 +1301,6 @@ export const HomePage = ({
 
   return (
     <main className="home-gallery-page">
-      <SpecialOfferBadge
-        className="home-special-offer-badge--mobile"
-        onClick={() => navigate("/pricing", { state: { pricingEntryScreenId: activeScreen.id } })}
-      />
       <section className="home-gallery-shell">
         <motion.div
           className="home-gallery-stage"

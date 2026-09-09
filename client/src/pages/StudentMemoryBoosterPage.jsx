@@ -232,19 +232,19 @@ export const StudentMemoryBoosterPage = () => {
                 <button
                   type="button"
                   className="student-memory-booster-counter-nav"
-                  aria-label="Previous concept"
+                  aria-label="Previous micro learning unit"
                   onClick={() => goToConcept(activeIndex - 1)}
                   disabled={activeIndex === 0}
                 >
                   <ChevronIcon direction="left" />
                 </button>
                 <span className="student-memory-booster-concept-counter">
-                  Concept {activeIndex + 1} of {memoryAids.length}
+                  Micro Learning Unit {activeIndex + 1} of {memoryAids.length}
                 </span>
                 <button
                   type="button"
                   className="student-memory-booster-counter-nav"
-                  aria-label="Next concept"
+                  aria-label="Next micro learning unit"
                   onClick={() => goToConcept(activeIndex + 1)}
                   disabled={activeIndex === memoryAids.length - 1}
                 >
@@ -322,7 +322,7 @@ export const StudentMemoryBoosterPage = () => {
               ) : activeTabKey ? (
                 <p>{activeAid[activeTabKey]}</p>
               ) : (
-                <p className="student-empty-state">No memory aids recorded for this concept yet.</p>
+                <p className="student-empty-state">No memory aids recorded for this micro learning unit yet.</p>
               )}
             </article>
           </>

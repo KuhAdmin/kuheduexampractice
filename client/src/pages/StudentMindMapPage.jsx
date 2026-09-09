@@ -133,7 +133,7 @@ export const StudentMindMapPage = () => {
           <p className="student-empty-state">{error}</p>
         ) : tree.length === 0 ? (
           <p className="student-empty-state">
-            No concept dependencies have been recorded for this section yet.
+            No micro learning unit dependencies have been recorded for this section yet.
           </p>
         ) : (
           <>

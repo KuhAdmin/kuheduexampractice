@@ -233,7 +233,7 @@ export const renameConcept = async ({ assessmentUnitId, primaryConcept }) => {
   );
 
   if (!result.rows[0]) {
-    const error = new Error("Concept not found.");
+    const error = new Error("Micro learning unit not found.");
     error.statusCode = 404;
     throw error;
   }
@@ -329,7 +329,7 @@ export const setConceptVisibility = ({ assessmentUnitId, isHidden }) => {
     );
 
     if (!parentResult.rows[0]) {
-      const error = new Error("Concept not found.");
+      const error = new Error("Micro learning unit not found.");
       error.statusCode = 404;
       throw error;
     }
@@ -339,7 +339,7 @@ export const setConceptVisibility = ({ assessmentUnitId, isHidden }) => {
     // and setSectionVisibility's own cascade UPDATE against assessment_unit
     // blocks on that same lock until this transaction commits/rolls back.
     if (!hidden && parentResult.rows[0].section_is_hidden) {
-      const error = new Error("This concept's section is hidden. Un-hide the section first.");
+      const error = new Error("This micro learning unit's section is hidden. Un-hide the section first.");
       error.statusCode = 409;
       throw error;
     }

@@ -254,7 +254,7 @@ export const StudentAssessmentPage = () => {
               (isChapterMode
                 ? "This chapter has no practice questions yet."
                 : isConceptMode
-                ? "This concept has no practice questions yet."
+                ? "This micro learning unit has no practice questions yet."
                 : "This section has no assessment yet.")
           );
         }
@@ -622,7 +622,7 @@ export const StudentAssessmentPage = () => {
     : isConceptMode
     ? assessment?.topicName
       ? `${assessment.topicName} Practice`
-      : "Concept Practice"
+      : "Micro Learning Unit Practice"
     : assessment?.sectionNumber
     ? `${assessment.sectionNumber} Section Assessment`
     : assessment?.topicName
@@ -658,7 +658,7 @@ export const StudentAssessmentPage = () => {
                   </button>
                   <ChevronRightIcon />
                   <span className="is-current">
-                    {assessment?.topicName ? `Concept - ${assessment.topicName}` : "Concept"}
+                    {assessment?.topicName ? `Micro Learning Unit - ${assessment.topicName}` : "Micro Learning Unit"}
                   </span>
                 </>
               ) : (
@@ -701,7 +701,7 @@ export const StudentAssessmentPage = () => {
         ) : !assessment || totalQuestions === 0 ? (
           <p className="student-empty-state">
             {isConceptMode
-              ? "No practice questions have been generated for this concept yet."
+              ? "No practice questions have been generated for this micro learning unit yet."
               : "No assessment items have been generated for this section yet."}
           </p>
         ) : phase === "instructions" ? (
@@ -733,7 +733,7 @@ export const StudentAssessmentPage = () => {
                 disabled={restarting}
                 onClick={beginAssessment}
               >
-                {isConceptMode ? "Practice Concept" : "Continue Assessment"}
+                {isConceptMode ? "Practice Micro Learning Unit" : "Continue Assessment"}
               </button>
               <button
                 type="button"
@@ -833,7 +833,7 @@ export const StudentAssessmentPage = () => {
                   )}
                   {feedback.relatedConcept && (
                     <p className="student-instant-feedback-related">
-                      Related concept: {feedback.relatedConcept}
+                      Related micro learning unit: {feedback.relatedConcept}
                     </p>
                   )}
                 </div>

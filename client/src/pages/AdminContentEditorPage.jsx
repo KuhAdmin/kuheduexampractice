@@ -23,6 +23,7 @@ import {
 } from "../api/client";
 import { AdminContentDetailsEditor } from "../components/AdminContentDetailsEditor";
 import { AdminContentTree } from "../components/AdminContentTree";
+import { SectionPreWarmupPanel } from "../components/SectionPreWarmupPanel";
 import { useAuth } from "../context/authHooks";
 import { isAdmin } from "../roles";
 import {
@@ -100,7 +101,7 @@ const CONTENT_TYPE_GROUPS = [
   },
   {
     key: "extraction",
-    label: "Concepts",
+    label: "Micro Learning Units",
     description: "Extracted characters, setting & ideas",
     colorClass: "is-blue",
     match: (card) => card.contentuitab === "extraction",
@@ -680,7 +681,7 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
                           onClick={() => handleGeneratePrompt()}
                           disabled={busy}
                         >
-                          {busy ? "Working..." : "Generate prompt from concept"}
+                          {busy ? "Working..." : "Generate prompt from micro learning unit"}
                         </button>
                       )}
                       <button
@@ -1190,6 +1191,10 @@ export const AdminContentEditorPage = () => {
             />
           )}
         </div>
+      )}
+
+      {selectedSection?.sourceSectionId && (
+        <SectionPreWarmupPanel sourceSectionId={selectedSection.sourceSectionId} canEdit={canEditJson} />
       )}
 
       {memoryHookUnits.map((unit) => (

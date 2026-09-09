@@ -122,11 +122,11 @@ export const AdminConceptImportPage = () => {
       <header className="admin-bulk-pipeline-header">
         <div>
           <span className="eyebrow">Admin module</span>
-          <h1>Concept Import</h1>
+          <h1>Micro Learning Unit Import</h1>
           <p>
             Upload a JSON export from the content app: a <code>contentKey</code>, root board/class/
             subject/chapter/section/book/chapterName/sectionName metadata, and a flat <code>cards</code>{" "}
-            array (concepts, teaching, assessment, revision, tutor, and section-level visuals). The
+            array (micro learning units, teaching, assessment, revision, tutor, and section-level visuals). The
             root metadata is used to link it to a real chapter and section (creating them if they
             don't exist yet). Imported content goes live immediately. Older exports (root
             board/classNum/subject/chapterNum/sectionNo metadata with an <code>extraction.concepts</code>{" "}
@@ -183,7 +183,7 @@ export const AdminConceptImportPage = () => {
             </button>
             <h2>Import Results</h2>
             <div className="admin-bulk-pipeline-summary">
-              <span>Concepts in file: {result.conceptsProcessed}</span>
+              <span>Micro Learning Units in file: {result.conceptsProcessed}</span>
               <span>
                 {result.catalogTarget
                   ? `Linked to chapter #${result.catalogTarget.fkMstChapterId} / section #${result.catalogTarget.sourceSectionId} (normal chapters -> sections flow)`

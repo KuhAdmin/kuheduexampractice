@@ -16,7 +16,8 @@ const adminMenu = [
       { label: "Books", to: "/admin/books" },
     ],
   },
-  { label: "Concept Import", to: "/admin/concept-import" },
+  { label: "Micro Learning Unit Import", to: "/admin/concept-import" },
+  { label: "Pre-Warmup Import", to: "/admin/pre-warmup-import" },
   { label: "Content Editor", to: "/admin/content-editor" },
   { label: "Settings", to: "/admin/settings" },
 ];
