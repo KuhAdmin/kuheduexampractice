@@ -34,6 +34,13 @@ const AI_MODEL_REGISTRY = [
     isDefault: false,
   },
   {
+    id: "azure-vision",
+    label: "Azure OpenAI — Vision",
+    provider: "azure-openai",
+    modelName: env.azureOpenAiDeploymentVision || "gpt-5.4-mini",
+    isDefault: false,
+  },
+  {
     id: "gemini-vision",
     label: "Google Gemini Vision",
     provider: "openai-compatible",

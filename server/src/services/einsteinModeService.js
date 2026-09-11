@@ -6,8 +6,10 @@ import { getConceptCard } from "./studentContentService.js";
 // AI Tutor and practice-capture sections. The app invents a real-world
 // object related to the concept, the student photographs (camera -> two-pin
 // crop, same as StudentConceptPracticeCapture) an object they believe
-// matches it, and Gemini Vision judges whether their photo is a match.
-const GEMINI_VISION_MODEL_ID = "gemini-vision";
+// matches it, and Azure OpenAI Vision judges whether their photo is a match
+// (moved off Gemini Vision so this runs on the same Azure account as the
+// rest of the app instead of needing separate Gemini credentials).
+const VISION_MODEL_ID = "azure-vision";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
@@ -27,7 +29,12 @@ const assertImage = (imageDataUrl, label = "photo") => {
 };
 
 const assertVisionModelConfigured = () => {
-  if (!env.geminiApiKey || !env.geminiVisionModel) {
+  if (
+    !env.azureOpenAiApiKey ||
+    !env.azureOpenAiEndpoint ||
+    !env.azureOpenAiApiVersion ||
+    !env.azureOpenAiDeploymentVision
+  ) {
     const error = new Error("This feature isn't available right now. Please contact support.");
     error.statusCode = 503;
     throw error;
@@ -127,7 +134,7 @@ export const recognizeEinsteinObject = async ({ targetObject, imageDataUrl }) =>
       { type: "image_url", image_url: { url: imageDataUrl } },
     ],
     responseFormatName: "einstein_mode_recognition",
-    modelId: GEMINI_VISION_MODEL_ID,
+    modelId: VISION_MODEL_ID,
   });
 
   const identifiedAs = typeof parsed?.identifiedAs === "string" ? parsed.identifiedAs.trim() : "";

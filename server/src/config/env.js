@@ -45,6 +45,16 @@ export const env = {
   azureOpenAiDeploymentGpt54Mini:
     process.env.AZURE_OPENAI_DEPLOYMENT_GPT54_MINI || "",
   azureOpenAiDeploymentImage: process.env.AZURE_OPENAI_DEPLOYMENT_IMAGE || "",
+  // Vision deployment for Einstein Mode's photo-recognition step (was
+  // pinned to Gemini Vision -- moved here so it runs on the same Azure
+  // OpenAI account as everything else). Falls back to the GPT-5.4 Mini
+  // deployment on the assumption it's a vision-capable model; override with
+  // a dedicated deployment name if that assumption doesn't hold for your
+  // Azure resource.
+  azureOpenAiDeploymentVision:
+    process.env.AZURE_OPENAI_DEPLOYMENT_VISION ||
+    process.env.AZURE_OPENAI_DEPLOYMENT_GPT54_MINI ||
+    "",
   azureOpenAiImageApiVersion: process.env.AZURE_OPENAI_IMAGE_API_VERSION || "",
   openAiModel:
     process.env.OPENAI_MODEL ||
