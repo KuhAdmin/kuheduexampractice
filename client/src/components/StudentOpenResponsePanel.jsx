@@ -101,6 +101,11 @@ export const StudentOpenResponsePanel = ({
   // Experiential Warm-Up today, see StudentPreLessonWarmupPage.jsx). Every
   // other caller of this panel never sets this, so it stays empty for them.
   const [issues, setIssues] = useState([]);
+  // Optional, like `issues` -- only populated when fetchResponse/submitResponse
+  // include a `contentFeedback` object (writing-practice questions today, see
+  // StudentWritingQuestionDetailPage.jsx). Every other caller of this panel
+  // never sets this, so it stays null for them.
+  const [contentFeedback, setContentFeedback] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -139,6 +144,7 @@ export const StudentOpenResponsePanel = ({
     setLoading(true);
     setFeedback(null);
     setIssues([]);
+    setContentFeedback(null);
     setResponseText("");
     setSourcePageImages([]);
     setSubmitError("");
@@ -150,6 +156,7 @@ export const StudentOpenResponsePanel = ({
           setResponseText(result.responseText || "");
           setFeedback(result.feedback || null);
           setIssues(result.issues || []);
+          setContentFeedback(result.contentFeedback || null);
         }
       })
       .catch(() => {})
@@ -175,6 +182,7 @@ export const StudentOpenResponsePanel = ({
       const result = await submitResponse(responseKey, responseText, sourcePageImages);
       setFeedback(result.feedback);
       setIssues(result.issues || []);
+      setContentFeedback(result.contentFeedback || null);
       speakFeedback(result.feedback);
     } catch (error) {
       setSubmitError(error.message || "Failed to get feedback. Please try again.");
@@ -260,7 +268,7 @@ export const StudentOpenResponsePanel = ({
             </button>
           </div>
           <p>{feedback}</p>
-          {issues.length > 0 && <StudentAnnotatedAnswer text={responseText} issues={issues} />}
+          <StudentAnnotatedAnswer text={responseText} issues={issues} contentFeedback={contentFeedback} />
         </div>
       )}
     </div>

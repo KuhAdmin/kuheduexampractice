@@ -674,6 +674,30 @@ export const reviewChapterExerciseQuestion = async (questionId, decision) =>
     body: JSON.stringify({ decision }),
   });
 
+export const getWritingPracticeCategories = async () => apiRequest("/user/writing-practice/categories");
+
+export const getWritingPracticeCategoryDetail = async (categorySlug) =>
+  apiRequest(`/user/writing-practice/categories/${encodeURIComponent(categorySlug)}`);
+
+export const getWritingPracticeQuestions = async (categorySlug, subCategorySlug) =>
+  apiRequest(
+    `/user/writing-practice/categories/${encodeURIComponent(categorySlug)}/subcategories/${encodeURIComponent(
+      subCategorySlug
+    )}/questions`
+  );
+
+export const getWritingPracticeQuestion = async (questionId) =>
+  apiRequest(`/user/writing-practice/questions/${questionId}`);
+
+export const getWritingPracticeResponse = async (questionId) =>
+  apiRequest(`/user/writing-practice/questions/${questionId}/response`);
+
+export const submitWritingPracticeResponse = async (questionId, responseText, sourcePageImages) =>
+  apiRequest(`/user/writing-practice/questions/${questionId}/submit`, {
+    method: "POST",
+    body: JSON.stringify({ responseText, sourcePageImages }),
+  });
+
 export const getBookQuestions = async (chapterNumber) =>
   apiRequest(`/user/chapters/${chapterNumber}/book-questions`);
 

@@ -923,6 +923,86 @@ CREATE TABLE IF NOT EXISTS chapter_exercise_response (
 ALTER TABLE IF EXISTS chapter_exercise_response
 ADD COLUMN IF NOT EXISTS source_page_images JSONB;
 
+-- Writing Practice ("Tests" > "Write") -- CBSE English writing-skills
+-- workbook, Classes 6-8. Flat 4-level hierarchy (category -> subcategory ->
+-- question -> description), matching chapter_exercise_*'s flat style rather
+-- than the mst_subject/mst_book normalized catalog -- content is seeded once
+-- via seed_writing_practice.sql, no admin CRUD in v1.
+CREATE TABLE IF NOT EXISTS writing_practice_category (
+  id BIGSERIAL PRIMARY KEY,
+  slug VARCHAR(120) NOT NULL UNIQUE,
+  title VARCHAR(200) NOT NULL,
+  -- Disambiguates the duplicate-titled categories the source material has
+  -- (two "Letter to the Editor", "Placing an Order" vs "Commercial Letter
+  -- for Placing an Order", "Letter of Complaint" vs "Official/Business
+  -- Letter of Complaint", two "Descriptive Paragraph" sets) -- shown as a
+  -- tile subtitle so students can tell them apart without the title changing.
+  subtitle VARCHAR(255),
+  description TEXT,
+  -- Ordered [{ "label": "...", "guidance": "..." }] steps -- the "Standard
+  -- CBSE Format" reference, generic enough to represent a notice's boxed
+  -- fields, a letter's paragraph structure, a story's 3-act shape, or a
+  -- speech's salutation/body/closing with the same shape.
+  format_template JSONB NOT NULL DEFAULT '[]'::jsonb,
+  word_limit INTEGER,
+  marks INTEGER,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS writing_practice_subcategory (
+  id BIGSERIAL PRIMARY KEY,
+  fk_category_id BIGINT NOT NULL REFERENCES writing_practice_category(id) ON DELETE CASCADE,
+  slug VARCHAR(120) NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (fk_category_id, slug)
+);
+CREATE INDEX IF NOT EXISTS idx_writing_practice_subcategory_category
+ON writing_practice_subcategory (fk_category_id, display_order);
+
+-- UNIQUE(fk_subcategory_id, display_order) gives the seed script a stable
+-- upsert key (source content has no natural question slug) -- reseeding
+-- after a content edit updates the existing row in place rather than
+-- delete+reinsert, which would otherwise mint a new id and, via
+-- writing_practice_response's ON DELETE CASCADE, silently wipe out any
+-- student responses already recorded against that question.
+CREATE TABLE IF NOT EXISTS writing_practice_question (
+  id BIGSERIAL PRIMARY KEY,
+  fk_subcategory_id BIGINT NOT NULL REFERENCES writing_practice_subcategory(id) ON DELETE CASCADE,
+  question_number INTEGER,
+  title VARCHAR(255) NOT NULL,       -- short topic label, e.g. "Annual Cultural Fest"
+  description TEXT NOT NULL,         -- full scenario/prompt text
+  word_limit INTEGER,
+  marks INTEGER,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (fk_subcategory_id, display_order)
+);
+CREATE INDEX IF NOT EXISTS idx_writing_practice_question_subcategory
+ON writing_practice_question (fk_subcategory_id, display_order);
+
+-- Append-only (like textbook_content_response), not upsert-per-question
+-- (unlike chapter_exercise_response) -- writing practice is qualitative and
+-- retry-friendly, so keeping every attempt lets a student see improvement
+-- across retries instead of overwriting their last one.
+CREATE TABLE IF NOT EXISTS writing_practice_response (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  fk_question_id BIGINT NOT NULL REFERENCES writing_practice_question(id) ON DELETE CASCADE,
+  -- [{ "order": 1, "imageData": "data:image/..." }], same shape as
+  -- chapter_exercise_response.source_page_images.
+  source_page_images JSONB,
+  response_text TEXT NOT NULL,       -- joined, learner-reviewed OCR text that was graded
+  -- { "feedback": "...", "issues": [...], "contentFeedback": { "toAdd": [...], "toOmit": [...] } }
+  ai_feedback JSONB NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'graded' CHECK (status IN ('graded', 'failed')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_writing_practice_response_lookup
+ON writing_practice_response (user_id, fk_question_id, created_at DESC);
+
 -- Materialized practice-bank snapshot, synced from content_assessment_item
 -- (studentPracticeService.js's syncPracticeSetItems) -- kept from the prior
 -- seven-layer-removal migration since practice_set/student_attempt already

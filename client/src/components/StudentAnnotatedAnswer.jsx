@@ -24,41 +24,82 @@ export const buildIssueSegments = (text, issues) => {
   return segments;
 };
 
-export const StudentAnnotatedAnswer = ({ text, issues }) => {
-  if (!issues?.length) return null;
+const ISSUE_TYPE_LABELS = {
+  grammar: "Grammar",
+  phrasing: "Phrasing",
+  spelling: "Spelling",
+};
 
-  const segments = buildIssueSegments(text, issues);
+const issueTypeLabel = (type) => ISSUE_TYPE_LABELS[type] || ISSUE_TYPE_LABELS.spelling;
+
+// contentFeedback is optional -- only writing-practice submissions
+// (StudentWritingQuestionDetailPage.jsx via StudentOpenResponsePanel) pass
+// it. Whole-answer observations, not spans located inside the text, so
+// they're rendered as plain bullet lists rather than inline marks.
+export const StudentAnnotatedAnswer = ({ text, issues, contentFeedback }) => {
+  const hasIssues = Boolean(issues?.length);
+  const hasContentFeedback = Boolean(contentFeedback?.toAdd?.length || contentFeedback?.toOmit?.length);
+  if (!hasIssues && !hasContentFeedback) return null;
+
+  const segments = hasIssues ? buildIssueSegments(text, issues) : [];
 
   return (
     <div className="student-answer-issues">
-      <p className="student-answer-issues-text">
-        {segments.map((segment, index) =>
-          segment.type === "issue" ? (
-            <mark
-              key={index}
-              className={`student-answer-issue is-${segment.issue.type}`}
-              title={`${segment.issue.type === "grammar" ? "Grammar" : "Spelling"}: ${segment.issue.suggestion}`}
-            >
-              {segment.value}
-            </mark>
-          ) : (
-            <span key={index}>{segment.value}</span>
-          )
-        )}
-      </p>
-      <ul className="student-answer-issues-list">
-        {issues.map((issue, index) => (
-          <li key={index} className="student-answer-issues-row">
-            <span className={`student-concept-explore-tag is-${issue.type}`}>
-              {issue.type === "grammar" ? "Grammar" : "Spelling"}
-            </span>
-            <span className="student-answer-issues-correction">
-              <s>{issue.original}</s> {"→"} <strong>{issue.suggestion}</strong>
-            </span>
-            {issue.note && <span className="student-answer-issues-note">{issue.note}</span>}
-          </li>
-        ))}
-      </ul>
+      {hasIssues && (
+        <>
+          <p className="student-answer-issues-text">
+            {segments.map((segment, index) =>
+              segment.type === "issue" ? (
+                <mark
+                  key={index}
+                  className={`student-answer-issue is-${segment.issue.type}`}
+                  title={`${issueTypeLabel(segment.issue.type)}: ${segment.issue.suggestion}`}
+                >
+                  {segment.value}
+                </mark>
+              ) : (
+                <span key={index}>{segment.value}</span>
+              )
+            )}
+          </p>
+          <ul className="student-answer-issues-list">
+            {issues.map((issue, index) => (
+              <li key={index} className="student-answer-issues-row">
+                <span className={`student-concept-explore-tag is-${issue.type}`}>{issueTypeLabel(issue.type)}</span>
+                <span className="student-answer-issues-correction">
+                  <s>{issue.original}</s> {"→"} <strong>{issue.suggestion}</strong>
+                </span>
+                {issue.note && <span className="student-answer-issues-note">{issue.note}</span>}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {hasContentFeedback && (
+        <div className="student-answer-content-feedback">
+          {contentFeedback.toAdd?.length > 0 && (
+            <div className="student-answer-content-feedback-group">
+              <strong>Add these</strong>
+              <ul>
+                {contentFeedback.toAdd.map((point, index) => (
+                  <li key={index}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {contentFeedback.toOmit?.length > 0 && (
+            <div className="student-answer-content-feedback-group">
+              <strong>Consider removing</strong>
+              <ul>
+                {contentFeedback.toOmit.map((point, index) => (
+                  <li key={index}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

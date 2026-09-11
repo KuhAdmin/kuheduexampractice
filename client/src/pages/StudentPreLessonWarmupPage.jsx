@@ -5,8 +5,11 @@ import { StudentMediaViewer } from "../components/StudentMediaViewer";
 import { StudentOpenResponsePanel } from "../components/StudentOpenResponsePanel";
 import { SingleSelectOptions } from "../components/SingleSelectOptions";
 import { StudentHookCaption } from "../components/StudentHookCaption";
-import { startPreWarmupPhase, submitPreWarmupAnswer } from "../api/client";
+import { StudentBreadcrumb } from "../components/StudentBreadcrumb";
+import { useBreakpoint } from "../hooks/useBreakpoint";
+import { startPreWarmupPhase, submitPreWarmupAnswer, getStudentSections } from "../api/client";
 import { getSubsectionMeta } from "../content/preWarmupSubsections";
+import { decodeSelectionChapterId } from "./studentChapterData";
 
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
@@ -32,11 +35,17 @@ const BackIcon = () => (
 // separate "final submit" step here anymore.
 export const StudentPreLessonWarmupPage = () => {
   const navigate = useNavigate();
+  const tier = useBreakpoint();
   const { chapterId: chapterNumber, sectionId: sourceSectionId } = useParams();
+  const selectionOverride = decodeSelectionChapterId(chapterNumber);
+  const displayChapterNumber = selectionOverride?.chapterNumber ?? chapterNumber;
   const [searchParams] = useSearchParams();
   const subsectionKey = searchParams.get("section");
   const basePath = `/chapters/${chapterNumber}/sections/${sourceSectionId}`;
   const subsectionMeta = getSubsectionMeta("preLessonWarmup", subsectionKey);
+  // Breadcrumb-only metadata (desktop/tablet) -- same fetch-once-by-section
+  // pattern as StudentConceptLearningPage.jsx/StudentSectionDetailPage.jsx.
+  const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", sectionNumber: "", topicName: "" });
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -90,6 +99,31 @@ export const StudentPreLessonWarmupPage = () => {
       cancelled = true;
     };
   }, [sourceSectionId, subsectionKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getStudentSections(displayChapterNumber, selectionOverride || undefined)
+      .then((result) => {
+        if (cancelled) return;
+        const section = (result?.sections || []).find(
+          (item) => String(item.sourceSectionId) === String(sourceSectionId)
+        );
+        setBreadcrumbMeta({
+          chapterName: result?.chapterName || "",
+          sectionNumber: section?.sectionNumber || "",
+          topicName: section?.topicName || section?.sectionNumber || "",
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setBreadcrumbMeta({ chapterName: "", sectionNumber: "", topicName: "" });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapterNumber, sourceSectionId]);
 
   const activeItem = items[activeIndex];
 
@@ -332,17 +366,35 @@ export const StudentPreLessonWarmupPage = () => {
   return (
     <StudentPageShell pageClass="student-page--pre-warmup" legacyModifierClass="student-assessment-phone">
       <div className="student-assessment-wide">
-        <header className="student-section-detail-header">
-          <button
-            type="button"
-            className="student-chapter-detail-back"
-            aria-label="Back to section"
-            onClick={() => navigate(basePath)}
-          >
-            <BackIcon />
-          </button>
-          <h1>{subsectionMeta?.title || "Pre-Lesson Warm-Up"}</h1>
-        </header>
+        {tier === "mobile" ? (
+          <header className="student-section-detail-header">
+            <button
+              type="button"
+              className="student-chapter-detail-back"
+              aria-label="Back to section"
+              onClick={() => navigate(basePath)}
+            >
+              <BackIcon />
+            </button>
+            <h1>{subsectionMeta?.title || "Pre-Lesson Warm-Up"}</h1>
+          </header>
+        ) : (
+          <StudentBreadcrumb
+            items={[
+              {
+                label: `Chapter ${displayChapterNumber}${breadcrumbMeta.chapterName ? `. ${breadcrumbMeta.chapterName}` : ""}`,
+                to: `/chapters/${chapterNumber}`,
+              },
+              {
+                label: breadcrumbMeta.topicName
+                  ? `${breadcrumbMeta.sectionNumber ? `${breadcrumbMeta.sectionNumber} ` : ""}${breadcrumbMeta.topicName}`
+                  : `Section ${sourceSectionId}`,
+                to: basePath,
+              },
+              { label: subsectionMeta?.title || "Pre-Lesson Warm-Up" },
+            ]}
+          />
+        )}
         {subsectionMeta?.caption && <StudentHookCaption text={subsectionMeta.caption} />}
 
         {loading ? (

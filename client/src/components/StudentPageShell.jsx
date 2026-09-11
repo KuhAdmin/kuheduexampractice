@@ -12,6 +12,9 @@ const resolveActiveNavItem = (pathname) => {
   if (pathname.startsWith("/practice")) {
     return "practice";
   }
+  if (pathname.startsWith("/tests")) {
+    return "assessments";
+  }
   return "home";
 };
 

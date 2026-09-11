@@ -2572,6 +2572,22 @@ a {
     margin: 0;
   }
 
+  /* Writing Practice's sub-category/question-detail pages are short on
+     content (a blurb, a toggle button, a handful of cards) relative to a
+     tall admin-main viewport -- .student-page's grid `align-content:
+     normal` computes to `stretch` here since every row uses `auto` sizing
+     and the container has a definite (viewport-filling) height, so the
+     leftover vertical space was being distributed INTO each row instead of
+     collecting below the content. That inflated single-line rows like the
+     Format Guide toggle button to 150px+ tall. `align-content: start` keeps
+     every row at its natural content height and pushes the leftover space
+     below the last row instead. */
+  .student-page.student-page--writing-practice {
+    max-width: none;
+    margin: 0;
+    align-content: start;
+  }
+
   /* Diagrams/Revision/Tutor Notes: these render a dynamic-length list of
      cards (flip-cards, detail cards) that used to inherit the 480px
      "not yet given a bespoke layout" default forever, even on desktop and
@@ -2614,6 +2630,15 @@ a {
 
   .student-page--chapters .student-chapters-list {
     display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  /* Writing Practice (category/subcategory/question lists): 2-up on
+     tablet, capped at 3-up on desktop+ below (unlike chapters, this never
+     gains a 4th column at ultra-wide -- 3 stays comfortably readable for
+     these longer description-bearing cards). */
+  .student-page--writing-practice .student-writing-drilldown-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
@@ -2666,6 +2691,13 @@ a {
      was stuck at 2 columns from tablet all the way through ultra-wide
      monitors, leaving growing dead margins either side of the grid. */
   .student-page--chapters .student-chapters-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Writing Practice caps at 3 columns here and stays there through
+     ultra-wide (no further column step, unlike chapters above) -- these
+     cards carry a full description line, so a 4th column would crowd them. */
+  .student-page--writing-practice .student-writing-drilldown-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
@@ -3629,6 +3661,19 @@ a {
   place-items: center;
   width: 30px;
   height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--success-bg), var(--success-bg));
+  color: var(--muted-strong);
+  font-size: 1.2408em;
+  font-weight: 700;
+}
+
+.student-writing-index {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: linear-gradient(180deg, var(--success-bg), var(--success-bg));
   color: var(--muted-strong);
@@ -5798,6 +5843,12 @@ a {
   color: var(--teal);
 }
 
+.student-concept-explore-tag.is-phrasing {
+  background: rgb(from var(--blue) r g b / 0.14);
+  border-color: rgb(from var(--blue) r g b / 0.3);
+  color: var(--blue);
+}
+
 .student-answer-issues {
   display: grid;
   gap: 10px;
@@ -5826,6 +5877,11 @@ a {
   text-decoration-thickness: 1.5px;
 }
 
+.student-answer-issue.is-phrasing {
+  text-decoration: underline wavy var(--blue);
+  text-decoration-thickness: 1.5px;
+}
+
 .student-answer-issues-list {
   display: grid;
   gap: 8px;
@@ -5848,6 +5904,212 @@ a {
 }
 
 .student-answer-issues-note {
+  color: var(--muted);
+  font-size: 0.95em;
+}
+
+.student-answer-content-feedback {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgb(from var(--muted) r g b / 0.18);
+}
+
+.student-answer-content-feedback-group strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.95em;
+}
+
+.student-answer-content-feedback-group ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.student-writing-drilldown-list {
+  display: grid;
+  gap: 10px;
+}
+
+/* .student-concept-practice-panel h2 (22px, bold) was tuned for a short
+   one-line MCQ question stem (StudentBookQuestionsPage.jsx) -- reused here
+   for a full 50-100-word scenario paragraph, bold reads as a "wall of
+   heavy text" rather than a heading. Lighter weight everywhere; the size
+   itself is fine at desktop widths (8-10 words/line) but only fits ~4
+   words/line on a phone, so it drops further there specifically. */
+/* .student-concept-practice-head's shared 2-column grid (minmax(0,1fr) auto)
+   was built for a short MCQ stem where the badge sits beside a single-line
+   question (StudentBookQuestionsPage.jsx) -- the second column's width
+   still gets reserved on every row of a shared grid, though, so once the
+   long-form description wraps across many rows it leaves a wide, empty
+   dead column running down the right side of every one of them. Collapse
+   to a single column here and put the "Q1"/badge pair in their own flex
+   row instead, so the description gets the entire width to wrap in. */
+.student-concept-practice-panel .student-writing-question-head {
+  grid-template-columns: 1fr;
+}
+
+.student-writing-question-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.student-concept-practice-panel .student-writing-question-head h2 {
+  font-weight: 500;
+}
+
+@media (max-width: 639px) {
+  .student-concept-practice-panel .student-writing-question-head h2 {
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+
+  /* .student-dashboard-phone already insets everything 18px each side --
+     .student-concept-practice-panel's own 20px padding + 1px border stacks
+     a second inset on top of that, leaving a long paragraph only about 80%
+     of the phone's width to wrap in. Cancel the phone-level inset via
+     negative margin so this panel specifically runs edge-to-edge, and drop
+     its side border/radius so that read as intentional (full-bleed strip)
+     rather than a misaligned card. Vertical padding/border/radius stay,
+     so it's still visually a "card" top and bottom. */
+  .student-writing-question-panel {
+    margin-left: -18px;
+    margin-right: -18px;
+    padding-left: 14px;
+    padding-right: 14px;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+  }
+}
+
+/* .ghost-button is a block-level element, so as a bare .student-page grid
+   item it stretches to fill the full content width (`justify-items:
+   normal` on the grid container behaves as stretch for block-level
+   children) -- fine for pages meaning "one big full-width action", wrong
+   for a small inline toggle like "Show Format Guide" here, which otherwise
+   renders as an oversized pill-shaped bar next to normal-width cards.
+   Overrides .ghost-button's faint tinted-text look (built for secondary
+   text-link-style actions) with a solid, bold pill -- at normal body text
+   size the faint version read as barely-there on a wide page, easy to miss
+   as a real, clickable CTA. */
+.student-writing-format-toggle {
+  justify-self: start;
+  width: fit-content;
+  padding: 12px 22px;
+  font-weight: 700;
+  background: var(--teal);
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgb(from var(--teal) r g b / 0.3);
+}
+
+@media (min-width: 640px) {
+  .student-writing-format-toggle {
+    padding: 16px 30px;
+    font-size: 1.3em;
+  }
+
+  /* Capture Photo / Submit for Feedback: full-width is the right call on a
+     phone (easy to tap, standard mobile pattern), but on a wide desktop
+     panel these are block-level grid items that stretch to fill the whole
+     width -- same "justify-items: normal computes to stretch" story as
+     .ghost-button above. Centered and sized to content reads much better
+     once there's a lot of spare horizontal room. */
+  .student-writing-response-panel .student-ocr-upload-button {
+    justify-self: center;
+    width: fit-content;
+  }
+
+  .student-writing-response-panel .student-concept-practice-next {
+    justify-self: center;
+    width: fit-content;
+    padding: 0 36px;
+  }
+}
+
+.student-writing-category-blurb {
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+
+/* Standalone category description on the sub-category page (distinct from
+   .student-writing-category-blurb, which stays small/muted for the compact
+   card blurbs on the categories list -- this one is the sole large banner
+   shown once at the top of a category's own page, so it can go big without
+   blowing up any card grid). One-color gradient (fading to transparent),
+   same technique as .student-hook-caption elsewhere in this file. */
+.student-writing-intro {
+  margin: 10px 0 0;
+  padding: 14px 18px;
+  border-radius: 16px;
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.5;
+  background: linear-gradient(90deg, rgb(from var(--green) r g b / 0.16), transparent);
+}
+
+@media (min-width: 640px) {
+  .student-writing-intro {
+    font-size: 2em;
+    padding: 20px 26px;
+  }
+}
+
+.student-writing-format-guide {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  margin-top: 8px;
+  border: 1px solid rgb(from var(--teal) r g b / 0.18);
+  border-radius: 14px;
+  /* Light teal tint (not the plain white card background) -- ties this
+     box visually to the teal "Show/Hide Format Guide" CTA that reveals it. */
+  background: rgb(from var(--teal) r g b / 0.06);
+}
+
+.student-writing-format-guide h3 {
+  margin: 0;
+  font-size: 1em;
+}
+
+.student-writing-format-guide-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.student-writing-format-guide-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.student-writing-format-guide-step-number {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgb(from var(--green) r g b / 0.14);
+  color: var(--green);
+  font-size: 0.85em;
+  font-weight: 700;
+}
+
+.student-writing-format-guide-step-copy strong {
+  display: block;
+}
+
+.student-writing-format-guide-step-copy p {
+  margin: 2px 0 0;
   color: var(--muted);
   font-size: 0.95em;
 }
@@ -9013,6 +9275,15 @@ a {
 
 .student-app-shell .admin-sidebar-link-label {
   font-size: 1.5em;
+}
+
+/* .admin-sidebar-sublink already carries its own 1.2684em bump (general
+   admin submenu sizing) -- left alone, that stacks with the 1.5em label
+   rule above and renders sub-items noticeably larger than their parent
+   ("Write" bigger than "Skills"). Cancel it back to 1em here so student
+   sidebar sub-items render at the same size as their parent item. */
+.student-app-shell .admin-sidebar-sublink {
+  font-size: 1em;
 }
 
 .admin-sidebar-link.is-disabled {

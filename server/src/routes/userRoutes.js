@@ -77,6 +77,14 @@ import {
 import { postEinsteinChallenge, postEinsteinRecognize } from "../controllers/einsteinModeController.js";
 import { postVivaFeedback, postVivaQuestions } from "../controllers/vivaController.js";
 import { getExercisesActivitiesTabVisible } from "../services/contentEditorSettingsService.js";
+import {
+  getWritingPracticeCategories,
+  getWritingPracticeCategoryDetail,
+  getWritingPracticeQuestionDetailHandler,
+  getWritingPracticeQuestions,
+  getWritingPracticeResponseHandler,
+  postWritingPracticeSubmit,
+} from "../controllers/writingPracticeController.js";
 
 const router = Router();
 
@@ -173,6 +181,16 @@ router.post("/chapters/:chapterNumber/hots/start", startChapterHots);
 router.post("/hots-attempts/:attemptId/items/:displayOrder/answer", answerHotsItem);
 
 router.post("/ocr/handwritten-note", postHandwrittenNoteOcr);
+
+router.get("/writing-practice/categories", getWritingPracticeCategories);
+router.get("/writing-practice/categories/:categorySlug", getWritingPracticeCategoryDetail);
+router.get(
+  "/writing-practice/categories/:categorySlug/subcategories/:subCategorySlug/questions",
+  getWritingPracticeQuestions
+);
+router.get("/writing-practice/questions/:questionId", getWritingPracticeQuestionDetailHandler);
+router.get("/writing-practice/questions/:questionId/response", getWritingPracticeResponseHandler);
+router.post("/writing-practice/questions/:questionId/submit", postWritingPracticeSubmit);
 
 router.get("/dashboard", async (req, res, next) => {
   const firstName = req.user.name?.trim().split(/\s+/)[0] || "Alex";

@@ -6,12 +6,21 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { AiTutorAvatarProvider } from "./AiTutorAvatarProvider";
 import { ClassSubjectProvider } from "../context/ClassSubjectContext";
 
-const baseStudentMenuItems = navItems.map((item) => ({
-  label: item.label,
-  to: item.path || "#",
-  icon: <StudentNavIcon type={item.icon} />,
-  disabled: !item.path,
-}));
+// "Skills" gets a "Write" child on desktop, reusing AppSidebarLayout's
+// SidebarGroup mechanism (already used by Admin's "Masters" group in
+// AdminLayout.jsx) -- Write is the only Tests feature at launch, so this is
+// a single-item expand/collapse group rather than a plain link.
+const baseStudentMenuItems = navItems.map((item) => {
+  const mapped = {
+    label: item.label,
+    to: item.path || "#",
+    icon: <StudentNavIcon type={item.icon} />,
+    disabled: !item.path,
+  };
+  return item.id === "assessments"
+    ? { ...mapped, children: [{ label: "Write", to: "/tests/write", icon: <StudentNavIcon type="clipboard" /> }] }
+    : mapped;
+});
 
 export const StudentLayout = ({ user, onLogout }) => {
   const tier = useBreakpoint();

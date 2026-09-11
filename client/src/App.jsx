@@ -32,6 +32,10 @@ import { StudentHotsPage } from "./pages/StudentHotsPage";
 import { StudentChapterDetailPage } from "./pages/StudentChapterDetailPage";
 import { StudentBookQuestionsPage } from "./pages/StudentBookQuestionsPage";
 import { StudentChaptersPage } from "./pages/StudentChaptersPage";
+import { StudentWritingCategoriesPage } from "./pages/StudentWritingCategoriesPage";
+import { StudentWritingSubCategoriesPage } from "./pages/StudentWritingSubCategoriesPage";
+import { StudentWritingQuestionsPage } from "./pages/StudentWritingQuestionsPage";
+import { StudentWritingQuestionDetailPage } from "./pages/StudentWritingQuestionDetailPage";
 import { StudentRemainingConceptsPage } from "./pages/StudentRemainingConceptsPage";
 import { StudentConceptLearningPage } from "./pages/StudentConceptLearningPage";
 import { StudentDashboardPage } from "./pages/StudentDashboardPage";
@@ -197,6 +201,16 @@ const App = () => {
           <Route path="/chapters" element={<StudentChaptersPage dashboard={dashboard} user={user} />} />
           <Route path="/practice" element={<StudentPracticePage />} />
           <Route path="/goals" element={<StudentRemainingConceptsPage />} />
+          <Route path="/tests/write" element={<StudentWritingCategoriesPage />} />
+          <Route path="/tests/write/:categorySlug" element={<StudentWritingSubCategoriesPage />} />
+          <Route
+            path="/tests/write/:categorySlug/:subCategorySlug"
+            element={<StudentWritingQuestionsPage />}
+          />
+          <Route
+            path="/tests/write/:categorySlug/:subCategorySlug/:questionId"
+            element={<StudentWritingQuestionDetailPage />}
+          />
           <Route path="/chapters/:chapterId" element={<StudentChapterDetailPage dashboard={dashboard} user={user} />} />
           <Route path="/chapters/:chapterId/book-questions" element={<StudentBookQuestionsPage />} />
           <Route path="/chapters/:chapterId/assessment" element={<StudentAssessmentPage />} />
