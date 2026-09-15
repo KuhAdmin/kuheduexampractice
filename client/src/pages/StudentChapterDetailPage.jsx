@@ -5,6 +5,7 @@ import { StudentDrilldownCard } from "../components/StudentDrilldownCard";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getBookQuestions, getChapterAssessmentPreview, getChapterHotsPreview, getStudentSections } from "../api/client";
 import { decodeSelectionChapterId, isSelectionChapterId } from "./studentChapterData";
+import { hasFullContentAccess } from "../roles";
 
 const ChapterDetailIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -200,7 +201,7 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
     Array.isArray(dashboard?.chapters) &&
     dashboard.chapters.length > 0 &&
     String(dashboard.chapters[0].chapterNumber ?? dashboard.chapters[0].id) === String(chapterNumber);
-  const subscriptionActive = Boolean(user?.isPremium);
+  const subscriptionActive = hasFullContentAccess(user);
   const isLocked = !subscriptionActive && !isFirstChapter;
 
   useEffect(() => {

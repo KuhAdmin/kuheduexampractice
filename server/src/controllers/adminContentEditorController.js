@@ -8,6 +8,8 @@ import {
   renameConcept,
   setSectionVisibility,
   setConceptVisibility,
+  getChapterDeletionPreview,
+  deleteChapter,
 } from "../services/contentEditorService.js";
 import { regenerateDiagramMedia } from "../services/diagramImageService.js";
 import {
@@ -51,6 +53,36 @@ export const putChapterNameHandler = async (req, res, next) => {
       chapterName: req.body?.chapterName,
     });
     return res.json({ chapter });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const getChapterDeletionPreviewHandler = async (req, res, next) => {
+  try {
+    const preview = await getChapterDeletionPreview({
+      bookId: req.params.bookId,
+      chapterNumber: req.params.chapterNumber,
+    });
+    return res.json({ preview });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const deleteChapterHandler = async (req, res, next) => {
+  try {
+    const result = await deleteChapter({
+      bookId: req.params.bookId,
+      chapterNumber: req.params.chapterNumber,
+    });
+    return res.json({ result });
   } catch (error) {
     if (error.statusCode) {
       return res.status(error.statusCode).json({ message: error.message });

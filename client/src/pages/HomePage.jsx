@@ -188,7 +188,9 @@ const validateRegisterDetails = (form) => {
 };
 
 const isStudentOnboardingComplete = (user) =>
-  user?.role === "moderator" || Boolean(user?.board && user?.studentClass && user?.subject);
+  user?.role === "moderator" ||
+  user?.role === "superstudent" ||
+  Boolean(user?.board && user?.studentClass && user?.subject);
 
 const getOnboardingResumeStep = (user) => {
   if (!user?.board) {
@@ -981,7 +983,7 @@ export const HomePage = ({
       return;
     }
 
-    if (user?.role === "moderator") {
+    if (user?.role === "moderator" || user?.role === "superstudent") {
       navigate("/dashboard");
       return;
     }

@@ -1,7 +1,14 @@
 import bcrypt from "bcryptjs";
 import { pool } from "../db/pool.js";
+import { listClassSubjectOptionsWithContent } from "./catalogService.js";
 
-const ALLOWED_ROLES = ["student", "moderator", "admin"];
+const ALLOWED_ROLES = ["student", "moderator", "admin", "superstudent"];
+
+// The seed admin account is exempt from the superstudent-access toggle --
+// it's the fallback login used to recover the admin panel, so it must never
+// be left in a state where flipping a checkbox could lock it out or leave it
+// ambiguous whether it has full access.
+const PROTECTED_ADMIN_EMAIL = "admin@example.com";
 
 const mapUser = (row) => ({
   id: row.id,
@@ -17,6 +24,15 @@ const mapUser = (row) => ({
   theme: row.theme,
   isPremium: row.is_premium,
   premiumExpiresAt: row.premium_expires_at,
+  superstudentAccessEnabled: row.superstudent_access_enabled,
+  superstudentRemarks: row.superstudent_remarks,
+  superstudentGrantedBy: row.superstudent_granted_by,
+  superstudentGrantedAt: row.superstudent_granted_at,
+  superstudentAccessUpdatedBy: row.superstudent_access_updated_by,
+  superstudentAccessUpdatedAt: row.superstudent_access_updated_at,
+  superstudentScopeType: row.superstudent_scope_type,
+  superstudentScopeClasses: row.superstudent_scope_classes || [],
+  superstudentScopeSubjects: row.superstudent_scope_subjects || [],
   createdAt: row.created_at,
 });
 
@@ -178,9 +194,102 @@ export const listUsers = async () => {
   return result.rows.map(mapUser);
 };
 
-export const createUserByAdmin = async ({ name, email, password, role }) => {
+const SCOPE_TYPES = ["all", "class", "class_subject"];
+
+// Validates admin-submitted scope selections against the real catalog
+// (never trust client-supplied names) and resolves them to the canonical
+// {examGoalCode, levelCode, examGoalName, levelName} / {subjectCode,
+// subjectName} shape stored in the JSONB scope columns.
+const resolveSuperstudentScope = async ({ scopeType, scopeClasses, scopeSubjects }) => {
+  if (scopeType === "all") {
+    return { scopeType: "all", scopeClassesJson: null, scopeSubjectsJson: null };
+  }
+
+  if (!SCOPE_TYPES.includes(scopeType)) {
+    const error = new Error(`scopeType must be one of: ${SCOPE_TYPES.join(", ")}.`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!Array.isArray(scopeClasses) || scopeClasses.length === 0) {
+    const error = new Error("Select at least one class for this scope.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (scopeType === "class_subject" && (!Array.isArray(scopeSubjects) || scopeSubjects.length === 0)) {
+    const error = new Error("Select at least one subject for this scope.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const catalog = await listClassSubjectOptionsWithContent();
+
+  const seenClassKeys = new Set();
+  const resolvedClasses = [];
+  for (const { examGoalCode, levelCode } of scopeClasses) {
+    const match = catalog.find((row) => row.examGoalCode === examGoalCode && row.levelCode === levelCode);
+    if (!match) {
+      const error = new Error("One of the selected classes is not valid.");
+      error.statusCode = 400;
+      throw error;
+    }
+    const key = `${match.examGoalCode}|${match.levelCode}`;
+    if (!seenClassKeys.has(key)) {
+      seenClassKeys.add(key);
+      resolvedClasses.push({
+        examGoalCode: match.examGoalCode,
+        levelCode: match.levelCode,
+        examGoalName: match.examGoalName,
+        levelName: match.levelName,
+      });
+    }
+  }
+
+  let resolvedSubjects = null;
+  if (scopeType === "class_subject") {
+    const seenSubjectCodes = new Set();
+    resolvedSubjects = [];
+    for (const subjectCode of scopeSubjects) {
+      const match = catalog.find((row) => row.subjectCode === subjectCode);
+      if (!match) {
+        const error = new Error("One of the selected subjects is not valid.");
+        error.statusCode = 400;
+        throw error;
+      }
+      if (!seenSubjectCodes.has(subjectCode)) {
+        seenSubjectCodes.add(subjectCode);
+        resolvedSubjects.push({ subjectCode: match.subjectCode, subjectName: match.subjectName });
+      }
+    }
+  }
+
+  return {
+    scopeType,
+    scopeClassesJson: JSON.stringify(resolvedClasses),
+    scopeSubjectsJson: resolvedSubjects ? JSON.stringify(resolvedSubjects) : null,
+  };
+};
+
+export const createUserByAdmin = async ({
+  name,
+  email,
+  password,
+  role,
+  remarks,
+  grantedByUserId,
+  scopeType = "all",
+  scopeClasses = [],
+  scopeSubjects = [],
+}) => {
   if (!ALLOWED_ROLES.includes(role)) {
     const error = new Error(`role must be one of: ${ALLOWED_ROLES.join(", ")}.`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (role === "superstudent" && !remarks?.trim()) {
+    const error = new Error("remarks are required for a superstudent account.");
     error.statusCode = 400;
     throw error;
   }
@@ -192,14 +301,36 @@ export const createUserByAdmin = async ({ name, email, password, role }) => {
     throw error;
   }
 
+  const isSuperstudent = role === "superstudent";
+  const scope = isSuperstudent
+    ? await resolveSuperstudentScope({ scopeType, scopeClasses, scopeSubjects })
+    : { scopeType: "all", scopeClassesJson: null, scopeSubjectsJson: null };
+
   const passwordHash = await bcrypt.hash(password, 10);
   const result = await pool.query(
     `
-      INSERT INTO users (name, email, password_hash, provider, role)
-      VALUES ($1, $2, $3, 'local', $4)
+      INSERT INTO users (
+        name, email, password_hash, provider, role,
+        superstudent_access_enabled, superstudent_remarks,
+        superstudent_granted_by, superstudent_granted_at,
+        superstudent_scope_type, superstudent_scope_classes, superstudent_scope_subjects
+      )
+      VALUES ($1, $2, $3, 'local', $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `,
-    [name, email, passwordHash, role]
+    [
+      name,
+      email,
+      passwordHash,
+      role,
+      isSuperstudent,
+      isSuperstudent ? remarks.trim() : null,
+      isSuperstudent ? grantedByUserId : null,
+      isSuperstudent ? new Date() : null,
+      scope.scopeType,
+      scope.scopeClassesJson,
+      scope.scopeSubjectsJson,
+    ]
   );
 
   return mapUser(result.rows[0]);
@@ -218,6 +349,53 @@ export const updateUserRole = async (userId, role) => {
   );
 
   return result.rows[0] ? mapUser(result.rows[0]) : null;
+};
+
+export const setSuperstudentAccess = async (userId, { isEnabled, remarks, updatedByUserId }) => {
+  const result = await pool.query("SELECT * FROM users WHERE id = $1", [userId]);
+  const existing = result.rows[0];
+  if (!existing) {
+    return null;
+  }
+
+  if (existing.email === PROTECTED_ADMIN_EMAIL) {
+    const error = new Error("This account's access cannot be changed.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const updated = await pool.query(
+    `
+      UPDATE users
+      SET superstudent_access_enabled = $2,
+          superstudent_remarks = COALESCE($3, superstudent_remarks),
+          superstudent_access_updated_by = $4,
+          superstudent_access_updated_at = NOW(),
+          updated_at = NOW()
+      WHERE id = $1
+      RETURNING *
+    `,
+    [userId, Boolean(isEnabled), remarks?.trim() || null, updatedByUserId]
+  );
+
+  return mapUser(updated.rows[0]);
+};
+
+export const resetUserPassword = async (userId, newPassword) => {
+  if (!newPassword || newPassword.length < 8) {
+    const error = new Error("Password must be at least 8 characters long.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await pool.query("SELECT id FROM users WHERE id = $1", [userId]);
+  if (!result.rows[0]) {
+    return null;
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await updateUserPassword({ id: userId, passwordHash });
+  return true;
 };
 
 export const toPublicUser = mapUser;

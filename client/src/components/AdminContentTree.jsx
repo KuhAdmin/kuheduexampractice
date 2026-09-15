@@ -23,6 +23,19 @@ const PencilIcon = () => (
   </svg>
 );
 
+const TrashIcon = () => (
+  <svg viewBox="0 0 24 24" className="admin-content-tree-trash-icon" aria-hidden="true">
+    <path
+      d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.6"
+    />
+  </svg>
+);
+
 // Mirrors the student "Deep Learn" action-row icon set (AdminContentEditorPage.jsx
 // used to render these below the tree; moved here now that a concept's
 // content types render as its own tree children).
@@ -327,6 +340,8 @@ export const AdminContentTree = ({
   onEditCard,
   onToggleCardHidden,
   onToggleGroupHidden,
+  canDeleteChapter,
+  onDeleteChapter,
 }) => {
   const [expandedChapters, setExpandedChapters] = useState(() => new Set());
   const [expandedSections, setExpandedSections] = useState(() => new Set());
@@ -394,6 +409,19 @@ export const AdminContentTree = ({
                 onCancelEdit={() => setEditKey(null)}
                 onSave={(value) => onRenameChapter(chapter.chapterNumber, value)}
               />
+              {canDeleteChapter && (
+                <button
+                  type="button"
+                  className="admin-content-tree-delete"
+                  aria-label={`Delete Chapter ${chapter.chapterNumber} — ${chapter.chapterName}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDeleteChapter(chapter.chapterNumber, chapter.chapterName);
+                  }}
+                >
+                  <TrashIcon />
+                </button>
+              )}
             </div>
 
             {isChapterOpen && (

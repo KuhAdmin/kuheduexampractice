@@ -326,16 +326,28 @@ export const submitHotsAnswer = async (attemptId, displayOrder, studentAnswer, t
 
 export const getAdminUsers = async () => apiRequest("/admin/users");
 
-export const createAdminUser = async ({ name, email, password, role }) =>
+export const createAdminUser = async ({ name, email, password, role, remarks, scopeType, scopeClasses, scopeSubjects }) =>
   apiRequest("/admin/users", {
     method: "POST",
-    body: JSON.stringify({ name, email, password, role }),
+    body: JSON.stringify({ name, email, password, role, remarks, scopeType, scopeClasses, scopeSubjects }),
   });
 
 export const updateAdminUserRole = async (userId, role) =>
   apiRequest(`/admin/users/${userId}/role`, {
     method: "PUT",
     body: JSON.stringify({ role }),
+  });
+
+export const resetAdminUserPassword = async (userId, newPassword) =>
+  apiRequest(`/admin/users/${userId}/password`, {
+    method: "PUT",
+    body: JSON.stringify({ newPassword }),
+  });
+
+export const updateSuperstudentAccess = async (userId, { isEnabled, remarks }) =>
+  apiRequest(`/admin/users/${userId}/superstudent-access`, {
+    method: "PUT",
+    body: JSON.stringify({ isEnabled, remarks }),
   });
 
 export const getAdminExamTypes = async () => apiRequest("/admin/exam-types");
@@ -568,6 +580,14 @@ export const renameContentEditorChapter = async (bookId, chapterNumber, chapterN
   apiRequest(`/admin/content-editor/books/${bookId}/chapters/${chapterNumber}/name`, {
     method: "PUT",
     body: JSON.stringify({ chapterName }),
+  });
+
+export const getContentEditorChapterDeletionPreview = async (bookId, chapterNumber) =>
+  apiRequest(`/admin/content-editor/books/${bookId}/chapters/${chapterNumber}/deletion-preview`);
+
+export const deleteContentEditorChapter = async (bookId, chapterNumber) =>
+  apiRequest(`/admin/content-editor/books/${bookId}/chapters/${chapterNumber}`, {
+    method: "DELETE",
   });
 
 export const renameContentEditorSection = async (id, topicName) =>

@@ -19,6 +19,8 @@ import {
   getPreWarmupHandler,
   putPreWarmupHandler,
   postGeneratePreWarmupImageHandler,
+  getChapterDeletionPreviewHandler,
+  deleteChapterHandler,
 } from "../controllers/adminContentEditorController.js";
 
 const router = Router();
@@ -30,6 +32,16 @@ router.use(requireAuth, requireRole("admin", "moderator"));
 router.get("/books", getBooksHandler);
 router.get("/books/:bookId/tree", getContentTreeHandler);
 router.put("/books/:bookId/chapters/:chapterNumber/name", putChapterNameHandler);
+// Hard-delete is destructive enough (permanently removes real student
+// attempt/mastery/pre-warmup history under the chapter, not just content)
+// that it's restricted to admins even though the rest of this router is
+// also open to moderators.
+router.get(
+  "/books/:bookId/chapters/:chapterNumber/deletion-preview",
+  requireRole("admin"),
+  getChapterDeletionPreviewHandler
+);
+router.delete("/books/:bookId/chapters/:chapterNumber", requireRole("admin"), deleteChapterHandler);
 router.put("/chapters/:id/name", putSectionNameHandler);
 router.put("/concepts/:assessmentUnitId/name", putConceptNameHandler);
 router.put("/chapters/:id/visibility", putSectionVisibilityHandler);

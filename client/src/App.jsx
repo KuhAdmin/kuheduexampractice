@@ -50,7 +50,7 @@ import { StudentPracticePage } from "./pages/StudentPracticePage";
 import { StudentSectionDetailPage } from "./pages/StudentSectionDetailPage";
 
 const isStudentOnboardingComplete = (user) => {
-  if (!user || user.role === "admin" || user.role === "moderator") {
+  if (!user || user.role === "admin" || user.role === "moderator" || user.role === "superstudent") {
     return true;
   }
 
@@ -88,7 +88,7 @@ const App = () => {
       return data;
     }
 
-    if (data.user?.role === "moderator") {
+    if (data.user?.role === "moderator" || data.user?.role === "superstudent") {
       navigate("/dashboard");
       return data;
     }

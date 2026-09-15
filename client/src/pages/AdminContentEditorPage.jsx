@@ -7,6 +7,8 @@ import {
   renameContentEditorConcept,
   setContentEditorSectionVisibility,
   setContentEditorConceptVisibility,
+  getContentEditorChapterDeletionPreview,
+  deleteContentEditorChapter,
   getContentEditorCards,
   updateContentEditorCard,
   regenerateContentCardImage,
@@ -765,6 +767,7 @@ const MemoryHookPanel = ({ assessmentUnitId, label }) => {
 export const AdminContentEditorPage = () => {
   const { user } = useAuth();
   const canEditJson = isAdmin(user);
+  const canDeleteChapter = isAdmin(user);
 
   const [books, setBooks] = useState([]);
   const [booksLoading, setBooksLoading] = useState(true);
@@ -778,6 +781,13 @@ export const AdminContentEditorPage = () => {
   const [cardsLoading, setCardsLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+
+  const [deletingChapter, setDeletingChapter] = useState(null);
+  const [deletionPreview, setDeletionPreview] = useState(null);
+  const [deletionPreviewError, setDeletionPreviewError] = useState("");
+  const [deletionPreviewLoading, setDeletionPreviewLoading] = useState(false);
+  const [deletionConfirmText, setDeletionConfirmText] = useState("");
+  const [deletionInProgress, setDeletionInProgress] = useState(false);
 
   const [editingCard, setEditingCard] = useState(null);
   const [form, setForm] = useState({ title: "", summary: "", details: [], isHidden: false });
@@ -885,6 +895,47 @@ export const AdminContentEditorPage = () => {
           : chapter
       )
     );
+  };
+
+  const handleRequestDeleteChapter = async (chapterNumber, chapterName) => {
+    setDeletingChapter({ chapterNumber, chapterName });
+    setDeletionPreview(null);
+    setDeletionPreviewError("");
+    setDeletionConfirmText("");
+    setDeletionPreviewLoading(true);
+    try {
+      const result = await getContentEditorChapterDeletionPreview(selectedBookId, chapterNumber);
+      setDeletionPreview(result?.preview || null);
+    } catch (previewError) {
+      setDeletionPreviewError(previewError.message || "Failed to load deletion preview.");
+    } finally {
+      setDeletionPreviewLoading(false);
+    }
+  };
+
+  const closeDeleteChapterModal = () => {
+    setDeletingChapter(null);
+    setDeletionPreview(null);
+    setDeletionPreviewError("");
+    setDeletionConfirmText("");
+  };
+
+  const handleConfirmDeleteChapter = async () => {
+    if (!deletingChapter || deletionConfirmText.trim() !== String(deletingChapter.chapterNumber)) {
+      return;
+    }
+    setDeletionInProgress(true);
+    setDeletionPreviewError("");
+    try {
+      await deleteContentEditorChapter(selectedBookId, deletingChapter.chapterNumber);
+      setTree((current) => current.filter((chapter) => chapter.chapterNumber !== deletingChapter.chapterNumber));
+      setNotice(`Deleted Chapter ${deletingChapter.chapterNumber} — ${deletingChapter.chapterName}.`);
+      closeDeleteChapterModal();
+    } catch (deleteError) {
+      setDeletionPreviewError(deleteError.message || "Failed to delete chapter.");
+    } finally {
+      setDeletionInProgress(false);
+    }
   };
 
   const handleRenameSection = async (id, topicName) => {
@@ -1188,6 +1239,8 @@ export const AdminContentEditorPage = () => {
               onEditCard={openEditModal}
               onToggleCardHidden={toggleHidden}
               onToggleGroupHidden={toggleGroupHidden}
+              canDeleteChapter={canDeleteChapter}
+              onDeleteChapter={handleRequestDeleteChapter}
             />
           )}
         </div>
@@ -1251,6 +1304,80 @@ export const AdminContentEditorPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deletingChapter && (
+        <div className="modal-backdrop" onClick={closeDeleteChapterModal}>
+          <div
+            className="modal-panel admin-content-editor-delete-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="close-button" aria-label="Close" onClick={closeDeleteChapterModal}>
+              &times;
+            </button>
+            <h2>Delete Chapter {deletingChapter.chapterNumber}</h2>
+            <p>
+              This permanently deletes <strong>Chapter {deletingChapter.chapterNumber} — {deletingChapter.chapterName}</strong>{" "}
+              and everything under it (sections, concepts, cards, practice sets). This cannot be undone.
+            </p>
+
+            {deletionPreviewLoading && <p>Loading what this will delete...</p>}
+
+            {!deletionPreviewLoading && deletionPreview && (
+              <ul className="admin-content-editor-delete-summary">
+                <li>{deletionPreview.sectionCount} section(s)</li>
+                <li>{deletionPreview.conceptCount} concept(s)</li>
+                <li>{deletionPreview.contentCardCount} content card(s)</li>
+                <li>{deletionPreview.practiceSetCount} practice set(s)</li>
+                <li>{deletionPreview.exerciseQuestionCount} chapter-end exercise question(s)</li>
+                {(deletionPreview.studentAttemptCount > 0 ||
+                  deletionPreview.studentMasteryCount > 0 ||
+                  deletionPreview.preWarmupAttemptCount > 0 ||
+                  deletionPreview.hotsAttemptCount > 0) && (
+                  <li className="admin-content-editor-delete-summary-warning">
+                    Real student history will be permanently destroyed, not just orphaned:{" "}
+                    {deletionPreview.studentAttemptCount} practice attempt(s),{" "}
+                    {deletionPreview.studentMasteryCount} mastery record(s),{" "}
+                    {deletionPreview.preWarmupAttemptCount} pre-warmup attempt(s),{" "}
+                    {deletionPreview.hotsAttemptCount} HOTS attempt(s).
+                  </li>
+                )}
+              </ul>
+            )}
+
+            {deletionPreviewError && <p className="error-text">{deletionPreviewError}</p>}
+
+            <label className="admin-studio-field">
+              <span>
+                Type the chapter number (<strong>{deletingChapter.chapterNumber}</strong>) to confirm
+              </span>
+              <input
+                value={deletionConfirmText}
+                onChange={(event) => setDeletionConfirmText(event.target.value)}
+                autoFocus
+                disabled={deletionInProgress}
+              />
+            </label>
+
+            <div className="admin-bulk-pipeline-dialog-actions">
+              <button type="button" className="ghost-button" onClick={closeDeleteChapterModal} disabled={deletionInProgress}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="primary-button admin-content-editor-delete-confirm"
+                disabled={
+                  deletionInProgress ||
+                  deletionPreviewLoading ||
+                  deletionConfirmText.trim() !== String(deletingChapter.chapterNumber)
+                }
+                onClick={handleConfirmDeleteChapter}
+              >
+                {deletionInProgress ? "Deleting..." : "Permanently delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}

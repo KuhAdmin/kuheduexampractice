@@ -1,6 +1,6 @@
 import { pool } from "../db/pool.js";
 import { listBooks } from "./bookService.js";
-import { refreshChapterCatalogView } from "./catalogService.js";
+import { refreshChapterCatalogView, refreshBookChapterSummaryView } from "./catalogService.js";
 
 // Mirrors the identical (unexported) helper in studentPracticeService.js --
 // copied locally rather than cross-importing a private helper from an
@@ -463,4 +463,193 @@ export const updateContentCard = async (id, { title, summary, details, isHidden 
     details: result.rows[0].details,
     isHidden: result.rows[0].is_hidden,
   };
+};
+
+// --- Hard chapter delete --------------------------------------------------
+//
+// "A chapter" has no single row to delete (see the comment on
+// getContentTreeForBook above) -- it's every mst_chapter row sharing
+// (fk_mst_book_id, chapter_number). Deleting it means walking every table
+// reachable from those rows, because most of the direct/second-level foreign
+// keys into this tree are ON DELETE NO ACTION, not CASCADE (verified against
+// init.sql): a naive `DELETE FROM mst_chapter` fails immediately with a
+// 23503 the moment any content under it still exists. The order below
+// deletes the NO-ACTION-guarded tables first (question_bank_item,
+// practice_set, assessment_unit, hots_response, source_section, mst_chapter)
+// so every blocking edge is already empty by the time its parent is
+// deleted; everything else in the tree (content_card, content_assessment_item,
+// student_attempt/_item, student_response, student_mastery, pre_warmup_*,
+// assessment_unit_supporting_concept/_dependency, memory_hook_media,
+// micro_activity_response, concept_learning_pillar, content_concept_memory)
+// is declared ON DELETE CASCADE from one of those and disappears
+// automatically once its parent goes. chapter_exercise_upload/question/response
+// and hots_attempt have NO foreign key into this tree at all (keyed by
+// (book, chapter_number) text / a "chapter:<book>:<number>" string,
+// respectively -- see their own schema comments), so they're deleted
+// separately by that key or they'd survive as orphans under a chapter
+// number that no longer exists.
+
+// Shared by the preview (read-only) and the real delete, so the two can
+// never disagree about what's in scope. section_code matching mirrors
+// getContentTreeForBook/setSectionVisibility's own resolution (NOT
+// source_section.fk_mst_chapter_id, which the import pipeline sets
+// imprecisely and can point at a sibling section's chapter row) --
+// unioned with fk_mst_chapter_id as a defensive catch-all, and every step
+// after that unions its own direct FK with the chapter-id fallback the same
+// way, so nothing reachable only through an imprecise link is missed.
+const resolveChapterDeletionScope = async (db, { bookId, chapterNumber, lock = false }) => {
+  const chapterRows = await db.query(
+    `SELECT id, section_number FROM mst_chapter WHERE fk_mst_book_id = $1 AND chapter_number = $2${
+      lock ? " FOR UPDATE" : ""
+    }`,
+    [bookId, chapterNumber]
+  );
+
+  if (chapterRows.rows.length === 0) {
+    const error = new Error("Chapter not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const chapterIds = chapterRows.rows.map((row) => row.id);
+  const sectionCodes = chapterRows.rows.map((row) => `${bookId}:${chapterNumber}:${row.section_number}`);
+
+  const sectionResult = await db.query(
+    `SELECT DISTINCT id, source_document_id FROM source_section WHERE section_code = ANY($1::text[]) OR fk_mst_chapter_id = ANY($2::bigint[])`,
+    [sectionCodes, chapterIds]
+  );
+  const sectionIds = sectionResult.rows.map((row) => row.id);
+  const candidateSourceDocumentIds = [...new Set(sectionResult.rows.map((row) => row.source_document_id))];
+
+  const assessmentUnitResult = await db.query(
+    `SELECT DISTINCT assessment_unit_id FROM assessment_unit WHERE source_section_id = ANY($1::bigint[]) OR fk_mst_chapter_id = ANY($2::bigint[])`,
+    [sectionIds, chapterIds]
+  );
+  const assessmentUnitIds = assessmentUnitResult.rows.map((row) => row.assessment_unit_id);
+
+  const contentCardResult = await db.query(
+    `SELECT DISTINCT id FROM content_card WHERE source_section_id = ANY($1::bigint[]) OR assessment_unit_id = ANY($2::text[])`,
+    [sectionIds, assessmentUnitIds]
+  );
+  const contentCardIds = contentCardResult.rows.map((row) => row.id);
+
+  const itemResult = await db.query(
+    `SELECT DISTINCT item_id FROM content_assessment_item WHERE content_card_id = ANY($1::bigint[]) OR assessment_unit_id = ANY($2::text[])`,
+    [contentCardIds, assessmentUnitIds]
+  );
+  const itemIds = itemResult.rows.map((row) => row.item_id);
+
+  const practiceSetResult = await db.query(
+    `
+      SELECT DISTINCT id FROM practice_set
+      WHERE fk_mst_chapter_id = ANY($1::bigint[])
+         OR source_section_id = ANY($2::bigint[])
+         OR source_assessment_unit_id = ANY($3::text[])
+    `,
+    [chapterIds, sectionIds, assessmentUnitIds]
+  );
+  const practiceSetIds = practiceSetResult.rows.map((row) => row.id);
+
+  const questionBankItemResult = await db.query(
+    `SELECT DISTINCT id FROM question_bank_item WHERE assessment_unit_id = ANY($1::text[]) OR item_id = ANY($2::text[])`,
+    [assessmentUnitIds, itemIds]
+  );
+  const questionBankItemIds = questionBankItemResult.rows.map((row) => row.id);
+
+  return {
+    chapterIds,
+    sectionIds,
+    assessmentUnitIds,
+    contentCardIds,
+    itemIds,
+    practiceSetIds,
+    questionBankItemIds,
+    candidateSourceDocumentIds,
+  };
+};
+
+// Read-only counts of everything a hard delete would remove, for the admin
+// confirmation UI to show before committing to something irreversible.
+export const getChapterDeletionPreview = async ({ bookId, chapterNumber }) => {
+  const scope = await resolveChapterDeletionScope(pool, { bookId, chapterNumber });
+
+  const [studentAttemptCount, studentMasteryCount, preWarmupAttemptCount, hotsAttemptCount, exerciseQuestionCount] =
+    await Promise.all([
+      pool.query(`SELECT COUNT(*) FROM student_attempt WHERE practice_set_id = ANY($1::bigint[])`, [
+        scope.practiceSetIds,
+      ]),
+      pool.query(`SELECT COUNT(*) FROM student_mastery WHERE assessment_unit_id = ANY($1::text[])`, [
+        scope.assessmentUnitIds,
+      ]),
+      pool.query(`SELECT COUNT(*) FROM pre_warmup_attempt WHERE source_section_id = ANY($1::bigint[])`, [
+        scope.sectionIds,
+      ]),
+      pool.query(`SELECT COUNT(*) FROM hots_attempt WHERE chapter_key = $1`, [
+        `chapter:${bookId}:${chapterNumber}`,
+      ]),
+      pool.query(`SELECT COUNT(*) FROM chapter_exercise_question WHERE fk_mst_book_id = $1 AND chapter_number = $2`, [
+        bookId,
+        chapterNumber,
+      ]),
+    ]);
+
+  return {
+    sectionCount: scope.sectionIds.length,
+    conceptCount: scope.assessmentUnitIds.length,
+    contentCardCount: scope.contentCardIds.length,
+    practiceSetCount: scope.practiceSetIds.length,
+    studentAttemptCount: Number(studentAttemptCount.rows[0].count),
+    studentMasteryCount: Number(studentMasteryCount.rows[0].count),
+    preWarmupAttemptCount: Number(preWarmupAttemptCount.rows[0].count),
+    hotsAttemptCount: Number(hotsAttemptCount.rows[0].count),
+    exerciseQuestionCount: Number(exerciseQuestionCount.rows[0].count),
+  };
+};
+
+// The actual hard delete -- see the comment block above for why each step
+// is here and in this order. Wrapped in one transaction: either the whole
+// chapter and everything under it goes, or (on any error) none of it does.
+export const deleteChapter = async ({ bookId, chapterNumber }) => {
+  const result = await withTransaction(async (client) => {
+    const scope = await resolveChapterDeletionScope(client, { bookId, chapterNumber, lock: true });
+
+    await client.query(`DELETE FROM question_bank_item WHERE id = ANY($1::bigint[])`, [scope.questionBankItemIds]);
+    await client.query(`DELETE FROM practice_set WHERE id = ANY($1::bigint[])`, [scope.practiceSetIds]);
+    await client.query(`DELETE FROM assessment_unit WHERE assessment_unit_id = ANY($1::text[])`, [
+      scope.assessmentUnitIds,
+    ]);
+    await client.query(`DELETE FROM hots_response WHERE source_section_id = ANY($1::bigint[])`, [scope.sectionIds]);
+    await client.query(`DELETE FROM source_section WHERE id = ANY($1::bigint[])`, [scope.sectionIds]);
+
+    // A source_document (the uploaded PDF, can carry its full page-image
+    // payload) is only deleted if NONE of its sections survive the delete
+    // above -- i.e. it was wholly owned by this chapter, not shared with a
+    // sibling chapter/book. Checked after the fact rather than assumed, so
+    // this stays correct even if that 1:1 relationship ever isn't true.
+    await client.query(
+      `
+        DELETE FROM source_document
+        WHERE id = ANY($1::bigint[])
+          AND NOT EXISTS (SELECT 1 FROM source_section WHERE source_section.source_document_id = source_document.id)
+      `,
+      [scope.candidateSourceDocumentIds]
+    );
+
+    await client.query(`DELETE FROM mst_chapter WHERE id = ANY($1::bigint[])`, [scope.chapterIds]);
+
+    // Not FK-linked to anything above -- see the comment block's note on
+    // chapter_exercise_upload/hots_attempt's own keying.
+    await client.query(`DELETE FROM chapter_exercise_upload WHERE fk_mst_book_id = $1 AND chapter_number = $2`, [
+      bookId,
+      chapterNumber,
+    ]);
+    await client.query(`DELETE FROM hots_attempt WHERE chapter_key = $1`, [`chapter:${bookId}:${chapterNumber}`]);
+
+    return { chapterNumber, deletedSectionCount: scope.sectionIds.length };
+  });
+
+  await refreshChapterCatalogView();
+  await refreshBookChapterSummaryView();
+
+  return result;
 };

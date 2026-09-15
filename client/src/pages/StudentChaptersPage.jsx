@@ -7,6 +7,7 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getChaptersForSelection, getNotifications, markNotificationsSeen } from "../api/client";
 import { buildChapterRows, encodeSelectionChapterId } from "./studentChapterData";
 import { selectionKey, useClassSubject } from "../context/classSubjectHooks";
+import { hasFullContentAccess } from "../roles";
 
 const ChapterIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -247,7 +248,7 @@ export const StudentChaptersPage = ({ dashboard, user }) => {
   // is browsable without an active subscription -- everything else (and any
   // chapter reached via the class/subject switcher, since that's a premium
   // browse-other-subjects feature) stays locked until user.isPremium.
-  const subscriptionActive = Boolean(user?.isPremium);
+  const subscriptionActive = hasFullContentAccess(user);
   const isChapterLocked = (index) => !subscriptionActive && (!isDefaultSelection || index !== 0);
 
   const handleBellClick = () => {

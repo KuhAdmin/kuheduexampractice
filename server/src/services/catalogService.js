@@ -58,6 +58,15 @@ export const refreshChapterCatalogView = async () => {
   });
 };
 
+// Same best-effort precedent as refreshChapterCatalogView, for the other
+// materialized view that joins mst_chapter (its chapter/topic counts go
+// stale after a chapter is renamed, hidden, or hard-deleted otherwise).
+export const refreshBookChapterSummaryView = async () => {
+  await pool.query("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_book_chapter_summary").catch((error) => {
+    console.error("Failed to refresh mv_book_chapter_summary:", error);
+  });
+};
+
 export const listChapters = async ({
   bookId,
   chapterNumber,

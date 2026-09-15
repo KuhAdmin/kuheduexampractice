@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/authHooks";
 
 const isStudentOnboardingComplete = (user) => {
-  if (!user || user.role === "admin") {
+  if (!user || user.role === "admin" || user.role === "superstudent") {
     return true;
   }
 

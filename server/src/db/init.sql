@@ -44,6 +44,64 @@ ADD COLUMN IF NOT EXISTS is_premium BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS premium_expires_at TIMESTAMPTZ;
 
+-- Superstudent access: a subscription-agnostic, full class/subject/chapter
+-- access grant an admin can flip on/off for ANY account (not just role =
+-- 'superstudent' -- see AdminUsersPage's per-row toggle), without touching
+-- that account's role or deleting it. The granted_by/updated_by pair record
+-- which admin set it up and last changed it (there's no separate admin-action
+-- audit log in this app).
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS superstudent_access_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- ADD COLUMN IF NOT EXISTS above is a no-op once the column already exists,
+-- so it never actually changes an existing column's default -- this line is
+-- what actually flips a deployment that first created the column back when
+-- it defaulted to TRUE.
+ALTER TABLE users
+ALTER COLUMN superstudent_access_enabled SET DEFAULT FALSE;
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS superstudent_remarks TEXT;
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS superstudent_granted_by BIGINT REFERENCES users(id);
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS superstudent_granted_at TIMESTAMPTZ;
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS superstudent_access_updated_by BIGINT REFERENCES users(id);
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS superstudent_access_updated_at TIMESTAMPTZ;
+
+-- One-time correction: superstudent_access_enabled originally defaulted to
+-- TRUE (harmless while only role='superstudent' accounts ever read it), but
+-- since it's now readable for any account, every row that picked up that
+-- stale default must be reset to FALSE. Guarded by "never explicitly
+-- toggled" (superstudent_access_updated_at IS NULL) so this is safe to rerun
+-- on every boot without ever undoing an admin's later toggle, and role <>
+-- 'superstudent' so a genuine superstudent account created with access on
+-- keeps it.
+UPDATE users
+SET superstudent_access_enabled = FALSE
+WHERE role <> 'superstudent' AND superstudent_access_updated_at IS NULL;
+
+-- Superstudent scope: narrows a full-access grant to specific classes (and
+-- optionally specific subjects) instead of the whole catalog. 'all' (default)
+-- is today's unrestricted behavior; 'class' grants N classes, any subject;
+-- 'class_subject' grants N classes crossed with M subjects (any granted
+-- class + any granted subject). Multi-select, so these are JSONB arrays, not
+-- single-value columns -- see userRoutes.js's isWithinSuperstudentScope.
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS superstudent_scope_type VARCHAR(20) NOT NULL DEFAULT 'all';
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS superstudent_scope_classes JSONB;
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS superstudent_scope_subjects JSONB;
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 

@@ -90,14 +90,60 @@ const router = Router();
 
 router.use(requireAuth);
 
+// superstudent_access_enabled is a per-account grant an admin can flip for
+// ANY user (not just role='superstudent') -- see AdminUsersPage's per-row
+// toggle -- so this checks the flag alone, not the role.
+const hasSuperstudentAccess = (user) => Boolean(user.superstudentAccessEnabled);
+
+// A full-access grant can be narrowed to specific classes (and optionally
+// specific subjects) instead of the whole catalog -- see AdminUsersPage's
+// scope picker and userService.js's superstudent_scope_* columns. 'all' is
+// unrestricted; 'class' allows any of the granted classes, any subject;
+// 'class_subject' allows any granted class crossed with any granted subject.
+const isWithinSuperstudentScope = (user, { examGoalCode, levelCode, subjectCode }) => {
+  if (user.superstudentScopeType === "all") {
+    return true;
+  }
+
+  const classMatch = (user.superstudentScopeClasses || []).some(
+    (scopedClass) => scopedClass.examGoalCode === examGoalCode && scopedClass.levelCode === levelCode
+  );
+  if (!classMatch) {
+    return false;
+  }
+
+  if (user.superstudentScopeType === "class") {
+    return true;
+  }
+
+  return (user.superstudentScopeSubjects || []).some((scopedSubject) => scopedSubject.subjectCode === subjectCode);
+};
+
 // Shared by /chapters-for-selection and /dashboard-for-selection: a caller
 // with a resolvable board/class/subject of their own (i.e. not a moderator
 // -- see resolveDashboardAcademicFilters' isValid) may only request their
 // own combo, not an arbitrary one, even though the client normally never
 // asks for anything else (see ClassSubjectContext.jsx/
 // StudentClassSubjectSwitcher.jsx, whose options list is itself scoped by
-// /class-subject-options below).
+// /class-subject-options below). A user with superstudent access enabled is
+// instead checked against their granted scope (see isWithinSuperstudentScope
+// above) regardless of whether they have a resolvable profile of their own.
 const assertOwnSelectionOrDeny = async (req, res) => {
+  if (hasSuperstudentAccess(req.user)) {
+    if (
+      isWithinSuperstudentScope(req.user, {
+        examGoalCode: req.query.examGoalCode,
+        levelCode: req.query.levelCode,
+        subjectCode: req.query.subjectCode,
+      })
+    ) {
+      return true;
+    }
+
+    res.status(403).json({ message: "This class/subject is outside your granted access scope." });
+    return false;
+  }
+
   const ownFilters = await resolveDashboardAcademicFilters({
     board: req.user.board,
     studentClass: req.user.studentClass,
@@ -219,11 +265,26 @@ router.get("/dashboard", async (req, res, next) => {
 // content, since there's nothing of their own to scope to.
 router.get("/class-subject-options", async (req, res, next) => {
   try {
-    const ownFilters = await resolveDashboardAcademicFilters({
-      board: req.user.board,
-      studentClass: req.user.studentClass,
-      subject: req.user.subject,
-    });
+    if (hasSuperstudentAccess(req.user) && req.user.superstudentScopeType !== "all") {
+      const allOptions = await listClassSubjectOptionsWithContent();
+      const options = allOptions.filter((row) =>
+        isWithinSuperstudentScope(req.user, {
+          examGoalCode: row.examGoalCode,
+          levelCode: row.levelCode,
+          subjectCode: row.subjectCode,
+        })
+      );
+      res.json({ options });
+      return;
+    }
+
+    const ownFilters = hasSuperstudentAccess(req.user)
+      ? { isValid: false }
+      : await resolveDashboardAcademicFilters({
+          board: req.user.board,
+          studentClass: req.user.studentClass,
+          subject: req.user.subject,
+        });
 
     const options = await listClassSubjectOptionsWithContent(
       ownFilters.isValid

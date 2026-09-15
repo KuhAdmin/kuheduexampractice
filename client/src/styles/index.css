@@ -4286,6 +4286,30 @@ a {
   color: var(--text);
 }
 
+.admin-content-tree-delete {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.admin-content-tree-delete:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.admin-content-tree-trash-icon {
+  width: 15px;
+  height: 15px;
+}
+
 .admin-content-tree-pencil-icon {
   width: 15px;
   height: 15px;
@@ -12499,6 +12523,75 @@ a {
   flex-shrink: 0;
 }
 
+.admin-superstudent-access-cell {
+  display: grid;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.admin-superstudent-access-toggle {
+  padding: 6px 10px;
+  border-radius: 12px;
+  align-items: center;
+  width: fit-content;
+}
+
+.admin-superstudent-access-toggle input {
+  margin-top: 0;
+}
+
+.admin-superstudent-remarks-text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85em;
+  cursor: pointer;
+}
+
+.admin-superstudent-remarks-editor {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-superstudent-remarks-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-users-name-cell {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-users-scope-label {
+  color: var(--muted);
+  font-size: 0.8em;
+}
+
+.admin-users-scope-picker {
+  display: grid;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.admin-users-scope-checklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.admin-users-scope-checklist label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9em;
+}
+
+.admin-users-password-editor {
+  display: grid;
+  gap: 6px;
+}
+
 .admin-settings-split-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -13987,6 +14080,34 @@ a {
    upper cap like .is-wide above. */
 .admin-content-editor-edit-modal {
   width: 90vw;
+}
+
+.admin-content-editor-delete-modal {
+  width: min(90vw, 520px);
+}
+
+.admin-content-editor-delete-summary {
+  margin: 12px 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 4px;
+}
+
+.admin-content-editor-delete-summary-warning {
+  color: #dc2626;
+  font-weight: 600;
+  list-style: none;
+  margin-left: -20px;
+  margin-top: 8px;
+}
+
+.admin-content-editor-delete-confirm {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.admin-content-editor-delete-confirm:disabled {
+  opacity: 0.5;
 }
 
 .admin-books-bulk-results-list {
