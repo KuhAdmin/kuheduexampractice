@@ -130,10 +130,17 @@ export const importPreWarmupContent = async ({ payload, userId }) => {
   // "The other half" -- this upload attaches to a section's Concept Import
   // content_key rather than inventing its own, so both halves of a
   // section's content share one identity. If nothing has been imported for
-  // this section yet, there's no content_key to attach to.
+  // this section yet, there's no content_key to attach to. Matches both
+  // root-scoped cards (source_section_id set directly) and concept-scoped
+  // cards (reachable only via assessment_unit.source_section_id) -- same
+  // OR-shape as contentEditorService.js's listContentCardsForSection --
+  // since a section with no root/visual content (the common case: poem or
+  // prose sections that only produce concept content) has zero content_card
+  // rows with source_section_id set at all.
   const existingCardResult = await pool.query(
     `SELECT content_key FROM content_card
      WHERE source_section_id = $1
+        OR assessment_unit_id IN (SELECT assessment_unit_id FROM assessment_unit WHERE source_section_id = $1)
      ORDER BY created_at DESC
      LIMIT 1`,
     [sourceSectionId]
