@@ -17,11 +17,10 @@ export const PRE_LESSON_SUBSECTIONS = [
     title: "Vocabulary Warm-Up — Visual",
     caption: "One picture. The whole story's shape — before you read a line.",
   },
-  {
-    key: "avsAssessment",
-    title: "Vocabulary Warm-Up — Assessment",
-    caption: "Quick check — do these words already look familiar?",
-  },
+  // "avsAssessment" (Vocabulary Warm-Up — Assessment) is hidden from
+  // students: removed from this list rather than the underlying content, so
+  // it disappears from both accordions (StudentSectionDetailPage.jsx) and
+  // the page header (getSubsectionMeta) without touching any authored data.
   {
     key: "sensoryWarmup",
     title: "Sensory Warm-Up",
