@@ -47,8 +47,17 @@ export class VoiceSession {
     this.muted = false;
   }
 
-  async start({ assessmentUnitId, mode }) {
+  // `micStream` must already be acquired (via getUserMedia) by the caller
+  // BEFORE this is called, and that acquisition must be the very first
+  // await after the user's click -- not after this method's own token
+  // fetch/WebSocket handshake. iOS Safari (especially installed PWAs) ties
+  // getUserMedia's permission to a short-lived "user activation" window
+  // that a network round-trip like the token fetch below silently expires;
+  // calling getUserMedia after that gap throws NotAllowedError even though
+  // the exact same call works fine on desktop. See StudentVoiceSessionPanel.jsx.
+  async start({ assessmentUnitId, mode, micStream }) {
     this.callbacks.onStatusChange("connecting");
+    this.micStream = micStream;
     try {
       const { token } = await getConceptTutorVoiceToken(assessmentUnitId, mode);
 
@@ -189,7 +198,6 @@ export class VoiceSession {
   }
 
   async startMic() {
-    this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const context = new AudioContext({ sampleRate: INPUT_SAMPLE_RATE });
     this.recordingContext = context;
     await context.audioWorklet.addModule("/audio/pcm-recorder-worklet.js");

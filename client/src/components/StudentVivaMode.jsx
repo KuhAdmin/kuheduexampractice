@@ -56,17 +56,41 @@ export const StudentVivaMode = ({ assessmentUnitId }) => {
     []
   );
 
+  // iOS Safari (particularly an installed/standalone PWA) can leave
+  // speechSynthesis.speak() either throwing synchronously or never firing
+  // onend/onerror at all -- most often right after the questions-generation
+  // network call above, which the same way as getUserMedia elsewhere in this
+  // app (see voiceClient.js) can silently expire iOS's "this came from a user
+  // gesture" grace period speech APIs rely on. Since runViva's stage only
+  // advances to "listening" (showing the countdown and the typed fallback)
+  // after this resolves, an unguarded hang/throw here means the whole flow
+  // freezes before the student ever gets a chance to answer. The timeout and
+  // try/catch below guarantee this always settles, with or without narration.
+  const SPEAK_TIMEOUT_MS = 8000;
+
   const speak = (text) =>
     new Promise((resolve) => {
       if (cancelledRef.current || typeof window === "undefined" || !window.speechSynthesis || !text) {
         resolve();
         return;
       }
-      const utterance = applyPreferredVoice(new SpeechSynthesisUtterance(text));
-      utterance.onend = resolve;
-      utterance.onerror = resolve;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+        resolve();
+      };
+      const timeoutId = setTimeout(finish, SPEAK_TIMEOUT_MS);
+      try {
+        const utterance = applyPreferredVoice(new SpeechSynthesisUtterance(text));
+        utterance.onend = finish;
+        utterance.onerror = finish;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        finish();
+      }
     });
 
   const stopListening = () => {

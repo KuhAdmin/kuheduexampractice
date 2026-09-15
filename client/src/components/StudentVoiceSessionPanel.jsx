@@ -86,6 +86,25 @@ export const StudentVoiceSessionPanel = ({ mode, label, assessmentUnitId, onUsag
     setElapsed(0);
     elapsedRef.current = 0;
     setMuted(false);
+
+    // Must be the very first await in this click handler -- iOS Safari
+    // (especially installed PWAs) only allows getUserMedia while the click's
+    // "user activation" is still fresh. The token fetch and WebSocket
+    // handshake VoiceSession.start() does next both take real network time;
+    // requesting the mic after those (as this used to) silently expires that
+    // window on iOS and throws NotAllowedError, even though the identical
+    // call works fine on desktop. Acquiring the stream here, before any
+    // other await, and handing it down keeps the permission request inside
+    // the gesture on every platform.
+    let micStream;
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      setStatus("error");
+      setError(err instanceof Error ? err.message : "Microphone access was denied.");
+      return;
+    }
+
     // Must happen before the session's own audio starts flowing -- also
     // what triggers the avatar's audio-context init inside this click's
     // user gesture. Resolves false when the avatar is off/not ready, in
@@ -109,7 +128,7 @@ export const StudentVoiceSessionPanel = ({ mode, label, assessmentUnitId, onUsag
         return next;
       });
     }, 1000);
-    await session.start({ assessmentUnitId, mode });
+    await session.start({ assessmentUnitId, mode, micStream });
   };
 
   const active = status === "connecting" || status === "listening" || status === "speaking";
