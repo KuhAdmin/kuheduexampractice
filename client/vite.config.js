@@ -54,6 +54,14 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    // Default 500 kB limit warns on every build since the main chunk
+    // (React + AI Tutor avatar + all ~50 pages, none code-split yet) is
+    // already ~3.7 MB -- raised to match the same 4 MiB headroom already
+    // used for the service worker's maximumFileSizeToCacheInBytes above.
+    // This only silences the warning; it doesn't shrink the actual bundle.
+    chunkSizeWarningLimit: 4096,
+  },
   server: {
     port: 5173,
     proxy: {
