@@ -6,6 +6,7 @@
 // microActivityService.js / diagramImageService.js need no logic changes
 // beyond the import path.
 import { pool } from "../db/pool.js";
+import { HIERARCHY_LABELS } from "../config/hierarchyLabels.js";
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -362,5 +363,6 @@ export const getSectionKnowledgeSummary = async (sourceSectionId) => {
   );
 
   const count = result.rows[0]?.count || 0;
-  return count > 0 ? `This Textbook Section covers ${count} Concept${count === 1 ? "" : "s"}.` : null;
+  const unitLabel = count === 1 ? HIERARCHY_LABELS.microLearningUnit : HIERARCHY_LABELS.microLearningUnitPlural;
+  return count > 0 ? `This ${HIERARCHY_LABELS.lesson} covers ${count} ${unitLabel}.` : null;
 };

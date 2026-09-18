@@ -6,6 +6,7 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getStudentSectionOverview, getStudentSections } from "../api/client";
 import { decodeSelectionChapterId } from "./studentChapterData";
 import { PRE_LESSON_SUBSECTIONS, POST_LESSON_SUBSECTIONS } from "../content/preWarmupSubsections";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 
 const SectionDetailIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -335,6 +336,25 @@ const ConceptCompetencyChips = ({ competencies }) => {
 
 const CONCEPTS_PAGE_SIZE = 12;
 
+// The "Recall Lab" accordion's own sub-items -- same pattern as
+// PRE_LESSON_SUBSECTIONS/POST_LESSON_SUBSECTIONS above, just local to this
+// page since nothing else needs this list. Was previously a separate
+// "Recall Lab" tab (a whole different screen, student-chapter-detail-action
+// cards); now a pinned row at the end of the Micro Learning Units list
+// instead, matching Pre-Lesson Warm-Up/Post-Lesson Follow-Up's own
+// expand-in-place accordion pattern rather than a tab switch. `flag` (when
+// present) gates the item on contentFlags, same as the old cards did;
+// "Section Assessment" has none since it's always available.
+const RECALL_LAB_ITEMS = [
+  { key: "assessment", label: `${HIERARCHY_LABELS.lesson} Assessment`, path: "assessment" },
+  { key: "memoryBooster", label: "Memory Boosters", path: "memory-booster", flag: "hasMemoryBooster" },
+  { key: "flashcards", label: "Flashcards", path: "flashcards", flag: "hasFlashcards" },
+  { key: "revision", label: "Revision", path: "revision", flag: "hasRevision" },
+  { key: "tutorNotes", label: "Tutor Notes", path: "tutor-notes", flag: "hasTutorNotes" },
+  { key: "diagrams", label: "Diagrams", path: "diagrams", flag: "hasDiagrams" },
+  { key: "mindMap", label: "Mind Map", path: "mind-map", flag: "hasMindMap" },
+];
+
 export const StudentSectionDetailPage = () => {
   const navigate = useNavigate();
   const tier = useBreakpoint();
@@ -350,18 +370,16 @@ export const StudentSectionDetailPage = () => {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("concepts");
   const [visibleConceptCount, setVisibleConceptCount] = useState(CONCEPTS_PAGE_SIZE);
   const [chapterName, setChapterName] = useState("");
-  // null | "preLessonWarmup" | "postLesson" -- which accordion group (if any)
-  // is currently expanded in the Micro Learning Units list.
+  // null | "preLessonWarmup" | "postLesson" | "recallLab" -- which accordion
+  // group (if any) is currently expanded in the Micro Learning Units list.
   const [expandedGroup, setExpandedGroup] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError("");
-    setActiveTab("concepts");
     setVisibleConceptCount(CONCEPTS_PAGE_SIZE);
 
     getStudentSectionOverview(sourceSectionId)
@@ -369,7 +387,7 @@ export const StudentSectionDetailPage = () => {
         if (!cancelled) setDetail(result);
       })
       .catch((fetchError) => {
-        if (!cancelled) setError(fetchError.message || "This section has not been generated yet.");
+        if (!cancelled) setError(fetchError.message || `This ${HIERARCHY_LABELS.lesson.toLowerCase()} has not been generated yet.`);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -416,92 +434,6 @@ export const StudentSectionDetailPage = () => {
   // just linked to a page whose only content was its own "nothing
   // generated yet" empty state (see getSectionContentFlags on the server).
   const flags = detail?.contentFlags || {};
-  const deepLearnActions = detail && (
-    <section className="student-section-detail-actions">
-      <button type="button" className="student-chapter-detail-action is-violet" onClick={() => navigate(`${basePath}/assessment`)}>
-        <span className="student-chapter-detail-action-mark is-violet">
-          <SectionDetailIcon type="quiz" />
-        </span>
-        <span className="student-chapter-detail-action-copy">
-          <strong>Section Assessment</strong>
-          <small>{detail.conceptCount} micro learning units covered</small>
-        </span>
-        <SectionDetailIcon type="chevron" />
-      </button>
-      {flags.hasMemoryBooster && (
-        <button type="button" className="student-chapter-detail-action is-lilac" onClick={() => navigate(`${basePath}/memory-booster`)}>
-          <span className="student-chapter-detail-action-mark is-lilac">
-            <SectionDetailIcon type="memory" />
-          </span>
-          <span className="student-chapter-detail-action-copy">
-            <strong>Memory Booster</strong>
-            <small>Strengthen your memory</small>
-          </span>
-          <SectionDetailIcon type="chevron" />
-        </button>
-      )}
-      {flags.hasFlashcards && (
-        <button type="button" className="student-chapter-detail-action is-amber" onClick={() => navigate(`${basePath}/flashcards`)}>
-          <span className="student-chapter-detail-action-mark is-amber">
-            <SectionDetailIcon type="cards" />
-          </span>
-          <span className="student-chapter-detail-action-copy">
-            <strong>Flashcards</strong>
-            <small>Key terms for this section</small>
-          </span>
-          <SectionDetailIcon type="chevron" />
-        </button>
-      )}
-      {flags.hasRevision && (
-        <button type="button" className="student-chapter-detail-action is-rose" onClick={() => navigate(`${basePath}/revision`)}>
-          <span className="student-chapter-detail-action-mark is-rose">
-            <SectionDetailIcon type="revision" />
-          </span>
-          <span className="student-chapter-detail-action-copy">
-            <strong>Revision</strong>
-            <small>Cheat sheets, mnemonics &amp; exam notes</small>
-          </span>
-          <SectionDetailIcon type="chevron" />
-        </button>
-      )}
-      {flags.hasTutorNotes && (
-        <button type="button" className="student-chapter-detail-action is-teal" onClick={() => navigate(`${basePath}/tutor-notes`)}>
-          <span className="student-chapter-detail-action-mark is-teal">
-            <SectionDetailIcon type="tutor" />
-          </span>
-          <span className="student-chapter-detail-action-copy">
-            <strong>Tutor Notes</strong>
-            <small>Coach, interview &amp; viva prep</small>
-          </span>
-          <SectionDetailIcon type="chevron" />
-        </button>
-      )}
-      {flags.hasDiagrams && (
-        <button type="button" className="student-chapter-detail-action is-green" onClick={() => navigate(`${basePath}/diagrams`)}>
-          <span className="student-chapter-detail-action-mark is-green">
-            <SectionDetailIcon type="diagram" />
-          </span>
-          <span className="student-chapter-detail-action-copy">
-            <strong>Diagrams</strong>
-            <small>Labeled parts to review</small>
-          </span>
-          <SectionDetailIcon type="chevron" />
-        </button>
-      )}
-      {flags.hasMindMap && (
-        <button type="button" className="student-chapter-detail-action is-blue" onClick={() => navigate(`${basePath}/mind-map`)}>
-          <span className="student-chapter-detail-action-mark is-blue">
-            <SectionDetailIcon type="tree" />
-          </span>
-          <span className="student-chapter-detail-action-copy">
-            <strong>Mind Map</strong>
-            <small>See how micro learning units connect</small>
-          </span>
-          <SectionDetailIcon type="chevron" />
-        </button>
-      )}
-    </section>
-  );
 
   // Pinned as the first row of the Micro Learning Units list (not gated
   // inside Deep Learn, and not part of `detail.concepts`/`conceptCount` --
@@ -544,14 +476,14 @@ export const StudentSectionDetailPage = () => {
             </button>
             <SectionDetailIcon />
             <span className="is-current">
-              {detail ? `${detail.sectionNumber} ${detail.topicName || ""}`.trim() : "Section"}
+              {detail ? `${detail.sectionNumber} ${detail.topicName || ""}`.trim() : HIERARCHY_LABELS.lesson}
             </span>
           </nav>
 
           {loading ? (
-            <p className="student-empty-state">Loading section...</p>
+            <p className="student-empty-state">{`Loading ${HIERARCHY_LABELS.lesson.toLowerCase()}...`}</p>
           ) : error || !detail ? (
-            <p className="student-empty-state">{error || "This section has not been generated yet."}</p>
+            <p className="student-empty-state">{error || `This ${HIERARCHY_LABELS.lesson.toLowerCase()} has not been generated yet.`}</p>
           ) : (
             <>
               <section className="student-section-detail-card">
@@ -567,7 +499,7 @@ export const StudentSectionDetailPage = () => {
                     <span>Overall Progress</span>
                     <strong>{detail.progress}%</strong>
                     <p>
-                      {summary.completed} of {detail.conceptCount} micro learning units completed
+                      {`${summary.completed} of ${detail.conceptCount} ${HIERARCHY_LABELS.microLearningUnitPlural} (MLU) completed.`}
                     </p>
                   </div>
 
@@ -601,29 +533,9 @@ export const StudentSectionDetailPage = () => {
                 </div>
               </section>
 
-              <nav className="student-section-detail-tabs is-iconic" aria-label="Section content">
-                <button
-                  type="button"
-                  className={`student-section-detail-tab ${activeTab === "concepts" ? "is-active" : ""}`}
-                  onClick={() => setActiveTab("concepts")}
-                >
-                  <SectionDetailIcon type="list" />
-                  {`Micro Learning Units (${detail.conceptCount})`}
-                </button>
-                <button
-                  type="button"
-                  className={`student-section-detail-tab ${activeTab === "deepLearn" ? "is-active" : ""}`}
-                  onClick={() => setActiveTab("deepLearn")}
-                >
-                  <SectionDetailIcon type="atom" />
-                  Memory Boosters
-                </button>
-              </nav>
-
-              {activeTab === "concepts" ? (
-                <section className="student-section-detail-concepts">
-                  <div className="student-goals-list">
-                    {flags.hasPreWarmup && (
+              <section className="student-section-detail-concepts">
+                <div className="student-goals-list">
+                  {flags.hasPreWarmup && (
                       <>
                         <button
                           type="button"
@@ -717,6 +629,38 @@ export const StudentSectionDetailPage = () => {
                           ))}
                       </>
                     )}
+                    <button
+                      type="button"
+                      className="student-goals-row is-highlight"
+                      onClick={() => setExpandedGroup((current) => (current === "recallLab" ? null : "recallLab"))}
+                    >
+                      <span className="student-goals-row-rail">
+                        <span className="student-goals-row-circle">
+                          <SectionDetailIcon type="memory" />
+                        </span>
+                      </span>
+                      <span className="student-goals-row-copy">
+                        <strong>Recall Lab</strong>
+                        <small>Assessments, memory boosters &amp; more</small>
+                      </span>
+                      <SectionDetailIcon type={expandedGroup === "recallLab" ? "chevron-down" : undefined} />
+                    </button>
+                    {expandedGroup === "recallLab" &&
+                      RECALL_LAB_ITEMS.filter((recallItem) => !recallItem.flag || flags[recallItem.flag]).map(
+                        (recallItem) => (
+                          <button
+                            key={recallItem.key}
+                            type="button"
+                            className="student-goals-row is-highlight is-subitem"
+                            onClick={() => navigate(`${basePath}/${recallItem.path}`)}
+                          >
+                            <span className="student-goals-row-copy">
+                              <strong>{recallItem.label}</strong>
+                            </span>
+                            <SectionDetailIcon />
+                          </button>
+                        )
+                      )}
                   </div>
                   {hasMoreConcepts && (
                     <button
@@ -729,9 +673,6 @@ export const StudentSectionDetailPage = () => {
                     </button>
                   )}
                 </section>
-              ) : (
-                deepLearnActions
-              )}
             </>
           )}
         </div>
@@ -750,13 +691,13 @@ export const StudentSectionDetailPage = () => {
           >
             <SectionDetailIcon type="back" />
           </button>
-          <h1>{detail ? `${detail.sectionNumber} ${detail.topicName || ""}`.trim() : "Section"}</h1>
+          <h1>{detail ? `${detail.sectionNumber} ${detail.topicName || ""}`.trim() : HIERARCHY_LABELS.lesson}</h1>
         </header>
 
         {loading ? (
-          <p className="student-empty-state">Loading section...</p>
+          <p className="student-empty-state">{`Loading ${HIERARCHY_LABELS.lesson.toLowerCase()}...`}</p>
         ) : error || !detail ? (
-          <p className="student-empty-state">{error || "This section has not been generated yet."}</p>
+          <p className="student-empty-state">{error || `This ${HIERARCHY_LABELS.lesson.toLowerCase()} has not been generated yet.`}</p>
         ) : (
           <>
             <section className="student-section-detail-card">
@@ -766,25 +707,7 @@ export const StudentSectionDetailPage = () => {
               </div>
             </section>
 
-            <nav className="student-section-detail-tabs" aria-label="Section content">
-              <button
-                type="button"
-                className={`student-section-detail-tab ${activeTab === "concepts" ? "is-active" : ""}`}
-                onClick={() => setActiveTab("concepts")}
-              >
-                Micro Learning Units ({detail.conceptCount})
-              </button>
-              <button
-                type="button"
-                className={`student-section-detail-tab ${activeTab === "deepLearn" ? "is-active" : ""}`}
-                onClick={() => setActiveTab("deepLearn")}
-              >
-                Memory Boosters
-              </button>
-            </nav>
-
-            {activeTab === "concepts" ? (
-              <section className="student-section-detail-concepts">
+            <section className="student-section-detail-concepts">
                 <div className="student-section-detail-list">
                   {flags.hasPreWarmup && (
                     <>
@@ -848,11 +771,31 @@ export const StudentSectionDetailPage = () => {
                         ))}
                     </>
                   )}
+                  <StudentDrilldownCard
+                    className="student-section-detail-row is-highlight"
+                    onClick={() => setExpandedGroup((current) => (current === "recallLab" ? null : "recallLab"))}
+                    leading={
+                      <div className="student-section-detail-index">
+                        <SectionDetailIcon type="memory" />
+                      </div>
+                    }
+                    title="Recall Lab"
+                    subtitle="Assessments, memory boosters & more"
+                    trailing={<SectionDetailIcon type={expandedGroup === "recallLab" ? "chevron-down" : undefined} />}
+                  />
+                  {expandedGroup === "recallLab" &&
+                    RECALL_LAB_ITEMS.filter((recallItem) => !recallItem.flag || flags[recallItem.flag]).map(
+                      (recallItem) => (
+                        <StudentDrilldownCard
+                          key={recallItem.key}
+                          className="student-section-detail-row is-highlight is-subitem"
+                          onClick={() => navigate(`${basePath}/${recallItem.path}`)}
+                          title={recallItem.label}
+                        />
+                      )
+                    )}
                 </div>
               </section>
-            ) : (
-              deepLearnActions
-            )}
           </>
         )}
 

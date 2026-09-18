@@ -19,6 +19,7 @@ import {
   submitAssessmentAnswer,
 } from "../api/client";
 import { decodeSelectionChapterId } from "./studentChapterData";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
@@ -255,7 +256,7 @@ export const StudentAssessmentPage = () => {
                 ? "This chapter has no practice questions yet."
                 : isConceptMode
                 ? "This micro learning unit has no practice questions yet."
-                : "This section has no assessment yet.")
+                : `This ${HIERARCHY_LABELS.lesson.toLowerCase()} has no assessment yet.`)
           );
         }
       })
@@ -624,10 +625,10 @@ export const StudentAssessmentPage = () => {
       ? `${assessment.topicName} Practice`
       : "Micro Learning Unit Practice"
     : assessment?.sectionNumber
-    ? `${assessment.sectionNumber} Section Assessment`
+    ? `${assessment.sectionNumber} ${HIERARCHY_LABELS.lesson} Assessment`
     : assessment?.topicName
     ? `${assessment.topicName} Assessment`
-    : "Section Assessment";
+    : `${HIERARCHY_LABELS.lesson} Assessment`;
 
   // Breadcrumb is persistent chrome across every phase now (previously it
   // only showed on the instructions screen, which meant it vanished the
@@ -685,7 +686,7 @@ export const StudentAssessmentPage = () => {
             <button
               type="button"
               className="student-chapter-detail-back"
-              aria-label="Back to section"
+              aria-label={`Back to ${HIERARCHY_LABELS.lesson.toLowerCase()}`}
               onClick={() => navigate(basePath)}
             >
               <BackIcon />
@@ -702,7 +703,7 @@ export const StudentAssessmentPage = () => {
           <p className="student-empty-state">
             {isConceptMode
               ? "No practice questions have been generated for this micro learning unit yet."
-              : "No assessment items have been generated for this section yet."}
+              : `No assessment items have been generated for this ${HIERARCHY_LABELS.lesson.toLowerCase()} yet.`}
           </p>
         ) : phase === "instructions" ? (
           <section className="student-assessment-instructions">

@@ -5,6 +5,7 @@ import { StudentNotificationPanel } from "../components/StudentNotificationPanel
 import { getNotifications, markNotificationsSeen } from "../api/client";
 import { selectionKey, useClassSubject } from "../context/classSubjectHooks";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 
 const defaultContinueCard = {
   eyebrow: "Continue Learning",
@@ -218,8 +219,8 @@ const FirstTimeDashboard = ({ view }) => {
         <div className="student-dashboard-continue-copy">
           <span>{continueCard.eyebrow}</span>
           <strong>{continueCard.title}</strong>
-          <p>Section: {continueCard.section}</p>
-          <p>Micro Learning Unit: {continueCard.concept}</p>
+          <p>{`${HIERARCHY_LABELS.lesson}: ${continueCard.section}`}</p>
+          <p>{`${HIERARCHY_LABELS.microLearningUnit}: ${continueCard.concept}`}</p>
         </div>
         <div className="student-dashboard-continue-actions">
           <button
@@ -277,8 +278,8 @@ const ReturningDashboard = ({ view }) => {
         <div className="student-dashboard-continue-copy">
           <span>{continueCard.eyebrow}</span>
           <strong>{continueCard.title}</strong>
-          <p>Section: {continueCard.section}</p>
-          <p>Micro Learning Unit: {continueCard.concept}</p>
+          <p>{`${HIERARCHY_LABELS.lesson}: ${continueCard.section}`}</p>
+          <p>{`${HIERARCHY_LABELS.microLearningUnit}: ${continueCard.concept}`}</p>
         </div>
 
         <div className="student-dashboard-continue-actions">

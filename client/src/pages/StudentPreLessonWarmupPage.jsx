@@ -8,6 +8,7 @@ import { StudentHookCaption } from "../components/StudentHookCaption";
 import { StudentBreadcrumb } from "../components/StudentBreadcrumb";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { startPreWarmupPhase, submitPreWarmupAnswer, getStudentSections } from "../api/client";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 import { getSubsectionMeta } from "../content/preWarmupSubsections";
 import { decodeSelectionChapterId } from "./studentChapterData";
 
@@ -89,7 +90,7 @@ export const StudentPreLessonWarmupPage = () => {
         setPhase("item");
       })
       .catch((fetchError) => {
-        if (!cancelled) setError(fetchError.message || "This section has no warm-up content yet.");
+        if (!cancelled) setError(fetchError.message || `This ${HIERARCHY_LABELS.lesson.toLowerCase()} has no warm-up content yet.`);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -241,7 +242,7 @@ export const StudentPreLessonWarmupPage = () => {
               className="student-media-viewer--contain"
             />
           ) : (
-            <p className="student-empty-state">No image has been generated for this section yet.</p>
+            <p className="student-empty-state">{`No image has been generated for this ${HIERARCHY_LABELS.lesson.toLowerCase()} yet.`}</p>
           )}
           <button
             type="button"
@@ -371,7 +372,7 @@ export const StudentPreLessonWarmupPage = () => {
             <button
               type="button"
               className="student-chapter-detail-back"
-              aria-label="Back to section"
+              aria-label={`Back to ${HIERARCHY_LABELS.lesson.toLowerCase()}`}
               onClick={() => navigate(basePath)}
             >
               <BackIcon />
@@ -422,7 +423,7 @@ export const StudentPreLessonWarmupPage = () => {
             )}
             <p>
               {wholePhaseCompleted
-                ? "Nice work! You've finished the whole Pre-Lesson Warm-Up — you're ready to start this section."
+                ? `Nice work! You've finished the whole Pre-Lesson Warm-Up — you're ready to start this ${HIERARCHY_LABELS.lesson.toLowerCase()}.`
                 : `Nice work — you finished "${subsectionMeta?.title}".`}
             </p>
             <button type="button" className="student-concept-practice-next" onClick={() => navigate(basePath)}>

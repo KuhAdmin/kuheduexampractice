@@ -143,7 +143,7 @@ const buildPhaseItems = (payload, phase) => {
   return items;
 };
 
-const gradeScoredItem = async (item, studentAnswer) => {
+export const gradeScoredItem = async (item, studentAnswer) => {
   const { format } = item;
 
   if (format === "reorder") {
@@ -583,7 +583,7 @@ const shuffleInPlace = (array) => {
   return array;
 };
 
-const collectChapterHotsItems = async ({ board, studentClass, subject, chapterNumber, userId }) => {
+export const collectChapterHotsItems = async ({ board, studentClass, subject, chapterNumber, userId }) => {
   const { sections } = await listSectionsForChapter({ board, studentClass, subject, chapterNumber, userId });
   const sourceSectionIds = sections.map((section) => section.sourceSectionId).filter(Boolean);
 

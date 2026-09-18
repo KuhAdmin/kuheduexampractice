@@ -91,7 +91,7 @@ export const StudentConceptPracticeCapture = ({ assessmentUnitId }) => {
           className="student-concept-practice-capture-cta"
           onClick={() => set({ stage: "question-camera" })}
         >
-          Capture Question
+          Snap and AI Check
         </button>
       )}
 
@@ -174,7 +174,7 @@ export const StudentConceptPracticeCapture = ({ assessmentUnitId }) => {
               Retake
             </button>
             <button type="button" className="primary-button" onClick={() => set({ stage: "answer-camera" })}>
-              Capture Answer
+              Snap and AI Check
             </button>
           </div>
         </div>

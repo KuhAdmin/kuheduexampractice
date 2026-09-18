@@ -92,6 +92,10 @@ export const StudentOpenResponsePanel = ({
   voiceRef,
   onVoiceStageChange,
   onVoiceCountdownChange,
+  // Passed through to StudentMultiPageAnswerInput when captureMode="photo"
+  // (default false everywhere else) -- hides the editable text box for a
+  // photo-only answer flow; see that component for details.
+  hideTextInput = false,
 }) => {
   const [responseText, setResponseText] = useState("");
   const [sourcePageImages, setSourcePageImages] = useState([]);
@@ -241,6 +245,7 @@ export const StudentOpenResponsePanel = ({
           }}
           resetKey={responseKey}
           placeholder={placeholder}
+          hideTextInput={hideTextInput}
         />
       )}
 

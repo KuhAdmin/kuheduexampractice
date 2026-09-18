@@ -12,6 +12,7 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { startPreWarmupPhase, submitPatternExercise, submitPreWarmupAnswer, getStudentSections } from "../api/client";
 import { getSubsectionMeta } from "../content/preWarmupSubsections";
 import { decodeSelectionChapterId } from "./studentChapterData";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
@@ -156,7 +157,7 @@ export const StudentPostLessonPage = () => {
         setPhase("item");
       })
       .catch((fetchError) => {
-        if (!cancelled) setError(fetchError.message || "This section has no post-lesson content yet.");
+        if (!cancelled) setError(fetchError.message || `This ${HIERARCHY_LABELS.lesson.toLowerCase()} has no post-lesson content yet.`);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -584,7 +585,7 @@ export const StudentPostLessonPage = () => {
             <button
               type="button"
               className="student-chapter-detail-back"
-              aria-label="Back to section"
+              aria-label={`Back to ${HIERARCHY_LABELS.lesson.toLowerCase()}`}
               onClick={() => navigate(basePath)}
             >
               <BackIcon />

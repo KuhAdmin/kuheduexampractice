@@ -30,6 +30,7 @@ import {
   getStudentVisualLearningItems,
   getChallengeResponseHandler,
   getTextbookActivityResponseHandler,
+  postObjectHuntCheck,
   submitChallengeResponseHandler,
   submitMicroActivityResponseHandler,
   submitTextbookActivityResponseHandler,
@@ -61,6 +62,16 @@ import {
   startPreWarmup,
 } from "../controllers/studentPreWarmupController.js";
 import { answerHotsItem, getChapterHotsPreviewHandler, startChapterHots } from "../controllers/hotsController.js";
+import {
+  answerAttemptItem as answerTestLabAttemptItem,
+  setItemReviewFlag as setTestLabItemReviewFlagHandler,
+  finishAttempt as finishTestLabAttempt,
+  getAttempt as getTestLabAttemptHandler,
+  getAttemptResult as getTestLabAttemptResultHandler,
+  getFilterOptions as getTestLabFilterOptionsHandler,
+  getRecentAttempts as getRecentTestLabAttempts,
+  startAttempt as startTestLabAttemptHandler,
+} from "../controllers/testLabController.js";
 import { postHandwrittenNoteOcr } from "../controllers/ocrController.js";
 import {
   getTutorUsageHandler,
@@ -175,6 +186,7 @@ router.get("/textbook-activities/:activityKey/response", getTextbookActivityResp
 router.post("/textbook-activities/:activityKey/respond", submitTextbookActivityResponseHandler);
 router.get("/challenges/:responseKey/response", getChallengeResponseHandler);
 router.post("/challenges/:responseKey/respond", submitChallengeResponseHandler);
+router.post("/concepts/:assessmentUnitId/challenges/object-hunt/check", postObjectHuntCheck);
 router.get("/sections/:sourceSectionId/diagrams", getStudentDiagrams);
 router.get("/sections/:sourceSectionId/visual-learning", getStudentVisualLearningItems);
 router.get("/diagrams/:diagramId/media", getStudentDiagramMedia);
@@ -225,6 +237,15 @@ router.get("/pre-warmup-attempts/:attemptId/result", getPreWarmupResultHandler);
 router.get("/chapters/:chapterNumber/hots/preview", getChapterHotsPreviewHandler);
 router.post("/chapters/:chapterNumber/hots/start", startChapterHots);
 router.post("/hots-attempts/:attemptId/items/:displayOrder/answer", answerHotsItem);
+
+router.get("/test-lab/filters", getTestLabFilterOptionsHandler);
+router.get("/test-lab/attempts/recent", getRecentTestLabAttempts);
+router.post("/test-lab/attempts", startTestLabAttemptHandler);
+router.get("/test-lab/attempts/:attemptId", getTestLabAttemptHandler);
+router.post("/test-lab/attempts/:attemptId/items/:displayOrder/answer", answerTestLabAttemptItem);
+router.patch("/test-lab/attempts/:attemptId/items/:displayOrder/review", setTestLabItemReviewFlagHandler);
+router.post("/test-lab/attempts/:attemptId/submit", finishTestLabAttempt);
+router.get("/test-lab/attempts/:attemptId/result", getTestLabAttemptResultHandler);
 
 router.post("/ocr/handwritten-note", postHandwrittenNoteOcr);
 

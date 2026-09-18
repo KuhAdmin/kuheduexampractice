@@ -87,6 +87,14 @@ export const StudentMultiPageAnswerInput = ({
   statusClassName = "",
   placeholder = "Type your answer, or capture a photo of your handwritten answer above",
   subjectCode,
+  // When true, hides the editable text box (and per-page reorder/remove
+  // controls, since there's nothing visible left to manage) entirely --
+  // just "Snap and AI Check" stays, and OCR'd text still populates the
+  // answer via onChange as normal, the student just never sees/edits it
+  // directly.
+  // For callers (Challenges' Case Study today) that want a photo-only
+  // answer flow, same idea as Viva's voice-only design elsewhere in the app.
+  hideTextInput = false,
 }) => {
   const idCounterRef = useRef(0);
   const makeId = () => `page-${idCounterRef.current++}`;
@@ -184,7 +192,7 @@ export const StudentMultiPageAnswerInput = ({
         onClick={() => setCameraOpen(true)}
       >
         <CameraIcon />
-        <span>{ocrLoading ? "Reading your photo..." : "Capture Photo"}</span>
+        <span>{ocrLoading ? "Reading your photo..." : "Snap and AI Check"}</span>
       </button>
       {!canAddPage && (
         <p className="student-ocr-hint">
@@ -202,55 +210,57 @@ export const StudentMultiPageAnswerInput = ({
         />
       )}
 
-      <ol className="student-ocr-page-list">
-        {pages.map((page, index) => (
-          <li key={page.id} className="student-ocr-page-row">
-            <div className="student-ocr-page-row-head">
-              <span className="student-concept-practice-badge">{index + 1}</span>
-              <div className="student-ocr-page-controls">
-                <button
-                  type="button"
-                  className="student-ordering-move"
-                  aria-label={`Move page ${index + 1} up`}
-                  disabled={index === 0}
-                  onClick={() => movePage(page.id, -1)}
-                >
-                  <MoveIcon direction="up" />
-                </button>
-                <button
-                  type="button"
-                  className="student-ordering-move"
-                  aria-label={`Move page ${index + 1} down`}
-                  disabled={index === pages.length - 1}
-                  onClick={() => movePage(page.id, 1)}
-                >
-                  <MoveIcon direction="down" />
-                </button>
-                <button
-                  type="button"
-                  className="student-ordering-move is-danger"
-                  aria-label={`Remove page ${index + 1}`}
-                  disabled={pages.length === 1}
-                  onClick={() => removePage(page.id)}
-                >
-                  <RemoveIcon />
-                </button>
+      {!hideTextInput && (
+        <ol className="student-ocr-page-list">
+          {pages.map((page, index) => (
+            <li key={page.id} className="student-ocr-page-row">
+              <div className="student-ocr-page-row-head">
+                <span className="student-concept-practice-badge">{index + 1}</span>
+                <div className="student-ocr-page-controls">
+                  <button
+                    type="button"
+                    className="student-ordering-move"
+                    aria-label={`Move page ${index + 1} up`}
+                    disabled={index === 0}
+                    onClick={() => movePage(page.id, -1)}
+                  >
+                    <MoveIcon direction="up" />
+                  </button>
+                  <button
+                    type="button"
+                    className="student-ordering-move"
+                    aria-label={`Move page ${index + 1} down`}
+                    disabled={index === pages.length - 1}
+                    onClick={() => movePage(page.id, 1)}
+                  >
+                    <MoveIcon direction="down" />
+                  </button>
+                  <button
+                    type="button"
+                    className="student-ordering-move is-danger"
+                    aria-label={`Remove page ${index + 1}`}
+                    disabled={pages.length === 1}
+                    onClick={() => removePage(page.id)}
+                  >
+                    <RemoveIcon />
+                  </button>
+                </div>
               </div>
-            </div>
-            <EquationDisplay
-              value={page.text}
-              onChange={(next) => updatePageText(page.id, next)}
-              placeholder={pages.length === 1 ? placeholder : `Page ${index + 1}`}
-            />
-            {ocrAppliedId === page.id && (
-              <p className="student-ocr-hint">
-                We've filled this in from your photo — please check it reads correctly and fix anything before
-                submitting.
-              </p>
-            )}
-          </li>
-        ))}
-      </ol>
+              <EquationDisplay
+                value={page.text}
+                onChange={(next) => updatePageText(page.id, next)}
+                placeholder={pages.length === 1 ? placeholder : `Page ${index + 1}`}
+              />
+              {ocrAppliedId === page.id && (
+                <p className="student-ocr-hint">
+                  We've filled this in from your photo — please check it reads correctly and fix anything before
+                  submitting.
+                </p>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
 
       {ocrError && <p className="error-text">{ocrError}</p>}
     </div>

@@ -18,6 +18,7 @@ import {
   getStudentConceptSectionMedia,
   getStudentDiagramMedia,
   getStudentRevision,
+  getStudentSectionOverview,
   getStudentSections,
   getStudentTextbookContent,
   getStudentVisualLearningItems,
@@ -26,6 +27,7 @@ import {
   getExercisesActivitiesTabVisible,
 } from "../api/client";
 import { decodeSelectionChapterId } from "./studentChapterData";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 
 const ConceptLearningIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -323,12 +325,16 @@ const ConceptLearningIcon = ({ type, className = "" }) => {
   );
 };
 
-const TABS = ["Learn", "Explore", "Exercises/Activities", "Practice", "Revision", "Smart Tutor", "Challenges"];
+// "Revision" is hidden from students -- removed from this list rather than
+// the underlying renderRevisionMode/MOBILE_TAB_ICON entry, so it disappears
+// from both the desktop tab bar and the mobile accordion without touching
+// any authored revision content.
+const TABS = ["Snapshot", "Explore", "Exercises/Activities", "Practice", "Smart Tutor", "Challenges"];
 
 // Mobile accordion only (see .student-concept-accordion-header below) --
 // desktop keeps its plain underline tabs, no icons there.
 const MOBILE_TAB_ICON = {
-  Learn: "book",
+  Snapshot: "book",
   Explore: "atom",
   "Exercises/Activities": "list",
   Practice: "quiz",
@@ -345,8 +351,8 @@ const MOBILE_TAB_ICON = {
 // Compare/Story/Simple/Real Life read card.teachingNotes (the same
 // multi-item, per-concept source LEARN_MODE_DISPLAY's pages use) instead of
 // the single synthesized card.analogy/story/realWorldConnection strings --
-// these four used to be their own Learn-tab pages; moved here so Learn only
-// keeps "Learn"/"Understand", with the fuller (possibly multi-slide, see
+// these four used to be their own Learn-tab pages; moved here so the
+// Snapshot tab only keeps "Snapshot"/"Story Snapshot", with the fuller (possibly multi-slide, see
 // getTeachingSlidesForMode) content intact rather than the one-line summary.
 // "Simple" (eli5) has no equivalent memory_hook_media section key, so it
 // never attempts a media fetch (see hasMediaSlot).
@@ -371,31 +377,31 @@ const resolveMediaSectionKey = (sectionKey) => MEDIA_SECTION_KEY_ALIASES[section
 const EXPLORE_STEPS = [
   {
     key: "simple",
-    label: "Simple",
-    subtitle: "Easy explanation",
+    label: "Simply Explained",
+    subtitle: "Get the idea clearly",
     teachingMode: "eli5",
     hasMediaSlot: false,
     hasContent: (c) => Boolean(c.teachingNotes?.some((note) => note.mode === "eli5")),
   },
   {
     key: "story",
-    label: "Story",
+    label: "Through a Story",
     subtitle: "Learn through storytelling",
     teachingMode: "storymode",
     hasContent: (c) => Boolean(c.teachingNotes?.some((note) => note.mode === "storymode")),
   },
   {
     key: "deepLearning",
-    label: "Deep Dive",
-    subtitle: "Common pitfalls and the reasoning behind them",
+    label: "Think Deeper",
+    subtitle: "Explore pitfalls and the reasoning behind them",
     notesField: "deepLearningNotes",
     hasMediaSlot: false,
     hasContent: (c) => Boolean(c.deepLearningNotes?.length),
   },
   {
     key: "analogy",
-    label: "Compare",
-    subtitle: "Learn using familiar comparisons",
+    label: "Make Connections",
+    subtitle: "Understand through familiar comparisons",
     teachingMode: "analogy",
     hasContent: (c) => Boolean(c.teachingNotes?.some((note) => note.mode === "analogy")),
   },
@@ -524,8 +530,8 @@ const ExploreSection = ({ sectionKey, title, mediaType, isExpanded, onToggle, ch
 // content has no modes at all, so it never produces any pages here -- see
 // FALLBACK handling in buildLearnContent.
 const LEARN_MODE_DISPLAY = [
-  { mode: "teachme", label: "Learn", purpose: "Structured learning" },
-  { mode: "explain", label: "Understand", purpose: "Detailed classroom explanation" },
+  { mode: "teachme", label: "Snapshot", purpose: "Structured learning" },
+  { mode: "explain", label: "Story Snapshot", purpose: "See the story at a glance" },
 ];
 
 const noteToSlide = (note, card) => ({
@@ -659,7 +665,7 @@ export const StudentConceptLearningPage = () => {
   // decoupled from activeTab (which must always hold a real tab so desktop's
   // tab bar/content-selection keeps working). Starts at null so landing on
   // this page shows every section's header at a glance -- previously this
-  // just read `tab === activeTab`, which meant TABS[0] ("Learn") was always
+  // just read `tab === activeTab`, which meant TABS[0] ("Snapshot") was always
   // pre-expanded, pushing every other option below the fold on a phone.
   const [mobileExpandedTab, setMobileExpandedTab] = useState(null);
   // Moderator/admin toggle (AdminContentEditorPage.jsx) -- defaults to
@@ -677,6 +683,10 @@ export const StudentConceptLearningPage = () => {
   const [activeLearnMode, setActiveLearnMode] = useState(null);
   const [expandedSections, setExpandedSections] = useState(() => new Set());
   const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", sectionNumber: "", topicName: "" });
+  // Ordered assessmentUnitIds for the current section, so the breadcrumb can
+  // show this micro learning unit's position ("MLU x/y") instead of its
+  // (often long) name -- see the section-overview fetch below.
+  const [sectionUnitIds, setSectionUnitIds] = useState([]);
   // Mobile header's compact "C11·BIO·4.1" prefix ahead of the concept name.
   // selectionOverride (present when reached via the class/subject switcher's
   // encoded chapterId, see decodeSelectionChapterId above) wins over the
@@ -693,19 +703,21 @@ export const StudentConceptLearningPage = () => {
   const headerPrefix = [headerClassLabel ? `C${headerClassLabel}` : "", headerSubjectLabel, headerSectionLabel]
     .filter(Boolean)
     .join("·");
+  // Desktop only (see goToExploreStep) -- lets picking a new Explore step from
+  // the rail scroll the main content column back to its own top, instead of
+  // leaving the student wherever they'd scrolled to reading the previous step.
+  const desktopMainContentRef = useRef(null);
   const [activeExploreStepKey, setActiveExploreStepKey] = useState(null);
+  // Shows the back-to-top CTA once the page has scrolled away from true
+  // top -- including right after goToExploreStep's own scroll, which only
+  // reaches the top of the main content column (below the hero), not y=0.
+  const [scrolledFromTop, setScrolledFromTop] = useState(false);
   const [visitedExploreSteps, setVisitedExploreSteps] = useState(() => new Set());
   // Only meaningful for teachingMode-driven steps (Compare/Story/Simple/Real
   // Life), which -- like the Learn tab's own pages -- can carry more than one
   // item per concept. Reset whenever the active step changes so paging
   // through Compare's slides doesn't leave Story starting mid-sequence.
   const [activeExploreSlideIndex, setActiveExploreSlideIndex] = useState(0);
-  // Visual/Read toggle for any Explore step with a media slot -- side-by-side
-  // columns looked odd once the "Read" side (Compare/Story/etc's fuller
-  // teaching content) grew much longer than a placeholder image box. Defaults
-  // to "read" since most concepts have no uploaded visual yet, so a first-time
-  // visitor lands on real content instead of a "Visual coming soon" tab.
-  const [activeStepView, setActiveStepView] = useState("read");
   // Memory-hook media (base64 image/video, up to ~20MB per section) is
   // deliberately NOT part of the concept card payload -- it's fetched one
   // section at a time, only for the section actually being viewed, keyed
@@ -810,6 +822,26 @@ export const StudentConceptLearningPage = () => {
     };
   }, [chapterNumber, sourceSectionId]);
 
+  // Ordered sibling unit ids for the "MLU x/y" breadcrumb position -- same
+  // section-scoped fetch-once pattern as breadcrumbMeta above, and the same
+  // endpoint StudentSectionDetailPage already uses for its own concept list.
+  useEffect(() => {
+    let cancelled = false;
+
+    getStudentSectionOverview(sourceSectionId)
+      .then((result) => {
+        if (cancelled) return;
+        setSectionUnitIds((result?.concepts || []).map((unit) => unit.assessmentUnitId));
+      })
+      .catch(() => {
+        if (!cancelled) setSectionUnitIds([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceSectionId]);
+
   // Same section-scoped fetch-once pattern as breadcrumbMeta above -- keyed
   // on sourceSectionId (not assessmentUnitId), so navigating between
   // concepts within one section doesn't re-fetch this.
@@ -913,7 +945,7 @@ export const StudentConceptLearningPage = () => {
   const totalSlides = slides.length;
   const activeSlide = slides[activeSlideIndex] || slides[0];
 
-  // Reset to the first available mode page (teachme/"Learn" when present,
+  // Reset to the first available mode page (teachme/"Snapshot" when present,
   // per LEARN_MODE_DISPLAY's order) and the first slide whenever the concept
   // changes, so switching concepts never leaves a stale mode/slide selected
   // from the previous one.
@@ -943,18 +975,42 @@ export const StudentConceptLearningPage = () => {
     setActiveExploreStepKey(firstStepKey);
     setVisitedExploreSteps(new Set(firstStepKey ? [firstStepKey] : []));
     setActiveExploreSlideIndex(0);
-    setActiveStepView("read");
     if (firstStepKey && exploreSteps[0]?.hasMediaSlot !== false) {
       ensureSectionMedia(firstStepKey);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assessmentUnitId, exploreSteps.length]);
 
+  useEffect(() => {
+    if (!isDesktop) return undefined;
+    const handleScroll = () => setScrolledFromTop(window.scrollY > 0);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isDesktop]);
+
+  // Set only by goToExploreStep (never by the initial-selection effect above,
+  // so landing on the tab never auto-scrolls) and consumed by the effect
+  // below. Actually performing the scroll from an effect -- instead of
+  // synchronously in goToExploreStep, right after the setState calls -- makes
+  // it run after React has committed the new step's DOM, not before: calling
+  // scrollIntoView synchronously in the click handler reads the OLD step's
+  // still-on-screen layout (React 18 doesn't flush a render until the
+  // handler returns), which previously produced an incorrect scroll target.
+  const pendingExploreScrollRef = useRef(false);
+
+  useEffect(() => {
+    if (isDesktop && pendingExploreScrollRef.current) {
+      pendingExploreScrollRef.current = false;
+      desktopMainContentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [activeExploreStepKey, isDesktop]);
+
   const goToExploreStep = (key) => {
     setActiveExploreStepKey(key);
     setVisitedExploreSteps((current) => new Set(current).add(key));
     setActiveExploreSlideIndex(0);
-    setActiveStepView("read");
+    pendingExploreScrollRef.current = true;
     if (exploreSteps.find((step) => step.key === key)?.hasMediaSlot !== false) {
       ensureSectionMedia(key);
     }
@@ -964,7 +1020,7 @@ export const StudentConceptLearningPage = () => {
 
   const renderLearnMode = () => (
     <>
-      {learnContent.modePages.length > 0 && (
+      {learnContent.modePages.length > 1 && (
         <div className="student-learn-mode-tabs" role="tablist" aria-label="Learning style">
           {learnContent.modePages.map((page) => (
             <button
@@ -979,6 +1035,17 @@ export const StudentConceptLearningPage = () => {
               {page.purpose && <span className="student-learn-mode-tab-subtitle">{page.purpose}</span>}
             </button>
           ))}
+        </div>
+      )}
+
+      {activeModePage?.mode === "explain" && (
+        <div className="student-story-snapshot-header">
+          <div className="student-story-snapshot-title">
+            <ConceptLearningIcon type="book" />
+            <span>{activeModePage.label}</span>
+          </div>
+          {activeModePage.purpose && <p className="student-story-snapshot-subtitle">{activeModePage.purpose}</p>}
+          <p className="student-story-snapshot-tags">Characters • Events • Big Idea</p>
         </div>
       )}
 
@@ -1088,7 +1155,7 @@ export const StudentConceptLearningPage = () => {
         {visualLearningItems === null ? (
           <p>Loading visuals...</p>
         ) : categoryItems.length === 0 ? (
-          <p>{`No ${activeCategoryLabel.toLowerCase()} recorded for this section yet.`}</p>
+          <p>{`No ${activeCategoryLabel.toLowerCase()} recorded for this ${HIERARCHY_LABELS.lesson.toLowerCase()} yet.`}</p>
         ) : (
           <div className="student-concept-visual-learning-grid">
             {categoryItems.map((item) => {
@@ -1134,31 +1201,6 @@ export const StudentConceptLearningPage = () => {
     );
   };
 
-  // Visual/Read toggle for a step with a media slot -- replaces the old
-  // fixed two-column layout (see activeStepView above for why).
-  const renderStepViewTabs = () => (
-    <div className="student-concept-step-view-tabs" role="tablist" aria-label="View">
-      <button
-        type="button"
-        role="tab"
-        aria-selected={activeStepView === "visual"}
-        className={`student-concept-step-view-tab ${activeStepView === "visual" ? "is-active" : ""}`}
-        onClick={() => setActiveStepView("visual")}
-      >
-        Visual
-      </button>
-      <button
-        type="button"
-        role="tab"
-        aria-selected={activeStepView === "read"}
-        className={`student-concept-step-view-tab ${activeStepView === "read" ? "is-active" : ""}`}
-        onClick={() => setActiveStepView("read")}
-      >
-        Read
-      </button>
-    </div>
-  );
-
   // Condensed slide pager for a step with more than one slide -- lives in
   // the step heading (top-right) instead of at the bottom of the step copy,
   // so it reads as "paging this step's content" rather than competing with
@@ -1172,9 +1214,6 @@ export const StudentConceptLearningPage = () => {
 
     const slides = getStepSlides(card, step);
     if (slides.length <= 1) return null;
-
-    const showVisual = step.hasMediaSlot !== false && activeStepView === "visual";
-    if (showVisual) return null;
 
     return (
       <div className="student-concept-explore-slide-nav is-condensed">
@@ -1203,10 +1242,11 @@ export const StudentConceptLearningPage = () => {
     );
   };
 
-  // Desktop/tablet step view: media (when this step has a slot for it) or
-  // text, switched by renderStepViewTabs instead of shown side by side --
-  // driven by the same real card fields the mobile accordion
-  // (renderExploreMode below) already reads, no new data.
+  // Desktop/tablet step view: media (when this step has a slot for it) stacked
+  // above the read content, always both shown together -- no toggle. Mirrors
+  // the mobile accordion (renderExploreMode below), which has always rendered
+  // this way; desktop used to gate media behind a Visual/Read switch students
+  // routinely missed entirely, so it's brought in line with mobile here.
   const renderExploreStepContent = () => {
     const step = exploreSteps[activeExploreStepIndex];
     if (!step) return null;
@@ -1217,12 +1257,9 @@ export const StudentConceptLearningPage = () => {
       const media = step.hasMediaSlot === false ? null : sectionMediaByKey[resolveMediaSectionKey(step.key)];
       const speechText = [activeStepSlide?.heading, ...(activeStepSlide?.body || [])].filter(Boolean).join(". ");
 
-      const showVisual = step.hasMediaSlot !== false && activeStepView === "visual";
-
       return (
         <div className="student-concept-step-panel">
-          {step.hasMediaSlot !== false && renderStepViewTabs()}
-          {showVisual ? (
+          {step.hasMediaSlot !== false && (
             <div className="student-concept-step-media is-full-width">
               {media === undefined ? (
                 <div className="student-memory-booster-media-placeholder">
@@ -1237,20 +1274,18 @@ export const StudentConceptLearningPage = () => {
                 />
               ) : null}
             </div>
-          ) : (
-            <div className="student-concept-step-copy is-full-width">
-              <h3>{step.subtitle}</h3>
-              {(activeStepSlide?.body || []).map((paragraph) => (
-                <div key={paragraph}>
-                  <p>{paragraph}</p>
-                  <MathPreview text={paragraph} />
-                </div>
-              ))}
-              {activeStepSlide?.details?.length > 0 && (
-                <StudentDetailCard className="student-concept-learning-detail-card" details={activeStepSlide.details} />
-              )}
-            </div>
           )}
+          <div className="student-concept-step-copy is-full-width">
+            {(activeStepSlide?.body || []).map((paragraph) => (
+              <div key={paragraph}>
+                <p>{paragraph}</p>
+                <MathPreview text={paragraph} />
+              </div>
+            ))}
+            {activeStepSlide?.details?.length > 0 && (
+              <StudentDetailCard className="student-concept-learning-detail-card" details={activeStepSlide.details} />
+            )}
+          </div>
         </div>
       );
     }
@@ -1332,7 +1367,6 @@ export const StudentConceptLearningPage = () => {
     if (step.key === "microActivity") {
       return (
         <div className="student-concept-step-copy is-full-width">
-          <h3>{step.subtitle}</h3>
           {media && (
             <StudentMediaViewer
               mediaType={media.mediaType}
@@ -1347,29 +1381,24 @@ export const StudentConceptLearningPage = () => {
 
     return (
       <div className="student-concept-step-panel">
-        {renderStepViewTabs()}
-        {activeStepView === "visual" ? (
-          <div className="student-concept-step-media is-full-width">
-            {media === undefined ? (
-              <div className="student-memory-booster-media-placeholder">
-                <span>Loading visual...</span>
-              </div>
-            ) : media ? (
-              <StudentMediaViewer
-                mediaType={media.mediaType}
-                src={media.mediaData}
-                alt={`${step.label} illustration`}
-                speechText={text}
-              />
-            ) : null}
-          </div>
-        ) : (
-          <div className="student-concept-step-copy is-full-width">
-            <h3>{step.subtitle}</h3>
-            <p>{text}</p>
-            <MathPreview text={text} />
-          </div>
-        )}
+        <div className="student-concept-step-media is-full-width">
+          {media === undefined ? (
+            <div className="student-memory-booster-media-placeholder">
+              <span>Loading visual...</span>
+            </div>
+          ) : media ? (
+            <StudentMediaViewer
+              mediaType={media.mediaType}
+              src={media.mediaData}
+              alt={`${step.label} illustration`}
+              speechText={text}
+            />
+          ) : null}
+        </div>
+        <div className="student-concept-step-copy is-full-width">
+          <p>{text}</p>
+          <MathPreview text={text} />
+        </div>
       </div>
     );
   };
@@ -1819,7 +1848,7 @@ export const StudentConceptLearningPage = () => {
         <section className="student-concept-learning-card">
           <div className="student-concept-learning-copy">
             <h2>Exercises/Activities</h2>
-            <p>No exercises or activities have been added for this section yet.</p>
+            <p>{`No exercises or activities have been added for this ${HIERARCHY_LABELS.lesson.toLowerCase()} yet.`}</p>
           </div>
         </section>
       );
@@ -1874,7 +1903,7 @@ export const StudentConceptLearningPage = () => {
   // whichever tab is currently open, since Practice never actually becomes
   // activeTab (selectTab navigates away instead of opening it).
   const renderTabContent = (tab) => {
-    if (tab === "Learn") return renderLearnMode();
+    if (tab === "Snapshot") return renderLearnMode();
     if (tab === "Explore") return renderExploreMode();
     if (tab === "Smart Tutor") {
       return (
@@ -1897,6 +1926,10 @@ export const StudentConceptLearningPage = () => {
   // constant itself so activeTab/mobileExpandedTab's default (TABS[0]) and
   // MOBILE_TAB_ICON lookups stay untouched regardless of this setting.
   const visibleTabs = TABS.filter((tab) => tab !== "Exercises/Activities" || exercisesActivitiesTabVisible);
+  // 1-indexed position of this unit within its section's ordered list, for
+  // the breadcrumb's "MLU x/y" crumb -- 0 (falsy) until sectionUnitIds has
+  // loaded or if this id isn't found in it (indexOf returns -1).
+  const unitPosition = sectionUnitIds.indexOf(assessmentUnitId) + 1;
 
   // Desktop/tablet only: breadcrumb + hero card + tab bar as persistent
   // chrome, matching the reference design's Notion/Duolingo-style layout.
@@ -1927,7 +1960,7 @@ export const StudentConceptLearningPage = () => {
             </button>
             <ConceptLearningIcon type="chevron-right" />
             <span className="is-current">
-              {card?.primaryConcept ? `Micro Learning Unit - ${card.primaryConcept}` : "Micro Learning Unit"}
+              {unitPosition > 0 ? `MLU ${unitPosition}/${sectionUnitIds.length}` : "MLU"}
             </span>
           </nav>
 
@@ -1936,7 +1969,10 @@ export const StudentConceptLearningPage = () => {
               <ConceptLearningIcon type="book" />
             </div>
             <div className="student-concept-hero-copy">
-              <h1>{card?.primaryConcept || "Micro Learning Unit"}</h1>
+              <h1>
+                {unitPosition > 0 ? `MLU ${unitPosition} - ` : ""}
+                {card?.primaryConcept || "Micro Learning Unit"}
+              </h1>
               {(card?.learningObjective || card?.contextSummary) && (
                 <p>{card.learningObjective || card.contextSummary}</p>
               )}
@@ -1967,18 +2003,26 @@ export const StudentConceptLearningPage = () => {
                 activeTab === "Explore" && exploreSteps.length > 0 ? "has-rail" : ""
               }`}
             >
-              <div className="student-concept-desktop-main">
-                {activeTab === "Learn" ? (
+              <div className="student-concept-desktop-main" ref={desktopMainContentRef}>
+                {activeTab === "Explore" && scrolledFromTop && (
+                  <button
+                    type="button"
+                    className="student-concept-back-to-top"
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  >
+                    <ConceptLearningIcon type="chevron-down" className="student-concept-back-to-top-icon" />
+                    Back to top
+                  </button>
+                )}
+                {activeTab === "Snapshot" ? (
                   renderLearnMode()
                 ) : activeTab === "Explore" ? (
                   exploreSteps.length > 0 ? (
-                    <section className="student-concept-learning-card student-concept-step-card">
-                      <div className="student-concept-step-heading">
-                        <span className="student-concept-step-index">
-                          {activeExploreStepIndex + 1}. {exploreSteps[activeExploreStepIndex]?.label}
-                        </span>
-                        {renderExploreSlideNav()}
-                      </div>
+                    <section
+                      className="student-concept-learning-card student-concept-step-card"
+                      key={activeExploreStepKey}
+                    >
+                      <div className="student-concept-step-heading">{renderExploreSlideNav()}</div>
                       {renderExploreStepContent()}
                       <footer className="student-concept-learning-footer is-two-up">
                         <button
@@ -2016,12 +2060,16 @@ export const StudentConceptLearningPage = () => {
                     </section>
                   )
                 ) : activeTab === "Smart Tutor" ? (
-                  <>
+                  // 2x2 grid on tablet/desktop only -- this branch of the
+                  // ternary only ever renders inside the isDesktop layout;
+                  // the mobile accordion's own copy of these four components
+                  // (renderTabContent above) is untouched and stays stacked.
+                  <div className="student-smart-tutor-grid">
                     <StudentAiTutorPanel assessmentUnitId={assessmentUnitId} />
                     <StudentConceptPracticeCapture assessmentUnitId={assessmentUnitId} />
                     <StudentEinsteinMode assessmentUnitId={assessmentUnitId} />
                     <StudentVivaMode assessmentUnitId={assessmentUnitId} />
-                  </>
+                  </div>
                 ) : activeTab === "Challenges" ? (
                   <StudentChallengesTab assessmentUnitId={assessmentUnitId} />
                 ) : activeTab === "Exercises/Activities" ? (
@@ -2047,7 +2095,7 @@ export const StudentConceptLearningPage = () => {
           <button
             type="button"
             className="student-chapter-detail-back"
-            aria-label="Back to section"
+            aria-label={`Back to ${HIERARCHY_LABELS.lesson.toLowerCase()}`}
             onClick={() => navigate(`/chapters/${chapterNumber}/sections/${sourceSectionId}`)}
           >
             <ConceptLearningIcon type="back" />

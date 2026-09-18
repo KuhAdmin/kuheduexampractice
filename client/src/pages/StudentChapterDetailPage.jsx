@@ -6,6 +6,7 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { getBookQuestions, getChapterAssessmentPreview, getChapterHotsPreview, getStudentSections } from "../api/client";
 import { decodeSelectionChapterId, isSelectionChapterId } from "./studentChapterData";
 import { hasFullContentAccess } from "../roles";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 
 const ChapterDetailIcon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
@@ -219,7 +220,7 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
         if (!cancelled) setData(result);
       })
       .catch((fetchError) => {
-        if (!cancelled) setError(fetchError.message || "Failed to load chapter sections.");
+        if (!cancelled) setError(fetchError.message || `Failed to load chapter ${HIERARCHY_LABELS.lessonPlural.toLowerCase()}.`);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -323,7 +324,7 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
   // Falls back to the concept count alone (the old "(32)" label) until the
   // separate, heavier preview request resolves -- see the effect above.
   const questionBankLabel = assessmentPreview
-    ? `${assessmentPreview.sectionCount} section${assessmentPreview.sectionCount === 1 ? "" : "s"} → ` +
+    ? `${assessmentPreview.sectionCount} ${assessmentPreview.sectionCount === 1 ? HIERARCHY_LABELS.lesson.toLowerCase() : HIERARCHY_LABELS.lessonPlural.toLowerCase()} → ` +
       `${assessmentPreview.conceptCount} micro learning unit${assessmentPreview.conceptCount === 1 ? "" : "s"} → ` +
       `${assessmentPreview.questionCount} question${assessmentPreview.questionCount === 1 ? "" : "s"}`
     : `${totalConcepts}`;
@@ -368,7 +369,7 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
             </button>
             <div>
               <h1>{`Chapter ${displayChapterNumber}. ${chapterName}`}</h1>
-              <p>Browse sections and continue where you left off.</p>
+              <p>{`Browse ${HIERARCHY_LABELS.lessonPlural.toLowerCase()} and continue where you left off.`}</p>
             </div>
           </header>
 
@@ -378,7 +379,7 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
                 <span>Overall Progress</span>
                 <strong>{overallProgress}%</strong>
                 <p>
-                  {generatedSections.length}/{sections.length || 0} Sections Available
+                  {generatedSections.length}/{sections.length || 0} {HIERARCHY_LABELS.lessonPlural} Available
                 </p>
               </div>
 
@@ -389,7 +390,7 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
                       <ChapterDetailIcon type="book" />
                     </span>
                     <strong>{summary.total}</strong>
-                    <span>Sections</span>
+                    <span>{HIERARCHY_LABELS.lessonPlural}</span>
                   </div>
                   <div className="student-goals-stat-card is-in-progress">
                     <span className="student-goals-stat-icon is-in-progress">
@@ -444,11 +445,11 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
               </button>
             </div>
           ) : loading ? (
-            <p className="student-empty-state">Loading sections...</p>
+            <p className="student-empty-state">{`Loading ${HIERARCHY_LABELS.lessonPlural.toLowerCase()}...`}</p>
           ) : error ? (
             <p className="student-empty-state">{error}</p>
           ) : sections.length === 0 ? (
-            <p className="student-empty-state">No sections found for this chapter yet.</p>
+            <p className="student-empty-state">{`No ${HIERARCHY_LABELS.lessonPlural.toLowerCase()} found for this chapter yet.`}</p>
           ) : (
             <>
               <div className="student-goals-list">
@@ -551,7 +552,7 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
             <span>Overall Progress</span>
             <strong>{overallProgress}%</strong>
             <p>
-              {generatedSections.length}/{sections.length || 0} Sections Available
+              {generatedSections.length}/{sections.length || 0} {HIERARCHY_LABELS.lessonPlural} Available
             </p>
             <div className="student-chapter-detail-progress-bar" aria-hidden="true">
               <span style={{ width: `${overallProgress}%` }} />
@@ -581,11 +582,11 @@ export const StudentChapterDetailPage = ({ dashboard, user }) => {
               </button>
             </div>
           ) : loading ? (
-            <p className="student-empty-state">Loading sections...</p>
+            <p className="student-empty-state">{`Loading ${HIERARCHY_LABELS.lessonPlural.toLowerCase()}...`}</p>
           ) : error ? (
             <p className="student-empty-state">{error}</p>
           ) : sections.length === 0 ? (
-            <p className="student-empty-state">No sections found for this chapter yet.</p>
+            <p className="student-empty-state">{`No ${HIERARCHY_LABELS.lessonPlural.toLowerCase()} found for this chapter yet.`}</p>
           ) : (
             <div className="student-chapter-detail-list">
               {sections.map((section) => (

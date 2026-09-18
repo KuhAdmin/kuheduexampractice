@@ -148,3 +148,48 @@ export const recognizeEinsteinObject = async ({ targetObject, imageDataUrl }) =>
 
   return { identifiedAs, isMatch, feedback };
 };
+
+// Object Hunt (StudentChallengesTab.jsx) -- reuses recognizeEinsteinObject
+// unmodified, one call per captured object, instead of a separate
+// prompt/vision pipeline. The student photographs objects locally first (no
+// AI call yet), then this runs the whole batch in one shot when they tap
+// "Check My Objects". A small concurrency cap (not Promise.all on the full
+// batch at once) keeps a 15-object hunt from firing 15 simultaneous vision
+// calls. One item's failure (bad image, model hiccup) never fails the
+// batch -- that item just comes back as a graceful non-match.
+const BATCH_CONCURRENCY = 5;
+
+export const checkObjectHuntPhotos = async ({ items }) => {
+  const list = Array.isArray(items) ? items : [];
+  if (list.length === 0) {
+    const error = new Error("No photos were provided to check.");
+    error.statusCode = 422;
+    throw error;
+  }
+
+  const results = new Array(list.length);
+
+  const checkOne = async (item, index) => {
+    try {
+      const { identifiedAs, isMatch, feedback } = await recognizeEinsteinObject({
+        targetObject: item?.objectName,
+        imageDataUrl: item?.imageDataUrl,
+      });
+      results[index] = { objectId: item?.objectId, identifiedAs, isMatch, feedback };
+    } catch (error) {
+      results[index] = {
+        objectId: item?.objectId,
+        identifiedAs: "",
+        isMatch: false,
+        feedback: error.message || "Couldn't check this photo -- please try again.",
+      };
+    }
+  };
+
+  for (let start = 0; start < list.length; start += BATCH_CONCURRENCY) {
+    const batch = list.slice(start, start + BATCH_CONCURRENCY);
+    await Promise.all(batch.map((item, offset) => checkOne(item, start + offset)));
+  }
+
+  return { results };
+};

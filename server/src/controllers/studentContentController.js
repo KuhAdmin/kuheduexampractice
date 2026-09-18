@@ -28,6 +28,7 @@ import {
   gradeTextbookActivityResponse,
 } from "../services/textbookActivityResponseService.js";
 import { getMostRecentChallengeResponse, gradeChallengeResponse } from "../services/challengeResponseService.js";
+import { checkObjectHuntPhotos } from "../services/einsteinModeService.js";
 
 const studentAcademicContext = (req) => ({
   board: req.user.board,
@@ -241,6 +242,18 @@ export const submitChallengeResponseHandler = async (req, res, next) => {
       responseText: req.body?.responseText,
       sourcePageImages: req.body?.sourcePageImages,
     });
+    return res.json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+};
+
+export const postObjectHuntCheck = async (req, res, next) => {
+  try {
+    const result = await checkObjectHuntPhotos({ items: req.body?.items });
     return res.json(result);
   } catch (error) {
     if (error.statusCode) {

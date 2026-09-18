@@ -176,7 +176,7 @@ const isMatchingCorrect = ({ interactionData, studentAnswer }) => {
   );
 };
 
-const isAnswerCorrect = ({ interactionType, correctAnswer, interactionData, acceptableAnswers, studentAnswer }) => {
+export const isAnswerCorrect = ({ interactionType, correctAnswer, interactionData, acceptableAnswers, studentAnswer }) => {
   if (interactionType === "ordering") {
     return isOrderingCorrect({ interactionData, studentAnswer });
   }
@@ -414,7 +414,7 @@ const materializePracticeSetForConcept = async (assessmentUnitId) =>
 // doesn't touch the DB at all) -- both need the EXACT same section -> concept
 // -> answerable-item enumeration so the preview's question count on the
 // chapter page never drifts from what the real assessment actually contains.
-const collectAnswerableChapterItems = async ({ board, studentClass, subject, chapterNumber, userId }) => {
+export const collectAnswerableChapterItems = async ({ board, studentClass, subject, chapterNumber, userId }) => {
   const { sections } = await listSectionsForChapter({ board, studentClass, subject, chapterNumber, userId });
   const sourceSectionIds = sections
     .filter((section) => section.hasContent && section.sourceSectionId)

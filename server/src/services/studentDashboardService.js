@@ -4,6 +4,7 @@ import {
   getDashboardCatalogForUser,
   resolveDashboardAcademicFilters,
 } from "./catalogService.js";
+import { HIERARCHY_LABELS } from "../config/hierarchyLabels.js";
 
 const MASTERY_COMPLETE_THRESHOLD = 0.8;
 
@@ -19,7 +20,7 @@ const emptyReturningDashboard = {
   chapters: [],
   todayGoal: {
     title: "Today's Goal",
-    value: "No concepts available yet",
+    value: `No ${HIERARCHY_LABELS.microLearningUnitPlural.toLowerCase()} available yet`,
   },
   weakConcepts: [],
   streak: {
@@ -87,13 +88,13 @@ const buildTodayGoal = (totalUnits, masteredUnits) => {
   if (remainingUnits === 0) {
     return {
       title: "Today's Goal",
-      value: "All concepts completed",
+      value: `All ${HIERARCHY_LABELS.microLearningUnitPlural.toLowerCase()} completed`,
     };
   }
 
   return {
     title: "Today's Goal",
-    value: `${pluralize(remainingUnits, "Concept")} Remaining`,
+    value: `${pluralize(remainingUnits, HIERARCHY_LABELS.microLearningUnit, HIERARCHY_LABELS.microLearningUnitPlural)} Remaining`,
   };
 };
 

@@ -1475,3 +1475,57 @@ ON mv_book_chapter_summary (
   exam_goal_code,
   book_is_active
 );
+
+-- TestLab: a student-filtered, freshly-randomized mixed set (Question Bank +
+-- HOTS story-anchor questions together) across one or more chapters. Unlike
+-- practice_set/student_attempt (one canonical set per section/concept/chapter,
+-- synced from currently-selected content) or hots_attempt (one canonical set
+-- per chapter, re-derived live), every TestLab attempt is its own one-off
+-- random draw -- so, like hots_attempt, each item is fully snapshotted
+-- (question_snapshot) rather than referencing a shared question_bank_item
+-- row, and there is no "in-progress per key" uniqueness constraint since a
+-- student can have many different TestLab draws going at once.
+CREATE TABLE IF NOT EXISTS test_lab_attempt (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  chapter_numbers JSONB NOT NULL,
+  interaction_types JSONB,
+  status VARCHAR(20) NOT NULL DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'completed')),
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  submitted_at TIMESTAMPTZ,
+  score NUMERIC(6,2),
+  correct_count INTEGER,
+  incorrect_count INTEGER,
+  unattempted_count INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_test_lab_attempt_user_recent
+ON test_lab_attempt (user_id, started_at DESC);
+
+-- One row per item PRESENTED in this attempt, in shuffled display order.
+-- question_snapshot carries everything needed to render AND grade the item
+-- (question/options/correct_answer/interaction_type/format/marks) so a
+-- TestLab session survives the source content being edited/regenerated later
+-- -- same anti-drift reasoning as question_bank_item's own snapshot columns.
+CREATE TABLE IF NOT EXISTS test_lab_attempt_item (
+  id BIGSERIAL PRIMARY KEY,
+  test_lab_attempt_id BIGINT NOT NULL REFERENCES test_lab_attempt(id) ON DELETE CASCADE,
+  display_order INTEGER NOT NULL,
+  source_type VARCHAR(20) NOT NULL CHECK (source_type IN ('question_bank', 'hots')),
+  source_item_id TEXT NOT NULL,
+  assessment_unit_id VARCHAR(80) REFERENCES assessment_unit(assessment_unit_id) ON DELETE SET NULL,
+  chapter_number TEXT NOT NULL,
+  question_snapshot JSONB NOT NULL,
+  student_answer TEXT,
+  is_correct BOOLEAN,
+  marks_awarded NUMERIC(6,2),
+  ai_feedback TEXT,
+  time_taken_seconds INTEGER,
+  UNIQUE (test_lab_attempt_id, display_order)
+);
+
+-- "Mark for Review" on StudentTestLabSessionPage.jsx's Attempt Test screen --
+-- purely a student-side flag for revisiting a question later in the same
+-- attempt, independent of whether it's been answered yet.
+ALTER TABLE IF EXISTS test_lab_attempt_item
+ADD COLUMN IF NOT EXISTS is_marked_for_review BOOLEAN NOT NULL DEFAULT FALSE;

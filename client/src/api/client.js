@@ -134,6 +134,12 @@ export const submitChallengeResponse = async (responseKey, responseText, sourceP
     body: JSON.stringify({ responseText, sourcePageImages }),
   });
 
+export const checkObjectHuntPhotos = async (assessmentUnitId, items) =>
+  apiRequest(`/user/concepts/${assessmentUnitId}/challenges/object-hunt/check`, {
+    method: "POST",
+    body: JSON.stringify({ items }),
+  });
+
 export const getStudentDiagrams = async (sourceSectionId) =>
   apiRequest(`/user/sections/${sourceSectionId}/diagrams`);
 
@@ -784,4 +790,52 @@ export const updateDemoSubjectModelOverride = async (subjectCode, { ocrModelId, 
     method: "PUT",
     body: JSON.stringify({ ocrModelId, gradingModelId }),
   });
+
+// selection is the class/subject switcher's current combo (useClassSubject(),
+// {examGoalCode, levelCode, subjectCode, ...}) -- passed through so TestLab
+// works for accounts with no fixed board/class/subject profile (e.g. a
+// superstudent), which otherwise have nothing for the server to fall back to.
+export const getTestLabFilterOptions = async (selection) => {
+  const params = new URLSearchParams();
+  if (selection?.examGoalCode) params.set("examGoalCode", selection.examGoalCode);
+  if (selection?.levelCode) params.set("levelCode", selection.levelCode);
+  if (selection?.subjectCode) params.set("subjectCode", selection.subjectCode);
+  const query = params.toString();
+  return apiRequest(`/user/test-lab/filters${query ? `?${query}` : ""}`);
+};
+
+export const startTestLabAttempt = async (chapterNumbers, interactionTypes, selection, questionCount) =>
+  apiRequest("/user/test-lab/attempts", {
+    method: "POST",
+    body: JSON.stringify({
+      chapterNumbers,
+      interactionTypes,
+      questionCount,
+      examGoalCode: selection?.examGoalCode,
+      levelCode: selection?.levelCode,
+      subjectCode: selection?.subjectCode,
+    }),
+  });
+
+export const getTestLabAttempt = async (attemptId) => apiRequest(`/user/test-lab/attempts/${attemptId}`);
+
+export const submitTestLabAnswer = async (attemptId, displayOrder, studentAnswer, timeTakenSeconds) =>
+  apiRequest(`/user/test-lab/attempts/${attemptId}/items/${displayOrder}/answer`, {
+    method: "POST",
+    body: JSON.stringify({ studentAnswer, timeTakenSeconds }),
+  });
+
+export const setTestLabItemReviewFlag = async (attemptId, displayOrder, markedForReview) =>
+  apiRequest(`/user/test-lab/attempts/${attemptId}/items/${displayOrder}/review`, {
+    method: "PATCH",
+    body: JSON.stringify({ markedForReview }),
+  });
+
+export const submitTestLabAttempt = async (attemptId) =>
+  apiRequest(`/user/test-lab/attempts/${attemptId}/submit`, { method: "POST" });
+
+export const getTestLabAttemptResult = async (attemptId) =>
+  apiRequest(`/user/test-lab/attempts/${attemptId}/result`);
+
+export const getRecentTestLabAttempts = async () => apiRequest("/user/test-lab/attempts/recent");
 

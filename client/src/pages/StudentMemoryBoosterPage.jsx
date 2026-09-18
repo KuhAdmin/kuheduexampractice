@@ -4,6 +4,7 @@ import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentMediaViewer } from "../components/StudentMediaViewer";
 import { StudentMicroActivityPanel } from "../components/StudentMicroActivityPanel";
 import { getStudentMemoryBoosterForSection } from "../api/client";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
@@ -101,7 +102,7 @@ export const StudentMemoryBoosterPage = () => {
         });
       })
       .catch((fetchError) => {
-        if (!cancelled) setError(fetchError.message || "Failed to load memory boosters.");
+        if (!cancelled) setError(fetchError.message || "Failed to load your recall lab.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -202,7 +203,7 @@ export const StudentMemoryBoosterPage = () => {
           <button
             type="button"
             className="student-chapter-detail-back"
-            aria-label="Back to section"
+            aria-label={`Back to ${HIERARCHY_LABELS.lesson.toLowerCase()}`}
             onClick={() => navigate(`/chapters/${chapterNumber}/sections/${sourceSectionId}`)}
           >
             <BackIcon />
@@ -210,21 +211,21 @@ export const StudentMemoryBoosterPage = () => {
           <h1>
             {sectionMeta.sectionNumber
               ? `${sectionMeta.sectionNumber} ${sectionMeta.topicName || ""}`.trim()
-              : "Memory Booster"}
+              : "Recall Lab"}
           </h1>
         </header>
 
         <div className="student-memory-booster-kicker">
           <MemoryIcon />
-          <span>Memory Booster</span>
+          <span>Memory Boosters</span>
         </div>
 
         {loading ? (
-          <p className="student-empty-state">Loading memory boosters...</p>
+          <p className="student-empty-state">Loading your recall lab...</p>
         ) : error ? (
           <p className="student-empty-state">{error}</p>
         ) : memoryAids.length === 0 ? (
-          <p className="student-empty-state">No memory aids have been generated for this section yet.</p>
+          <p className="student-empty-state">{`No memory aids have been generated for this ${HIERARCHY_LABELS.lesson.toLowerCase()} yet.`}</p>
         ) : (
           <>
             <div className="student-memory-booster-concept-meta">
@@ -259,7 +260,7 @@ export const StudentMemoryBoosterPage = () => {
                 <nav
                   ref={tabsScrollRef}
                   className="student-memory-booster-tabs"
-                  aria-label="Memory booster sections"
+                  aria-label={`Memory booster ${HIERARCHY_LABELS.lessonPlural.toLowerCase()}`}
                   onWheel={handleTabsWheel}
                 >
                   {tabs.map((tab) => (

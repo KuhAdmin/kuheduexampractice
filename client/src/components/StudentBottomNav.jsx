@@ -1,17 +1,17 @@
 import { useNavigate } from "react-router-dom";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 
 // "practice" removed from the nav (not from the app -- other flows still
-// link to /practice directly). "labs" is deliberately kept with no `path`:
+// link to /practice directly). "labs" ("TestLab") now links to /test-lab --
 // both this bar and StudentLayout.jsx's desktop sidebar (see
-// studentMenuItems there) treat a missing path as "disabled," so it stays
-// visible but inert until that feature launches. "assessments" (Tests) now
-// links to /tests/write -- see StudentLayout.jsx for the "Write" child item
-// under it on desktop; mobile has no sub-menu concept, so tapping it here
-// goes straight there.
+// studentMenuItems there) treat a missing `path` as "disabled" for any
+// future placeholder item. "assessments" (Tests) now links to /tests/write
+// -- see StudentLayout.jsx for the "Write" child item under it on desktop;
+// mobile has no sub-menu concept, so tapping it here goes straight there.
 export const navItems = [
   { id: "home", label: "Home", icon: "home", path: "/dashboard" },
-  { id: "chapters", label: "Lessons", icon: "book", path: "/chapters" },
-  { id: "labs", label: "Labs", icon: "lab" },
+  { id: "chapters", label: HIERARCHY_LABELS.chapterPlural, icon: "book", path: "/chapters" },
+  { id: "labs", label: "TestLab", icon: "lab", path: "/test-lab" },
   { id: "assessments", label: "Skills", icon: "clipboard", path: "/tests/write" },
   { id: "profile", label: "Profile", icon: "user", path: "/profile" },
 ];

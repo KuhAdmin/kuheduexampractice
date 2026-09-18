@@ -40,7 +40,7 @@ export const AI_TOOLS_HOWTO = [
     id: "practice",
     title: "Practice with a Real Question",
     description:
-      "In the same tab, tap Capture Question to photograph a question from your book and your handwritten answer, and get instant AI feedback.",
+      "In the same tab, tap Snap and AI Check to photograph a question from your book and your handwritten answer, and get instant AI feedback.",
     accent: "var(--green)",
   },
   {
@@ -94,7 +94,7 @@ export const REVISION_TOOLS = [
   },
   {
     id: "memory-booster",
-    title: "Memory Booster",
+    title: "Recall Lab",
     description: "Media-based memory hooks that make facts stick long after the chapter ends.",
     accent: "var(--blue)",
   },

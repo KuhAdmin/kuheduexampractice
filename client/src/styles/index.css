@@ -2610,6 +2610,16 @@ a {
     margin: 0 auto;
   }
 
+  /* TestLab's filter form is single-focus like Book Questions, but its
+     Question Types/Chapters checklists genuinely benefit from going wider
+     (see .student-testlab-two-col's desktop grid) instead of just growing a
+     single narrow column -- same contained-but-growing treatment, bigger
+     ceiling. */
+  .student-page.student-page--test-lab {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
   .student-practice-frame {
     height: 90vh;
     min-height: 480px;
@@ -2685,6 +2695,13 @@ a {
      .student-assessment-wide sibling above, instead of staying pinned. */
   .student-page.student-page--book-questions {
     max-width: 960px;
+  }
+
+  /* TestLab grows past its tablet-tier 720px cap once the two-column
+     Question Types/Chapters grid (.student-testlab-two-col) actually has
+     room to lay out side by side. */
+  .student-page.student-page--test-lab {
+    max-width: 1000px;
   }
 
   /* Chapters list: one further density step once there's real room --
@@ -5129,6 +5146,44 @@ a {
   color: var(--green);
 }
 
+.student-story-snapshot-header {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.student-story-snapshot-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1029em;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.student-story-snapshot-title svg {
+  width: 20px;
+  height: 20px;
+  color: var(--green);
+}
+
+.student-story-snapshot-subtitle {
+  margin: 0;
+  font-size: 0.9375em;
+  color: var(--muted);
+}
+
+.student-story-snapshot-tags {
+  margin: 0;
+  font-size: 0.9375em;
+  font-style: italic;
+  color: var(--green);
+}
+
+.student-story-snapshot-header + .student-concept-learning-card {
+  margin-top: 12px;
+}
+
 .student-concept-learning-card {
   display: grid;
   gap: 14px;
@@ -5370,6 +5425,43 @@ a {
   min-width: 0;
 }
 
+.student-smart-tutor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+
+.student-smart-tutor-grid > * {
+  height: 100%;
+}
+
+.student-concept-back-to-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 0 auto 14px;
+  padding: 7px 16px;
+  border: 1px solid rgb(from var(--green) r g b / 0.25);
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--green);
+  font-size: 0.9375em;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgb(from var(--green) r g b / 0.14);
+}
+
+.student-concept-back-to-top:hover {
+  background: var(--success-bg);
+}
+
+.student-concept-back-to-top-icon {
+  width: 14px;
+  height: 14px;
+  transform: rotate(180deg);
+}
+
 .student-concept-step-card {
   padding: 22px;
 }
@@ -5377,14 +5469,12 @@ a {
 .student-concept-step-heading {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
 }
 
-.student-concept-step-index {
-  font-size: 1.4476em;
-  font-weight: 800;
-  color: var(--text);
+.student-concept-step-heading:empty {
+  display: none;
 }
 
 .student-concept-step-panel {
@@ -5618,6 +5708,34 @@ a {
   border-radius: 22px;
   background: var(--surface-strong);
   box-shadow: 0 12px 32px rgb(from var(--green) r g b / 0.08);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+/* Widescreen only (matches the min-width the rail becomes a side column at,
+   see .student-concept-desktop-body.has-rail above) -- keeps the rail in
+   view as the (usually much taller) main content column scrolls past it,
+   instead of scrolling away with the page. Mobile/tablet never render this
+   element in a side column at all, so this is scoped here rather than
+   relying on that alone.
+   Deliberately NOT centered via a translateY(-50%) transform or a height:100vh
+   flex wrapper -- both were tried and both back the rail into a corner:
+   a transform shifts the box from wherever it currently sits (including its
+   natural pre-scroll position flush with the tab bar), which visually
+   dragged it up into the hero card above the grid before the page had
+   scrolled; a 100vh flex-centered wrapper centers within its own full
+   height even while most of that height is still below the fold at page
+   load, leaving a dead gap between the tab bar and the rail instead of the
+   rail sitting flush at the top like the main content does. A plain
+   `top` offset with no transform has neither problem: it sits at its
+   natural position (flush, no gap) until scrolling would carry it above
+   that offset, then holds there -- bounded by its own containing block by
+   construction. */
+@media (min-width: 1180px) {
+  .student-concept-explore-rail {
+    position: sticky;
+    top: 24px;
+  }
 }
 
 .student-concept-explore-rail h2 {
@@ -6038,8 +6156,8 @@ a {
     font-size: 1.3em;
   }
 
-  /* Capture Photo / Submit for Feedback: full-width is the right call on a
-     phone (easy to tap, standard mobile pattern), but on a wide desktop
+  /* Snap and AI Check / Submit for Feedback: full-width is the right call
+     on a phone (easy to tap, standard mobile pattern), but on a wide desktop
      panel these are block-level grid items that stretch to fill the whole
      width -- same "justify-items: normal computes to stretch" story as
      .ghost-button above. Centered and sized to content reads much better
@@ -6445,6 +6563,11 @@ a {
   height: 16px;
 }
 
+.student-media-viewer-toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .student-media-viewer-overlay {
   position: fixed;
   inset: 0;
@@ -6474,10 +6597,36 @@ a {
   height: 20px;
 }
 
+.student-media-viewer-zoom-controls {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.student-media-viewer-zoom-controls .student-media-viewer-toggle {
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.student-media-viewer-zoom-level {
+  min-width: 3.2em;
+  text-align: center;
+  color: var(--text);
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
 .student-media-viewer-overlay-inner {
   position: relative;
   max-width: min(100%, 900px);
   max-height: 90vh;
+  overflow: hidden;
 }
 
 /* Content (e.g. a "Start Timer" button) overlaid on top of the image itself
@@ -6527,6 +6676,24 @@ a {
   max-height: 90vh;
   object-fit: contain;
   border-radius: 12px;
+  /* Must stay centered, not top-anchored -- the pan-bounds math in
+     StudentMediaViewer.jsx assumes scaling grows the image equally in every
+     direction from its true center, so it can clamp panning symmetrically.
+     A top-anchored origin left all the extra height below the fold with none
+     above, which silently made the bottom portion of a zoomed image
+     unreachable no matter how far you dragged. */
+  transform-origin: center center;
+  transition: transform 150ms ease;
+  touch-action: none;
+}
+
+.student-media-viewer-overlay-media.is-pannable {
+  cursor: grab;
+  transition: none;
+}
+
+.student-media-viewer-overlay-media.is-pannable:active {
+  cursor: grabbing;
 }
 
 .student-camera-capture-overlay {
@@ -6962,6 +7129,24 @@ a {
   margin-top: 16px;
 }
 
+/* StudentChallengesTab.jsx's desktop/tablet layout -- still a tab switch
+   (one challenge family active at a time, same as mobile), but that
+   family's items lay out 2-per-row instead of stacked full-width when
+   there's more than one. auto-fit (not a fixed repeat(2, ...)) so a family
+   with only one item -- the common case, e.g. Case Study/Object Hunt each
+   only ever having a single card -- stretches to fill the row instead of
+   sitting alone in a half-width column with an awkward empty gap next to
+   it; 2+ items still wrap into columns once there's enough width for more
+   than one 320px-minimum card. No media query needed here: the component
+   itself only applies this class at tablet width and up
+   (useBreakpoint() !== "mobile"). */
+.student-challenges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
 /* Shared by StudentRevisionPage.jsx and StudentTutorNotesPage.jsx's
    one-card-at-a-time pager (Previous/Next + swipe) -- deliberately NOT
    .student-detail-card-list-page, since that class switches to a 2-column
@@ -6985,6 +7170,10 @@ a {
 
 .student-challenge-reveal {
   margin-top: 10px;
+  /* Matches .student-micro-activity-panel's own 10px gap (the space between
+     Snap and AI Check / Submit for Feedback right below this), so the "Show
+     hints" -> response-panel gap isn't left undefined/inconsistent with it. */
+  margin-bottom: 10px;
 }
 
 .student-challenge-reveal .student-concept-learning-list,
@@ -7054,9 +7243,18 @@ a {
   list-style: none;
 }
 
+/* Tablet/desktop only (matches useBreakpoint.js's BREAKPOINT_TABLET) -- two
+   objects per row instead of one long stacked list; mobile keeps the single
+   column. */
+@media (min-width: 640px) {
+  .student-object-hunt-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .student-object-hunt-item {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   gap: 12px;
   align-items: center;
   padding: 12px;
@@ -7065,9 +7263,22 @@ a {
   border: 1px solid rgb(from var(--green) r g b / 0.12);
 }
 
-.student-object-hunt-item.is-found {
+/* .is-attached: photo taken, not checked yet. .is-matched/.is-unmatched:
+   real AI-vision verdict from checkObjectHuntPhotos, once "Check My
+   Objects" has run. */
+.student-object-hunt-item.is-attached {
+  background: var(--surface-strong);
+  border-color: rgb(from var(--muted) r g b / 0.25);
+}
+
+.student-object-hunt-item.is-matched {
   background: var(--success-bg);
   border-color: rgb(from var(--green) r g b / 0.3);
+}
+
+.student-object-hunt-item.is-unmatched {
+  background: rgb(from var(--warning) r g b / 0.08);
+  border-color: rgb(from var(--warning) r g b / 0.35);
 }
 
 .student-object-hunt-thumb {
@@ -7077,8 +7288,21 @@ a {
   object-fit: cover;
 }
 
+.student-object-hunt-copy {
+  min-width: 0;
+}
+
+/* Title and camera-icon button sit side by side on the same line, instead
+   of the old full-height "Attach a photo" pill stretched across the whole
+   card. */
+.student-object-hunt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .student-object-hunt-copy strong {
-  display: block;
   font-size: 1.2684em;
   color: var(--text);
 }
@@ -7089,28 +7313,48 @@ a {
   color: var(--muted);
 }
 
-.student-object-hunt-actions {
-  display: grid;
-  gap: 6px;
-  justify-items: end;
+.student-object-hunt-camera-button {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: none;
+  background: rgb(from var(--green) r g b / 0.14);
+  color: var(--green);
 }
 
-/* Now a non-interactive status badge (a <span>, not a <button>) -- found
-   status is only ever set by attaching a photo, never toggled directly, so
-   this always renders combined with .is-active below. */
+.student-object-hunt-camera-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Non-interactive status badge (a <span>, not a <button>). Base (no
+   modifier): neutral "photo attached, not checked yet". .is-active plus
+   .is-match/.is-no-match: the real AI-vision verdict from
+   checkObjectHuntPhotos, once "Check My Objects" has run. */
 .student-object-hunt-toggle {
   display: inline-block;
+  margin-top: 6px;
   border-radius: 10px;
-  border: 1px solid rgb(from var(--green) r g b / 0.3);
+  border: 1px solid rgb(from var(--muted) r g b / 0.3);
   background: var(--surface-strong);
-  color: var(--green);
+  color: var(--muted-strong, var(--muted));
   font-size: 1.0754em;
   font-weight: 700;
   padding: 6px 10px;
 }
 
-.student-object-hunt-toggle.is-active {
+.student-object-hunt-toggle.is-active.is-match {
+  border-color: rgb(from var(--green) r g b / 0.3);
   background: var(--green);
+  color: #ffffff;
+}
+
+.student-object-hunt-toggle.is-active.is-no-match {
+  border-color: rgb(from var(--warning) r g b / 0.4);
+  background: var(--warning);
   color: #ffffff;
 }
 
@@ -7572,6 +7816,13 @@ a {
 .student-einstein-mode-cta,
 .student-viva-mode-cta {
   justify-self: start;
+  /* Their card is a single-column grid with no explicit align-items, so it
+     defaults to "stretch" -- harmless normally, but once the card itself is
+     stretched taller to match a sibling in the Smart Tutor 2x2 grid, a lone
+     button (the only grid row when the card is in its "intro" state) would
+     stretch to fill that whole height instead of staying tight around its
+     own text. */
+  align-self: start;
   min-height: 40px;
   padding: 0 16px;
   border-radius: 999px;
@@ -7664,6 +7915,12 @@ a {
   text-align: center;
 }
 
+.student-viva-listening-indicators {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .student-viva-countdown {
   display: inline-flex;
   align-items: center;
@@ -7675,6 +7932,151 @@ a {
   color: var(--teal, var(--teal));
   font-size: 2.068em;
   font-weight: 800;
+}
+
+/* Mic + ripple -- specifically for the "listening" reply window, so
+   capturing a spoken answer reads unambiguously as "recording." The robot
+   avatar (below) is used for the thinking/feedback-narration states instead. */
+.student-viva-mic-indicator {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+}
+
+.student-viva-mic-icon {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--teal);
+  color: #fff;
+}
+
+.student-viva-mic-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.student-viva-mic-ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 2px solid var(--teal);
+  opacity: 0;
+  animation: student-viva-mic-ripple-pulse 1.8s ease-out infinite;
+}
+
+.student-viva-mic-ripple:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+.student-viva-mic-ripple:nth-child(3) {
+  animation-delay: 1.2s;
+}
+
+@keyframes student-viva-mic-ripple-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-viva-mic-ripple {
+    animation: none;
+    opacity: 0.25;
+  }
+}
+
+/* Same ripple language as the mic indicator above, wrapped around the robot
+   avatar instead -- used for every narration moment (intro, each question,
+   "no reply" message, feedback). Reuses student-viva-mic-ripple-pulse since
+   it's just a generic scale/opacity pulse, not mic-specific. */
+.student-viva-avatar-ripple-wrap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  margin: 0 auto;
+}
+
+.student-viva-avatar-ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 2px solid var(--teal);
+  opacity: 0;
+  animation: student-viva-mic-ripple-pulse 1.8s ease-out infinite;
+}
+
+.student-viva-avatar-ripple:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+.student-viva-avatar-ripple:nth-child(3) {
+  animation-delay: 1.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-viva-avatar-ripple {
+    animation: none;
+    opacity: 0.25;
+  }
+}
+
+/* RobotAvatar.jsx -- reusable SVG robot head, purely presentational, driven
+   by the isThinking/isSpeaking/audioLevel props. Shared by any component
+   that wants a "thinking"/"speaking" face cue -- StudentVivaMode.jsx uses it
+   for the grading (thinking) and feedback-narration (speaking) states. */
+.student-robot-avatar-eye,
+.student-robot-avatar-mouth {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.student-robot-avatar-eye.is-blinking {
+  animation: student-robot-avatar-blink 4s ease-in-out infinite;
+}
+
+@keyframes student-robot-avatar-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+.student-robot-avatar-mouth.is-speaking {
+  animation: student-robot-avatar-talk 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes student-robot-avatar-talk {
+  0% {
+    transform: scaleY(0.4);
+  }
+  100% {
+    transform: scaleY(1.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-robot-avatar-eye.is-blinking,
+  .student-robot-avatar-mouth.is-speaking {
+    animation: none;
+  }
 }
 
 /* Pill (not a fixed circle like .student-viva-countdown, which only ever
@@ -7728,6 +8130,10 @@ a {
 .student-viva-summary em {
   font-style: normal;
   color: var(--muted, var(--muted));
+}
+
+.student-viva-summary em.student-viva-feedback-text {
+  font-style: italic;
 }
 
 .student-ai-tutor-coach-button {
@@ -15281,10 +15687,37 @@ a {
   margin-bottom: 6px;
 }
 
+.student-viva-feedback-block {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.student-viva-feedback-block .student-viva-avatar-ripple-wrap {
+  margin-bottom: 8px;
+}
+
+.student-viva-grading {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  text-align: center;
+}
+
 .admin-ai-demo-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.student-viva-report-actions {
+  justify-content: center;
+}
+
+.student-object-hunt-check-actions {
+  justify-content: center;
+  margin-top: 12px;
 }
 
 .admin-ai-demo-panel-in-modal {
@@ -15586,4 +16019,1075 @@ a {
 .admin-equation-display.is-incorrect {
   background: linear-gradient(180deg, #fdf4f4, #fbe9e9);
   border-color: rgba(198, 60, 60, 0.3);
+}
+
+/* ==========================================================================
+   TestLab -- filter wizard, activity list, session, report card.
+   ========================================================================== */
+
+.student-testlab-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.student-testlab-header-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.student-testlab-header-copy h1 {
+  margin: 0;
+  font-size: 1.6em;
+  color: var(--text);
+}
+
+.student-testlab-header-copy p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.95em;
+}
+
+.student-testlab-icon-button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgb(from var(--green) r g b / 0.15);
+  background: var(--surface-strong);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.student-testlab-start-error {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--danger-bg, rgba(198, 60, 60, 0.08));
+  color: var(--danger, #c63c3c);
+  font-size: 0.92em;
+}
+
+.student-testlab-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  border-radius: 22px;
+  border: 1px solid rgb(from var(--blue) r g b / 0.14);
+  background: var(--surface-strong);
+  box-shadow: 0 12px 32px rgb(from var(--blue) r g b / 0.08);
+}
+
+.student-testlab-step-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-testlab-step-badge {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-weight: 700;
+}
+
+.student-testlab-step-heading h2 {
+  margin: 0;
+  font-size: 1.15em;
+  color: var(--text);
+}
+
+.student-testlab-step-heading p {
+  margin: 2px 0 0;
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.student-testlab-academic-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.student-testlab-academic-field label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 0.78em;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.student-testlab-academic-select-wrap {
+  position: relative;
+}
+
+.student-testlab-academic-select {
+  width: 100%;
+  padding: 10px 26px 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.88em;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+
+.student-testlab-academic-select:disabled {
+  opacity: 1;
+  color: var(--text);
+  cursor: not-allowed;
+}
+
+.student-testlab-chevron {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.student-testlab-two-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.student-testlab-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.student-testlab-section h4 {
+  margin: 0 0 10px;
+  font-size: 0.95em;
+  color: var(--text);
+}
+
+.student-testlab-section-header h4 {
+  margin: 0;
+}
+
+.student-testlab-section-header h4 span {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.student-testlab-select-all {
+  border: none;
+  background: none;
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 0.88em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.student-testlab-checkbox-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.student-testlab-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 2px;
+  font-size: 0.92em;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.student-testlab-checkbox-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid rgb(from var(--muted) r g b / 0.4);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.student-testlab-checkbox-row input[type="checkbox"]:checked {
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+.student-testlab-checkbox-row input[type="checkbox"]:checked::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.student-testlab-show-more {
+  margin-top: 8px;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 0.88em;
+  cursor: pointer;
+}
+
+.student-testlab-count-group {
+  display: flex;
+  gap: 8px;
+}
+
+.student-testlab-count-button {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.student-testlab-count-button.is-active {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+.student-testlab-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.student-testlab-reset-button {
+  border: none;
+  background: none;
+  padding: 10px 4px;
+  color: var(--blue);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.student-testlab-generate-button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  border: none;
+  background: var(--blue);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+.student-testlab-generate-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.student-testlab-arrow-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---- Step 2: Pick a Test ---- */
+
+.student-testlab-pick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.student-testlab-pick-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.student-testlab-pick-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.student-testlab-pick-card-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.student-testlab-pick-card-icon-glyph {
+  width: 22px;
+  height: 22px;
+}
+
+.student-testlab-pick-card-icon.is-tone-indigo {
+  background: rgb(from var(--indigo) r g b / 0.14);
+  color: var(--indigo);
+}
+
+.student-testlab-pick-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.student-testlab-pick-card-copy strong {
+  font-size: 1em;
+  color: var(--text);
+}
+
+.student-testlab-pick-card-copy span {
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.student-testlab-pick-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.student-testlab-pick-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.student-testlab-pick-tag {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78em;
+  font-weight: 700;
+}
+
+.student-testlab-pick-tag.is-tone-blue {
+  background: rgb(from var(--blue) r g b / 0.12);
+  color: var(--blue);
+}
+
+.student-testlab-pick-tag.is-tone-warning {
+  background: rgb(from var(--warning) r g b / 0.15);
+  color: var(--warning);
+}
+
+.student-testlab-pick-tag.is-tone-indigo {
+  background: rgb(from var(--indigo) r g b / 0.12);
+  color: var(--indigo);
+}
+
+.student-testlab-pick-tag.is-tone-danger {
+  background: var(--danger-bg, rgba(198, 60, 60, 0.08));
+  color: var(--danger, #c63c3c);
+}
+
+.student-testlab-pick-start {
+  flex-shrink: 0;
+  padding: 10px 22px;
+  border-radius: 12px;
+  border: none;
+  background: var(--blue);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.student-testlab-pick-start:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Recent Sessions: a right-side overlay drawer at every breakpoint (opened
+   from the header's history icon), not an always-visible section -- keeps
+   the filter form as the page's one focus. */
+.student-testlab-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 20, 0.45);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 60;
+}
+
+.student-testlab-drawer {
+  width: 100%;
+  max-width: 380px;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--surface-raised);
+  padding: 24px 20px;
+  box-shadow: -16px 0 40px rgba(0, 0, 0, 0.18);
+  animation: student-testlab-drawer-in 0.2s ease-out;
+}
+
+@keyframes student-testlab-drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.student-testlab-drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 14px;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-hover);
+  color: var(--text);
+  font-size: 0.85em;
+  cursor: pointer;
+}
+
+.student-testlab-activity h3 {
+  margin: 0 0 12px;
+  font-size: 1.05em;
+  color: var(--text);
+}
+
+/* Recent-sessions list. */
+.student-testlab-activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.student-testlab-activity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgb(from var(--green) r g b / 0.1);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+}
+
+.student-testlab-activity-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.student-testlab-activity-copy strong {
+  font-size: 0.92em;
+  color: var(--text);
+}
+
+.student-testlab-activity-copy small {
+  color: var(--muted);
+  font-size: 0.78em;
+}
+
+.student-testlab-activity-score {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgb(from var(--green) r g b / 0.12);
+  color: var(--green);
+  font-weight: 700;
+  font-size: 0.85em;
+}
+
+.student-testlab-activity-score.is-in-progress {
+  background: rgb(from var(--warning) r g b / 0.15);
+  color: var(--warning);
+}
+
+/* ---- Session (question-taking) screen ---- */
+
+/* ---- Session top row: question count, elapsed timer, Pause ---- */
+
+.student-testlab-session-toprow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 4px 0 14px;
+}
+
+.student-testlab-session-count {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.student-testlab-timer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgb(from var(--teal) r g b / 0.12);
+  color: var(--teal);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.student-testlab-timer-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.student-testlab-pause-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--blue);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.student-testlab-pause-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.student-testlab-session-tags {
+  margin-bottom: 14px;
+}
+
+/* ---- Passage box (HOTS items with a real anchorSentence) ---- */
+
+.student-testlab-passage-box {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgb(from var(--blue) r g b / 0.06);
+  border: 1px solid rgb(from var(--blue) r g b / 0.14);
+}
+
+.student-testlab-passage-box strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.student-testlab-passage-box p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ---- Mark for Review ---- */
+
+.student-testlab-mark-review {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 18px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.student-testlab-mark-review.is-marked {
+  color: var(--blue);
+}
+
+.student-testlab-mark-review-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.student-testlab-mark-review.is-marked .student-testlab-mark-review-icon {
+  fill: rgb(from var(--blue) r g b / 0.16);
+}
+
+/* ---- Previous / Save & Next ---- */
+
+.student-testlab-session-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.student-testlab-session-prev {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.student-testlab-session-prev:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.student-testlab-question-card {
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid rgb(from var(--green) r g b / 0.12);
+  background: var(--surface-strong);
+  margin-bottom: 16px;
+}
+
+.student-testlab-question-text {
+  margin: 0 0 16px;
+  font-size: 1.08em;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.student-testlab-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgb(from var(--green) r g b / 0.2);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.student-testlab-textarea.is-correct {
+  border-color: var(--success, var(--green));
+}
+
+.student-testlab-textarea.is-incorrect {
+  border-color: var(--danger, #c63c3c);
+}
+
+/* ---- Report card review ---- */
+
+.student-testlab-review {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.student-testlab-review-item {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgb(from var(--green) r g b / 0.12);
+  background: var(--surface-strong);
+}
+
+.student-testlab-review-item.is-correct {
+  border-color: rgb(from var(--success, var(--green)) r g b / 0.35);
+}
+
+.student-testlab-review-item.is-incorrect {
+  border-color: rgb(from var(--danger, #c63c3c) r g b / 0.35);
+}
+
+.student-testlab-review-item header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.student-testlab-review-source {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(from var(--indigo) r g b / 0.12);
+  color: var(--indigo);
+  font-weight: 600;
+}
+
+.student-testlab-review-feedback {
+  font-style: italic;
+  color: var(--muted);
+}
+
+/* ---- Step 4: Submit & View Report ---- */
+
+.student-testlab-step-badge.is-tone-green {
+  background: var(--green);
+}
+
+.student-testlab-report-celebrate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 0 4px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.student-testlab-report-trophy {
+  font-size: 2.4em;
+  line-height: 1;
+}
+
+.student-testlab-report-celebrate h3 {
+  margin: 6px 0 0;
+  font-size: 1.2em;
+  color: var(--text);
+}
+
+.student-testlab-report-celebrate p {
+  margin: 2px 0 0;
+  color: var(--muted);
+}
+
+/* A handful of CSS-only confetti pieces that fall/settle once on mount --
+   only shown for a high-tier score (see StudentTestLabResultPage.jsx), so
+   the celebration always matches how the student actually did. */
+.student-testlab-report-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.student-testlab-report-confetti span {
+  position: absolute;
+  top: -10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: student-testlab-confetti-fall 1.8s ease-out forwards;
+}
+
+.student-testlab-report-confetti span:nth-child(1) { left: 6%; background: var(--blue); animation-delay: 0ms; }
+.student-testlab-report-confetti span:nth-child(2) { left: 16%; background: var(--warning); animation-delay: 80ms; }
+.student-testlab-report-confetti span:nth-child(3) { left: 28%; background: var(--indigo); animation-delay: 40ms; }
+.student-testlab-report-confetti span:nth-child(4) { left: 40%; background: var(--green); animation-delay: 160ms; }
+.student-testlab-report-confetti span:nth-child(5) { left: 52%; background: var(--danger); animation-delay: 20ms; }
+.student-testlab-report-confetti span:nth-child(6) { left: 64%; background: var(--blue); animation-delay: 120ms; }
+.student-testlab-report-confetti span:nth-child(7) { left: 74%; background: var(--warning); animation-delay: 60ms; }
+.student-testlab-report-confetti span:nth-child(8) { left: 84%; background: var(--indigo); animation-delay: 140ms; }
+.student-testlab-report-confetti span:nth-child(9) { left: 92%; background: var(--green); animation-delay: 100ms; }
+.student-testlab-report-confetti span:nth-child(10) { left: 48%; background: var(--danger); animation-delay: 180ms; }
+
+@keyframes student-testlab-confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120px) rotate(220deg);
+    opacity: 0;
+  }
+}
+
+/* Same conic-gradient ring technique as .student-dashboard-progress-ring,
+   just larger and with two stacked lines of text inside. */
+.student-testlab-report-ring {
+  --progress: 0%;
+  --ring-angle: calc(var(--progress) * 3.6deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 150px;
+  height: 150px;
+  margin: 10px auto 18px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, var(--surface-strong) 62%, transparent 63%),
+    conic-gradient(var(--green) 0deg var(--ring-angle), rgb(from var(--green) r g b / 0.16) var(--ring-angle) 360deg);
+  box-shadow: 0 0 0 1px rgb(from var(--green) r g b / 0.16);
+}
+
+.student-testlab-report-ring-fraction {
+  font-size: 1.5em;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.student-testlab-report-ring-percent {
+  font-size: 0.95em;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.student-testlab-report-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.student-testlab-report-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.student-testlab-report-stat strong {
+  display: block;
+  font-size: 1.05em;
+  color: var(--text);
+}
+
+.student-testlab-report-stat span {
+  font-size: 0.8em;
+  color: var(--muted);
+}
+
+.student-testlab-report-stat-icon-wrap {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.student-testlab-report-stat-icon-wrap.is-tone-success {
+  background: rgb(from var(--success) r g b / 0.14);
+  color: var(--success);
+}
+
+.student-testlab-report-stat-icon-wrap.is-tone-danger {
+  background: var(--danger-bg, rgba(198, 60, 60, 0.08));
+  color: var(--danger, #c63c3c);
+}
+
+.student-testlab-report-stat-icon-wrap.is-tone-blue {
+  background: rgb(from var(--blue) r g b / 0.14);
+  color: var(--blue);
+}
+
+.student-testlab-report-stat-icon-wrap.is-tone-indigo {
+  background: rgb(from var(--indigo) r g b / 0.14);
+  color: var(--indigo);
+}
+
+.student-testlab-report-stat-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.student-testlab-report-quote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgb(from var(--warning) r g b / 0.12);
+}
+
+.student-testlab-report-quote p {
+  margin: 0;
+  color: var(--text);
+  font-style: italic;
+}
+
+.student-testlab-report-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--surface);
+  overflow-x: auto;
+}
+
+.student-testlab-report-tab {
+  flex: 1;
+  white-space: nowrap;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.88em;
+  cursor: pointer;
+}
+
+.student-testlab-report-tab.is-active {
+  background: var(--blue);
+  color: #fff;
+}
+
+.student-testlab-report-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.student-testlab-report-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) auto minmax(60px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 2px;
+  font-size: 0.9em;
+}
+
+.student-testlab-report-row-label {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-testlab-report-row-fraction {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+.student-testlab-report-row-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgb(from var(--green) r g b / 0.14);
+  overflow: hidden;
+}
+
+.student-testlab-report-row-bar span {
+  display: block;
+  height: 100%;
+  background: var(--green);
+}
+
+.student-testlab-report-row-percent {
+  color: var(--text);
+  font-size: 0.9em;
+}
+
+.student-testlab-report-strengths {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.student-testlab-report-strengths h4 {
+  margin: 0 0 6px;
+  font-size: 0.95em;
+  color: var(--text);
+}
+
+.student-testlab-report-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.student-testlab-report-actions-row {
+  display: flex;
+  gap: 12px;
+}
+
+.student-testlab-report-secondary {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Desktop: per-question stepper dots alongside the question card, and
+   Question Types + Chapters side by side now that the page has real width
+   (see .student-page.student-page--test-lab's own override, above). */
+@media (min-width: 920px) {
+  .student-testlab-session-stepper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 16px;
+  }
+
+  .student-testlab-two-col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+  }
+
+  .student-testlab-academic-row {
+    max-width: 640px;
+  }
+
+  /* Question Types: lay its (now data-driven, so no longer a fixed count
+     of 4) checkboxes out two-per-row within its own half of the two-col
+     grid above, instead of one tall single-file list next to Chapters'
+     usually-longer list. */
+  .student-testlab-checkbox-grid--two-col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 2px;
+  }
+
+  .student-testlab-report-strengths {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { getStudentMindMap } from "../api/client";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
@@ -119,7 +120,7 @@ export const StudentMindMapPage = () => {
           <button
             type="button"
             className="student-chapter-detail-back"
-            aria-label="Back to section"
+            aria-label={`Back to ${HIERARCHY_LABELS.lesson.toLowerCase()}`}
             onClick={() => navigate(`/chapters/${chapterNumber}/sections/${sourceSectionId}`)}
           >
             <BackIcon />
@@ -133,7 +134,7 @@ export const StudentMindMapPage = () => {
           <p className="student-empty-state">{error}</p>
         ) : tree.length === 0 ? (
           <p className="student-empty-state">
-            No micro learning unit dependencies have been recorded for this section yet.
+            {`No micro learning unit dependencies have been recorded for this ${HIERARCHY_LABELS.lesson.toLowerCase()} yet.`}
           </p>
         ) : (
           <>

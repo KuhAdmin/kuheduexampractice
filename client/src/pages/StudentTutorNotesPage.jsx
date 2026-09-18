@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { StudentDetailCard } from "../components/StudentDetailCard";
 import { getStudentTutorNotes } from "../api/client";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" className="student-dashboard-icon" aria-hidden="true">
@@ -123,7 +124,7 @@ export const StudentTutorNotesPage = () => {
         <button
           type="button"
           className="student-chapter-detail-back"
-          aria-label="Back to section"
+          aria-label={`Back to ${HIERARCHY_LABELS.lesson.toLowerCase()}`}
           onClick={() => navigate(`/chapters/${chapterNumber}/sections/${sourceSectionId}`)}
         >
           <BackIcon />
@@ -136,7 +137,7 @@ export const StudentTutorNotesPage = () => {
       ) : error ? (
         <p className="student-empty-state">{error}</p>
       ) : availableTabs.length === 0 ? (
-        <p className="student-empty-state">No tutor notes have been generated for this section yet.</p>
+        <p className="student-empty-state">{`No tutor notes have been generated for this ${HIERARCHY_LABELS.lesson.toLowerCase()} yet.`}</p>
       ) : (
         <>
           <nav

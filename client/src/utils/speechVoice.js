@@ -1,44 +1,19 @@
 // Shared by every SpeechSynthesisUtterance caller in the app (StudentVivaMode,
 // StudentOpenResponsePanel, StudentMicroActivityPanel, StudentMediaViewer,
-// StudentDetailCard) -- picks a female, Indian-English voice when the
-// browser/OS's installed voice list has one, rather than leaving it to
-// whatever default voice the platform happens to pick (often a US male
-// voice). Falls back gracefully (any female English voice, then any English
-// voice, then the platform default) since most desktop browsers/OSes don't
-// ship an en-IN voice at all.
-const FEMALE_NAME_HINTS = [
-  "female",
-  "heera",
-  "veena",
-  "lekha",
-  "priya",
-  "kalpana",
-  "samantha",
-  "zira",
-  "susan",
-  "victoria",
-  "moira",
-  "tessa",
-  "fiona",
-  "karen",
-  "kate",
-  "amelie",
-  "aria",
-];
-
+// StudentDetailCard) -- picks a US-English voice when the browser/OS's
+// installed voice list has one, rather than leaving it to whatever default
+// voice the platform happens to pick. Gender is not a factor -- either a US
+// male or US female voice scores the same. Falls back gracefully (any
+// English voice, then the platform default) since not every browser/OS ships
+// an en-US voice under that exact tag.
 const scoreVoice = (voice) => {
   const lang = (voice.lang || "").toLowerCase();
-  const name = (voice.name || "").toLowerCase();
 
-  if (lang !== "en-in" && !lang.startsWith("en")) {
+  if (!lang.startsWith("en")) {
     return -1; // never pick a non-English voice for English feedback text
   }
 
-  let score = lang === "en-in" ? 4 : 1;
-  if (name.includes("india")) score += 2;
-  if (FEMALE_NAME_HINTS.some((hint) => name.includes(hint))) score += 2;
-
-  return score;
+  return lang === "en-us" ? 2 : 1;
 };
 
 // getVoices() can return an empty list on first call in some browsers until

@@ -1,7 +1,27 @@
 import { useEffect, useState } from "react";
-import { getChallengeResponse, getStudentConceptChallenges, submitChallengeResponse } from "../api/client";
+import {
+  checkObjectHuntPhotos,
+  getChallengeResponse,
+  getStudentConceptChallenges,
+  submitChallengeResponse,
+} from "../api/client";
 import { StudentCameraCapture } from "./StudentCameraCapture";
 import { StudentOpenResponsePanel } from "./StudentOpenResponsePanel";
+import { useBreakpoint } from "../hooks/useBreakpoint";
+
+const CameraIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l.9-1.5A1.5 1.5 0 0 1 9.7 4.75h4.6a1.5 1.5 0 0 1 1.3.75L16.5 7h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-9Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.7"
+    />
+    <circle cx="12" cy="12.5" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.7" />
+  </svg>
+);
 
 // Strips <script> tags and on*="..." handler attributes before the SVG is
 // injected via dangerouslySetInnerHTML. The generation contract already
@@ -96,8 +116,9 @@ const CaseStudyCard = ({ item }) => {
           responseKey={item.responseKey}
           fetchResponse={getChallengeResponse}
           submitResponse={submitChallengeResponse}
-          placeholder="Type your own answer, or capture a photo of your handwritten answer above"
+          placeholder="Capture a photo of your handwritten answer above"
           onFeedbackChange={(feedbackValue) => setHasFeedback(Boolean(feedbackValue))}
+          hideTextInput
         />
       )}
     </article>
@@ -152,55 +173,99 @@ const HotspotCard = ({ item }) => {
   );
 };
 
-// einsteinmode -> "Object Hunt": a self-check checklist of 15 real-world
-// objects, distinctly named/placed from the existing live "Einstein Mode"
-// feature (StudentEinsteinMode.jsx, a different single-object-per-round,
-// AI-vision-graded activity) so the two aren't mistaken for one another.
-// Per-object "Attach a photo" stays a local, in-session reference thumbnail
-// only (never sent to the server, no per-object grading) -- but a
-// StudentOpenResponsePanel below the checklist lets the student write a
-// free-text summary of the whole hunt and get one holistic AI feedback
-// pass on it, same mechanism as Case Study/textbook Exercises.
-const ObjectHuntCard = ({ item }) => {
+// einsteinmode -> "Object Hunt": a checklist of 15 real-world objects,
+// distinctly named/placed from the existing live "Einstein Mode" feature
+// (StudentEinsteinMode.jsx, a different single-object-per-round activity) so
+// the two aren't mistaken for one another. Each object is photographed
+// locally first (no AI call yet, same low-friction capture as before), then
+// "Check My Objects" sends every attached photo in ONE batch to
+// checkObjectHuntPhotos, which reuses einsteinModeService.js's
+// recognizeEinsteinObject per photo -- real AI vision verification against
+// the object's name, not a local-only "I found it" claim. Replaces the
+// earlier design (a separate StudentOpenResponsePanel asking for a
+// photographed written reflection), which was confusing -- two unrelated
+// "snap a photo" actions with only one of them actually AI-graded.
+const ObjectHuntCard = ({ item, assessmentUnitId }) => {
   const objects = parseJsonDetail(getDetailValue(item.details, "Objects")) || [];
-  const [foundState, setFoundState] = useState({});
+  const [photoState, setPhotoState] = useState({});
+  const [results, setResults] = useState({});
   const [cameraObjectId, setCameraObjectId] = useState(null);
+  const [checking, setChecking] = useState(false);
+  const [checkError, setCheckError] = useState("");
 
-  // Attaching a photo is the only way to mark an object found -- there's no
-  // separate "I found it, trust me" toggle, so foundState.found and .photo
-  // are always set together (never found:true with no photo attached).
-  const attachPhoto = (id, dataUrl) =>
-    setFoundState((current) => ({ ...current, [id]: { ...current[id], found: true, photo: dataUrl } }));
+  const attachPhoto = (id, dataUrl) => {
+    setPhotoState((current) => ({ ...current, [id]: dataUrl }));
+    // A retaken photo invalidates whatever verdict was based on the old one.
+    setResults((current) => {
+      if (!current[id]) return current;
+      const { [id]: _removed, ...rest } = current;
+      return rest;
+    });
+  };
 
-  const foundCount = Object.values(foundState).filter((entry) => entry.found).length;
+  const attachedIds = Object.keys(photoState);
+  const matchedCount = Object.values(results).filter((entry) => entry.isMatch).length;
+  const hasResults = Object.keys(results).length > 0;
+
+  const handleCheckObjects = async () => {
+    setChecking(true);
+    setCheckError("");
+    try {
+      const items = attachedIds.map((id) => ({
+        objectId: id,
+        objectName: objects.find((object) => object.id === id)?.name || "",
+        imageDataUrl: photoState[id],
+      }));
+      const { results: checkResults } = await checkObjectHuntPhotos(assessmentUnitId, items);
+      setResults(Object.fromEntries(checkResults.map((entry) => [entry.objectId, entry])));
+    } catch (error) {
+      setCheckError(error.message || "Failed to check your photos. Please try again.");
+    } finally {
+      setChecking(false);
+    }
+  };
 
   return (
     <article className="student-detail-card student-object-hunt">
       {item.title && <h3 className="student-detail-card-title">{item.title}</h3>}
       {item.summary && <p className="student-detail-card-summary">{item.summary}</p>}
       <div className="student-hotspot-counter">
-        {foundCount}/{objects.length} found
+        {hasResults ? `${matchedCount}/${attachedIds.length} matched` : `${attachedIds.length}/${objects.length} photos attached`}
       </div>
       <ul className="student-object-hunt-list">
         {objects.map((object) => {
-          const entry = foundState[object.id] || {};
+          const photo = photoState[object.id];
+          const result = results[object.id];
           return (
-            <li key={object.id} className={`student-object-hunt-item ${entry.found ? "is-found" : ""}`}>
-              {entry.photo && (
-                <img src={entry.photo} alt={object.name} className="student-object-hunt-thumb" />
-              )}
+            <li
+              key={object.id}
+              className={`student-object-hunt-item ${
+                result ? (result.isMatch ? "is-matched" : "is-unmatched") : photo ? "is-attached" : ""
+              }`}
+            >
+              {photo && <img src={photo} alt={object.name} className="student-object-hunt-thumb" />}
               <div className="student-object-hunt-copy">
-                <strong>{object.name}</strong>
+                <div className="student-object-hunt-header">
+                  <strong>{object.name}</strong>
+                  <button
+                    type="button"
+                    className="student-object-hunt-camera-button"
+                    onClick={() => setCameraObjectId(object.id)}
+                    aria-label={photo ? "Retake photo" : "Attach photo"}
+                    title={photo ? "Retake photo" : "Attach photo"}
+                  >
+                    <CameraIcon />
+                  </button>
+                </div>
                 <p>{object.hint}</p>
-              </div>
-              <div className="student-object-hunt-actions">
-                <button type="button" className="ghost-button" onClick={() => setCameraObjectId(object.id)}>
-                  {entry.photo ? "Retake photo" : "Attach a photo"}
-                </button>
-                {entry.found && (
-                  <span className="student-object-hunt-toggle is-active" aria-label="Found">
-                    Found it
+                {result ? (
+                  <span
+                    className={`student-object-hunt-toggle is-active ${result.isMatch ? "is-match" : "is-no-match"}`}
+                  >
+                    {result.isMatch ? "✓ Matched" : "✗ Not quite"} — {result.feedback}
                   </span>
+                ) : (
+                  photo && <span className="student-object-hunt-toggle">Photo attached</span>
                 )}
               </div>
             </li>
@@ -216,14 +281,17 @@ const ObjectHuntCard = ({ item }) => {
           onCancel={() => setCameraObjectId(null)}
         />
       )}
-      {item.responseKey && (
-        <StudentOpenResponsePanel
-          responseKey={item.responseKey}
-          fetchResponse={getChallengeResponse}
-          submitResponse={submitChallengeResponse}
-          placeholder="Describe the objects you found and how they connect to the theme, or capture a photo of your notes above"
-        />
-      )}
+      <div className="admin-ai-demo-actions student-object-hunt-check-actions">
+        <button
+          type="button"
+          className="primary-button"
+          disabled={checking || attachedIds.length === 0}
+          onClick={handleCheckObjects}
+        >
+          {checking ? "Checking your photos..." : "Check My Objects"}
+        </button>
+      </div>
+      {checkError && <p className="error-text">{checkError}</p>}
     </article>
   );
 };
@@ -234,7 +302,20 @@ const CHALLENGE_FAMILIES = [
   { key: "einsteinmode", label: "Object Hunt" },
 ];
 
+// Shared by both the mobile (one family at a time) and desktop/tablet (all
+// families at once) layouts, so which component renders a given family's
+// items is only ever defined in one place.
+const renderChallengeCard = (familyKey, item, index, assessmentUnitId) =>
+  familyKey === "casestudy" ? (
+    <CaseStudyCard key={index} item={item} />
+  ) : familyKey === "hotspot" ? (
+    <HotspotCard key={index} item={item} />
+  ) : (
+    <ObjectHuntCard key={index} item={item} assessmentUnitId={assessmentUnitId} />
+  );
+
 export const StudentChallengesTab = ({ assessmentUnitId }) => {
+  const isDesktop = useBreakpoint() !== "mobile";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -287,6 +368,11 @@ export const StudentChallengesTab = ({ assessmentUnitId }) => {
 
   const activeItems = data[activeFamily] || [];
 
+  // Still a tab switch on every width -- only the active family's items
+  // show at once. Desktop/tablet lays those items out 2-per-row (when
+  // there's more than one) instead of full-width stacked, via the same
+  // .student-challenges-grid used elsewhere; mobile keeps the single-column
+  // list.
   return (
     <>
       <nav className="student-section-detail-tabs" aria-label="Challenge type">
@@ -301,16 +387,8 @@ export const StudentChallengesTab = ({ assessmentUnitId }) => {
           </button>
         ))}
       </nav>
-      <div className="student-detail-card-list-page">
-        {activeItems.map((item, index) =>
-          activeFamily === "casestudy" ? (
-            <CaseStudyCard key={index} item={item} />
-          ) : activeFamily === "hotspot" ? (
-            <HotspotCard key={index} item={item} />
-          ) : (
-            <ObjectHuntCard key={index} item={item} />
-          )
-        )}
+      <div className={isDesktop ? "student-challenges-grid" : "student-detail-card-list-page"}>
+        {activeItems.map((item, index) => renderChallengeCard(activeFamily, item, index, assessmentUnitId))}
       </div>
     </>
   );

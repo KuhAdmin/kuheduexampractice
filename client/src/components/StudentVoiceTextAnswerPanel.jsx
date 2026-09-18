@@ -31,8 +31,8 @@ const StopIcon = () => (
   </svg>
 );
 
-// Replaces StudentMultiPageAnswerInput's "Capture Photo" for Story Anchor
-// Questions' free-text formats only (see StudentPostLessonPage.jsx) --
+// Replaces StudentMultiPageAnswerInput's "Snap and AI Check" for Story
+// Anchor Questions' free-text formats only (see StudentPostLessonPage.jsx) --
 // FreeTextAnswerPanel/StudentMultiPageAnswerInput stay untouched everywhere
 // else in the app (Section Assessment etc. still want photo capture).
 //

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { FocusLayout } from "../components/FocusLayout";
 import { getStudentFlashcards } from "../api/client";
+import { HIERARCHY_LABELS } from "../content/hierarchyLabels";
 
 // Definitions in particular can run to a full sentence or two -- a fixed
 // font-size either overflows the card's rounded corners (breaching the
@@ -75,7 +76,7 @@ export const StudentFlashcardsPage = () => {
           <button
             type="button"
             className="student-chapter-detail-back"
-            aria-label="Back to section"
+            aria-label={`Back to ${HIERARCHY_LABELS.lesson.toLowerCase()}`}
             onClick={() => navigate(`/chapters/${chapterNumber}/sections/${sourceSectionId}`)}
           >
             <BackIcon />
@@ -88,7 +89,7 @@ export const StudentFlashcardsPage = () => {
         ) : error ? (
           <p className="student-empty-state">{error}</p>
         ) : flashcards.length === 0 ? (
-          <p className="student-empty-state">No terms have been generated for this section yet.</p>
+          <p className="student-empty-state">{`No terms have been generated for this ${HIERARCHY_LABELS.lesson.toLowerCase()} yet.`}</p>
         ) : (
           <>
             <div className="student-flashcard-viewport">
