@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { useAuth } from "../context/authHooks";
 import { StudentMediaViewer } from "../components/StudentMediaViewer";
@@ -644,6 +644,7 @@ const buildLearnContent = (card) => {
 
 export const StudentConceptLearningPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const tier = useBreakpoint();
   const isDesktop = tier !== "mobile";
@@ -653,7 +654,13 @@ export const StudentConceptLearningPage = () => {
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState(TABS[0]);
+  // The Practice/Assessment page's own tab bar (StudentAssessmentPage.jsx,
+  // which can't just switch activeTab locally since it's a separate route)
+  // links back here with the clicked tab in location.state, so that jump
+  // lands on the right tab instead of always resetting to Snapshot.
+  const [activeTab, setActiveTab] = useState(
+    TABS.includes(location.state?.activeTab) ? location.state.activeTab : TABS[0]
+  );
   // Mobile accordion's own "which section is visually expanded" flag,
   // decoupled from activeTab (which must always hold a real tab so desktop's
   // tab bar/content-selection keeps working). Starts at null so landing on

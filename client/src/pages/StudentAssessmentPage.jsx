@@ -5,9 +5,12 @@ import { extractSourcePageImages, StudentMultiPageAnswerInput } from "../compone
 import { MathPreview } from "../components/MathPreview";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import {
+  getExercisesActivitiesTabVisible,
   getRecentAssessmentAttempts,
   getRecentChapterAssessmentAttempts,
   getRecentConceptAssessmentAttempts,
+  getStudentConceptCard,
+  getStudentSectionOverview,
   getStudentSections,
   restartChapterAssessment,
   restartConceptAssessment,
@@ -46,6 +49,15 @@ const MoveIcon = ({ direction }) => (
     />
   </svg>
 );
+
+// Mirrors StudentConceptLearningPage.jsx's TABS -- this page is reached via
+// that page's "Practice" tab (a separate route, not local tab state, since
+// the assessment flow needs its own URL/phase machine), so without this bar
+// the tab row visibly disappears the moment a student lands here. Clicking
+// any other tab navigates back to the Concept Learning page with the
+// clicked tab passed via location.state (see that file's activeTab
+// initializer) so it lands there directly instead of resetting to Snapshot.
+const CONCEPT_TABS = ["Snapshot", "Explore", "Exercises/Activities", "Practice", "Smart Tutor", "Challenges"];
 
 // Same breadcrumb/hero icons as StudentConceptLearningPage's desktop chrome,
 // reused here so the assessment/practice screens share the exact same top
@@ -199,6 +211,63 @@ export const StudentAssessmentPage = () => {
   const [recentAttempts, setRecentAttempts] = useState([]);
   const [restarting, setRestarting] = useState(false);
   const [breadcrumbMeta, setBreadcrumbMeta] = useState({ chapterName: "", sectionNumber: "", sectionTopicName: "" });
+  // Ordered sibling unit ids for the breadcrumb's "MLU x/y" crumb -- same
+  // section-scoped fetch and the same endpoint StudentConceptLearningPage
+  // uses for its own breadcrumb, so concept-mode Practice shows the
+  // identical "MLU x/y" crumb instead of the concept's (often long) name.
+  const [sectionUnitIds, setSectionUnitIds] = useState([]);
+  // Hero card's description line -- same source (and same
+  // learningObjective/contextSummary fallback) as StudentConceptLearningPage's
+  // hero, fetched separately here since this page otherwise only loads
+  // assessment-shaped data (topicName/totalMarks/items), not the full concept
+  // card. Without this, switching from Practice to any other tab visibly
+  // shrinks/grows the hero card as the description line appears/disappears.
+  const [conceptSummary, setConceptSummary] = useState("");
+  // Gates the tab bar's "Exercises/Activities" entry, same as
+  // StudentConceptLearningPage.jsx's own admin-controlled toggle.
+  const [exercisesActivitiesTabVisible, setExercisesActivitiesTabVisible] = useState(false);
+
+  useEffect(() => {
+    if (!isConceptMode) return undefined;
+    getExercisesActivitiesTabVisible()
+      .then((result) => setExercisesActivitiesTabVisible(result?.visible ?? false))
+      .catch(() => {});
+  }, [isConceptMode]);
+
+  useEffect(() => {
+    if (!isConceptMode) return undefined;
+    let cancelled = false;
+
+    getStudentSectionOverview(sourceSectionId)
+      .then((result) => {
+        if (cancelled) return;
+        setSectionUnitIds((result?.concepts || []).map((unit) => unit.assessmentUnitId));
+      })
+      .catch(() => {
+        if (!cancelled) setSectionUnitIds([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isConceptMode, sourceSectionId]);
+
+  useEffect(() => {
+    if (!isConceptMode) return undefined;
+    let cancelled = false;
+
+    getStudentConceptCard(conceptId)
+      .then((result) => {
+        if (!cancelled) setConceptSummary(result?.learningObjective || result?.contextSummary || "");
+      })
+      .catch(() => {
+        if (!cancelled) setConceptSummary("");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isConceptMode, conceptId]);
 
   // Same breadcrumb data source as StudentConceptLearningPage's desktop
   // chrome, extended to also resolve the section's own topic name (distinct
@@ -630,6 +699,20 @@ export const StudentAssessmentPage = () => {
     ? `${assessment.topicName} Assessment`
     : `${HIERARCHY_LABELS.lesson} Assessment`;
 
+  // 1-indexed position of this unit within its section's ordered list, for
+  // the breadcrumb's "MLU x/y" crumb -- same derivation as
+  // StudentConceptLearningPage's own breadcrumb.
+  const unitPosition = sectionUnitIds.indexOf(conceptId) + 1;
+
+  const visibleConceptTabs = CONCEPT_TABS.filter(
+    (tab) => tab !== "Exercises/Activities" || exercisesActivitiesTabVisible
+  );
+  const conceptPath = `/chapters/${chapterNumber}/sections/${sourceSectionId}/concepts/${conceptId}`;
+  const selectConceptTab = (tab) => {
+    if (tab === "Practice") return;
+    navigate(conceptPath, { state: { activeTab: tab } });
+  };
+
   // Breadcrumb is persistent chrome across every phase now (previously it
   // only showed on the instructions screen, which meant it vanished the
   // moment a question started -- the exact gap reported). The hero card
@@ -659,7 +742,7 @@ export const StudentAssessmentPage = () => {
                   </button>
                   <ChevronRightIcon />
                   <span className="is-current">
-                    {assessment?.topicName ? `Micro Learning Unit - ${assessment.topicName}` : "Micro Learning Unit"}
+                    {unitPosition > 0 ? `MLU ${unitPosition}/${sectionUnitIds.length}` : "MLU"}
                   </span>
                 </>
               ) : (
@@ -676,9 +759,29 @@ export const StudentAssessmentPage = () => {
                   <BookIcon />
                 </div>
                 <div className="student-concept-hero-copy">
-                  <h1>{assessmentTitle}</h1>
+                  <h1>
+                    {isConceptMode
+                      ? `${unitPosition > 0 ? `MLU ${unitPosition} - ` : ""}${assessment?.topicName || "Micro Learning Unit"}`
+                      : assessmentTitle}
+                  </h1>
+                  {isConceptMode && conceptSummary && <p>{conceptSummary}</p>}
                 </div>
               </header>
+            )}
+
+            {isConceptMode && (
+              <nav className="student-concept-tabbar" aria-label="Micro Learning Unit modes">
+                {visibleConceptTabs.map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    className={`student-concept-tabbar-tab ${tab === "Practice" ? "is-active" : ""}`}
+                    onClick={() => selectConceptTab(tab)}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </nav>
             )}
           </div>
         ) : (
@@ -800,7 +903,26 @@ export const StudentAssessmentPage = () => {
 
               {phase === "question" && (
                 <>
-                  {error && <p className="error-text">{error}</p>}
+                  {error && (
+                    <>
+                      <p className="error-text">{error}</p>
+                      {/* Submitting into a stuck attempt (e.g. its item_id was
+                          nulled by a content re-import -- see
+                          restartConceptAssessment's comment server-side) can
+                          never succeed by retrying Submit; Restart is the only
+                          way out, so surface it here too instead of only on
+                          the instructions screen the student would otherwise
+                          have to navigate back to. */}
+                      <button
+                        type="button"
+                        className="ghost-button student-assessment-restart"
+                        disabled={restarting}
+                        onClick={handleRestartAssessment}
+                      >
+                        {restarting ? "Restarting..." : "Restart Assessment"}
+                      </button>
+                    </>
+                  )}
 
                   <button
                     type="button"

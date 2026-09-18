@@ -128,6 +128,14 @@ export const listChapters = async ({
 // StudentChaptersPage.jsx) can skip the board/class/subject-text ->
 // codes translation entirely, instead of forcing everything through
 // resolveDashboardAcademicFilters's free-text matching.
+// The chapter list below is genuinely the whole syllabus, not a preview --
+// getChaptersForClassSubjectSelection (studentDashboardService.js) builds
+// the Chapters page's full chapter list straight from this `chapters`
+// array, so an earlier `LIMIT 12` here (sized for the Dashboard's own
+// chapter widget) silently truncated any subject with more than 12
+// chapters on that page. Removed rather than parameterized -- a fuller
+// Dashboard chapter list isn't wrong, just more complete, and keeping one
+// query shape avoids a capped/uncapped split to maintain.
 export const getDashboardCatalogForCodes = async ({ examGoalCode, levelCode, subjectCode }) => {
   const [chapterRowsResult, continueCardResult] = await Promise.all([
     pool.query(
@@ -147,7 +155,6 @@ export const getDashboardCatalogForCodes = async ({ examGoalCode, levelCode, sub
           ORDER BY chapter_number, chapter_display_order ASC
         ) AS chapter_rows
         ORDER BY "displayOrder" ASC, "chapterNumber" ASC
-        LIMIT 12
       `,
       [examGoalCode, levelCode, subjectCode]
     ),
