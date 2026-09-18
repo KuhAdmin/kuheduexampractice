@@ -392,14 +392,6 @@ const EXPLORE_STEPS = [
     hasContent: (c) => Boolean(c.teachingNotes?.some((note) => note.mode === "storymode")),
   },
   {
-    key: "deepLearning",
-    label: "Think Deeper",
-    subtitle: "Explore pitfalls and the reasoning behind them",
-    notesField: "deepLearningNotes",
-    hasMediaSlot: false,
-    hasContent: (c) => Boolean(c.deepLearningNotes?.length),
-  },
-  {
     key: "analogy",
     label: "Make Connections",
     subtitle: "Understand through familiar comparisons",
@@ -1450,7 +1442,6 @@ export const StudentConceptLearningPage = () => {
       card?.retrievalCues?.length > 0 ||
       card?.associatedConcepts?.length > 0 ||
       card?.supportingConcepts?.length > 0 ||
-      card?.deepLearningNotes?.length > 0 ||
       visualLearningItems?.length > 0;
 
     if (!hasAnyExploreContent) {
@@ -1712,14 +1703,6 @@ export const StudentConceptLearningPage = () => {
             </div>
           </ExploreSection>
         )}
-
-        {renderTeachingModeSection({
-          sectionKey: "deepLearning",
-          title: "Deep Dive",
-          mediaType: null,
-          iconType: "atom",
-          notesField: "deepLearningNotes",
-        })}
 
         {visualLearningItems?.length > 0 && (
           <ExploreSection
