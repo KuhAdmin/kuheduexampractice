@@ -89,8 +89,16 @@ const CountBadge = ({ cardCount }) => (
 // non-empty, changed value -- the API/service layer still validates too
 // (defense in depth, see contentEditorService.js's validateName), but this
 // avoids a pointless round-trip for a no-op edit.
-const TreeRowLabel = ({ rowKey, label, editKey, onStartEdit, onCancelEdit, onSave }) => {
-  const [draft, setDraft] = useState(label);
+// `label` is what's shown (and, for chapter/section rows, includes a
+// "1 — "/"1.2 — " number prefix composed on top of the real stored name --
+// see the chapter/section TreeRowLabel call sites below). `editValue`, when
+// given, is the raw underlying name the input actually edits and the value
+// that gets saved -- without it, editing a chapter/section would save the
+// WHOLE "1 — Name" string back as the name, which then gets ANOTHER prefix
+// composed onto it next render ("1 — 1 — Name"), compounding on every edit.
+const TreeRowLabel = ({ rowKey, label, editValue, editKey, onStartEdit, onCancelEdit, onSave }) => {
+  const initialValue = editValue ?? label;
+  const [draft, setDraft] = useState(initialValue);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const isEditing = editKey === rowKey;
@@ -105,7 +113,7 @@ const TreeRowLabel = ({ rowKey, label, editKey, onStartEdit, onCancelEdit, onSav
           aria-label={`Rename ${label}`}
           onClick={(event) => {
             event.stopPropagation();
-            setDraft(label);
+            setDraft(initialValue);
             setError("");
             onStartEdit(rowKey);
           }}
@@ -119,7 +127,7 @@ const TreeRowLabel = ({ rowKey, label, editKey, onStartEdit, onCancelEdit, onSav
   const handleSave = async (event) => {
     event.stopPropagation();
     const trimmed = draft.trim();
-    if (!trimmed || trimmed === label) {
+    if (!trimmed || trimmed === initialValue) {
       onCancelEdit();
       return;
     }
@@ -404,6 +412,7 @@ export const AdminContentTree = ({
               <TreeRowLabel
                 rowKey={chapterKey}
                 label={`Chapter ${chapter.chapterNumber} — ${chapter.chapterName}`}
+                editValue={chapter.chapterName}
                 editKey={editKey}
                 onStartEdit={setEditKey}
                 onCancelEdit={() => setEditKey(null)}
@@ -449,6 +458,7 @@ export const AdminContentTree = ({
                               ? `${chapter.chapterNumber}.${section.sectionNumber} — ${section.topicName}`
                               : section.topicName
                           }
+                          editValue={section.topicName}
                           editKey={editKey}
                           onStartEdit={setEditKey}
                           onCancelEdit={() => setEditKey(null)}

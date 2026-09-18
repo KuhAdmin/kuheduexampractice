@@ -354,24 +354,25 @@ const MOBILE_TAB_ICON = {
 // these four used to be their own Learn-tab pages; moved here so the
 // Snapshot tab only keeps "Snapshot"/"Story Snapshot", with the fuller (possibly multi-slide, see
 // getTeachingSlidesForMode) content intact rather than the one-line summary.
-// "Simple" (eli5) has no equivalent memory_hook_media section key, so it
-// never attempts a media fetch (see hasMediaSlot).
 // Order here drives the Explore tab's step rail (exploreSteps filters this
 // list down to whichever steps have content for the active concept,
 // preserving this relative order -- see the exploreSteps useMemo below).
-// The "Story" step has no image pipeline of its own -- no admin tool ever
-// writes media under sectionKey "story", so its Visual tab would otherwise
-// stay permanently empty. Memory Trick is in the same position as Story
-// content-wise (see EXPLORE_STEPS' memoryTrick entry below: content_concept_memory
-// has no memory_trick column, so card.memoryTrick text is always null and
-// that step never even makes it into exploreSteps) except it DOES have a
-// real image, generated via the admin Content Editor's Memory Hook panel,
-// with nowhere reachable to show it. Aliasing Story's media lookup to
-// "memoryTrick" gives that image a home without touching the
-// Compare/Analogy step or the (separately identified, still independently
-// expandable) standalone Memory Trick accordion section further down --
-// this only redirects WHICH media key Story's Visual tab resolves to.
-const MEDIA_SECTION_KEY_ALIASES = { story: "memoryTrick" };
+// Neither "Simple" (eli5) nor "Story" (storymode) has an image pipeline of
+// its own -- no admin tool ever writes media under sectionKey "eli5" or
+// "story", so whichever one is left without an alias would have a
+// permanently empty Visual tab. Memory Trick is in the same position
+// content-wise (see EXPLORE_STEPS' memoryTrick entry below:
+// content_concept_memory has no memory_trick column, so card.memoryTrick
+// text is always null and that step never even makes it into exploreSteps)
+// except it DOES have a real image, generated via the admin Content
+// Editor's Memory Hook panel ("Simple Explained Visual"), with nowhere
+// reachable to show it. Aliasing Simple's media lookup to "memoryTrick"
+// gives that image a home (on "Simply Explained" rather than "Through a
+// Story") without touching the Compare/Analogy step or the (separately
+// identified, still independently expandable) standalone Memory Trick
+// accordion section further down -- this only redirects WHICH media key
+// Simple's Visual tab resolves to.
+const MEDIA_SECTION_KEY_ALIASES = { simple: "memoryTrick" };
 const resolveMediaSectionKey = (sectionKey) => MEDIA_SECTION_KEY_ALIASES[sectionKey] || sectionKey;
 
 const EXPLORE_STEPS = [
@@ -380,7 +381,6 @@ const EXPLORE_STEPS = [
     label: "Simply Explained",
     subtitle: "Get the idea clearly",
     teachingMode: "eli5",
-    hasMediaSlot: false,
     hasContent: (c) => Boolean(c.teachingNotes?.some((note) => note.mode === "eli5")),
   },
   {
@@ -388,6 +388,7 @@ const EXPLORE_STEPS = [
     label: "Through a Story",
     subtitle: "Learn through storytelling",
     teachingMode: "storymode",
+    hasMediaSlot: false,
     hasContent: (c) => Boolean(c.teachingNotes?.some((note) => note.mode === "storymode")),
   },
   {
