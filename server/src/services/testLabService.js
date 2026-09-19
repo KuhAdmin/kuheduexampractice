@@ -196,53 +196,95 @@ export const getTestLabFilterOptions = async ({ userId, board, studentClass, sub
   // values are question_family strings now, not interaction_type strings.
   const interactionTypes = orderedFamilies.map((value) => ({ value, label: questionFamilyLabel(value) }));
 
-  const questionBankCount = questionPool.filter((item) => item.sourceType === "question_bank").length;
-  const hotsCount = questionPool.filter((item) => item.sourceType === "hots").length;
-  const teacherCustomCount = await countApprovedTeacherCustomQuestions({
-    chapterNumbers,
+  const questionRepoCount = await getQuestionRepoCountForSubject({
+    userId,
     examGoalCode: resolved.examGoalCode,
-    levelCode: resolved.levelCode,
     subjectCode: resolved.subjectCode,
+    board: resolved.board,
+    subject: resolved.subject,
   });
 
+  return { chapters, interactionTypes, questionRepoCount };
+};
+
+// The "N questions" badge on StudentTestLabPage.jsx's header is deliberately
+// NOT scoped to the student's own class -- it's meant to show how deep this
+// subject's whole repository is (Question Bank + HOTS + teacher custom),
+// across every class the board offers it for, not just the one chapter list
+// this student happens to be filtering right now.
+const listLevelCodesForExamGoalSubject = async ({ examGoalCode, subjectCode }) => {
+  const result = await pool.query(
+    `
+      SELECT DISTINCT lvl.name_code AS level_code
+      FROM mst_book mb
+      JOIN mst_level lvl ON lvl.id = mb.fk_mst_level_id
+      JOIN mst_subject subj ON subj.id = mb.fk_mst_subject_id
+      JOIN mst_exam_goal eg ON eg.id = mb.fk_mst_exam_goal_id
+      WHERE subj.name_code = $1 AND eg.goal_id = $2 AND mb.is_active = TRUE
+    `,
+    [subjectCode, examGoalCode]
+  );
+  return result.rows.map((row) => row.level_code);
+};
+
+const getQuestionRepoCountForSubject = async ({ userId, examGoalCode, subjectCode, board, subject }) => {
+  const levelCodes = await listLevelCodesForExamGoalSubject({ examGoalCode, subjectCode });
+
+  const perLevelCounts = await Promise.all(
+    levelCodes.map(async (levelCode) => {
+      const { chapters } = await getChaptersForClassSubjectSelection({ userId, examGoalCode, levelCode, subjectCode });
+      const chapterNumbers = chapters.map((chapter) => String(chapter.chapterNumber));
+      if (!chapterNumbers.length) return { questionBank: 0, hots: 0 };
+      const levelQuestionPool = await buildTestLabQuestionPool({
+        board,
+        studentClass: levelCode,
+        subject,
+        chapterNumbers,
+        interactionTypes: [],
+        userId,
+      });
+      return {
+        questionBank: levelQuestionPool.filter((item) => item.sourceType === "question_bank").length,
+        hots: levelQuestionPool.filter((item) => item.sourceType === "hots").length,
+      };
+    })
+  );
+
+  const questionBankCount = perLevelCounts.reduce((sum, entry) => sum + entry.questionBank, 0);
+  const hotsCount = perLevelCounts.reduce((sum, entry) => sum + entry.hots, 0);
+  const teacherCustomCount = await countApprovedTeacherCustomQuestions({ examGoalCode, subjectCode });
+
   return {
-    chapters,
-    interactionTypes,
-    questionRepoCount: {
-      questionBank: questionBankCount,
-      hots: hotsCount,
-      teacherCustom: teacherCustomCount,
-      total: questionBankCount + hotsCount + teacherCustomCount,
-    },
+    questionBank: questionBankCount,
+    hots: hotsCount,
+    teacherCustom: teacherCustomCount,
+    total: questionBankCount + hotsCount + teacherCustomCount,
   };
 };
 
 // Counts teacher-authored custom questions (content_assessment_item rows
 // with created_by_teacher_id set, keyed by fk_mst_chapter_id rather than
 // assessment_unit_id -- see teacherTestService.js's fetchCustomQuestionsForChapter)
-// that have cleared review, across every chapter in this board/class/subject.
-// Only "approved" ones count here -- same visibility bar the answerable
+// that have cleared review, across every class this board offers the subject
+// for. Only "approved" ones count here -- same visibility bar the answerable
 // question-bank pool above already applies -- so this mirrors what a student
-// could actually be served, not the teacher's own pending drafts.
-const countApprovedTeacherCustomQuestions = async ({ chapterNumbers, examGoalCode, levelCode, subjectCode }) => {
-  if (!chapterNumbers.length || !examGoalCode || !levelCode || !subjectCode) return 0;
+// could actually be served, not a teacher's own pending drafts.
+const countApprovedTeacherCustomQuestions = async ({ examGoalCode, subjectCode }) => {
+  if (!examGoalCode || !subjectCode) return 0;
   const result = await pool.query(
     `
       SELECT COUNT(*)::int AS count
       FROM content_assessment_item cai
       JOIN mst_chapter mc ON mc.id = cai.fk_mst_chapter_id
       JOIN mst_book mb ON mb.id = mc.fk_mst_book_id
-      JOIN mst_level lvl ON lvl.id = mb.fk_mst_level_id
       JOIN mst_subject subj ON subj.id = mb.fk_mst_subject_id
       JOIN mst_exam_goal eg ON eg.id = mb.fk_mst_exam_goal_id
-      WHERE mc.chapter_number = ANY($1)
-        AND lvl.name_code = $2
-        AND subj.name_code = $3
-        AND eg.goal_id = $4
+      WHERE subj.name_code = $1
+        AND eg.goal_id = $2
         AND cai.created_by_teacher_id IS NOT NULL
         AND cai.review_status = 'approved'
     `,
-    [chapterNumbers, levelCode, subjectCode, examGoalCode]
+    [subjectCode, examGoalCode]
   );
   return result.rows[0]?.count || 0;
 };

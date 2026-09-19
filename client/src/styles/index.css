@@ -3472,6 +3472,10 @@ a {
   color: var(--text);
 }
 
+[data-theme="dusk"] .student-dashboard-weak-copy strong {
+  color: #000;
+}
+
 .student-dashboard-weak-copy p {
   margin: 4px 0 0;
   font-size: 1.1029em;
@@ -4564,6 +4568,10 @@ a {
   background: var(--text);
   color: #ffffff;
   box-shadow: 0 8px 18px rgb(from var(--text) r g b / 0.18);
+}
+
+[data-theme="dusk"] .student-section-detail-tab.is-active {
+  color: #000;
 }
 
 /* Desktop-only iconic tab bar (Concepts / Deep Learn), matching the same
@@ -5858,6 +5866,10 @@ a {
   color: #ffffff;
 }
 
+[data-theme="dusk"] .student-concept-explore-rail-item.is-active .student-concept-explore-rail-copy strong {
+  color: #000;
+}
+
 .student-concept-explore-rail-copy span {
   color: var(--muted);
   font-size: 1.0478em;
@@ -5866,6 +5878,10 @@ a {
 
 .student-concept-explore-rail-item.is-active .student-concept-explore-rail-copy span {
   color: rgba(255, 255, 255, 0.72);
+}
+
+[data-theme="dusk"] .student-concept-explore-rail-item.is-active .student-concept-explore-rail-copy span {
+  color: rgba(0, 0, 0, 0.65);
 }
 
 .student-concept-learning-footer {
@@ -9551,6 +9567,10 @@ a {
   background: var(--brand);
   color: #ffffff;
   box-shadow: var(--shadow-soft);
+}
+
+[data-theme="dusk"] .student-profile-theme-chip.is-active {
+  color: #000;
 }
 
 @media (min-width: 640px) {
