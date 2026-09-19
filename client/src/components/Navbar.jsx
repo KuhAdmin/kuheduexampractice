@@ -16,7 +16,7 @@ export const Navbar = ({ onAuthOpen, user, onLogout }) => {
       <div className="brand-lockup">
         <img className="brand-logo" src="/kuhedu-logo.png" alt="KUHEDU logo" />
         <div>
-          <p>KUHEDU Practice</p>
+          <p>English 24x7</p>
           <span>A memory-first exam preparation platform for CBSE Class 11 & 12.</span>
         </div>
       </div>

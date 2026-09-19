@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { useNavigate } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { EditProfileModal } from "../components/EditProfileModal";
@@ -7,7 +7,15 @@ import { StudentNotificationPanel } from "../components/StudentNotificationPanel
 import { useAuth } from "../context/authHooks";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
-import { getLastPaymentAttempt, getNotifications, markNotificationsSeen } from "../api/client";
+import {
+  apiRequest,
+  getLastPaymentAttempt,
+  getMyBatches,
+  getNotifications,
+  joinBatchByCode,
+  leaveMyBatch,
+  markNotificationsSeen,
+} from "../api/client";
 import {
   getAvatarVisibleServerSnapshot,
   getAvatarVisibleSnapshot,
@@ -395,7 +403,7 @@ const AccountThemeRow = ({ theme, onChange }) => (
 );
 
 export const StudentProfilePage = ({ user, onLogout }) => {
-  const { updateProfile, changePassword, setTheme } = useAuth();
+  const { updateProfile, changePassword, setTheme, persistUser } = useAuth();
   const navigate = useNavigate();
   const isMobile = useBreakpoint() === "mobile";
   const { platform } = useInstallPrompt();
@@ -476,6 +484,63 @@ export const StudentProfilePage = ({ user, onLogout }) => {
   const subscriptionEndedAgo = formatSubscriptionEndedAgo(user?.premiumExpiresAt);
   const lastAttemptFailed = !user?.isPremium && lastPaymentAttempt?.status === "failed";
 
+  // A teacher's batch join code links this student to that teacher/institution
+  // for rosters and (later) grading; a licensed institution's batch also
+  // grants premium access -- see batchService.js's applyInstitutionPremiumGrant.
+  const [myBatches, setMyBatches] = useState([]);
+  const [batchesLoading, setBatchesLoading] = useState(true);
+  const [batchCode, setBatchCode] = useState("");
+  const [batchJoining, setBatchJoining] = useState(false);
+  const [batchError, setBatchError] = useState("");
+  const [batchNotice, setBatchNotice] = useState("");
+
+  const loadBatches = useCallback(() => {
+    setBatchesLoading(true);
+    getMyBatches()
+      .then((result) => setMyBatches(result?.batches || []))
+      .catch(() => setMyBatches([]))
+      .finally(() => setBatchesLoading(false));
+  }, []);
+
+  useEffect(() => {
+    loadBatches();
+  }, [loadBatches]);
+
+  const handleJoinBatch = async (event) => {
+    event.preventDefault();
+    if (!batchCode.trim()) return;
+    setBatchJoining(true);
+    setBatchError("");
+    setBatchNotice("");
+    try {
+      const result = await joinBatchByCode(batchCode.trim());
+      setBatchNotice(
+        `Joined ${result.batch.className} ${result.batch.sectionName} · ${result.batch.subjectName} at ${result.batch.institutionName}.`
+      );
+      setBatchCode("");
+      loadBatches();
+      // Refresh so a newly-granted institution premium shows immediately,
+      // instead of waiting for the next tab refocus/reload.
+      apiRequest("/auth/me")
+        .then((data) => persistUser(data.user))
+        .catch(() => {});
+    } catch (joinError) {
+      setBatchError(joinError.message || "Failed to join batch.");
+    } finally {
+      setBatchJoining(false);
+    }
+  };
+
+  const handleLeaveBatch = async (batchId) => {
+    try {
+      await leaveMyBatch(batchId);
+      loadBatches();
+    } catch {
+      // Best-effort -- the batch stays listed if this fails, which is a safe
+      // default (no false "left" state shown).
+    }
+  };
+
   return (
     <StudentPageShell pageClass="student-page--profile" legacyModifierClass="student-profile-phone">
         <header className="student-profile-header">
@@ -547,7 +612,7 @@ export const StudentProfilePage = ({ user, onLogout }) => {
           <div className="student-profile-premium-copy">
             <div className="student-profile-premium-head">
               <div>
-                <strong>Kuhedu Study Buddy Premium</strong>
+                <strong>English 24x7 Premium</strong>
                 <p>
                   {user?.isPremium
                     ? "You have full access to all features and premium content"
@@ -580,6 +645,47 @@ export const StudentProfilePage = ({ user, onLogout }) => {
                   <div className="student-profile-premium-trial is-alert">Attempt failed</div>
                 ) : null}
               </>
+            )}
+          </div>
+        </section>
+
+        <section className="student-profile-section">
+          <h2>Class Batch</h2>
+          <div className="admin-panel">
+            <form className="admin-studio-form-grid" onSubmit={handleJoinBatch}>
+              <label className="admin-studio-field">
+                <span>Have a batch code from your teacher?</span>
+                <input
+                  value={batchCode}
+                  onChange={(event) => setBatchCode(event.target.value.toUpperCase())}
+                  placeholder="e.g. GREEN-4F7K2Q"
+                />
+              </label>
+              <div className="admin-bulk-pipeline-dialog-actions">
+                <button type="submit" className="primary-button" disabled={batchJoining || !batchCode.trim()}>
+                  {batchJoining ? "Joining..." : "Join Batch"}
+                </button>
+              </div>
+            </form>
+            {batchError && <p className="error-text">{batchError}</p>}
+            {batchNotice && <div className="admin-bulk-pipeline-concurrency">{batchNotice}</div>}
+
+            {!batchesLoading && myBatches.length > 0 && (
+              <div className="student-profile-account-card">
+                {myBatches.map((batch) => (
+                  <div key={batch.id} className="student-profile-account-row student-profile-account-row-stacked">
+                    <div className="student-profile-account-row-top">
+                      <span>
+                        {batch.institutionName} &middot; {batch.className} {batch.sectionName} &middot;{" "}
+                        {batch.subjectName}
+                      </span>
+                      <button type="button" className="ghost-button" onClick={() => handleLeaveBatch(batch.id)}>
+                        Leave
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </section>
@@ -634,7 +740,7 @@ export const StudentProfilePage = ({ user, onLogout }) => {
             <div className="student-profile-premium-copy">
               <div className="student-profile-premium-head">
                 <div>
-                  <strong>KUHEDU STUDY BUDDY</strong>
+                  <strong>English 24x7</strong>
                   <p>Add to your Home Screen for quick access</p>
                 </div>
               </div>

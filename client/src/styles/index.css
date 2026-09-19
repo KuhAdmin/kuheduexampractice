@@ -197,6 +197,13 @@ a {
   min-height: 100vh;
 }
 
+/* #root wraps every role's app (Admin/Student too), so this is scoped to
+   only paint white when the Teacher shell is actually mounted inside it --
+   same :has() pattern already used for the bottom-nav spacing above. */
+#root:has(.teacher-app-shell) {
+  background-color: #fff;
+}
+
 .app-shell {
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
@@ -914,7 +921,7 @@ a {
 }
 
 /* clamp() instead of a fixed 0.8em -- on narrow phones these 5-6 item rows
-   (About Kuhedu/Study Buddy/Learners/Institutions/Pricing, then Privacy/
+   (About Kuhedu/English 24x7/Learners/Institutions/Pricing, then Privacy/
    Terms/Refund/Cancellation/Disclaimer/Contact) wrapped with a single
    orphaned word stranded on its own line. Scales down continuously as the
    viewport narrows (2.6vw) rather than jumping at one breakpoint, floored
@@ -2546,6 +2553,26 @@ a {
     gap: 24px;
   }
 
+  /* Dashboard-specific: tighter than the shared .student-page default above
+     (that one's left alone since other pages rely on it), and the
+     .student-dashboard-continue-card/-info-card/-section margin-top: 18px
+     each carry for the mobile phone-card layout (plain stacked-flow
+     siblings there, no grid gap of their own) is zeroed out here -- from
+     this width up they're direct children of the grid instead, so that
+     margin was stacking on top of the grid's own `gap`, roughly doubling
+     the visual space between sections. (Used to only be zeroed at the wider
+     920px "dashboard density" tier below, leaving 640-920px doubled up.) */
+  .student-page--dashboard {
+    gap: 12px;
+  }
+
+  .student-page--dashboard > .student-dashboard-continue-card,
+  .student-page--dashboard > .student-dashboard-info-card,
+  .student-page--dashboard > .student-dashboard-section,
+  .student-page--dashboard > .student-dashboard-subheading-row {
+    margin-top: 0;
+  }
+
   /* Default for pages not yet given a bespoke desktop layout: stay narrow
      and centered, just without the phone-card chrome/border/shadow. */
   .student-page {
@@ -2825,7 +2852,8 @@ a {
      its margin-top untouched). */
   .student-page--dashboard > .student-dashboard-continue-card,
   .student-page--dashboard > .student-dashboard-info-card,
-  .student-page--dashboard > .student-dashboard-section {
+  .student-page--dashboard > .student-dashboard-section,
+  .student-page--dashboard > .student-dashboard-subheading-row {
     margin-top: 0;
   }
 
@@ -2968,7 +2996,7 @@ a {
 
 .student-dashboard-greeting {
   margin: 0;
-  font-size: 2.5506em;
+  font-size: 1.913em;
   font-weight: 700;
   letter-spacing: -0.04em;
   color: var(--text);
@@ -2981,11 +3009,29 @@ a {
   color: var(--muted);
 }
 
-.student-dashboard-header h1 {
-  margin: 6px 0 0;
+/* Its own row below the header (not sharing the header's flex row with the
+   bell icon) so "Keep learning, keep growing!" always gets the full
+   viewport width to lay out in -- see StudentDashboardPage.jsx, where this
+   wraps a standalone <h1> placed right after </header>. */
+.student-dashboard-subheading-row h1 {
+  margin: 0;
   font-size: 1.296em;
   font-weight: 600;
   color: var(--muted-strong);
+}
+
+.student-dashboard-subheading-row {
+  margin-top: 6px;
+}
+
+@media (max-width: 720px) {
+  .student-dashboard-subheading-row {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding: 0 18px;
+    box-sizing: border-box;
+  }
 }
 
 .student-dashboard-bell-wrap {
@@ -2996,18 +3042,19 @@ a {
   position: relative;
   display: inline-grid;
   place-items: center;
-  width: 60px;
-  height: 60px;
+  width: 42px;
+  height: 42px;
   padding: 0;
   border: 1px solid rgb(from var(--text) r g b / 0.1);
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--surface-strong);
   color: var(--text);
+  font-size: 1.5em;
 }
 
 .student-dashboard-bell .student-dashboard-icon {
-  width: 27px;
-  height: 27px;
+  width: 30px;
+  height: 30px;
 }
 
 .student-dashboard-bell-badge {
@@ -3092,24 +3139,21 @@ a {
   min-width: 0;
 }
 
+/* Two columns now that the Continue button has moved up into the copy
+   block (see .student-dashboard-continue-copy .student-dashboard-continue-button)
+   -- just the streak card and the progress ring are left here. The streak
+   card's own column gets all the leftover width so "0 Days" always has
+   room and never wraps. */
 .student-dashboard-continue-actions {
   grid-area: actions;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
 }
 
-.student-dashboard-continue-actions .student-dashboard-continue-button {
-  min-width: 0;
-  margin-top: 0;
-  padding: 0 14px;
-  font-size: 1.1029em;
-  flex-shrink: 0;
-}
-
 .student-dashboard-continue-actions .student-dashboard-continue-streak {
-  flex: 1;
+  grid-column: 1 / 1;
   min-width: 0;
   padding: 8px 10px;
   gap: 8px;
@@ -3156,13 +3200,7 @@ a {
 
   /* Room to breathe once the viewport widens -- back to full size instead
      of the mobile action-bar compaction above. */
-  .student-dashboard-continue-actions .student-dashboard-continue-button {
-    padding: 0 16px;
-    font-size: 1.2408em;
-  }
-
   .student-dashboard-continue-actions .student-dashboard-continue-streak {
-    flex: none;
     padding: 14px 12px;
     gap: 12px;
   }
@@ -3223,7 +3261,7 @@ a {
 .student-dashboard-continue-copy strong {
   display: block;
   margin-top: 6px;
-  font-size: 1.6544em;
+  font-size: 1.2408em;
   color: var(--text);
 }
 
@@ -3233,15 +3271,20 @@ a {
   line-height: 1.45;
 }
 
+/* Now sits at the top of the copy block, in place of the old plain-text
+   "Continue Learning" eyebrow -- a small tight-fitting pill instead of the
+   full-size CTA it used to be lower in the card. */
 .student-dashboard-continue-button {
-  min-width: 104px;
-  min-height: 36px;
-  margin-top: 14px;
-  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 0;
+  margin-top: 0;
+  padding: 4px 12px;
   border-radius: 999px;
   background: var(--green);
   color: #ffffff;
-  font-size: 1.2408em;
+  font-size: 1.1305em;
   font-weight: 700;
 }
 
@@ -3404,6 +3447,7 @@ a {
   align-items: center;
   gap: 12px;
   padding: 14px 12px;
+  background-color: #c8eeee;
 }
 
 .student-dashboard-weak-badge {
@@ -9195,7 +9239,7 @@ a {
   color: var(--text);
 }
 
-/* Heading is "Install<br/>KUHEDU STUDY BUDDY" here (see StudentProfilePage.jsx)
+/* Heading is "Install<br/>English 24x7" here (see StudentProfilePage.jsx)
    -- smaller than the base .student-profile-premium-copy strong size so the
    product name fits on its own single line instead of wrapping a second time. */
 /* 1.08em is just under the measured wrap boundary (breaks to 2 lines
@@ -9522,21 +9566,21 @@ a {
   padding: 24px 0 28px;
 }
 
-.admin-mobile-topbar,
+.mobile-topbar-row,
 .admin-mobile-backdrop {
   display: none;
 }
 
-.admin-mobile-topbar {
+/* Flat, edge-to-edge header row -- no border/shadow/backdrop-blur "floating
+   card" treatment (that used to live on .admin-mobile-topbar, since renamed
+   away entirely). */
+.mobile-topbar-row {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 20px;
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(18px);
+  padding: 14px 20px;
+  background: var(--surface-strong);
+  border-bottom: 1px solid var(--line);
 }
 
 .admin-mobile-brand {
@@ -9565,14 +9609,56 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 88px;
-  padding: 12px 16px;
-  border-radius: 999px;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 14px;
   border: 1px solid var(--line);
   background: rgb(from var(--teal) r g b / 0.08);
   color: var(--teal);
-  font-weight: 700;
   flex: 0 0 auto;
+}
+
+/* Three bars that morph into an X -- aria-expanded on the button (already
+   set for screen readers) doubles as the open/close visual trigger, so no
+   extra JS-driven class is needed here. */
+.admin-mobile-menu-icon {
+  position: relative;
+  width: 20px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.admin-mobile-menu-icon span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition: transform 160ms ease, opacity 160ms ease, top 160ms ease;
+}
+
+.admin-mobile-menu-icon span:nth-child(1) {
+  top: 0;
+}
+.admin-mobile-menu-icon span:nth-child(2) {
+  top: 6px;
+}
+.admin-mobile-menu-icon span:nth-child(3) {
+  top: 12px;
+}
+
+.admin-mobile-menu-button[aria-expanded="true"] .admin-mobile-menu-icon span:nth-child(1) {
+  top: 6px;
+  transform: rotate(45deg);
+}
+.admin-mobile-menu-button[aria-expanded="true"] .admin-mobile-menu-icon span:nth-child(2) {
+  opacity: 0;
+}
+.admin-mobile-menu-button[aria-expanded="true"] .admin-mobile-menu-icon span:nth-child(3) {
+  top: 6px;
+  transform: rotate(-45deg);
 }
 
 .admin-sidebar,
@@ -9771,7 +9857,7 @@ a {
     transform: none;
   }
 
-  .admin-page--tablet-collapsed .admin-mobile-topbar,
+  .admin-page--tablet-collapsed .mobile-topbar-row,
   .admin-page--tablet-collapsed .admin-mobile-backdrop {
     display: none;
   }
@@ -9829,6 +9915,34 @@ a {
   display: grid;
   gap: 8px;
   flex-shrink: 0;
+}
+
+/* Logout as a plain nav-link-styled row (icon + .admin-sidebar-link-label)
+   instead of a standalone pill button, so it collapses to an icon-only
+   "infographic" item exactly like Home/Chapters/etc. do when the sidebar
+   itself collapses -- .admin-sidebar-link-label is the same class those
+   already use, so the existing collapsed/hover-to-reveal rules apply here
+   for free. */
+.admin-sidebar-logout {
+  width: 100%;
+  background: none;
+  text-align: left;
+}
+
+.admin-sidebar-logout:hover {
+  background: rgb(from var(--danger) r g b / 0.08);
+  color: var(--danger);
+}
+
+.admin-sidebar-logout-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.student-app-shell .admin-sidebar-logout-icon {
+  width: 27px;
+  height: 27px;
 }
 
 .admin-main {
@@ -13839,11 +13953,11 @@ a {
     transform: translateX(0);
   }
 
-  .admin-mobile-topbar {
+  .mobile-topbar-row {
     display: flex;
     grid-column: 1 / -1;
     position: sticky;
-    top: 16px;
+    top: 0;
     z-index: 8;
   }
 
@@ -13875,7 +13989,7 @@ a {
     align-items: start;
   }
 
-  .admin-mobile-topbar {
+  .mobile-topbar-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
@@ -16038,9 +16152,23 @@ a {
 }
 
 .student-testlab-header-copy h1 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   margin: 0;
   font-size: 1.6em;
   color: var(--text);
+}
+
+.student-testlab-repo-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgb(from var(--blue) r g b / 0.14);
+  color: var(--blue);
+  font-size: 0.42em;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .student-testlab-header-copy p {
@@ -16077,7 +16205,7 @@ a {
   padding: 20px;
   border-radius: 22px;
   border: 1px solid rgb(from var(--blue) r g b / 0.14);
-  background: var(--surface-strong);
+  background: rgb(from var(--blue) r g b / 0.16);
   box-shadow: 0 12px 32px rgb(from var(--blue) r g b / 0.08);
 }
 
@@ -16115,6 +16243,9 @@ a {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgb(from var(--blue) r g b / 0.16);
 }
 
 .student-testlab-academic-field label {
@@ -16165,6 +16296,12 @@ a {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.student-testlab-section {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgb(from var(--blue) r g b / 0.16);
 }
 
 .student-testlab-section-header {
@@ -16567,6 +16704,20 @@ a {
   color: var(--text);
 }
 
+.student-testlab-session-count-short {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .student-testlab-session-count-full {
+    display: none;
+  }
+
+  .student-testlab-session-count-short {
+    display: inline;
+  }
+}
+
 .student-testlab-timer-pill {
   display: inline-flex;
   align-items: center;
@@ -16683,6 +16834,18 @@ a {
   cursor: default;
 }
 
+@media (max-width: 640px) {
+  .student-testlab-session-prev,
+  .student-testlab-generate-button {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .student-testlab-session-nav .student-testlab-arrow-icon {
+    display: none;
+  }
+}
+
 .student-testlab-question-card {
   padding: 20px;
   border-radius: 20px;
@@ -16736,10 +16899,12 @@ a {
 
 .student-testlab-review-item.is-correct {
   border-color: rgb(from var(--success, var(--green)) r g b / 0.35);
+  background: rgb(from var(--success, var(--green)) r g b / 0.1);
 }
 
 .student-testlab-review-item.is-incorrect {
   border-color: rgb(from var(--danger, #c63c3c) r g b / 0.35);
+  background: rgb(from var(--danger, #c63c3c) r g b / 0.1);
 }
 
 .student-testlab-review-item header {
@@ -17090,4 +17255,1214 @@ a {
   .student-testlab-report-strengths {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* ============================================================
+   Teacher workspace -- its own visual identity (light sidebar, blue
+   accent for the active item), distinct from the app's orange --brand
+   used elsewhere. Scoped entirely under .teacher-app-shell so nothing
+   leaks into Admin/Student pages, which keep the shared .admin-sidebar
+   look.
+   ============================================================ */
+
+.teacher-app-shell {
+  background-color: #fff;
+  --tnavy: #101b3a;
+  --tblue: #2f5fdb;
+  --tblue-soft: rgba(47, 95, 219, 0.1);
+  --tgreen: #1f9d55;
+  --tgreen-soft: rgba(31, 157, 85, 0.12);
+  --tred: #dc3545;
+  --tred-soft: rgba(220, 53, 69, 0.1);
+  --tamber: #e8890c;
+  --tamber-soft: rgba(232, 137, 12, 0.12);
+  --tpurple: #7c4fe0;
+  --tpurple-soft: rgba(124, 79, 224, 0.12);
+}
+
+.teacher-app-shell .admin-sidebar {
+  background: #fff;
+  border-right: 1px solid var(--line);
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  border-radius: 0;
+  color: var(--text);
+}
+
+.teacher-app-shell .admin-sidebar-brand p {
+  color: var(--tnavy);
+}
+
+.teacher-app-shell .admin-sidebar-brand span,
+.teacher-app-shell .admin-sidebar-footer span {
+  color: var(--muted);
+}
+
+.teacher-app-shell .admin-sidebar-footer p {
+  color: var(--text);
+}
+
+.teacher-app-shell .admin-sidebar-footer {
+  border-top: 1px solid var(--line);
+}
+
+.teacher-app-shell .admin-sidebar-link {
+  color: #4b5568;
+}
+
+.teacher-app-shell .admin-sidebar-link.is-active,
+.teacher-app-shell .admin-sidebar-link:hover {
+  background: var(--tblue-soft);
+  color: var(--tblue);
+}
+
+.teacher-app-shell .admin-mobile-menu-button {
+  background: var(--tblue-soft);
+  color: var(--tblue);
+  border-color: var(--line);
+}
+
+/* Below 720px the shared .mobile-topbar-row switches to a 2-column grid
+   (sized for Admin/Student's plain brand + button pair) -- Teacher's row can
+   hold a third item (the bell/avatar slot), which doesn't fit that fixed
+   column count and would drop to its own line. Keep it a plain flex row at
+   every width instead: brand first, then the bell/avatar slot (its own
+   margin-left: auto pushes it and the hamburger after it flush right). */
+@media (max-width: 720px) {
+  .teacher-app-shell .mobile-topbar-row {
+    display: flex;
+    grid-template-columns: none;
+  }
+}
+
+/* ---- shared page bits ---- */
+
+.teacher-page {
+  display: grid;
+  gap: 20px;
+}
+
+.teacher-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.teacher-page-header h1 {
+  margin: 4px 0 2px;
+}
+
+.teacher-page-header p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+.teacher-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--tblue);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.teacher-greeting-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: 18px;
+  background: var(--tblue-soft);
+  border: 1px solid var(--line);
+}
+
+.teacher-greeting-banner strong {
+  display: block;
+  color: var(--tblue);
+  font-size: 1.1em;
+}
+
+.teacher-greeting-banner p {
+  margin: 2px 0 0;
+  color: var(--muted);
+}
+
+/* ---- stat tiles ---- */
+
+.teacher-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.teacher-stat-tile {
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  display: grid;
+  gap: 4px;
+}
+
+.teacher-stat-tile strong {
+  font-size: 1.9em;
+  line-height: 1;
+}
+
+.teacher-stat-tile span {
+  color: var(--muted);
+  font-size: 0.95em;
+}
+
+.teacher-stat-tile.tone-blue {
+  background: var(--tblue-soft);
+}
+.teacher-stat-tile.tone-blue strong {
+  color: var(--tblue);
+}
+
+.teacher-stat-tile.tone-green {
+  background: var(--tgreen-soft);
+}
+.teacher-stat-tile.tone-green strong {
+  color: var(--tgreen);
+}
+
+.teacher-stat-tile.tone-red {
+  background: var(--tred-soft);
+}
+.teacher-stat-tile.tone-red strong {
+  color: var(--tred);
+}
+
+.teacher-stat-tile.tone-purple {
+  background: var(--tpurple-soft);
+}
+.teacher-stat-tile.tone-purple strong {
+  color: var(--tpurple);
+}
+
+/* ---- class / list cards ---- */
+
+.teacher-card-list {
+  display: grid;
+  gap: 14px;
+}
+
+.teacher-card {
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  display: grid;
+  gap: 10px;
+}
+
+.teacher-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.teacher-card-head h3 {
+  margin: 0;
+}
+
+.teacher-card-head span {
+  color: var(--muted);
+  font-size: 0.95em;
+}
+
+.teacher-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.teacher-card-meta {
+  color: var(--muted);
+  font-size: 0.92em;
+}
+
+.teacher-alert-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--tred);
+  font-size: 0.92em;
+}
+
+.teacher-alert-line::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tred);
+  flex-shrink: 0;
+}
+
+.teacher-header-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.teacher-join-code-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.teacher-join-code {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--tblue-soft);
+  color: var(--tblue);
+}
+
+/* ---- progress bars ---- */
+
+.teacher-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+  flex: 1;
+  min-width: 80px;
+}
+
+.teacher-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--tgreen), var(--tblue));
+}
+
+.teacher-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.teacher-progress-row span:last-child {
+  font-weight: 700;
+  font-size: 0.9em;
+  color: var(--text);
+  min-width: 34px;
+  text-align: right;
+}
+
+/* ---- tabs ---- */
+
+.teacher-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.teacher-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 16px;
+  color: var(--muted);
+  font-weight: 600;
+  background: none;
+  border: none;
+  border-radius: 14px 14px 0 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.teacher-tab .teacher-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.teacher-tab.is-active {
+  background: var(--tblue-soft);
+}
+
+@media (max-width: 640px) {
+  .teacher-tabs {
+    justify-content: space-between;
+  }
+
+  .teacher-tab {
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 0.85em;
+    text-align: center;
+  }
+}
+
+/* For a table row's action buttons when they're full text buttons (not the
+   compact 34px icon buttons .admin-exam-types-row-actions is built for) --
+   that class sets `display:flex` + `width:1%` directly on the <td>, which a
+   couple of real-size text buttons overflow, visually bleeding left over the
+   previous column. Wrap those buttons in an inner element with this class
+   instead of applying it to the <td> itself. */
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.teacher-tab.is-active {
+  color: var(--tblue);
+  border-bottom-color: var(--tblue);
+}
+
+/* ---- donut ring (Class/Student insight) ---- */
+
+.teacher-donut-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.teacher-donut {
+  --pct: 0;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: conic-gradient(var(--tblue) calc(var(--pct) * 1%), var(--line) 0);
+}
+
+.teacher-donut::before {
+  content: "";
+  position: absolute;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: var(--surface-strong);
+}
+
+.teacher-donut {
+  position: relative;
+}
+
+.teacher-donut span {
+  position: relative;
+  font-size: 1.6em;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.teacher-donut-label {
+  color: var(--muted);
+  font-size: 0.92em;
+  text-align: center;
+}
+
+/* ---- metric rows (labeled progress bars) ---- */
+
+.teacher-metric-list {
+  display: grid;
+  gap: 12px;
+}
+
+.teacher-metric-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.teacher-metric-row span:first-child {
+  color: var(--muted);
+  font-size: 0.92em;
+}
+
+/* ---- needs-attention / learning-gaps rows ---- */
+
+.teacher-flag-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-strong);
+  border: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.teacher-flag-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75em;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.teacher-flag-dot.tone-red {
+  background: var(--tred);
+}
+.teacher-flag-dot.tone-amber {
+  background: var(--tamber);
+}
+.teacher-flag-dot.tone-green {
+  background: var(--tgreen);
+}
+
+.teacher-flag-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.teacher-flag-topic {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+/* ---- badges ---- */
+
+.teacher-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.82em;
+  font-weight: 700;
+}
+
+.teacher-badge.tone-draft {
+  background: var(--line);
+  color: var(--muted);
+}
+.teacher-badge.tone-published,
+.teacher-badge.tone-approved,
+.teacher-badge.tone-completed {
+  background: var(--tgreen-soft);
+  color: var(--tgreen);
+}
+.teacher-badge.tone-pending {
+  background: var(--tamber-soft);
+  color: var(--tamber);
+}
+.teacher-badge.tone-rejected {
+  background: var(--tred-soft);
+  color: var(--tred);
+}
+
+/* ---- stepper (Test Builder) ---- */
+
+.teacher-stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.teacher-stepper-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.teacher-stepper-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--line);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85em;
+  font-weight: 700;
+}
+
+.teacher-stepper-step.is-active .teacher-stepper-badge {
+  background: var(--tblue);
+  color: #fff;
+}
+
+.teacher-stepper-step.is-done .teacher-stepper-badge {
+  background: var(--tgreen);
+  color: #fff;
+}
+
+.teacher-stepper-step.is-active {
+  color: var(--text);
+}
+
+.teacher-stepper-divider {
+  width: 28px;
+  height: 1px;
+  background: var(--line);
+}
+
+/* ---- question rows (Test Builder step 2) ---- */
+
+.teacher-question-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  flex-wrap: wrap;
+}
+
+.teacher-question-row-main {
+  flex: 1;
+  min-width: 220px;
+  display: grid;
+  gap: 6px;
+}
+
+.teacher-question-row-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.teacher-question-row-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ---- difficulty distribution bar (Finalize step) ---- */
+
+.teacher-distribution-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.teacher-distribution-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.9em;
+  color: var(--muted);
+}
+
+.teacher-distribution-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.teacher-distribution-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+/* ---- lesson plan detail two-column ---- */
+
+.teacher-lesson-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 720px) {
+  .teacher-lesson-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teacher-lesson-field {
+  display: grid;
+  gap: 4px;
+}
+
+.teacher-lesson-field span:first-child {
+  font-weight: 700;
+  font-size: 0.92em;
+}
+
+.teacher-lesson-field p,
+.teacher-lesson-field ul {
+  margin: 0;
+  color: var(--muted);
+}
+
+.teacher-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--tblue-soft);
+  border: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+/* ---- AI grading assist ---- */
+
+.teacher-ai-assist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .teacher-ai-assist-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teacher-gradebook-input {
+  width: 56px;
+  text-align: center;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  padding: 4px;
+  font: inherit;
+}
+
+.teacher-gradebook-input:focus {
+  outline: 2px solid var(--tblue);
+  outline-offset: 1px;
+}
+
+/* ---- class-detail header: stat badges + join-code card ---- */
+
+.teacher-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.teacher-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.teacher-stat-badges {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.teacher-stat-badges-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--line);
+}
+
+.teacher-stat-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.teacher-stat-badge-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--tblue-soft);
+  color: var(--tblue);
+}
+
+.teacher-stat-badge-icon.tone-green {
+  background: var(--tgreen-soft);
+  color: var(--tgreen);
+}
+
+.teacher-stat-badge-icon.tone-purple {
+  background: var(--tpurple-soft);
+  color: var(--tpurple);
+}
+
+.teacher-stat-badge-text {
+  display: grid;
+  line-height: 1.25;
+}
+
+.teacher-stat-badge-text strong {
+  font-size: 1.02em;
+}
+
+.teacher-stat-badge-text span {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.teacher-joincode-card {
+  min-width: 240px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  display: grid;
+  gap: 10px;
+}
+
+.teacher-joincode-card > span:first-child {
+  font-weight: 700;
+  font-size: 0.92em;
+}
+
+.teacher-joincode-card-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.teacher-joincode-card-row .teacher-join-code {
+  flex: 1;
+  text-align: center;
+  padding: 8px 12px;
+  font-size: 1.02em;
+}
+
+.teacher-joincode-icon-button {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+}
+
+.teacher-joincode-icon-button:hover {
+  background: var(--surface);
+}
+
+.teacher-regenerate-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--tgreen-soft);
+  color: var(--tgreen);
+  font-weight: 700;
+}
+
+.teacher-joincode-notice {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.teacher-joincode-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.teacher-howitworks-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--tblue);
+  font-weight: 600;
+  font-size: 0.88em;
+  background: none;
+  border: none;
+}
+
+.teacher-howitworks-link .teacher-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Simple, honest stand-in for a custom illustration -- four colored bars
+   rather than art assets this project doesn't have. */
+.teacher-header-illustration {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 150px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.teacher-header-illustration-bar {
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.85em;
+  color: #fff;
+  text-align: center;
+}
+
+.teacher-header-illustration-bar.tone-1 {
+  background: #4ba3d3;
+}
+.teacher-header-illustration-bar.tone-2 {
+  background: #8b6fd8;
+}
+.teacher-header-illustration-bar.tone-3 {
+  background: #e8a23c;
+}
+.teacher-header-illustration-bar.tone-4 {
+  background: #4caf6e;
+}
+
+/* ---- activity tab ---- */
+
+.teacher-activity-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .teacher-activity-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teacher-activity-list {
+  display: grid;
+  gap: 4px;
+}
+
+.teacher-activity-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  text-align: left;
+}
+
+.teacher-activity-row.is-clickable {
+  cursor: pointer;
+}
+
+.teacher-activity-row.is-clickable:hover {
+  background: var(--surface);
+}
+
+.teacher-activity-row:last-child {
+  border-bottom: none;
+}
+
+.teacher-activity-chevron {
+  color: var(--muted);
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.teacher-activity-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tblue-soft);
+  color: var(--tblue);
+}
+
+.teacher-activity-icon.tone-green {
+  background: var(--tgreen-soft);
+  color: var(--tgreen);
+}
+.teacher-activity-icon.tone-amber {
+  background: var(--tamber-soft);
+  color: var(--tamber);
+}
+.teacher-activity-icon.tone-purple {
+  background: var(--tpurple-soft);
+  color: var(--tpurple);
+}
+
+.teacher-activity-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.teacher-activity-main span {
+  color: var(--muted);
+  font-size: 0.88em;
+}
+
+.teacher-activity-time {
+  color: var(--muted);
+  font-size: 0.85em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.teacher-side-card {
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+}
+
+.teacher-side-card.tone-green {
+  background: var(--tgreen-soft);
+  border-color: transparent;
+}
+
+.teacher-side-card.tone-blue {
+  background: var(--tblue-soft);
+  border-color: transparent;
+}
+
+.teacher-side-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.teacher-side-card.tone-green .teacher-side-card-head {
+  color: var(--tgreen);
+}
+.teacher-side-card.tone-blue .teacher-side-card-head {
+  color: var(--tblue);
+}
+
+.teacher-recent-join-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.teacher-recent-join-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--tblue-soft);
+  color: var(--tblue);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85em;
+  flex-shrink: 0;
+}
+
+.teacher-recent-join-info {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+
+.teacher-recent-join-info span {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.teacher-tip-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.teacher-tip-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92em;
+}
+
+.teacher-tip-list .teacher-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--tblue);
+  flex-shrink: 0;
+}
+
+.teacher-quote-banner {
+  text-align: center;
+  padding: 18px 22px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  color: var(--muted);
+  font-style: italic;
+}
+
+.teacher-quote-banner cite {
+  display: block;
+  margin-top: 6px;
+  font-style: normal;
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+/* ---- mobile topbar bell + avatar (Teacher only, via mobileTopbarExtra) ---- */
+
+.teacher-mobile-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.teacher-mobile-icon-button {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  color: var(--tnavy);
+  flex-shrink: 0;
+}
+
+.teacher-notification-dot {
+  position: absolute;
+  top: 8px;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tred);
+  border: 1.5px solid #fff;
+}
+
+.teacher-mobile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--tblue-soft);
+  color: var(--tblue);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85em;
+  overflow: hidden;
+}
+
+.teacher-mobile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Only meaningful on the mobile/tablet breakpoints where .mobile-topbar-row
+   itself becomes visible -- desktop keeps the sidebar's own footer for
+   account actions and never shows this row. */
+@media (min-width: 921px) {
+  .teacher-mobile-topbar-actions {
+    display: none;
+  }
+}
+
+/* ---- fixed bottom nav (mobile only) ---- */
+
+.teacher-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .teacher-bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9;
+    background: #fff;
+    border-top: 1px solid var(--line);
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Keeps page content (and the quote banner / floating panels) from being
+     covered by the fixed bar. :has() is already relied on elsewhere in this
+     stylesheet's color functions' browser baseline, so it's safe to use here
+     too. */
+  body:has(.teacher-bottom-nav) .teacher-app-shell .admin-main {
+    padding-bottom: 76px;
+  }
+}
+
+.teacher-bottom-nav-item {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 6px 2px;
+  border-radius: 14px;
+  color: var(--muted);
+}
+
+.teacher-bottom-nav-item span {
+  font-size: 0.78em;
+  font-weight: 600;
+}
+
+.teacher-bottom-nav-item .student-dashboard-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.teacher-bottom-nav-item.is-active {
+  color: var(--tblue);
+  background: var(--tblue-soft);
 }

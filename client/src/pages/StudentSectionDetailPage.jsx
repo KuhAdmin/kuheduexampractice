@@ -374,7 +374,57 @@ export const StudentSectionDetailPage = () => {
   const [chapterName, setChapterName] = useState("");
   // null | "preLessonWarmup" | "postLesson" | "recallLab" -- which accordion
   // group (if any) is currently expanded in the Micro Learning Units list.
-  const [expandedGroup, setExpandedGroup] = useState(null);
+  // Persisted per-section in localStorage (see toggleExpandedGroup below) so
+  // returning to the same section later shows it in the same expanded/
+  // collapsed state it was left in. Read via a lazy initializer (not an
+  // effect) so the very first render already reflects the stored value --
+  // an effect-based load would start this at null and only correct it a
+  // render later.
+  const [expandedGroup, setExpandedGroup] = useState(() => {
+    try {
+      return localStorage.getItem(`kuhedu_section_expanded_group_${sourceSectionId}`) || null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Lazy initializers only run once per mount, so this re-syncs from storage
+  // if the user navigates from one section straight to another without this
+  // component unmounting in between.
+  useEffect(() => {
+    if (!sourceSectionId) return;
+    try {
+      setExpandedGroup(localStorage.getItem(`kuhedu_section_expanded_group_${sourceSectionId}`) || null);
+    } catch {
+      setExpandedGroup(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceSectionId]);
+
+  // Saves synchronously at the moment of toggling (not via a useEffect
+  // reacting to expandedGroup changes) so it can't race the re-sync effect
+  // above -- that effect updating state for a newly-navigated-to section
+  // and this one persisting a toggle from the previous section could
+  // otherwise land in either order and overwrite each other.
+  const toggleExpandedGroup = (groupName) => {
+    setExpandedGroup((current) => {
+      const next = current === groupName ? null : groupName;
+      if (sourceSectionId) {
+        try {
+          const storageKey = `kuhedu_section_expanded_group_${sourceSectionId}`;
+          if (next) {
+            localStorage.setItem(storageKey, next);
+          } else {
+            localStorage.removeItem(storageKey);
+          }
+        } catch {
+          // Storage unavailable (private browsing, quota, etc.) -- the
+          // toggle still works for this visit, it just won't be remembered.
+        }
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -540,7 +590,7 @@ export const StudentSectionDetailPage = () => {
                         <button
                           type="button"
                           className="student-goals-row is-highlight"
-                          onClick={() => setExpandedGroup((current) => (current === "preLessonWarmup" ? null : "preLessonWarmup"))}
+                          onClick={() => toggleExpandedGroup("preLessonWarmup")}
                         >
                           <span className="student-goals-row-rail">
                             <span className="student-goals-row-circle">
@@ -600,7 +650,7 @@ export const StudentSectionDetailPage = () => {
                         <button
                           type="button"
                           className="student-goals-row is-highlight"
-                          onClick={() => setExpandedGroup((current) => (current === "postLesson" ? null : "postLesson"))}
+                          onClick={() => toggleExpandedGroup("postLesson")}
                         >
                           <span className="student-goals-row-rail">
                             <span className="student-goals-row-circle">
@@ -632,7 +682,7 @@ export const StudentSectionDetailPage = () => {
                     <button
                       type="button"
                       className="student-goals-row is-highlight"
-                      onClick={() => setExpandedGroup((current) => (current === "recallLab" ? null : "recallLab"))}
+                      onClick={() => toggleExpandedGroup("recallLab")}
                     >
                       <span className="student-goals-row-rail">
                         <span className="student-goals-row-circle">
@@ -713,7 +763,7 @@ export const StudentSectionDetailPage = () => {
                     <>
                       <StudentDrilldownCard
                         className="student-section-detail-row is-highlight"
-                        onClick={() => setExpandedGroup((current) => (current === "preLessonWarmup" ? null : "preLessonWarmup"))}
+                        onClick={() => toggleExpandedGroup("preLessonWarmup")}
                         leading={
                           <div className="student-section-detail-index">
                             <SectionDetailIcon type="atom" />
@@ -750,7 +800,7 @@ export const StudentSectionDetailPage = () => {
                     <>
                       <StudentDrilldownCard
                         className="student-section-detail-row is-highlight"
-                        onClick={() => setExpandedGroup((current) => (current === "postLesson" ? null : "postLesson"))}
+                        onClick={() => toggleExpandedGroup("postLesson")}
                         leading={
                           <div className="student-section-detail-index">
                             <SectionDetailIcon type="quiz" />
@@ -773,7 +823,7 @@ export const StudentSectionDetailPage = () => {
                   )}
                   <StudentDrilldownCard
                     className="student-section-detail-row is-highlight"
-                    onClick={() => setExpandedGroup((current) => (current === "recallLab" ? null : "recallLab"))}
+                    onClick={() => toggleExpandedGroup("recallLab")}
                     leading={
                       <div className="student-section-detail-index">
                         <SectionDetailIcon type="memory" />

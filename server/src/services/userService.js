@@ -1,8 +1,9 @@
 import bcrypt from "bcryptjs";
 import { pool } from "../db/pool.js";
 import { listClassSubjectOptionsWithContent } from "./catalogService.js";
+import { isInstitutionGrantStillValid } from "./batchService.js";
 
-const ALLOWED_ROLES = ["student", "moderator", "admin", "superstudent"];
+const ALLOWED_ROLES = ["student", "moderator", "admin", "superstudent", "teacher"];
 
 // The seed admin account is exempt from the superstudent-access toggle --
 // it's the fallback login used to recover the admin panel, so it must never
@@ -24,6 +25,7 @@ const mapUser = (row) => ({
   theme: row.theme,
   isPremium: row.is_premium,
   premiumExpiresAt: row.premium_expires_at,
+  premiumSource: row.premium_source,
   superstudentAccessEnabled: row.superstudent_access_enabled,
   superstudentRemarks: row.superstudent_remarks,
   superstudentGrantedBy: row.superstudent_granted_by,
@@ -36,13 +38,36 @@ const mapUser = (row) => ({
   createdAt: row.created_at,
 });
 
-// Trial premium (paymentService.js PLAN_AMOUNTS_PAISE.trial) is
-// self-expiring rather than webhook/cron-revoked -- cheapest correct option
-// for a ₹9/1-hour testing plan. Checked wherever a user row is loaded for
-// auth (requireAuth calls findUserById on every request), so a lapsed trial
-// never reads as premium for more than one request past its expiry.
+const revokePremium = async (row) => {
+  const result = await pool.query(
+    "UPDATE users SET is_premium = FALSE, updated_at = NOW() WHERE id = $1 RETURNING *",
+    [row.id]
+  );
+  return result.rows[0] || row;
+};
+
+// premium_source = 'institution' rows (see batchService.js's
+// applyInstitutionPremiumGrant) are revalidated against live batch
+// membership + institution licence standing instead of a stored expiry --
+// a removed student or a lapsed licence should lose access on their very
+// next request, with no cron job needed, exactly like the trial-plan case
+// below.
 const expirePremiumIfLapsed = async (row) => {
-  if (!row || !row.is_premium || !row.premium_expires_at) {
+  if (!row || !row.is_premium) {
+    return row;
+  }
+
+  if (row.premium_source === "institution") {
+    const stillValid = await isInstitutionGrantStillValid(row.id);
+    return stillValid ? row : revokePremium(row);
+  }
+
+  // Trial premium (paymentService.js PLAN_AMOUNTS_PAISE.trial) is
+  // self-expiring rather than webhook/cron-revoked -- cheapest correct option
+  // for a ₹9/1-hour testing plan. Checked wherever a user row is loaded for
+  // auth (requireAuth calls findUserById on every request), so a lapsed
+  // trial never reads as premium for more than one request past its expiry.
+  if (!row.premium_expires_at) {
     return row;
   }
   if (new Date(row.premium_expires_at) > new Date()) {
@@ -56,11 +81,7 @@ const expirePremiumIfLapsed = async (row) => {
   // (markOrderPaidAndActivatePremium always sets a fresh value or NULL), so
   // leaving the stale timestamp here never causes a future "still active"
   // misread.
-  const result = await pool.query(
-    "UPDATE users SET is_premium = FALSE, updated_at = NOW() WHERE id = $1 RETURNING *",
-    [row.id]
-  );
-  return result.rows[0] || row;
+  return revokePremium(row);
 };
 
 export const findUserByEmail = async (email) => {

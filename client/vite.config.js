@@ -33,8 +33,8 @@ export default defineConfig({
         "icons/apple-touch-icon.png",
       ],
       manifest: {
-        name: "KUHEDU STUDY BUDDY",
-        short_name: "KUHEDU STUDY BUDDY",
+        name: "English 24x7",
+        short_name: "English 24x7",
         description: "Practice chapters, assessments, and flashcards for CBSE/board exam prep.",
         display: "standalone",
         start_url: "/",

@@ -31,7 +31,7 @@ const defaultUsers = [
   // needing to be manually recreated every time.
   {
     name: "Content Moderator",
-    email: "contentadmin@exam4u.study",
+    email: "contentadmin@english24x7.study",
     password: "pass~!@#$%",
     role: "moderator",
     isPremium: true,

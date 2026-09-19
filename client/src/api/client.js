@@ -839,3 +839,209 @@ export const getTestLabAttemptResult = async (attemptId) =>
 
 export const getRecentTestLabAttempts = async () => apiRequest("/user/test-lab/attempts/recent");
 
+// ---- Admin: Institutions ----
+
+export const getAdminInstitutions = async () => apiRequest("/admin/institutions");
+
+export const getAdminInstitution = async (institutionId) => apiRequest(`/admin/institutions/${institutionId}`);
+
+export const createAdminInstitution = async (payload) =>
+  apiRequest("/admin/institutions", { method: "POST", body: JSON.stringify(payload) });
+
+export const updateAdminInstitution = async (institutionId, payload) =>
+  apiRequest(`/admin/institutions/${institutionId}`, { method: "PUT", body: JSON.stringify(payload) });
+
+export const updateAdminInstitutionLicense = async (institutionId, payload) =>
+  apiRequest(`/admin/institutions/${institutionId}/license`, { method: "PUT", body: JSON.stringify(payload) });
+
+export const getAdminInstitutionClasses = async (institutionId) =>
+  apiRequest(`/admin/institutions/${institutionId}/classes`);
+
+export const addAdminInstitutionClass = async (institutionId, mstLevelId) =>
+  apiRequest(`/admin/institutions/${institutionId}/classes`, {
+    method: "POST",
+    body: JSON.stringify({ mstLevelId }),
+  });
+
+export const removeAdminInstitutionClass = async (institutionId, institutionClassId) =>
+  apiRequest(`/admin/institutions/${institutionId}/classes/${institutionClassId}`, { method: "DELETE" });
+
+export const getAdminInstitutionSections = async (institutionClassId) =>
+  apiRequest(`/admin/institutions/classes/${institutionClassId}/sections`);
+
+export const addAdminInstitutionSection = async (institutionClassId, payload) =>
+  apiRequest(`/admin/institutions/classes/${institutionClassId}/sections`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+export const updateAdminInstitutionSection = async (sectionId, payload) =>
+  apiRequest(`/admin/institutions/sections/${sectionId}`, { method: "PUT", body: JSON.stringify(payload) });
+
+export const removeAdminInstitutionSection = async (sectionId) =>
+  apiRequest(`/admin/institutions/sections/${sectionId}`, { method: "DELETE" });
+
+export const getAdminInstitutionTeachers = async (institutionId) =>
+  apiRequest(`/admin/institutions/${institutionId}/teachers`);
+
+export const addAdminInstitutionTeacher = async (institutionId, userId) =>
+  apiRequest(`/admin/institutions/${institutionId}/teachers`, {
+    method: "POST",
+    body: JSON.stringify({ userId }),
+  });
+
+export const removeAdminInstitutionTeacher = async (institutionId, institutionTeacherId) =>
+  apiRequest(`/admin/institutions/${institutionId}/teachers/${institutionTeacherId}`, { method: "DELETE" });
+
+export const getAdminInstitutionTeacherAssignments = async (institutionTeacherId) =>
+  apiRequest(`/admin/institutions/teachers/${institutionTeacherId}/assignments`);
+
+export const saveAdminInstitutionTeacherAssignments = async (institutionTeacherId, assignments) =>
+  apiRequest(`/admin/institutions/teachers/${institutionTeacherId}/assignments`, {
+    method: "PUT",
+    body: JSON.stringify({ assignments }),
+  });
+
+// ---- Teacher: Home / Batches ----
+
+export const getTeacherHome = async () => apiRequest("/teacher/home");
+
+export const getTeacherBatches = async () => apiRequest("/teacher/batches");
+
+export const getTeacherBatchStudents = async (batchId) => apiRequest(`/teacher/batches/${batchId}/students`);
+
+export const removeTeacherBatchStudent = async (batchId, userId) =>
+  apiRequest(`/teacher/batches/${batchId}/students/${userId}/remove`, { method: "PUT" });
+
+export const regenerateTeacherBatchCode = async (batchId) =>
+  apiRequest(`/teacher/batches/${batchId}/regenerate-code`, { method: "POST" });
+
+// ---- Student: joining a teacher's batch ----
+
+export const joinBatchByCode = async (joinCode) =>
+  apiRequest("/user/batches/join", { method: "POST", body: JSON.stringify({ joinCode }) });
+
+export const getMyBatches = async () => apiRequest("/user/batches");
+
+export const leaveMyBatch = async (batchId) => apiRequest(`/user/batches/${batchId}/leave`, { method: "DELETE" });
+
+// ---- Teacher: insights ----
+
+export const getTeacherBatchInsights = async (batchId) => apiRequest(`/teacher/batches/${batchId}/insights`);
+
+export const getTeacherBatchActivity = async (batchId) => apiRequest(`/teacher/batches/${batchId}/activity`);
+
+export const getTeacherStudentInsight = async (batchId, userId) =>
+  apiRequest(`/teacher/batches/${batchId}/students/${userId}/insight`);
+
+// ---- Teacher: Tests ----
+
+export const getTeacherTestFilterOptions = async (batchId) => apiRequest(`/teacher/test-lab/filter-options?batchId=${batchId}`);
+
+export const getTeacherTestPapers = async () => apiRequest("/teacher/test-papers");
+
+export const getTeacherTestPaper = async (paperId) => apiRequest(`/teacher/test-papers/${paperId}`);
+
+export const createTeacherTestPaper = async (payload) =>
+  apiRequest("/teacher/test-papers", { method: "POST", body: JSON.stringify(payload) });
+
+export const removeTeacherTestPaperItem = async (paperId, itemId) =>
+  apiRequest(`/teacher/test-papers/${paperId}/items/${itemId}`, { method: "DELETE" });
+
+export const swapTeacherTestPaperItem = async (paperId, itemId) =>
+  apiRequest(`/teacher/test-papers/${paperId}/items/${itemId}/swap`, { method: "POST" });
+
+export const finalizeTeacherTestPaper = async (paperId) =>
+  apiRequest(`/teacher/test-papers/${paperId}/finalize`, { method: "POST" });
+
+const downloadAuthenticatedFile = async (path, filename) => {
+  const token = localStorage.getItem("kuhedu_token");
+  const response = await fetch(`/api${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to download the file.");
+  }
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
+
+export const downloadTeacherTestPaperPdf = async (paperId, filename) =>
+  downloadAuthenticatedFile(`/teacher/test-papers/${paperId}/export.pdf`, filename);
+
+export const downloadTeacherTestPaperExcel = async (paperId, filename) =>
+  downloadAuthenticatedFile(`/teacher/test-papers/${paperId}/export.xlsx`, filename);
+
+export const createTeacherCustomQuestion = async (payload) =>
+  apiRequest("/teacher/custom-questions", { method: "POST", body: JSON.stringify(payload) });
+
+export const getTeacherCustomQuestions = async () => apiRequest("/teacher/custom-questions");
+
+// ---- Teacher: Grading ----
+
+export const getTeacherGradebookExams = async (batchId) =>
+  apiRequest(`/teacher/gradebook/exams${batchId ? `?batchId=${batchId}` : ""}`);
+
+export const createTeacherGradebookExam = async (payload) =>
+  apiRequest("/teacher/gradebook/exams", { method: "POST", body: JSON.stringify(payload) });
+
+export const getTeacherGradebookExam = async (examId) => apiRequest(`/teacher/gradebook/exams/${examId}`);
+
+export const saveTeacherGradebookMarks = async (examId, marks) =>
+  apiRequest(`/teacher/gradebook/exams/${examId}/marks`, { method: "PUT", body: JSON.stringify({ marks }) });
+
+export const requestAiGradeAssist = async (examId, questionId, userId, studentAnswerText) =>
+  apiRequest(`/teacher/gradebook/exams/${examId}/questions/${questionId}/students/${userId}/ai-assist`, {
+    method: "POST",
+    body: JSON.stringify({ studentAnswerText }),
+  });
+
+export const downloadTeacherGradebookExcel = async (examId, filename) =>
+  downloadAuthenticatedFile(`/teacher/gradebook/exams/${examId}/export.xlsx`, filename);
+
+// ---- Teacher: Lessons ----
+
+export const getTeacherLessonPlans = async (batchId) =>
+  apiRequest(`/teacher/lesson-plans${batchId ? `?batchId=${batchId}` : ""}`);
+
+export const createTeacherLessonPlan = async (payload) =>
+  apiRequest("/teacher/lesson-plans", { method: "POST", body: JSON.stringify(payload) });
+
+export const updateTeacherLessonPlan = async (planId, payload) =>
+  apiRequest(`/teacher/lesson-plans/${planId}`, { method: "PUT", body: JSON.stringify(payload) });
+
+export const deleteTeacherLessonPlan = async (planId) =>
+  apiRequest(`/teacher/lesson-plans/${planId}`, { method: "DELETE" });
+
+export const publishTeacherLessonPlan = async (planId) =>
+  apiRequest(`/teacher/lesson-plans/${planId}/publish`, { method: "POST" });
+
+export const getTeacherLessonPlanDetail = async (planId) => apiRequest(`/teacher/lesson-plans/${planId}`);
+
+export const addTeacherLessonPlanEntry = async (planId, entry) =>
+  apiRequest(`/teacher/lesson-plans/${planId}/entries`, { method: "POST", body: JSON.stringify(entry) });
+
+export const updateTeacherLessonPlanEntry = async (planId, entryId, entry) =>
+  apiRequest(`/teacher/lesson-plans/${planId}/entries/${entryId}`, { method: "PUT", body: JSON.stringify(entry) });
+
+export const deleteTeacherLessonPlanEntry = async (planId, entryId) =>
+  apiRequest(`/teacher/lesson-plans/${planId}/entries/${entryId}`, { method: "DELETE" });
+
+export const downloadTeacherLessonPlanPdf = async (planId, filename) =>
+  downloadAuthenticatedFile(`/teacher/lesson-plans/${planId}/export.pdf`, filename);
+
+// ---- Admin: Question review ----
+
+export const getAdminPendingQuestions = async () => apiRequest("/admin/question-review");
+
+export const reviewAdminQuestion = async (itemId, decision, notes) =>
+  apiRequest(`/admin/question-review/${itemId}`, { method: "PUT", body: JSON.stringify({ decision, notes }) });
+

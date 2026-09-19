@@ -167,7 +167,7 @@ export const AuthModal = ({ open, onClose, onLogin, onRegister }) => {
             <h2>
               {mode === "login"
                 ? "Sign in to continue practice"
-                : "Start your KUHEDU journey"}
+                : "Start your English 24x7 journey"}
             </h2>
             <form className="auth-form" onSubmit={submit}>
               {mode === "register" ? (

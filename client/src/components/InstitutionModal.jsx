@@ -71,10 +71,10 @@ export const InstitutionModal = ({ open, onClose }) => (
             </div>
           </div>
           <div className="study-buddy-cta-footer">
-            <span>Ready to bring Kuhedu to your school?</span>
+            <span>Ready to bring English 24x7 to your school?</span>
             <a
               className="study-buddy-cta-button"
-              href="mailto:support@kuhedu.com?subject=Interested%20in%20Kuhedu%20for%20Our%20School"
+              href="mailto:support@kuhedu.com?subject=Interested%20in%20English%2024x7%20for%20Our%20School"
             >
               Get in Touch
             </a>

@@ -22,7 +22,7 @@ const CBSE_SUBTITLE = "CBSE Board | Class 6, 7 & 8";
 export const pricingCards = [
   {
     id: "premium",
-    name: "Kuhedu Study Buddy Premium",
+    name: "English 24x7 Premium",
     subtitle: CBSE_SUBTITLE,
     options: [
       {

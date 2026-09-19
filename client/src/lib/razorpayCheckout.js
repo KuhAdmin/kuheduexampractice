@@ -37,8 +37,8 @@ export const openRazorpayCheckout = async ({ order, user, onSuccess, onFailure, 
 
   const razorpayOptions = {
     key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-    name: "KUHEDU STUDY BUDDY",
-    description: "Kuhedu Study Buddy Premium",
+    name: "English 24x7",
+    description: "English 24x7 Premium",
     prefill: {
       name: user?.name || "",
       email: user?.email || "",

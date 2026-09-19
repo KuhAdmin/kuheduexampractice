@@ -294,7 +294,12 @@ export const StudentTestLabSessionPage = () => {
 
         <div className="student-testlab-session-toprow">
           <span className="student-testlab-session-count">
-            Question {activeIndex + 1} of {items.length}
+            <span className="student-testlab-session-count-full">
+              Question {activeIndex + 1} of {items.length}
+            </span>
+            <span className="student-testlab-session-count-short">
+              Q{activeIndex + 1}/{items.length}
+            </span>
           </span>
           <span className="student-testlab-timer-pill">
             <ClockIcon />
@@ -349,11 +354,21 @@ export const StudentTestLabSessionPage = () => {
         </button>
 
         <div className="student-testlab-session-nav">
-          <button type="button" className="student-testlab-session-prev" disabled={activeIndex === 0 || saving} onClick={handlePrevious}>
+          <button
+            type="button"
+            className="student-testlab-session-prev"
+            disabled={activeIndex === 0 || saving || paused}
+            onClick={handlePrevious}
+          >
             <ArrowLeftIcon />
             Previous
           </button>
-          <button type="button" className="student-testlab-generate-button" disabled={saving || finishing} onClick={handleSaveAndNext}>
+          <button
+            type="button"
+            className="student-testlab-generate-button"
+            disabled={saving || finishing || paused}
+            onClick={handleSaveAndNext}
+          >
             {saving ? "Saving..." : isLastQuestion ? "Submit Test" : "Save & Next"}
             {!isLastQuestion && <ArrowRightIcon />}
           </button>

@@ -24,6 +24,9 @@ import adminContentEditorRoutes from "./routes/adminContentEditorRoutes.js";
 import razorpayWebhookRoutes from "./routes/razorpayWebhookRoutes.js";
 import adminOrdersRoutes from "./routes/adminOrdersRoutes.js";
 import adminOverviewRoutes from "./routes/adminOverviewRoutes.js";
+import adminInstitutionRoutes from "./routes/adminInstitutionRoutes.js";
+import adminQuestionReviewRoutes from "./routes/adminQuestionReviewRoutes.js";
+import teacherRoutes from "./routes/teacherRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,9 +44,9 @@ export const createApp = () => {
 
   // "www." is treated as optional/interchangeable on both sides -- a single
   // exact-string CLIENT_URL match caused a real production outage: prod was
-  // actually served from https://www.exam4u.study, but CLIENT_URL didn't
-  // have that exact "www.", so the site's OWN real visitors' same-origin
-  // requests were rejected as a foreign origin.
+  // actually served from https://www.english24x7.study, but CLIENT_URL
+  // didn't have that exact "www.", so the site's OWN real visitors'
+  // same-origin requests were rejected as a foreign origin.
   const stripWww = (hostname) => hostname.replace(/^www\./, "");
 
   const allowedOriginUrls = [
@@ -133,6 +136,9 @@ export const createApp = () => {
   app.use("/api/admin/content-editor", adminContentEditorRoutes);
   app.use("/api/admin/orders", adminOrdersRoutes);
   app.use("/api/admin/overview", adminOverviewRoutes);
+  app.use("/api/admin/institutions", adminInstitutionRoutes);
+  app.use("/api/admin/question-review", adminQuestionReviewRoutes);
+  app.use("/api/teacher", teacherRoutes);
 
   const clientDist = path.resolve(__dirname, "../../client/dist");
   app.use(

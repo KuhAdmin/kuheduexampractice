@@ -12,8 +12,8 @@ export const privacyPolicy = {
   sections: [
     {
       paragraphs: [
-        "We value your trust. In order to honour that trust, KUHEDUSTUDYBUDDY adheres to ethical standards in gathering, using, and safeguarding any information you provide. Kuhedu Technologies Private Limited, operating under the brand name KUHEDUSTUDYBUDDY, is incorporated in India for imparting learning.",
-        "This privacy policy governs your use of KUHEDUSTUDYBUDDY App, https://www.exam4u.study, and the other associated applications, products, websites and services managed by the Company. Your use of the Website, Application, or Services signifies your acceptance of this Policy and your agreement to be legally bound by it.",
+        "We value your trust. In order to honour that trust, ENGLISH24X7 adheres to ethical standards in gathering, using, and safeguarding any information you provide. Kuhedu Technologies Private Limited, operating under the brand name ENGLISH24X7, is incorporated in India for imparting learning.",
+        "This privacy policy governs your use of ENGLISH24X7 App, https://www.english24x7.study, and the other associated applications, products, websites and services managed by the Company. Your use of the Website, Application, or Services signifies your acceptance of this Policy and your agreement to be legally bound by it.",
         "If you do not agree with the terms of this Policy, do not use the Website, Application, products or Services.",
       ],
     },
@@ -89,7 +89,7 @@ export const termsAndConditions = {
     {
       paragraphs: [
         "Effective Date: July 26, 2026",
-        "These Terms & Conditions (\"Terms\") govern your access to and use of the KUHEDUSTUDYBUDDY website, mobile applications, AI-powered learning services, assessments, educational content, and related products and services (collectively, the \"Services\") provided by Kuhedu Technologies Private Limited (\"Company\", \"we\", \"our\", or \"us\").",
+        "These Terms & Conditions (\"Terms\") govern your access to and use of the ENGLISH24X7 website, mobile applications, AI-powered learning services, assessments, educational content, and related products and services (collectively, the \"Services\") provided by Kuhedu Technologies Private Limited (\"Company\", \"we\", \"our\", or \"us\").",
         "By accessing or using our Services, you agree to be bound by these Terms. If you do not agree, you must discontinue use of the Services immediately.",
       ],
     },
@@ -113,7 +113,7 @@ export const termsAndConditions = {
     {
       heading: "3. Description of Services",
       paragraphs: [
-        "KUHEDUSTUDYBUDDY provides digital educational services, including but not limited to:",
+        "ENGLISH24X7 provides digital educational services, including but not limited to:",
         "• AI-powered tutoring",
         "• Practice questions",
         "• Mock examinations",
@@ -304,7 +304,7 @@ export const termsAndConditions = {
       paragraphs: [
         "Kuhedu Technologies Private Limited",
         "Email: support@kuhedu.com",
-        "Website: https://www.exam4u.study",
+        "Website: https://www.english24x7.study",
       ],
     },
   ],
@@ -334,7 +334,7 @@ export const refundAndCancellation = {
     {
       paragraphs: [
         "Effective Date: July 27, 2026",
-        "At KUHEDUSTUDYBUDDY, we strive to provide high-quality digital learning experiences. Before making any purchase, we encourage users to review the course details, features, and system requirements carefully.",
+        "At ENGLISH24X7, we strive to provide high-quality digital learning experiences. Before making any purchase, we encourage users to review the course details, features, and system requirements carefully.",
         "This Refund & Cancellation Policy explains the conditions under which refunds may or may not be granted.",
       ],
     },
@@ -360,7 +360,7 @@ export const refundAndCancellation = {
         "• Duplicate payment made due to technical error.",
         "• Incorrect amount charged due to system error.",
         "• Payment successfully deducted but premium access was not activated.",
-        "• Service could not be delivered because of a verified technical issue attributable to KUHEDUSTUDYBUDDY.",
+        "• Service could not be delivered because of a verified technical issue attributable to ENGLISH24X7.",
         "Eligible refund requests must be submitted within 7 calendar days from the date of payment.",
       ],
     },
@@ -396,7 +396,7 @@ export const refundAndCancellation = {
       paragraphs: [
         "Approved refunds will be processed through the original payment method.",
         "Typical processing time is 7–10 business days, depending on the payment gateway, issuing bank, or financial institution.",
-        "KUHEDUSTUDYBUDDY is not responsible for delays caused by banks or payment service providers.",
+        "ENGLISH24X7 is not responsible for delays caused by banks or payment service providers.",
       ],
     },
     {
@@ -418,7 +418,7 @@ export const refundAndCancellation = {
     {
       heading: "8. Right to Reject Refund Requests",
       paragraphs: [
-        "KUHEDUSTUDYBUDDY reserves the right to decline refund requests that:",
+        "ENGLISH24X7 reserves the right to decline refund requests that:",
         "• do not satisfy this policy,",
         "• involve misuse or abuse of the platform,",
         "• contain fraudulent claims,",
@@ -429,7 +429,7 @@ export const refundAndCancellation = {
     {
       heading: "9. Exceptional Circumstances",
       paragraphs: [
-        "In rare and genuine cases involving prolonged platform outages, duplicate transactions, or verified technical failures attributable to KUHEDUSTUDYBUDDY, we may, at our sole discretion:",
+        "In rare and genuine cases involving prolonged platform outages, duplicate transactions, or verified technical failures attributable to ENGLISH24X7, we may, at our sole discretion:",
         "• provide a full refund,",
         "• provide a partial refund,",
         "• extend the access period,",
@@ -440,7 +440,7 @@ export const refundAndCancellation = {
     {
       heading: "10. Policy Updates",
       paragraphs: [
-        "KUHEDUSTUDYBUDDY reserves the right to modify this Refund & Cancellation Policy at any time.",
+        "ENGLISH24X7 reserves the right to modify this Refund & Cancellation Policy at any time.",
         "The latest version published on our website shall supersede all previous versions.",
         "Continued use of our services after any update constitutes acceptance of the revised policy.",
       ],
@@ -451,7 +451,7 @@ export const refundAndCancellation = {
         "For refund-related queries, please contact:",
         "KUHEDU Technologies Private Limited",
         "Email: rinitad@kuhedu.com",
-        "Website: www.exam4u.study / www.kuhedu.com",
+        "Website: www.english24x7.study / www.kuhedu.com",
       ],
     },
   ],
@@ -462,7 +462,7 @@ export const contactUs = {
   sections: [
     {
       paragraphs: [
-        "We'd love to hear from you. Reach out with any questions about your account, purchase, or the KUHEDUSTUDYBUDDY platform.",
+        "We'd love to hear from you. Reach out with any questions about your account, purchase, or the ENGLISH24X7 platform.",
       ],
     },
     {
@@ -481,7 +481,7 @@ export const contactUs = {
     },
     {
       heading: "Website",
-      paragraphs: ["www.exam4u.study / www.kuhedu.com"],
+      paragraphs: ["www.english24x7.study / www.kuhedu.com"],
     },
     {
       heading: "Grievance Officer",
@@ -494,7 +494,7 @@ export const faqAndHelp = {
   title: "Frequently Asked Questions",
   sections: [
     {
-      heading: "What is KUHEDU STUDY BUDDY?",
+      heading: "What is English 24x7?",
       paragraphs: [
         "A CBSE-aligned digital learning companion for Class 6-8 students, covering English, Social Science, Science, and Mathematics -- combining an AI Smart Tutor with competency-based, inquiry-based, and experiential learning, not just a bank of practice questions.",
       ],
@@ -578,7 +578,7 @@ export const faqAndHelp = {
       ],
     },
     {
-      heading: "Can I use KUHEDU STUDY BUDDY without downloading an app from a store?",
+      heading: "Can I use English 24x7 without downloading an app from a store?",
       paragraphs: [
         "Yes -- it's a Progressive Web App. Add it to your phone's home screen from Safari (iOS) or Chrome (Android) for an app-like experience with no store download required.",
       ],
@@ -586,11 +586,11 @@ export const faqAndHelp = {
     {
       heading: "Is payment and personal data handled securely?",
       paragraphs: [
-        "Yes -- payments are processed through Razorpay and KUHEDU never stores your card/UPI details directly; data handling is governed by our Privacy Policy.",
+        "Yes -- payments are processed through Razorpay and ENGLISH24X7 never stores your card/UPI details directly; data handling is governed by our Privacy Policy.",
       ],
     },
     {
-      heading: "How do I contact KUHEDU if I have a question the app can't answer?",
+      heading: "How do I contact English 24x7 if I have a question the app can't answer?",
       paragraphs: [
         "General and grievance queries: rinitad@kuhedu.com.",
         "Refund and billing support: support@kuhedu.com.",

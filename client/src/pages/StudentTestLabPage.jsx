@@ -78,6 +78,7 @@ export const StudentTestLabPage = () => {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [questionCount, setQuestionCount] = useState(DEFAULT_QUESTION_COUNT);
   const [chaptersExpanded, setChaptersExpanded] = useState(false);
+  const [questionRepoCount, setQuestionRepoCount] = useState(null);
   const [recentAttempts, setRecentAttempts] = useState([]);
   const [attemptsLoading, setAttemptsLoading] = useState(true);
   const [starting, setStarting] = useState(false);
@@ -105,6 +106,7 @@ export const StudentTestLabPage = () => {
         setSelectedChapters(nextChapters.map((chapter) => chapter.chapterNumber));
         setSelectedTypes(nextTypes.map((type) => type.value));
         setChaptersExpanded(false);
+        setQuestionRepoCount(result?.questionRepoCount || null);
       })
       .catch((fetchError) => {
         if (!cancelled) setError(fetchError.message || "Failed to load TestLab filters.");
@@ -257,7 +259,12 @@ export const StudentTestLabPage = () => {
           </button>
         )}
         <div className="student-testlab-header-copy">
-          <h1>TestLab</h1>
+          <h1>
+            TestLab
+            {questionRepoCount && (
+              <span className="student-testlab-repo-badge">{questionRepoCount.total} questions</span>
+            )}
+          </h1>
           <p>Mixed practice sets, drawn fresh from Question Bank + HOTS.</p>
         </div>
         <button

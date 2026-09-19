@@ -584,7 +584,7 @@ const HomeScreen = ({
           {showBrandChrome ? (
             <div className="home-onboarding-topbar">
               <img src="/kuhedu-logo.png" alt="KUHEDU logo" />
-              <span>KUHEDU STUDY BUDDY</span>
+              <span>English 24x7</span>
             </div>
           ) : (
             <div className="home-screen-topline" aria-hidden="true" />
@@ -685,7 +685,7 @@ const HomeScreen = ({
                     About Kuhedu
                   </button>
                   <button type="button" onClick={onOpenStudyBuddy}>
-                    Study Buddy
+                    English 24x7
                   </button>
                   <button type="button" onClick={onOpenLearnerInfo}>
                     Learners
@@ -1189,14 +1189,14 @@ export const HomePage = ({
         <nav className="home-desktop-navbar">
           <div className="home-desktop-navbar-brand">
             <img src="/kuhedu-logo.png" alt="KUHEDU logo" />
-            <span>KUHEDU STUDY BUDDY</span>
+            <span>English 24x7</span>
           </div>
           <nav className="home-desktop-navbar-links" aria-label="Company">
             <button type="button" className="home-desktop-navbar-link-button" onClick={openCorporateSite}>
               About Kuhedu
             </button>
             <button type="button" className="home-desktop-navbar-link-button" onClick={openStudyBuddy}>
-              Study Buddy
+              English 24x7
             </button>
             <button type="button" className="home-desktop-navbar-link-button" onClick={openLearnerInfo}>
               Learners

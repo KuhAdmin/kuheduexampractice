@@ -57,7 +57,7 @@ export const StudentLayout = ({ user, onLogout }) => {
     <AiTutorAvatarProvider>
       <ClassSubjectProvider user={user}>
         <AppSidebarLayout
-          brandTitle="KUHEDU STUDY BUDDY"
+          brandTitle="English 24x7"
           brandSubtitle="Your learning workspace"
           belowBrand={<StudentClassSubjectSwitcher />}
           menuItems={studentMenuItems}

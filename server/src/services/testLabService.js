@@ -46,23 +46,56 @@ const resolveQuestionSetSize = (questionCount) => {
   return Math.min(Math.floor(parsed), MAX_QUESTION_SET_SIZE);
 };
 
-const INTERACTION_TYPE_OPTIONS = [
-  { value: "single_select", label: "Multiple Choice" },
-  { value: "free_text", label: "Short Answer" },
-  { value: "ordering", label: "Ordering" },
-  { value: "matching", label: "Matching" },
-];
+// Question Types on StudentTestLabPage.jsx's Step 1 filter by
+// content_assessment_item.question_family (the import pipeline's raw
+// card.processorkey, see conceptImportService.js's
+// STRUCTURED_ASSESSMENT_FAMILIES) rather than interaction_type. Several
+// families collapse into the same interaction_type -- mcq/truefalse/
+// assertionreason are all "single_select", shortanswer/fillintheblank are
+// both "free_text" -- so a student could never actually filter to just
+// "True/False" or "Assertion & Reason" when the filter was keyed on
+// interaction_type, even though those are real, distinct families in the
+// data. interaction_type itself is untouched elsewhere below -- it still
+// drives how a question is rendered/graded (QuestionInteractionRenderer),
+// which only understands single_select/free_text/ordering/matching.
+const QUESTION_FAMILY_LABELS = {
+  mcq: "Multiple Choice",
+  truefalse: "True/False",
+  assertionreason: "Assertion & Reason",
+  shortanswer: "Short Answer",
+  fillintheblank: "Fill in the Blank",
+  hots: "HOTS",
+};
+
+// Canonical display order for the families with a known label above;
+// anything else (a question_family value this map hasn't been updated for
+// yet, or a future addition to STRUCTURED_ASSESSMENT_FAMILIES) still shows
+// up via formatUnknownQuestionFamily below instead of silently vanishing
+// from the filter list.
+const QUESTION_FAMILY_DISPLAY_ORDER = ["mcq", "truefalse", "assertionreason", "shortanswer", "fillintheblank", "hots"];
+
+const formatUnknownQuestionFamily = (value) =>
+  String(value || "")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()) || "Other";
+
+const questionFamilyLabel = (value) => QUESTION_FAMILY_LABELS[value] || formatUnknownQuestionFamily(value);
 
 // Mirrors FREE_TEXT_FORMATS in studentPreWarmupService.js -- kept as a
 // separate copy here rather than importing it since it isn't exported, and
 // this mapping is TestLab-specific (translating a HOTS "format" into the
-// same interaction-type vocabulary the Question Types filter already uses).
+// interactionType vocabulary rendering needs).
 const HOTS_FREE_TEXT_FORMATS = new Set(["fill_in_blank", "short_answer", "hots_infer", "hots_predict", "hots_recall"]);
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
 const resolveQbInteractionType = (item) =>
   item.interaction_type || (toArray(item.options).length > 0 ? "single_select" : "free_text");
+
+// question_family is NOT NULL on content_assessment_item, so the
+// interaction-type fallback here is only for legacy/malformed rows.
+const resolveQbQuestionFamily = (item) => item.question_family || resolveQbInteractionType(item);
 
 const resolveHotsInteractionType = (format) => {
   if (format === "reorder") return "ordering";
@@ -138,11 +171,12 @@ export const getTestLabFilterOptions = async ({ userId, board, studentClass, sub
 
   // Question Types shown on StudentTestLabPage.jsx must reflect what this
   // board/class/subject's content actually has, not the full fixed
-  // vocabulary -- a subject with no ordering/matching items would otherwise
-  // show checkboxes that can never affect a Generate Test result. Scans the
-  // same unfiltered pool startTestLabAttempt would build (across every
-  // chapter, not just ones the student ends up selecting -- that filter is a
-  // sibling control, not a prerequisite) and keeps only the types it found.
+  // vocabulary -- a subject with no true/false or fill-in-the-blank items
+  // would otherwise show a checkbox that can never affect a Generate Test
+  // result. Scans the same unfiltered pool startTestLabAttempt would build
+  // (across every chapter, not just ones the student ends up selecting --
+  // that filter is a sibling control, not a prerequisite) and keeps only
+  // the families it actually found, in a stable, human-sensible order.
   const chapterNumbers = chapters.map((chapter) => String(chapter.chapterNumber));
   const questionPool = await buildTestLabQuestionPool({
     board: resolved.board,
@@ -152,18 +186,73 @@ export const getTestLabFilterOptions = async ({ userId, board, studentClass, sub
     interactionTypes: [],
     userId,
   });
-  const presentTypes = new Set(questionPool.map((item) => item.interactionType));
-  const interactionTypes = INTERACTION_TYPE_OPTIONS.filter((option) => presentTypes.has(option.value));
+  const presentFamilies = new Set(questionPool.map((item) => item.questionFamily));
+  const orderedFamilies = [
+    ...QUESTION_FAMILY_DISPLAY_ORDER.filter((value) => presentFamilies.has(value)),
+    ...Array.from(presentFamilies).filter((value) => !QUESTION_FAMILY_DISPLAY_ORDER.includes(value)),
+  ];
+  // Field name kept as "interactionTypes" for wire compatibility with the
+  // existing client/API contract (StudentTestLabPage.jsx, startTestLabAttempt) --
+  // values are question_family strings now, not interaction_type strings.
+  const interactionTypes = orderedFamilies.map((value) => ({ value, label: questionFamilyLabel(value) }));
 
-  return { chapters, interactionTypes };
+  const questionBankCount = questionPool.filter((item) => item.sourceType === "question_bank").length;
+  const hotsCount = questionPool.filter((item) => item.sourceType === "hots").length;
+  const teacherCustomCount = await countApprovedTeacherCustomQuestions({
+    chapterNumbers,
+    examGoalCode: resolved.examGoalCode,
+    levelCode: resolved.levelCode,
+    subjectCode: resolved.subjectCode,
+  });
+
+  return {
+    chapters,
+    interactionTypes,
+    questionRepoCount: {
+      questionBank: questionBankCount,
+      hots: hotsCount,
+      teacherCustom: teacherCustomCount,
+      total: questionBankCount + hotsCount + teacherCustomCount,
+    },
+  };
+};
+
+// Counts teacher-authored custom questions (content_assessment_item rows
+// with created_by_teacher_id set, keyed by fk_mst_chapter_id rather than
+// assessment_unit_id -- see teacherTestService.js's fetchCustomQuestionsForChapter)
+// that have cleared review, across every chapter in this board/class/subject.
+// Only "approved" ones count here -- same visibility bar the answerable
+// question-bank pool above already applies -- so this mirrors what a student
+// could actually be served, not the teacher's own pending drafts.
+const countApprovedTeacherCustomQuestions = async ({ chapterNumbers, examGoalCode, levelCode, subjectCode }) => {
+  if (!chapterNumbers.length || !examGoalCode || !levelCode || !subjectCode) return 0;
+  const result = await pool.query(
+    `
+      SELECT COUNT(*)::int AS count
+      FROM content_assessment_item cai
+      JOIN mst_chapter mc ON mc.id = cai.fk_mst_chapter_id
+      JOIN mst_book mb ON mb.id = mc.fk_mst_book_id
+      JOIN mst_level lvl ON lvl.id = mb.fk_mst_level_id
+      JOIN mst_subject subj ON subj.id = mb.fk_mst_subject_id
+      JOIN mst_exam_goal eg ON eg.id = mb.fk_mst_exam_goal_id
+      WHERE mc.chapter_number = ANY($1)
+        AND lvl.name_code = $2
+        AND subj.name_code = $3
+        AND eg.goal_id = $4
+        AND cai.created_by_teacher_id IS NOT NULL
+        AND cai.review_status = 'approved'
+    `,
+    [chapterNumbers, levelCode, subjectCode, examGoalCode]
+  );
+  return result.rows[0]?.count || 0;
 };
 
 // Pulls every answerable Question Bank item and every HOTS story-anchor item
 // across the selected chapters, normalizes both into one common shape, and
-// filters by the selected answer-format types (if any). HOTS items whose
-// format doesn't match a selected type are naturally excluded here too --
-// e.g. filtering to "Multiple Choice only" drops HOTS' typically free-text
-// questions, which is expected (see the plan's Question Types decision).
+// filters by the selected question family/families (if any). HOTS items
+// (always family "hots") are naturally excluded when a non-HOTS-only filter
+// is chosen -- e.g. filtering to "Multiple Choice only" drops them, which is
+// expected (see the plan's Question Types decision).
 const buildTestLabQuestionPool = async ({ board, studentClass, subject, chapterNumbers, interactionTypes, userId }) => {
   const typeFilter = toArray(interactionTypes);
   const questionPool = [];
@@ -175,8 +264,8 @@ const buildTestLabQuestionPool = async ({ board, studentClass, subject, chapterN
     ]);
 
     qbItems.forEach((item) => {
-      const interactionType = resolveQbInteractionType(item);
-      if (typeFilter.length && !typeFilter.includes(interactionType)) return;
+      const questionFamily = resolveQbQuestionFamily(item);
+      if (typeFilter.length && !typeFilter.includes(questionFamily)) return;
       questionPool.push({
         sourceType: "question_bank",
         sourceItemId: item.item_id,
@@ -185,7 +274,8 @@ const buildTestLabQuestionPool = async ({ board, studentClass, subject, chapterN
         question: item.question,
         options: toArray(item.options),
         correctAnswer: item.correct_answer,
-        interactionType,
+        interactionType: resolveQbInteractionType(item),
+        questionFamily,
         interactionData: item.interaction_data || {},
         acceptableAnswers: toArray(item.acceptable_answers),
         marks: Number(item.marks || 0),
@@ -196,8 +286,11 @@ const buildTestLabQuestionPool = async ({ board, studentClass, subject, chapterN
     hotsItems
       .filter((item) => item.itemTier === "scored")
       .forEach((item) => {
-        const interactionType = resolveHotsInteractionType(item.format);
-        if (typeFilter.length && !typeFilter.includes(interactionType)) return;
+        // HOTS story-anchor items have no question_family of their own (no
+        // processorkey-based import path) -- they're their own family for
+        // filtering purposes, matching the "HOTS" tag already used
+        // elsewhere for this sourceType (Steps 3/4).
+        if (typeFilter.length && !typeFilter.includes("hots")) return;
         questionPool.push({
           sourceType: "hots",
           sourceItemId: `${item.sourceSectionId}:${item.itemKey}`,
@@ -206,7 +299,8 @@ const buildTestLabQuestionPool = async ({ board, studentClass, subject, chapterN
           question: item.content?.question,
           options: toArray(item.content?.options),
           correctAnswer: item.correctAnswer,
-          interactionType,
+          interactionType: resolveHotsInteractionType(item.format),
+          questionFamily: "hots",
           format: item.format,
           // Genuinely passage-like content, distinct from the question text
           // itself -- lets the Attempt Test screen show a real "Case-based"
@@ -494,9 +588,18 @@ export const setTestLabItemReviewFlag = async ({ attemptId, displayOrder, userId
   return { displayOrder: updated.display_order, isMarkedForReview: updated.is_marked_for_review };
 };
 
-const INTERACTION_TYPE_LABEL_BY_VALUE = Object.fromEntries(
-  INTERACTION_TYPE_OPTIONS.map((option) => [option.value, option.label])
-);
+// Report card's "Question Type" tab groups by the answer-rendering
+// mechanism (interactionType), a coarser axis than Step 1's question_family
+// filter above -- e.g. "Multiple Choice", "True/False", and "Assertion &
+// Reason" items are all single_select, and the report groups them together
+// as one "Multiple Choice" bucket rather than needing question_family
+// persisted per attempt item (question_snapshot doesn't carry it).
+const INTERACTION_TYPE_LABEL_BY_VALUE = {
+  single_select: "Multiple Choice",
+  free_text: "Short Answer",
+  ordering: "Ordering",
+  matching: "Matching",
+};
 
 // Report-card-only label map -- SOURCE_TYPE_LABEL already exists client-side
 // (StudentTestLabResultPage.jsx) for the same two values; this copy is just

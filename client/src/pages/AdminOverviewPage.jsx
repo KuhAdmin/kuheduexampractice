@@ -43,7 +43,7 @@ export const AdminOverviewPage = () => {
       <div className="admin-hero">
         <div>
           <span className="eyebrow">Admin dashboard</span>
-          <h1>Run KUHEDU from one workspace.</h1>
+          <h1>Run English 24x7 from one workspace.</h1>
           <p>
             Monitor student behavior, manage chapter-wise suites, and create
             assessment workflows from a single admin shell.

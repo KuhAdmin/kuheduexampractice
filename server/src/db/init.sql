@@ -1529,3 +1529,300 @@ CREATE TABLE IF NOT EXISTS test_lab_attempt_item (
 -- attempt, independent of whether it's been answered yet.
 ALTER TABLE IF EXISTS test_lab_attempt_item
 ADD COLUMN IF NOT EXISTS is_marked_for_review BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- ============================================================
+-- Teacher / Institution platform -- Stage 1 (Foundation)
+-- ============================================================
+
+-- Distinguishes premium granted by an institution's licence (see
+-- institutions.license_* below and batchService.js's
+-- applyInstitutionPremiumGrant) from premium a student purchased directly
+-- (paymentService.js). Without this marker a lapsed institution licence
+-- could strip a paying student's access, or a cancelled purchase could leave
+-- an institution-sourced grant untouched -- see userService.js's
+-- expirePremiumIfLapsed, which only re-validates rows where this is
+-- 'institution'.
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS premium_source VARCHAR(20);
+
+CREATE TABLE IF NOT EXISTS institutions (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  code VARCHAR(40) NOT NULL UNIQUE,
+  address TEXT,
+  contact_name VARCHAR(120),
+  contact_email VARCHAR(255),
+  contact_phone VARCHAR(30),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  -- Admin-controlled licensing (Decision #7 -- no self-serve/Razorpay flow
+  -- for institutions). 'licensed' + a still-current license_valid_until (or
+  -- NULL for uncapped) is what lets a student joining one of this
+  -- institution's batches receive premium access -- see batchService.js.
+  license_status VARCHAR(20) NOT NULL DEFAULT 'unlicensed'
+    CHECK (license_status IN ('unlicensed', 'licensed', 'suspended')),
+  license_seat_cap INTEGER,
+  license_valid_from DATE,
+  license_valid_until DATE,
+  licensed_by BIGINT REFERENCES users(id),
+  licensed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Read on every batch-join and on every request from a student whose premium
+-- came from an institution (userService.js's expirePremiumIfLapsed).
+CREATE INDEX IF NOT EXISTS idx_institutions_license_status ON institutions(license_status);
+
+-- Which of the global mst_level rows (Class 6/7/8...) this institution
+-- actually runs -- Decision #1: institutions reuse the global class catalog
+-- rather than defining their own.
+CREATE TABLE IF NOT EXISTS institution_class (
+  id BIGSERIAL PRIMARY KEY,
+  fk_institution_id BIGINT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  fk_mst_level_id BIGINT NOT NULL REFERENCES mst_level(id),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  UNIQUE (fk_institution_id, fk_mst_level_id)
+);
+
+-- Per-institution classroom cohort (e.g. "8-A"). Deliberately named
+-- institution_section, not "section" -- that word already means a content
+-- unit elsewhere in this schema (source_section / mst_chapter.section_number,
+-- user-facing labeled "Lesson"). Keep institution UI copy saying "class
+-- section" or "cohort", never bare "Section", to avoid the same confusion in
+-- code and support conversations.
+CREATE TABLE IF NOT EXISTS institution_section (
+  id BIGSERIAL PRIMARY KEY,
+  fk_institution_class_id BIGINT NOT NULL REFERENCES institution_class(id) ON DELETE CASCADE,
+  name VARCHAR(60) NOT NULL,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  UNIQUE (fk_institution_class_id, name)
+);
+
+-- Which teacher-role users are linked to which institution (Decision #5 --
+-- one global admin console manages every institution, so this is just a
+-- link, not a scoped login).
+CREATE TABLE IF NOT EXISTS institution_teacher (
+  id BIGSERIAL PRIMARY KEY,
+  fk_institution_id BIGINT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  fk_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  added_by BIGINT REFERENCES users(id),
+  added_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (fk_institution_id, fk_user_id)
+);
+
+-- The actual (class section, subject) grant to a teacher -- a real join
+-- table (not JSONB) since it must drive "which teachers teach 8-A Math"
+-- queries and batch generation. One row here produces exactly one row in
+-- batches (see the UNIQUE on batches.fk_teacher_class_assignment_id below) --
+-- Decision #2. That 1:1 is a deliberate, permanent constraint: it rules out
+-- co-teaching or split batches unless relaxed later.
+--
+-- Named teacher_class_assignment, NOT teacher_assignment: an old,
+-- never-implemented "teacher assigns work" feature (docs/bio_assessment.md)
+-- had a table literally called teacher_assignment, which bootstrap.js's
+-- pruneRedundantAssessmentStudioSchema() unconditionally DROPs on every boot
+-- as confirmed-dead schema. Reusing that exact name here would have this
+-- table silently destroyed on every server restart.
+CREATE TABLE IF NOT EXISTS teacher_class_assignment (
+  id BIGSERIAL PRIMARY KEY,
+  fk_institution_teacher_id BIGINT NOT NULL REFERENCES institution_teacher(id) ON DELETE CASCADE,
+  fk_institution_section_id BIGINT NOT NULL REFERENCES institution_section(id) ON DELETE CASCADE,
+  fk_mst_subject_id BIGINT NOT NULL REFERENCES mst_subject(id),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  assigned_by BIGINT REFERENCES users(id),
+  assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (fk_institution_teacher_id, fk_institution_section_id, fk_mst_subject_id)
+);
+
+-- One joinable classroom instance per active assignment, generated/reactivated
+-- automatically the moment admin checks the corresponding cell in the
+-- assignment grid (institutionService.js) -- there is no separate "create
+-- batch" step. join_code is what a student enters on their own profile to
+-- enrol (userRoutes.js's /batches/join).
+CREATE TABLE IF NOT EXISTS batches (
+  id BIGSERIAL PRIMARY KEY,
+  fk_teacher_class_assignment_id BIGINT NOT NULL UNIQUE REFERENCES teacher_class_assignment(id) ON DELETE CASCADE,
+  join_code VARCHAR(12) NOT NULL UNIQUE,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Student enrolment. status is a soft-remove (never hard-deleted) -- a later
+-- stage's gradebook keys marks off batch membership, and hard-deleting an
+-- enrolment would orphan a since-left student's grading history.
+CREATE TABLE IF NOT EXISTS batch_student (
+  id BIGSERIAL PRIMARY KEY,
+  fk_batch_id BIGINT NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
+  fk_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'removed')),
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  removed_at TIMESTAMPTZ,
+  UNIQUE (fk_batch_id, fk_user_id)
+);
+
+-- Read by userService.js's expirePremiumIfLapsed on every request from a
+-- student whose premium_source = 'institution'.
+CREATE INDEX IF NOT EXISTS idx_batch_student_active_user
+ON batch_student (fk_user_id) WHERE status = 'active';
+
+-- ============================================================
+-- Teacher / Institution platform -- Stages 2-4 (Tests, Grading, Lessons)
+-- ============================================================
+
+-- Which board/curriculum this institution follows -- the existing content
+-- hierarchy (mst_chapter etc.) is always scoped by (exam goal, level,
+-- subject), but institution_class only carries level and
+-- teacher_class_assignment only carries subject. Without this, there is no
+-- way to resolve which board's chapters a batch's students should draw
+-- from. Nullable: a teacher's Tests/Lessons features simply show no content
+-- until admin sets this.
+ALTER TABLE institutions
+ADD COLUMN IF NOT EXISTS fk_mst_exam_goal_id BIGINT REFERENCES mst_exam_goal(id);
+
+-- Lets a teacher-authored question join the shared bank. assessment_unit_id
+-- is loosened to nullable specifically for these rows -- a teacher picks a
+-- chapter, not a specific concept, when authoring a question (see the Test
+-- Builder's chapter-only picker), so fk_mst_chapter_id is the anchor instead.
+-- review_status defaults to 'approved' so every existing/pipeline-imported
+-- row needs no backfill; only a teacher-authored INSERT sets 'pending'.
+ALTER TABLE content_assessment_item ALTER COLUMN assessment_unit_id DROP NOT NULL;
+
+ALTER TABLE content_assessment_item
+ADD COLUMN IF NOT EXISTS fk_mst_chapter_id BIGINT REFERENCES mst_chapter(id);
+
+ALTER TABLE content_assessment_item
+ADD COLUMN IF NOT EXISTS created_by_teacher_id BIGINT REFERENCES users(id);
+
+ALTER TABLE content_assessment_item
+ADD COLUMN IF NOT EXISTS review_status VARCHAR(20) NOT NULL DEFAULT 'approved';
+
+ALTER TABLE content_assessment_item
+DROP CONSTRAINT IF EXISTS content_assessment_item_review_status_check;
+
+ALTER TABLE content_assessment_item
+ADD CONSTRAINT content_assessment_item_review_status_check
+CHECK (review_status IN ('pending', 'approved', 'rejected'));
+
+ALTER TABLE content_assessment_item
+ADD COLUMN IF NOT EXISTS reviewed_by BIGINT REFERENCES users(id);
+
+ALTER TABLE content_assessment_item
+ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
+
+ALTER TABLE content_assessment_item
+ADD COLUMN IF NOT EXISTS review_notes TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_content_assessment_item_review_status
+ON content_assessment_item (review_status) WHERE review_status = 'pending';
+
+-- A teacher-built paper (Test Builder). Snapshotted items (below) mean a
+-- finalized paper survives later edits to the underlying question bank --
+-- same anti-drift idiom as test_lab_attempt_item.question_snapshot.
+CREATE TABLE IF NOT EXISTS teacher_test_paper (
+  id BIGSERIAL PRIMARY KEY,
+  fk_teacher_id BIGINT NOT NULL REFERENCES users(id),
+  fk_batch_id BIGINT REFERENCES batches(id),
+  title VARCHAR(255) NOT NULL,
+  generation_mode VARCHAR(20) NOT NULL DEFAULT 'custom_mix'
+    CHECK (generation_mode IN ('custom_mix', 'marks_target', 'difficulty_mix')),
+  chapter_numbers JSONB NOT NULL DEFAULT '[]'::jsonb,
+  question_families JSONB,
+  target_total_marks NUMERIC(6,2),
+  difficulty_distribution JSONB,
+  status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'finalized')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_teacher_test_paper_teacher ON teacher_test_paper (fk_teacher_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS teacher_test_paper_item (
+  id BIGSERIAL PRIMARY KEY,
+  fk_teacher_test_paper_id BIGINT NOT NULL REFERENCES teacher_test_paper(id) ON DELETE CASCADE,
+  display_order INTEGER NOT NULL,
+  source_content_assessment_item_id BIGINT REFERENCES content_assessment_item(id),
+  question_snapshot JSONB NOT NULL,
+  marks NUMERIC(6,2) NOT NULL DEFAULT 1,
+  UNIQUE (fk_teacher_test_paper_id, display_order)
+);
+
+-- One exam "sitting" for a batch -- header for the digitized markbook.
+-- source_type = 'manual' needs no teacher_test_paper at all (a teacher
+-- grading a paper-and-pencil test that was never generated in-app), so
+-- Grading never hard-depends on Tests.
+CREATE TABLE IF NOT EXISTS gradebook_exam (
+  id BIGSERIAL PRIMARY KEY,
+  fk_batch_id BIGINT NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
+  fk_teacher_id BIGINT NOT NULL REFERENCES users(id),
+  title VARCHAR(255) NOT NULL,
+  fk_mst_exam_type_id BIGINT REFERENCES mst_exam_type(id),
+  exam_date DATE NOT NULL,
+  total_marks NUMERIC(6,2) NOT NULL DEFAULT 0,
+  source_type VARCHAR(20) NOT NULL DEFAULT 'manual' CHECK (source_type IN ('manual', 'test_paper')),
+  fk_teacher_test_paper_id BIGINT REFERENCES teacher_test_paper(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_gradebook_exam_batch ON gradebook_exam (fk_batch_id, exam_date DESC);
+
+-- Always populated (even for a 'test_paper'-sourced exam, copied from
+-- teacher_test_paper_item at creation time) so mark entry always keys off
+-- one uniform question list regardless of where the exam came from.
+CREATE TABLE IF NOT EXISTS gradebook_exam_question (
+  id BIGSERIAL PRIMARY KEY,
+  fk_gradebook_exam_id BIGINT NOT NULL REFERENCES gradebook_exam(id) ON DELETE CASCADE,
+  display_order INTEGER NOT NULL,
+  question_label VARCHAR(60),
+  max_marks NUMERIC(6,2) NOT NULL DEFAULT 1,
+  question_snapshot JSONB,
+  UNIQUE (fk_gradebook_exam_id, display_order)
+);
+
+-- Per-student-per-question cell. NULL marks_awarded means "not yet graded",
+-- distinct from a genuine 0 -- eager-seeded (one row per active
+-- batch_student) so the grid always renders full without conditional
+-- "does this student have a row yet" logic.
+CREATE TABLE IF NOT EXISTS gradebook_mark (
+  id BIGSERIAL PRIMARY KEY,
+  fk_gradebook_exam_question_id BIGINT NOT NULL REFERENCES gradebook_exam_question(id) ON DELETE CASCADE,
+  fk_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  marks_awarded NUMERIC(6,2),
+  student_answer_text TEXT,
+  ai_suggested_marks NUMERIC(6,2),
+  ai_suggested_feedback TEXT,
+  graded_by BIGINT REFERENCES users(id),
+  graded_at TIMESTAMPTZ,
+  UNIQUE (fk_gradebook_exam_question_id, fk_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_gradebook_mark_user ON gradebook_mark (fk_user_id);
+
+CREATE TABLE IF NOT EXISTS lesson_plan (
+  id BIGSERIAL PRIMARY KEY,
+  fk_teacher_id BIGINT NOT NULL REFERENCES users(id),
+  fk_batch_id BIGINT NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  fk_mst_chapter_id BIGINT REFERENCES mst_chapter(id),
+  start_date DATE,
+  end_date DATE,
+  status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_lesson_plan_batch ON lesson_plan (fk_batch_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS lesson_plan_entry (
+  id BIGSERIAL PRIMARY KEY,
+  fk_lesson_plan_id BIGINT NOT NULL REFERENCES lesson_plan(id) ON DELETE CASCADE,
+  display_order INTEGER NOT NULL,
+  entry_date DATE,
+  topic VARCHAR(255) NOT NULL,
+  learning_objectives TEXT,
+  activities TEXT,
+  resources TEXT,
+  homework TEXT,
+  assessment_notes TEXT,
+  UNIQUE (fk_lesson_plan_id, display_order)
+);

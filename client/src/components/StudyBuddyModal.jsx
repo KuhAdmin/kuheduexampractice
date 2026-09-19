@@ -31,7 +31,7 @@ export const StudyBuddyModal = ({ open, onClose, onGetStarted }) => (
           </button>
           <div className="legal-modal-scroll">
             <div className="study-buddy-hero">
-              <h2>Kuhedu Study Buddy App</h2>
+              <h2>English 24x7 App</h2>
               <p>Your Classroom Teaching Companion &amp; Student&apos;s Competency-Based Learning App</p>
             </div>
 

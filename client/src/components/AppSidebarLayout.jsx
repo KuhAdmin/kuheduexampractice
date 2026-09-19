@@ -15,6 +15,22 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
+// Gives Logout the same icon-first shape as every other sidebar link, so it
+// collapses to an icon-only "infographic" nav item too instead of staying a
+// full-text pill when the sidebar itself collapses to icons.
+const LogoutIcon = () => (
+  <svg viewBox="0 0 24 24" className="admin-sidebar-logout-icon" aria-hidden="true">
+    <path
+      d="M15 4.5H7.5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2H15M18.5 12H9.5m9 0-3-3m3 3-3 3"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.8"
+    />
+  </svg>
+);
+
 // A group's children live under one parent label (e.g. "Masters" for Exam
 // Types/Exam Goals/Levels/Subjects/Books) instead of each being its own
 // top-level sidebar entry. Auto-opens whenever the current route matches one
@@ -71,6 +87,7 @@ export const AppSidebarLayout = ({
   collapsible = false,
   railClassName = "",
   ariaLabel = "Primary",
+  mobileTopbarExtra = null,
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
@@ -112,7 +129,7 @@ export const AppSidebarLayout = ({
         isTabletCollapsed ? "admin-page--tablet-collapsed" : ""
       }`}
     >
-      <div className="admin-mobile-topbar">
+      <div className="mobile-topbar-row">
         <div className="admin-mobile-brand">
           <img className="brand-logo" src="/kuhedu-logo.png" alt="KUHEDU logo" />
           <div>
@@ -120,6 +137,7 @@ export const AppSidebarLayout = ({
             <span>{brandSubtitle}</span>
           </div>
         </div>
+        {mobileTopbarExtra}
         <button
           type="button"
           ref={menuButtonRef}
@@ -127,8 +145,13 @@ export const AppSidebarLayout = ({
           onClick={() => setSidebarOpen((current) => !current)}
           aria-expanded={sidebarOpen}
           aria-controls="app-sidebar-nav"
+          aria-label={sidebarOpen ? "Close menu" : "Open menu"}
         >
-          {sidebarOpen ? "Close" : "Menu"}
+          <span className="admin-mobile-menu-icon" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
         </button>
       </div>
 
@@ -187,13 +210,14 @@ export const AppSidebarLayout = ({
           <p>{user?.name || "User"}</p>
           <span>{user?.email}</span>
           <button
-            className="ghost-button"
+            className="admin-sidebar-link admin-sidebar-logout"
             onClick={() => {
               setSidebarOpen(false);
               onLogout();
             }}
           >
-            Logout
+            <LogoutIcon />
+            <span className="admin-sidebar-link-label">Logout</span>
           </button>
         </div>
       </aside>

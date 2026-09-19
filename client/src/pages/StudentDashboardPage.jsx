@@ -66,6 +66,17 @@ const toTitleLabel = (value) => {
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 };
 
+// assessment_unit_id's own cardkey segment is 0-indexed as "concepts-N-..."
+// by the import pipeline (conceptImportService.js) -- a real sequence
+// number already in the data, not one invented for display. Falls back to
+// the full "Micro Learning Unit" label when no id is available (e.g. the
+// static first-time-dashboard defaults) rather than showing "MLU" with
+// nothing after it.
+const microLearningUnitLabel = (assessmentUnitId) => {
+  const match = String(assessmentUnitId || "").match(/concepts?-(\d+)-/);
+  return match ? `MLU ${Number(match[1]) + 1}` : HIERARCHY_LABELS.microLearningUnit;
+};
+
 const Icon = ({ type, className = "" }) => {
   const classes = `student-dashboard-icon ${className}`.trim();
 
@@ -220,7 +231,7 @@ const FirstTimeDashboard = ({ view }) => {
           <span>{continueCard.eyebrow}</span>
           <strong>{continueCard.title}</strong>
           <p>{`${HIERARCHY_LABELS.lesson}: ${continueCard.section}`}</p>
-          <p>{`${HIERARCHY_LABELS.microLearningUnit}: ${continueCard.concept}`}</p>
+          <p>{`${microLearningUnitLabel(continueCard.assessmentUnitId)}: ${continueCard.concept}`}</p>
         </div>
         <div className="student-dashboard-continue-actions">
           <button
@@ -276,21 +287,19 @@ const ReturningDashboard = ({ view }) => {
     <>
       <section className="student-dashboard-continue-card">
         <div className="student-dashboard-continue-copy">
-          <span>{continueCard.eyebrow}</span>
-          <strong>{continueCard.title}</strong>
-          <p>{`${HIERARCHY_LABELS.lesson}: ${continueCard.section}`}</p>
-          <p>{`${HIERARCHY_LABELS.microLearningUnit}: ${continueCard.concept}`}</p>
-        </div>
-
-        <div className="student-dashboard-continue-actions">
           <button
             type="button"
             className="student-dashboard-continue-button"
             onClick={() => goToConcept(continueCard)}
           >
-            Continue
+            Continue Learning
           </button>
+          <strong>{continueCard.title}</strong>
+          <p>{`${HIERARCHY_LABELS.lesson}: ${continueCard.section}`}</p>
+          <p>{`${microLearningUnitLabel(continueCard.assessmentUnitId)}: ${continueCard.concept}`}</p>
+        </div>
 
+        <div className="student-dashboard-continue-actions">
           <article className="student-dashboard-streak-card student-dashboard-continue-streak">
             <div className="student-dashboard-streak-mark">
               <Icon type="streak" />
@@ -309,20 +318,6 @@ const ReturningDashboard = ({ view }) => {
             <span>{continueCard.progress}%</span>
           </div>
         </div>
-      </section>
-
-      <section className="student-dashboard-info-card">
-        <div className="student-dashboard-info-copy">
-          <span>{view.todayGoal.title}</span>
-          <strong>{view.todayGoal.value}</strong>
-        </div>
-        <button
-          type="button"
-          className="student-dashboard-pill-button"
-          onClick={() => navigate("/goals")}
-        >
-          View
-        </button>
       </section>
 
       <section className="student-dashboard-section">
@@ -449,7 +444,6 @@ export const StudentDashboardPage = ({ dashboard, dashboardMode = "returning", u
             {enrollmentLabel ? (
               <p className="student-dashboard-enrollment">{enrollmentLabel}</p>
             ) : null}
-            <h1>{view.subheading}</h1>
           </div>
           <div className="student-dashboard-bell-wrap">
             <button
@@ -471,6 +465,14 @@ export const StudentDashboardPage = ({ dashboard, dashboardMode = "returning", u
             ) : null}
           </div>
         </header>
+
+        {/* Its own full-bleed row (not squeezed into the header's copy
+            column alongside the bell icon) so "Keep learning, keep
+            growing!" always has the full viewport width to lay out in and
+            never wraps -- see .student-dashboard-subheading-row. */}
+        <div className="student-dashboard-subheading-row">
+          <h1>{view.subheading}</h1>
+        </div>
 
         {/* Desktop gets this from the persistent sidebar (see
             StudentClassSubjectSwitcher/StudentLayout.jsx) -- mobile has no

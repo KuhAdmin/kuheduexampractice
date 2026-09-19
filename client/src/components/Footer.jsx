@@ -21,7 +21,7 @@ export const Footer = ({ onAuthOpen }) => (
     </motion.section>
 
     <div className="footer-meta">
-      <p>© 2026 KUHEDU Practice. All rights reserved.</p>
+      <p>© 2026 English 24x7. All rights reserved.</p>
       <nav className="footer-links" aria-label="Footer">
         <a href="#">Privacy</a>
         <a href="#">Terms</a>

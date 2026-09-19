@@ -8,7 +8,7 @@ import {
   updateSuperstudentAccess,
 } from "../api/client";
 
-const ROLES = ["student", "moderator", "admin", "superstudent"];
+const ROLES = ["student", "moderator", "admin", "superstudent", "teacher"];
 
 // The seed admin login is exempt from the access toggle -- it's the
 // fallback account used to recover the admin panel, so it must never be
@@ -78,6 +78,7 @@ const describeAccessScope = (user) => {
 
   if (user.role === "admin") return "Admin panel access";
   if (user.role === "moderator") return "Content moderation";
+  if (user.role === "teacher") return "Teacher account · link from Admin → Institutions";
 
   const tier = user.isPremium ? "Premium" : "Free";
   if (!user.board && !user.studentClass && !user.subject) {

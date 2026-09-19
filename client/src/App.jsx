@@ -19,7 +19,24 @@ import { AdminContentEditorPage } from "./pages/AdminContentEditorPage";
 import { StudentLayout } from "./components/StudentLayout";
 import { useAuth } from "./context/authHooks";
 import { AdminOverviewPage } from "./pages/AdminOverviewPage";
+import { AdminInstitutionsPage } from "./pages/AdminInstitutionsPage";
+import { AdminInstitutionDetailPage } from "./pages/AdminInstitutionDetailPage";
+import { AdminQuestionReviewPage } from "./pages/AdminQuestionReviewPage";
 import { AdminSectionPage } from "./pages/AdminSectionPage";
+import { TeacherLayout } from "./components/TeacherLayout";
+import { TeacherHomePage } from "./pages/TeacherHomePage";
+import { TeacherClassesPage } from "./pages/TeacherClassesPage";
+import { TeacherClassDetailPage } from "./pages/TeacherClassDetailPage";
+import { TeacherStudentInsightPage } from "./pages/TeacherStudentInsightPage";
+import { TeacherTestsPage } from "./pages/TeacherTestsPage";
+import { TeacherTestBuilderPage } from "./pages/TeacherTestBuilderPage";
+import { TeacherCustomQuestionsPage } from "./pages/TeacherCustomQuestionsPage";
+import { TeacherGradingPage } from "./pages/TeacherGradingPage";
+import { TeacherGradingNewPage } from "./pages/TeacherGradingNewPage";
+import { TeacherGradebookPage } from "./pages/TeacherGradebookPage";
+import { TeacherLessonsPage } from "./pages/TeacherLessonsPage";
+import { TeacherLessonPlanDetailPage } from "./pages/TeacherLessonPlanDetailPage";
+import { TeacherProfilePage } from "./pages/TeacherProfilePage";
 import { AuthSuccessPage } from "./pages/AuthSuccessPage";
 import { HomePage } from "./pages/HomePage";
 import { LegalPage } from "./pages/LegalPage";
@@ -88,6 +105,11 @@ const App = () => {
     const data = await login(payload);
     if (data.user?.role === "admin") {
       navigate("/admin");
+      return data;
+    }
+
+    if (data.user?.role === "teacher") {
+      navigate("/teacher");
       return data;
     }
 
@@ -173,6 +195,8 @@ const App = () => {
             authPending ? <></> : isAuthenticated ? (
               user?.role === "admin" ? (
                 <Navigate replace to="/admin" />
+              ) : user?.role === "teacher" ? (
+                <Navigate replace to="/teacher" />
               ) : !isStudentOnboardingComplete(user) ? (
                 <Navigate replace to="/" state={{ resumeOnboarding: true }} />
               ) : (
@@ -315,6 +339,18 @@ const App = () => {
             element={<AdminUsersPage />}
           />
           <Route
+            path="institutions"
+            element={<AdminInstitutionsPage />}
+          />
+          <Route
+            path="institutions/:institutionId"
+            element={<AdminInstitutionDetailPage />}
+          />
+          <Route
+            path="question-review"
+            element={<AdminQuestionReviewPage />}
+          />
+          <Route
             path="orders"
             element={<AdminOrdersPage />}
           />
@@ -354,6 +390,38 @@ const App = () => {
             path="settings"
             element={<AdminSettingsPage />}
           />
+        </Route>
+        <Route
+          path="/teacher"
+          element={
+            // See the matching comment on the other authPending gates above --
+            // must be a truthy empty element, not null.
+            authPending ? <></> : isAuthenticated ? (
+              user?.role === "teacher" ? (
+                <div className="app-shell teacher-app-shell" data-theme="dawn">
+                  <TeacherLayout onLogout={handleLogout} user={user} />
+                </div>
+              ) : (
+                <Navigate replace to="/dashboard" />
+              )
+            ) : (
+              <Navigate replace to="/" />
+            )
+          }
+        >
+          <Route index element={<TeacherHomePage />} />
+          <Route path="classes" element={<TeacherClassesPage />} />
+          <Route path="classes/:batchId" element={<TeacherClassDetailPage />} />
+          <Route path="classes/:batchId/students/:userId" element={<TeacherStudentInsightPage />} />
+          <Route path="tests" element={<TeacherTestsPage />} />
+          <Route path="tests/custom-questions" element={<TeacherCustomQuestionsPage />} />
+          <Route path="tests/:paperId" element={<TeacherTestBuilderPage />} />
+          <Route path="grading" element={<TeacherGradingPage />} />
+          <Route path="grading/new" element={<TeacherGradingNewPage />} />
+          <Route path="grading/:examId" element={<TeacherGradebookPage />} />
+          <Route path="lessons" element={<TeacherLessonsPage />} />
+          <Route path="lessons/:planId" element={<TeacherLessonPlanDetailPage />} />
+          <Route path="profile" element={<TeacherProfilePage user={user} onLogout={handleLogout} />} />
         </Route>
       </Routes>
     </>

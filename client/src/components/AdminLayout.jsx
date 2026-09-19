@@ -5,6 +5,8 @@ const adminMenu = [
   { label: "AI Assessment Demo", to: "/admin/ai-demo" },
   { label: "Demo Model Settings", to: "/admin/ai-demo/model-settings" },
   { label: "Users", to: "/admin/users" },
+  { label: "Institutions", to: "/admin/institutions" },
+  { label: "Question Review", to: "/admin/question-review" },
   { label: "Orders", to: "/admin/orders" },
   {
     label: "Masters",
@@ -26,7 +28,10 @@ const adminMenu = [
 // group (see adminContentEditorRoutes.js's requireRole("admin", "moderator"))
 // -- every other admin route still 403s for them, so hide those menu entries
 // rather than showing dead links.
-const moderatorMenu = [{ label: "Content Editor", to: "/admin/content-editor" }];
+const moderatorMenu = [
+  { label: "Content Editor", to: "/admin/content-editor" },
+  { label: "Question Review", to: "/admin/question-review" },
+];
 
 export const AdminLayout = ({ onLogout, user }) => {
   const isModerator = user?.role === "moderator";
@@ -34,7 +39,7 @@ export const AdminLayout = ({ onLogout, user }) => {
 
   return (
     <AppSidebarLayout
-      brandTitle="KUHEDU Admin"
+      brandTitle="English 24x7 Admin"
       brandSubtitle="Workspace for content and analytics"
       menuItems={menu.map((item) => ({ ...item, end: item.to === "/admin" }))}
       homeLink={isModerator ? { to: "/dashboard", label: "Back to app" } : { to: "/", label: "Home" }}

@@ -96,6 +96,7 @@ import {
   getWritingPracticeResponseHandler,
   postWritingPracticeSubmit,
 } from "../controllers/writingPracticeController.js";
+import { joinBatchByCode, leaveBatch, listBatchesForStudent } from "../services/batchService.js";
 
 const router = Router();
 
@@ -400,6 +401,43 @@ router.post("/notifications/mark-seen", async (req, res, next) => {
     res.json({ ok: true });
   } catch (error) {
     next(error);
+  }
+});
+
+// Self-serve enrolment into a teacher's batch (see batchService.js) -- the
+// code a teacher shares from their Batches page. Joining also grants premium
+// access when the batch's institution is currently licensed.
+router.post("/batches/join", async (req, res, next) => {
+  try {
+    const { joinCode } = req.body || {};
+    const result = await joinBatchByCode({ userId: req.user.id, joinCode });
+    return res.status(201).json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
+  }
+});
+
+router.get("/batches", async (req, res, next) => {
+  try {
+    const batches = await listBatchesForStudent(req.user.id);
+    return res.json({ batches });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.delete("/batches/:batchId/leave", async (req, res, next) => {
+  try {
+    await leaveBatch({ userId: req.user.id, batchId: req.params.batchId });
+    return res.status(204).send();
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return next(error);
   }
 });
 
