@@ -33,6 +33,14 @@ ADD COLUMN IF NOT EXISTS last_notifications_seen_at TIMESTAMPTZ;
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS theme VARCHAR(10) NOT NULL DEFAULT 'dawn';
 
+-- Which face RobotAvatar.jsx/MaleAvatar.jsx-driven narration UIs (currently
+-- just StudentVivaMode.jsx) show for this student -- 'robot' or 'male'.
+-- Unrelated to the "Show Avatar" Smart Tutor toggle (student_avatar_visible
+-- in localStorage, see aiTutorAvatarVisibility.js), which controls a
+-- completely different vendored 3D avatar for live voice sessions.
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS tutor_avatar VARCHAR(10) NOT NULL DEFAULT 'robot';
+
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS is_premium BOOLEAN NOT NULL DEFAULT FALSE;
 
@@ -1826,3 +1834,90 @@ CREATE TABLE IF NOT EXISTS lesson_plan_entry (
   assessment_notes TEXT,
   UNIQUE (fk_lesson_plan_id, display_order)
 );
+
+ALTER TABLE lesson_plan_entry ADD COLUMN IF NOT EXISTS chapter_label VARCHAR(255);
+ALTER TABLE lesson_plan_entry ADD COLUMN IF NOT EXISTS pre_concept TEXT;
+ALTER TABLE lesson_plan_entry ADD COLUMN IF NOT EXISTS subtopic TEXT;
+ALTER TABLE lesson_plan_entry ADD COLUMN IF NOT EXISTS teaching_approach TEXT;
+ALTER TABLE lesson_plan_entry ADD COLUMN IF NOT EXISTS teaching_method JSONB;
+ALTER TABLE lesson_plan_entry ADD COLUMN IF NOT EXISTS learning_aid TEXT;
+ALTER TABLE lesson_plan_entry ADD COLUMN IF NOT EXISTS learning_outcome TEXT;
+
+CREATE TABLE IF NOT EXISTS lesson_plan_share (
+  id BIGSERIAL PRIMARY KEY,
+  fk_lesson_plan_id BIGINT NOT NULL REFERENCES lesson_plan(id) ON DELETE CASCADE,
+  shared_by_teacher_id BIGINT NOT NULL REFERENCES users(id),
+  shared_with_teacher_id BIGINT NOT NULL REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (fk_lesson_plan_id, shared_with_teacher_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_lesson_plan_share_recipient ON lesson_plan_share (shared_with_teacher_id, created_at DESC);
+
+-- Set true only when a plan's initial save came from the AI-generate flow
+-- (never retroactively for manually-built plans) -- backs the Lesson
+-- Planner dashboard's real "Hours Saved with AI" stat.
+ALTER TABLE lesson_plan ADD COLUMN IF NOT EXISTS ai_generated BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- A recipient's rating of a plan shared with them (1-5), set once they've
+-- actually looked at it -- backs the dashboard's real "Avg Plan Rating"
+-- stat. Nullable: most shares are never rated.
+ALTER TABLE lesson_plan_share ADD COLUMN IF NOT EXISTS rating SMALLINT CHECK (rating IS NULL OR (rating BETWEEN 1 AND 5));
+
+CREATE TABLE IF NOT EXISTS lesson_plan_assistant_history (
+  id BIGSERIAL PRIMARY KEY,
+  fk_teacher_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  fk_batch_id BIGINT NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
+  question TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  items JSONB,
+  status VARCHAR(20) NOT NULL DEFAULT 'retried' CHECK (status IN ('retried', 'accepted')),
+  accepted_day_number INTEGER,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_lesson_plan_assistant_history ON lesson_plan_assistant_history (fk_teacher_id, fk_batch_id, created_at DESC);
+
+-- The chapter-level "Master Lesson Plan" (Previous Knowledge, Teaching
+-- Aids, Objectives, Skills & Competencies, Transaction Methodology,
+-- Inter-Disciplinary Linkage, Assessment/Extra Questions, sign-off) --
+-- distinct from `lesson_plan`, which is the day-by-day "Daily Lesson Plan"
+-- breakdown within a chapter. One Master Plan per batch+chapter.
+CREATE TABLE IF NOT EXISTS master_lesson_plan (
+  id BIGSERIAL PRIMARY KEY,
+  fk_teacher_id BIGINT NOT NULL REFERENCES users(id),
+  fk_batch_id BIGINT NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
+  fk_mst_chapter_id BIGINT REFERENCES mst_chapter(id),
+  chapter_label VARCHAR(255) NOT NULL,
+  class_transaction_time INTEGER,
+  previous_knowledge TEXT,
+  teaching_aids JSONB,
+  objectives JSONB,
+  skills_competencies JSONB,
+  transaction_methodology TEXT,
+  inter_disciplinary_linkage JSONB,
+  assessment_questions JSONB,
+  extra_questions JSONB,
+  subject_teacher_name VARCHAR(255),
+  hod_name VARCHAR(255),
+  principal_name VARCHAR(255),
+  ai_generated BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (fk_batch_id, fk_mst_chapter_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_master_lesson_plan_batch ON master_lesson_plan (fk_batch_id, created_at DESC);
+
+ALTER TABLE master_lesson_plan ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published'));
+
+CREATE TABLE IF NOT EXISTS master_lesson_plan_share (
+  id BIGSERIAL PRIMARY KEY,
+  fk_master_lesson_plan_id BIGINT NOT NULL REFERENCES master_lesson_plan(id) ON DELETE CASCADE,
+  shared_by_teacher_id BIGINT NOT NULL REFERENCES users(id),
+  shared_with_teacher_id BIGINT NOT NULL REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (fk_master_lesson_plan_id, shared_with_teacher_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_master_lesson_plan_share_recipient ON master_lesson_plan_share (shared_with_teacher_id, created_at DESC);

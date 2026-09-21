@@ -1038,6 +1038,88 @@ export const deleteTeacherLessonPlanEntry = async (planId, entryId) =>
 export const downloadTeacherLessonPlanPdf = async (planId, filename) =>
   downloadAuthenticatedFile(`/teacher/lesson-plans/${planId}/export.pdf`, filename);
 
+export const downloadTeacherLessonPlanExcel = async (planId, filename) =>
+  downloadAuthenticatedFile(`/teacher/lesson-plans/${planId}/export.xlsx`, filename);
+
+export const duplicateTeacherLessonPlanEntry = async (planId, entryId) =>
+  apiRequest(`/teacher/lesson-plans/${planId}/entries/${entryId}/duplicate`, { method: "POST" });
+
+export const reorderTeacherLessonPlanEntries = async (planId, orderedEntryIds) =>
+  apiRequest(`/teacher/lesson-plans/${planId}/entries/reorder`, { method: "POST", body: JSON.stringify({ orderedEntryIds }) });
+
+export const addTeacherLessonPlanEntriesBulk = async (planId, entries) =>
+  apiRequest(`/teacher/lesson-plans/${planId}/entries/bulk`, { method: "POST", body: JSON.stringify({ entries }) });
+
+export const getTeacherLessonPlanFilterOptions = async (batchId) =>
+  apiRequest(`/teacher/lesson-plans/filter-options?batchId=${batchId}`);
+
+export const generateTeacherLessonPlan = async (payload) =>
+  apiRequest("/teacher/lesson-plans/generate", { method: "POST", body: JSON.stringify(payload) });
+
+export const askLessonPlanAssistant = async (payload) =>
+  apiRequest("/teacher/lesson-plans/assistant", { method: "POST", body: JSON.stringify(payload) });
+
+export const recordLessonPlanAssistantHistory = async (payload) =>
+  apiRequest("/teacher/lesson-plans/assistant/history", { method: "POST", body: JSON.stringify(payload) });
+
+export const getLessonPlanAssistantHistory = async (batchId) =>
+  apiRequest(`/teacher/lesson-plans/assistant/history?batchId=${batchId}`);
+
+export const getTeacherLessonPlanColleagues = async () => apiRequest("/teacher/lesson-plans/colleagues");
+
+export const shareTeacherLessonPlan = async (planId, shareWithUserIds) =>
+  apiRequest(`/teacher/lesson-plans/${planId}/share`, { method: "POST", body: JSON.stringify({ shareWithUserIds }) });
+
+export const getTeacherLessonPlansSharedWithMe = async () => apiRequest("/teacher/lesson-plans/shared-with-me");
+
+export const getTeacherSharedLessonPlanDetail = async (shareId) =>
+  apiRequest(`/teacher/lesson-plans/shared/${shareId}`);
+
+export const cloneTeacherSharedLessonPlan = async (shareId, payload) =>
+  apiRequest(`/teacher/lesson-plans/shared/${shareId}/clone`, { method: "POST", body: JSON.stringify(payload) });
+
+export const rateTeacherSharedLessonPlan = async (shareId, rating) =>
+  apiRequest(`/teacher/lesson-plans/shared/${shareId}/rating`, { method: "POST", body: JSON.stringify({ rating }) });
+
+export const getTeacherLessonPlanDashboard = async (batchId) =>
+  apiRequest(`/teacher/lesson-plans/dashboard-summary${batchId ? `?batchId=${batchId}` : ""}`);
+
+// ---- Teacher: Master Lesson Plan (chapter-level) ----
+
+export const getTeacherMasterLessonPlans = async (batchId) =>
+  apiRequest(`/teacher/master-lesson-plans${batchId ? `?batchId=${batchId}` : ""}`);
+
+export const getTeacherMasterLessonPlanByChapter = async (batchId, chapterNumber) =>
+  apiRequest(`/teacher/master-lesson-plans/by-chapter?batchId=${batchId}&chapterNumber=${chapterNumber}`);
+
+export const generateTeacherMasterLessonPlan = async (payload) =>
+  apiRequest("/teacher/master-lesson-plans/generate", { method: "POST", body: JSON.stringify(payload) });
+
+export const createTeacherMasterLessonPlan = async (payload) =>
+  apiRequest("/teacher/master-lesson-plans", { method: "POST", body: JSON.stringify(payload) });
+
+export const getTeacherMasterLessonPlanDetail = async (planId) => apiRequest(`/teacher/master-lesson-plans/${planId}`);
+
+export const updateTeacherMasterLessonPlan = async (planId, payload) =>
+  apiRequest(`/teacher/master-lesson-plans/${planId}`, { method: "PUT", body: JSON.stringify(payload) });
+
+export const deleteTeacherMasterLessonPlan = async (planId) =>
+  apiRequest(`/teacher/master-lesson-plans/${planId}`, { method: "DELETE" });
+
+export const downloadTeacherMasterLessonPlanPdf = async (planId, filename) =>
+  downloadAuthenticatedFile(`/teacher/master-lesson-plans/${planId}/export.pdf`, filename);
+
+export const publishTeacherMasterLessonPlan = async (planId) =>
+  apiRequest(`/teacher/master-lesson-plans/${planId}/publish`, { method: "POST" });
+
+export const shareTeacherMasterLessonPlan = async (planId, shareWithUserIds) =>
+  apiRequest(`/teacher/master-lesson-plans/${planId}/share`, { method: "POST", body: JSON.stringify({ shareWithUserIds }) });
+
+export const getTeacherMasterLessonPlansSharedWithMe = async () => apiRequest("/teacher/master-lesson-plans/shared-with-me");
+
+export const getTeacherSharedMasterLessonPlanDetail = async (shareId) =>
+  apiRequest(`/teacher/master-lesson-plans/shared/${shareId}`);
+
 // ---- Admin: Question review ----
 
 export const getAdminPendingQuestions = async () => apiRequest("/admin/question-review");

@@ -11,6 +11,7 @@ import {
   register,
   updateProfile,
   updateTheme,
+  updateTutorAvatar,
 } from "../controllers/authController.js";
 import { requireAuth } from "../middleware/authMiddleware.js";
 
@@ -22,6 +23,7 @@ router.get("/me", requireAuth, currentUser);
 router.post("/onboarding/complete", requireAuth, completeOnboarding);
 router.put("/profile", requireAuth, updateProfile);
 router.put("/theme", requireAuth, updateTheme);
+router.put("/tutor-avatar", requireAuth, updateTutorAvatar);
 router.post("/change-password", requireAuth, changePassword);
 router.post("/logout", logout);
 

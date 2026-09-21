@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { StudentPageShell } from "../components/StudentPageShell";
 import { EditProfileModal } from "../components/EditProfileModal";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { StudentNotificationPanel } from "../components/StudentNotificationPanel";
+import { RobotAvatar } from "../components/RobotAvatar";
+import { MaleAvatar } from "../components/MaleAvatar";
 import { useAuth } from "../context/authHooks";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
@@ -16,13 +18,6 @@ import {
   leaveMyBatch,
   markNotificationsSeen,
 } from "../api/client";
-import {
-  getAvatarVisibleServerSnapshot,
-  getAvatarVisibleSnapshot,
-  setAvatarVisible,
-  subscribeAvatarVisible,
-} from "../lib/aiTutorAvatarVisibility";
-
 const firstNameFromUser = (name) => {
   if (!name) {
     return "Student";
@@ -354,25 +349,6 @@ const AccountRow = ({ label, onClick, tone = "default", disabled = false, disabl
   </button>
 );
 
-const AccountToggleRow = ({ label, description, checked, onChange }) => (
-  <div className="student-profile-account-row student-profile-account-row-stacked">
-    <div className="student-profile-account-row-top">
-      <span>{label}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        className={`student-profile-toggle-switch ${checked ? "is-on" : ""}`}
-        onClick={() => onChange(!checked)}
-      >
-        <span className="student-profile-toggle-switch-thumb" />
-      </button>
-    </div>
-    {description && <span className="student-profile-account-row-hint">{description}</span>}
-  </div>
-);
-
 const AccountThemeRow = ({ theme, onChange }) => (
   <div className="student-profile-account-row student-profile-account-row-stacked">
     <div className="student-profile-account-row-top">
@@ -402,8 +378,40 @@ const AccountThemeRow = ({ theme, onChange }) => (
   </div>
 );
 
+const TUTOR_AVATAR_OPTIONS = [
+  { value: "robot", label: "Robot", Component: RobotAvatar },
+  { value: "male", label: "Tutor", Component: MaleAvatar },
+];
+
+const AccountTutorAvatarRow = ({ tutorAvatar, onChange }) => (
+  <div className="student-profile-account-row student-profile-account-row-stacked">
+    <div className="student-profile-account-row-top">
+      <span>Select Avatar</span>
+    </div>
+    <div className="student-profile-avatar-options" role="radiogroup" aria-label="Tutor avatar">
+      {TUTOR_AVATAR_OPTIONS.map(({ value, label, Component }) => {
+        const isActive = (tutorAvatar || "robot") === value;
+        return (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={isActive}
+            className={`student-profile-avatar-option ${isActive ? "is-active" : ""}`}
+            onClick={() => onChange(value)}
+          >
+            <Component size={56} />
+            <span>{label}</span>
+          </button>
+        );
+      })}
+    </div>
+    <span className="student-profile-account-row-hint">Pick the face your tutor shows during Viva Mode</span>
+  </div>
+);
+
 export const StudentProfilePage = ({ user, onLogout }) => {
-  const { updateProfile, changePassword, setTheme, persistUser } = useAuth();
+  const { updateProfile, changePassword, setTheme, setTutorAvatar, persistUser } = useAuth();
   const navigate = useNavigate();
   const isMobile = useBreakpoint() === "mobile";
   const { platform } = useInstallPrompt();
@@ -418,16 +426,16 @@ export const StudentProfilePage = ({ user, onLogout }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const canChangePassword = user?.provider !== "google";
-  const avatarEnabled = useSyncExternalStore(
-    subscribeAvatarVisible,
-    getAvatarVisibleSnapshot,
-    getAvatarVisibleServerSnapshot
-  );
   const firstName = firstNameFromUser(user?.name);
   const handleThemeChange = (nextTheme) => {
     const current = user?.theme === "dusk" ? "dusk" : "dawn";
     if (nextTheme === current) return;
     setTheme(nextTheme).catch(() => {});
+  };
+  const handleTutorAvatarChange = (nextTutorAvatar) => {
+    const current = user?.tutorAvatar === "male" ? "male" : "robot";
+    if (nextTutorAvatar === current) return;
+    setTutorAvatar(nextTutorAvatar).catch(() => {});
   };
 
   // Same fetch/mark-seen/panel-toggle pattern as StudentDashboardPage.jsx's
@@ -691,21 +699,10 @@ export const StudentProfilePage = ({ user, onLogout }) => {
         </section>
 
         <section className="student-profile-section">
-          <h2>Smart Tutor</h2>
-          <div className="student-profile-account-card">
-            <AccountToggleRow
-              label="Show Avatar"
-              description="Display a 3D avatar face during Smart Tutor voice sessions"
-              checked={avatarEnabled}
-              onChange={setAvatarVisible}
-            />
-          </div>
-        </section>
-
-        <section className="student-profile-section">
           <h2>Appearance</h2>
           <div className="student-profile-account-card">
             <AccountThemeRow theme={user?.theme} onChange={handleThemeChange} />
+            <AccountTutorAvatarRow tutorAvatar={user?.tutorAvatar} onChange={handleTutorAvatarChange} />
           </div>
         </section>
 

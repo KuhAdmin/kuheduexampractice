@@ -4,7 +4,7 @@ import {
   loginWithEmail,
   registerWithEmail,
 } from "../services/authService.js";
-import { updateUserOnboarding, updateUserProfile, updateUserTheme } from "../services/userService.js";
+import { updateUserOnboarding, updateUserProfile, updateUserTheme, updateUserTutorAvatar } from "../services/userService.js";
 import { validatePasswordStrength } from "../services/passwordRules.js";
 import { validateEmail } from "../services/emailRules.js";
 import { env } from "../config/env.js";
@@ -152,6 +152,21 @@ export const updateTheme = async (req, res, next) => {
     }
 
     const user = await updateUserTheme({ id: req.user.id, theme });
+    return res.json({ user });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const updateTutorAvatar = async (req, res, next) => {
+  try {
+    const tutorAvatar = String(req.body?.tutorAvatar || "").toLowerCase();
+
+    if (tutorAvatar !== "robot" && tutorAvatar !== "male") {
+      return res.status(400).json({ message: "tutorAvatar must be 'robot' or 'male'." });
+    }
+
+    const user = await updateUserTutorAvatar({ id: req.user.id, tutorAvatar });
     return res.json({ user });
   } catch (error) {
     return next(error);

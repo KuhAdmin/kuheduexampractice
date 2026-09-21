@@ -21,6 +21,7 @@ const mapPlanRow = (row) => ({
   startDate: row.start_date,
   endDate: row.end_date,
   status: row.status,
+  aiGenerated: row.ai_generated,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -64,7 +65,7 @@ export const listLessonPlans = async ({ teacherUserId, batchId }) => {
   }));
 };
 
-export const createLessonPlan = async ({ teacherUserId, batchId, title, mstChapterId, startDate, endDate }) => {
+export const createLessonPlan = async ({ teacherUserId, batchId, title, mstChapterId, startDate, endDate, aiGenerated }) => {
   if (!batchId || !String(title || "").trim()) {
     const error = new Error("batchId and title are required.");
     error.statusCode = 400;
@@ -72,11 +73,11 @@ export const createLessonPlan = async ({ teacherUserId, batchId, title, mstChapt
   }
   const result = await pool.query(
     `
-      INSERT INTO lesson_plan (fk_teacher_id, fk_batch_id, title, fk_mst_chapter_id, start_date, end_date)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO lesson_plan (fk_teacher_id, fk_batch_id, title, fk_mst_chapter_id, start_date, end_date, ai_generated)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `,
-    [teacherUserId, batchId, title.trim(), mstChapterId || null, startDate || null, endDate || null]
+    [teacherUserId, batchId, title.trim(), mstChapterId || null, startDate || null, endDate || null, Boolean(aiGenerated)]
   );
   return mapPlanRow(result.rows[0]);
 };
@@ -122,6 +123,13 @@ const mapEntryRow = (row) => ({
   resources: row.resources,
   homework: row.homework,
   assessmentNotes: row.assessment_notes,
+  chapterLabel: row.chapter_label,
+  preConcept: row.pre_concept,
+  subtopic: row.subtopic,
+  teachingApproach: row.teaching_approach,
+  teachingMethod: row.teaching_method,
+  learningAid: row.learning_aid,
+  learningOutcome: row.learning_outcome,
 });
 
 export const getLessonPlanDetail = async (planId, teacherUserId) => {
@@ -150,8 +158,9 @@ export const addLessonPlanEntry = async (planId, teacherUserId, entry) => {
   const result = await pool.query(
     `
       INSERT INTO lesson_plan_entry
-        (fk_lesson_plan_id, display_order, entry_date, topic, learning_objectives, activities, resources, homework, assessment_notes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        (fk_lesson_plan_id, display_order, entry_date, topic, learning_objectives, activities, resources, homework, assessment_notes,
+         chapter_label, pre_concept, subtopic, teaching_approach, teaching_method, learning_aid, learning_outcome)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *
     `,
     [
@@ -164,6 +173,13 @@ export const addLessonPlanEntry = async (planId, teacherUserId, entry) => {
       entry.resources || null,
       entry.homework || null,
       entry.assessmentNotes || null,
+      entry.chapterLabel || null,
+      entry.preConcept || null,
+      entry.subtopic || null,
+      entry.teachingApproach || null,
+      entry.teachingMethod ? JSON.stringify(entry.teachingMethod) : null,
+      entry.learningAid || null,
+      entry.learningOutcome || null,
     ]
   );
   return mapEntryRow(result.rows[0]);
@@ -174,7 +190,8 @@ export const updateLessonPlanEntry = async (planId, entryId, teacherUserId, entr
   const result = await pool.query(
     `
       UPDATE lesson_plan_entry
-      SET entry_date = $3, topic = $4, learning_objectives = $5, activities = $6, resources = $7, homework = $8, assessment_notes = $9
+      SET entry_date = $3, topic = $4, learning_objectives = $5, activities = $6, resources = $7, homework = $8, assessment_notes = $9,
+          chapter_label = $10, pre_concept = $11, subtopic = $12, teaching_approach = $13, teaching_method = $14, learning_aid = $15, learning_outcome = $16
       WHERE id = $1 AND fk_lesson_plan_id = $2
       RETURNING *
     `,
@@ -188,6 +205,13 @@ export const updateLessonPlanEntry = async (planId, entryId, teacherUserId, entr
       entry.resources || null,
       entry.homework || null,
       entry.assessmentNotes || null,
+      entry.chapterLabel || null,
+      entry.preConcept || null,
+      entry.subtopic || null,
+      entry.teachingApproach || null,
+      entry.teachingMethod ? JSON.stringify(entry.teachingMethod) : null,
+      entry.learningAid || null,
+      entry.learningOutcome || null,
     ]
   );
   if (!result.rows[0]) {
@@ -205,4 +229,158 @@ export const deleteLessonPlanEntry = async (planId, entryId, teacherUserId) => {
     [entryId, planId]
   );
   return Boolean(result.rows[0]);
+};
+
+// Re-numbers every entry's display_order to match orderedEntryIds (1-based,
+// matching how "Day N" is already just index+1 on read). Two passes -- first
+// to distinct negative placeholders, then to the final positions -- so
+// reassigning positions that overlap with each other never collides with
+// the (fk_lesson_plan_id, display_order) unique constraint mid-transaction.
+export const reorderLessonPlanEntries = async (planId, teacherUserId, orderedEntryIds) => {
+  await getPlanOrThrow(planId, teacherUserId);
+  if (!Array.isArray(orderedEntryIds) || orderedEntryIds.length === 0) {
+    const error = new Error("orderedEntryIds must be a non-empty array.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    for (let i = 0; i < orderedEntryIds.length; i += 1) {
+      await client.query("UPDATE lesson_plan_entry SET display_order = $1 WHERE id = $2 AND fk_lesson_plan_id = $3", [
+        -(i + 1),
+        orderedEntryIds[i],
+        planId,
+      ]);
+    }
+    for (let i = 0; i < orderedEntryIds.length; i += 1) {
+      await client.query("UPDATE lesson_plan_entry SET display_order = $1 WHERE id = $2 AND fk_lesson_plan_id = $3", [
+        i + 1,
+        orderedEntryIds[i],
+        planId,
+      ]);
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  const entriesResult = await pool.query(
+    "SELECT * FROM lesson_plan_entry WHERE fk_lesson_plan_id = $1 ORDER BY display_order ASC",
+    [planId]
+  );
+  return entriesResult.rows.map(mapEntryRow);
+};
+
+export const duplicateLessonPlanEntry = async (planId, entryId, teacherUserId) => {
+  await getPlanOrThrow(planId, teacherUserId);
+  const sourceResult = await pool.query(
+    "SELECT * FROM lesson_plan_entry WHERE id = $1 AND fk_lesson_plan_id = $2",
+    [entryId, planId]
+  );
+  const source = sourceResult.rows[0];
+  if (!source) {
+    const error = new Error("Lesson plan entry not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const orderResult = await pool.query(
+    "SELECT COALESCE(MAX(display_order), 0) + 1 AS next_order FROM lesson_plan_entry WHERE fk_lesson_plan_id = $1",
+    [planId]
+  );
+  const nextOrder = orderResult.rows[0].next_order;
+
+  const result = await pool.query(
+    `
+      INSERT INTO lesson_plan_entry
+        (fk_lesson_plan_id, display_order, entry_date, topic, learning_objectives, activities, resources, homework, assessment_notes,
+         chapter_label, pre_concept, subtopic, teaching_approach, teaching_method, learning_aid, learning_outcome)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      RETURNING *
+    `,
+    [
+      planId,
+      nextOrder,
+      source.entry_date,
+      `${source.topic} (Copy)`,
+      source.learning_objectives,
+      source.activities,
+      source.resources,
+      source.homework,
+      source.assessment_notes,
+      source.chapter_label,
+      source.pre_concept,
+      source.subtopic,
+      source.teaching_approach,
+      source.teaching_method ? JSON.stringify(source.teaching_method) : null,
+      source.learning_aid,
+      source.learning_outcome,
+    ]
+  );
+  return mapEntryRow(result.rows[0]);
+};
+
+export const addLessonPlanEntriesBulk = async (planId, teacherUserId, entries) => {
+  await getPlanOrThrow(planId, teacherUserId);
+  if (!Array.isArray(entries) || entries.length === 0) {
+    const error = new Error("entries must be a non-empty array.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const orderResult = await pool.query(
+    "SELECT COALESCE(MAX(display_order), 0) AS max_order FROM lesson_plan_entry WHERE fk_lesson_plan_id = $1",
+    [planId]
+  );
+  let nextOrder = Number(orderResult.rows[0].max_order) + 1;
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const inserted = [];
+    for (const entry of entries) {
+      if (!String(entry?.topic || "").trim()) continue;
+      const result = await client.query(
+        `
+          INSERT INTO lesson_plan_entry
+            (fk_lesson_plan_id, display_order, entry_date, topic, learning_objectives, activities, resources, homework, assessment_notes,
+             chapter_label, pre_concept, subtopic, teaching_approach, teaching_method, learning_aid, learning_outcome)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+          RETURNING *
+        `,
+        [
+          planId,
+          nextOrder,
+          entry.entryDate || null,
+          entry.topic.trim(),
+          entry.learningObjectives || null,
+          entry.activities || null,
+          entry.resources || null,
+          entry.homework || null,
+          entry.assessmentNotes || null,
+          entry.chapterLabel || null,
+          entry.preConcept || null,
+          entry.subtopic || null,
+          entry.teachingApproach || null,
+          entry.teachingMethod ? JSON.stringify(entry.teachingMethod) : null,
+          entry.learningAid || null,
+          entry.learningOutcome || null,
+        ]
+      );
+      inserted.push(mapEntryRow(result.rows[0]));
+      nextOrder += 1;
+    }
+    await client.query("COMMIT");
+    return inserted;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 };

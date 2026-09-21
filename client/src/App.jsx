@@ -36,6 +36,9 @@ import { TeacherGradingNewPage } from "./pages/TeacherGradingNewPage";
 import { TeacherGradebookPage } from "./pages/TeacherGradebookPage";
 import { TeacherLessonsPage } from "./pages/TeacherLessonsPage";
 import { TeacherLessonPlanDetailPage } from "./pages/TeacherLessonPlanDetailPage";
+import { TeacherLessonPlanCreatePage } from "./pages/TeacherLessonPlanCreatePage";
+import { TeacherMasterLessonPlanPage } from "./pages/TeacherMasterLessonPlanPage";
+import { TeacherSharedMasterLessonPlanPage } from "./pages/TeacherSharedMasterLessonPlanPage";
 import { TeacherProfilePage } from "./pages/TeacherProfilePage";
 import { AuthSuccessPage } from "./pages/AuthSuccessPage";
 import { HomePage } from "./pages/HomePage";
@@ -420,6 +423,10 @@ const App = () => {
           <Route path="grading/new" element={<TeacherGradingNewPage />} />
           <Route path="grading/:examId" element={<TeacherGradebookPage />} />
           <Route path="lessons" element={<TeacherLessonsPage />} />
+          <Route path="lessons/master-plan" element={<TeacherMasterLessonPlanPage />} />
+          <Route path="lessons/master-plan/shared/:shareId" element={<TeacherSharedMasterLessonPlanPage />} />
+          <Route path="lessons/new" element={<TeacherLessonPlanCreatePage />} />
+          <Route path="lessons/shared/:shareId" element={<TeacherLessonPlanDetailPage sharedView />} />
           <Route path="lessons/:planId" element={<TeacherLessonPlanDetailPage />} />
           <Route path="profile" element={<TeacherProfilePage user={user} onLogout={handleLogout} />} />
         </Route>

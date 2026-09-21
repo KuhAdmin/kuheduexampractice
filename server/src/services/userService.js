@@ -23,6 +23,7 @@ const mapUser = (row) => ({
   subject: row.subject,
   onboardingCompletedAt: row.onboarding_completed_at,
   theme: row.theme,
+  tutorAvatar: row.tutor_avatar,
   isPremium: row.is_premium,
   premiumExpiresAt: row.premium_expires_at,
   premiumSource: row.premium_source,
@@ -198,6 +199,15 @@ export const updateUserTheme = async ({ id, theme }) => {
   const result = await pool.query(
     `UPDATE users SET theme = $2, updated_at = NOW() WHERE id = $1 RETURNING *`,
     [id, theme]
+  );
+
+  return result.rows[0] ? mapUser(result.rows[0]) : null;
+};
+
+export const updateUserTutorAvatar = async ({ id, tutorAvatar }) => {
+  const result = await pool.query(
+    `UPDATE users SET tutor_avatar = $2, updated_at = NOW() WHERE id = $1 RETURNING *`,
+    [id, tutorAvatar]
   );
 
   return result.rows[0] ? mapUser(result.rows[0]) : null;

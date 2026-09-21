@@ -299,12 +299,14 @@ export const AdminUsersPage = () => {
         </div>
       </div>
 
-      <form className="admin-add-user-form" onSubmit={handleSubmit}>
+      <form className="admin-add-user-form" onSubmit={handleSubmit} autoComplete="off">
         <h2>Add User</h2>
         <div className="admin-studio-form-grid">
           <label className="admin-studio-field">
             <span>Name</span>
             <input
+              name="new-user-name"
+              autoComplete="off"
               value={form.name}
               onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
               required
@@ -314,6 +316,8 @@ export const AdminUsersPage = () => {
             <span>Email</span>
             <input
               type="email"
+              name="new-user-email"
+              autoComplete="off"
               value={form.email}
               onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
               required
@@ -323,6 +327,8 @@ export const AdminUsersPage = () => {
             <span>Password</span>
             <input
               type="password"
+              name="new-user-password"
+              autoComplete="new-password"
               value={form.password}
               onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
               required

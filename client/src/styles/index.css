@@ -350,6 +350,17 @@ a {
   --brand-glow: #ffab6b;
 }
 
+/* Neither button class had any :disabled treatment -- a disabled button
+   rendered visually identical to an enabled one (same color, same cursor),
+   so clicking it silently did nothing with no cue why. */
+.primary-button:disabled,
+.ghost-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
 /* Sign-in CTA only -- not the app-wide orange .primary-button used
    everywhere else (Hero, admin pages, other modals) -- scoped to
    AuthModal's own form so this doesn't recolor buttons app-wide. */
@@ -8139,6 +8150,50 @@ a {
   }
 }
 
+/* MaleAvatar.jsx -- reusable SVG young-male tutor face, mirrors RobotAvatar's
+   isThinking/isSpeaking/audioLevel-driven behavior above 1:1 with its own
+   class names, so either face can be dropped into the same narration UI. */
+.student-male-avatar-eye,
+.student-male-avatar-mouth {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.student-male-avatar-eye.is-blinking {
+  animation: student-male-avatar-blink 4s ease-in-out infinite;
+}
+
+@keyframes student-male-avatar-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+.student-male-avatar-mouth.is-speaking {
+  animation: student-male-avatar-talk 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes student-male-avatar-talk {
+  0% {
+    transform: scaleY(0.4);
+  }
+  100% {
+    transform: scaleY(1.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-male-avatar-eye.is-blinking,
+  .student-male-avatar-mouth.is-speaking {
+    animation: none;
+  }
+}
+
 /* Pill (not a fixed circle like .student-viva-countdown, which only ever
    holds a bare number elsewhere) so variable-length text -- "5s" through
    "Time's up" -- always fits without overflowing or wrapping. */
@@ -9573,6 +9628,38 @@ a {
   color: #000;
 }
 
+/* AccountTutorAvatarRow (StudentProfilePage.jsx): each option shows the
+   actual RobotAvatar/MaleAvatar SVG rather than just a text label, so the
+   student can see the look before picking it -- same is-active language as
+   the theme chips above, just sized for a real face preview instead of a
+   word. */
+.student-profile-avatar-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.student-profile-avatar-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 18px;
+  border-radius: 18px;
+  border: 2px solid var(--line);
+  background: var(--bg-inset);
+  color: var(--muted);
+  font-size: 0.8em;
+  font-weight: 700;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+}
+
+.student-profile-avatar-option.is-active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--text);
+}
+
 @media (min-width: 640px) {
   .student-profile-premium-actions {
     flex-wrap: nowrap;
@@ -10589,6 +10676,44 @@ a {
   border: 1.5px solid rgba(31, 41, 51, 0.22);
   background: rgba(255, 255, 255, 0.92);
   color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .admin-studio-field input,
+  .admin-studio-field select,
+  .admin-studio-field textarea {
+    width: 75vw;
+  }
+
+  /* Master Lesson Plan's fields run wider on mobile than every other
+     .admin-studio-field use (including the Daily Lesson Plan pages, which
+     keep the 75vw default above) -- scoped to this page only. */
+  .teacher-master-lesson-plan-page .admin-studio-field input,
+  .teacher-master-lesson-plan-page .admin-studio-field select,
+  .teacher-master-lesson-plan-page .admin-studio-field textarea {
+    width: 85vw;
+  }
+}
+
+/* The rule above targets any <input> inside .admin-studio-field, which also
+   (unintentionally) matched checkbox/radio inputs nested inside a
+   .admin-studio-field used just for its label styling (e.g. a Teaching
+   Method checkbox group) -- turning each into a giant blank rounded box.
+   Reset those back down to a normal small checkbox/radio. */
+.admin-studio-field input[type="checkbox"],
+.admin-studio-field input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 4px;
+  border: 1.5px solid rgba(31, 41, 51, 0.4);
+  background: rgba(255, 255, 255, 0.92);
+  flex-shrink: 0;
+}
+
+.admin-studio-field input[type="radio"] {
+  border-radius: 50%;
 }
 
 .admin-studio-field input:focus,
@@ -17513,6 +17638,23 @@ a {
   font-size: 0.92em;
 }
 
+/* Compact variant for dashboard list cards -- kills the default <p> margins
+   that were stacking on top of .teacher-card's own grid gap (the actual
+   cause of the tall, airy look), tightens padding/gap, and drops the
+   heading's bottom margin so title+badge+meta+actions sit close together. */
+.teacher-lessons-plan-card {
+  padding: 12px 16px;
+  gap: 6px;
+}
+
+.teacher-lessons-plan-card p {
+  margin: 0;
+}
+
+.teacher-lessons-plan-card .teacher-card-head h3 {
+  font-size: 1em;
+}
+
 .teacher-alert-line {
   display: flex;
   align-items: center;
@@ -17794,6 +17936,14 @@ a {
   background: var(--tred-soft);
   color: var(--tred);
 }
+.teacher-badge.tone-red {
+  background: var(--tred-soft);
+  color: var(--tred);
+}
+.teacher-badge.tone-purple {
+  background: var(--tpurple-soft);
+  color: var(--tpurple);
+}
 
 /* ---- stepper (Test Builder) ---- */
 
@@ -17919,6 +18069,49 @@ a {
 @media (max-width: 720px) {
   .teacher-lesson-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.teacher-lesson-entry-toggle {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.teacher-lesson-entry-toggle h2 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.teacher-lesson-entry-toggle-chevron {
+  color: var(--muted);
+  font-size: 0.85em;
+  flex-shrink: 0;
+}
+
+.teacher-lesson-move-button {
+  padding: 12px 14px;
+  line-height: 1;
+}
+
+.teacher-lesson-entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 13px;
+  margin: 4px 0 12px;
+  padding-left: 18px;
+}
+
+@media (max-width: 640px) {
+  .teacher-lesson-entry-actions button {
+    font-size: 0.8em;
+    padding: 10px 10px;
   }
 }
 
@@ -18485,4 +18678,1555 @@ a {
 .teacher-bottom-nav-item.is-active {
   color: var(--tblue);
   background: var(--tblue-soft);
+}
+
+/* ---- Daily Lesson Plan create page ---- */
+
+.teacher-lesson-create-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 920px) {
+  .teacher-lesson-create-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teacher-lesson-create-main {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.teacher-lesson-create-sidebar {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  min-width: 0;
+}
+
+.teacher-lesson-mode-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 560px) {
+  .teacher-lesson-mode-toggle {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teacher-lesson-mode-card {
+  text-align: left;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+}
+
+.teacher-lesson-mode-card strong {
+  font-size: 1.02em;
+}
+
+.teacher-lesson-mode-card span {
+  color: var(--muted);
+  font-size: 0.88em;
+}
+
+.teacher-lesson-mode-card.is-active {
+  border-color: var(--tblue);
+  background: var(--tblue-soft);
+}
+
+.teacher-lesson-plan-table-wrap {
+  overflow-x: auto;
+  min-width: 0;
+}
+
+.teacher-lesson-plan-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.teacher-lesson-plan-table th,
+.teacher-lesson-plan-table td {
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.9em;
+}
+
+.teacher-lesson-plan-table th {
+  background: var(--bg-inset);
+  font-weight: 700;
+}
+
+.teacher-lesson-plan-table-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.teacher-lesson-assistant-panel,
+.teacher-quick-actions-panel,
+.teacher-plan-info-panel,
+.teacher-tips-panel {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+/* Each sidebar card gets its own tint, reusing the same categorical
+   "soft" tone tokens the teacher module already uses to tell stat tiles/
+   activity icons apart (see .teacher-stat-badge-icon.tone-*), instead of
+   every card sharing one flat --surface background. */
+.teacher-lesson-assistant-panel {
+  background: var(--tgreen-soft);
+}
+
+/* ---- Mobile drawer for the AI Teaching Assistant ---- */
+
+.teacher-ai-assistant-fab {
+  display: none;
+}
+
+.teacher-ai-assistant-overlay-backdrop {
+  display: none;
+}
+
+.teacher-ai-assistant-overlay-close {
+  display: none;
+}
+
+@media (max-width: 920px) {
+  .teacher-ai-assistant-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--tblue);
+    color: #fff;
+    border: none;
+    font-size: 1.3em;
+    box-shadow: var(--shadow-soft);
+    z-index: 45;
+    cursor: pointer;
+  }
+
+  .teacher-ai-assistant-overlay-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    z-index: 60;
+  }
+
+  .teacher-ai-assistant-mobile-wrap {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(360px, 90vw);
+    padding: 16px;
+    background: var(--bg);
+    box-shadow: var(--shadow);
+    overflow-y: auto;
+    z-index: 61;
+    transform: translateX(100%);
+    transition: transform 220ms ease;
+  }
+
+  .teacher-ai-assistant-mobile-wrap.is-open {
+    transform: translateX(0);
+  }
+
+  .teacher-ai-assistant-overlay-close {
+    display: inline-flex;
+    position: sticky;
+    top: 0;
+    margin: 0 0 8px auto;
+  }
+}
+
+.teacher-quick-actions-panel {
+  background: var(--tamber-soft);
+}
+
+.teacher-plan-info-panel {
+  background: var(--bg-inset);
+}
+
+.teacher-tips-panel {
+  background: var(--brand-soft);
+}
+
+.teacher-lesson-assistant-header h3,
+.teacher-quick-actions-panel h3,
+.teacher-plan-info-panel h3,
+.teacher-tips-panel h3 {
+  margin: 0 0 2px;
+}
+
+.teacher-lesson-assistant-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.teacher-lesson-assistant-header-row h3 {
+  margin: 0;
+}
+
+.teacher-lesson-assistant-history-toggle {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--tgreen);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.teacher-lesson-assistant-history-panel {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-raised);
+  padding: 10px 12px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.teacher-lesson-assistant-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.teacher-lesson-assistant-history-row {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.teacher-lesson-assistant-history-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.teacher-lesson-assistant-history-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.teacher-lesson-assistant-history-time {
+  font-size: 0.78em;
+  color: var(--muted);
+}
+
+.teacher-lesson-method-chip.is-accepted {
+  background: var(--tgreen-soft);
+  color: var(--tgreen);
+}
+
+.teacher-lesson-method-chip.is-retried {
+  background: var(--line);
+  color: var(--muted);
+}
+
+.teacher-lesson-assistant-notice {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--tgreen-soft);
+  color: var(--tgreen);
+  font-size: 0.88em;
+  font-weight: 600;
+}
+
+.teacher-lesson-assistant-resolve-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.teacher-lesson-assistant-accept-picker {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-raised);
+}
+
+.teacher-lesson-assistant-accept-picker label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.teacher-lesson-assistant-accept-picker select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--line-strong);
+}
+
+.teacher-lesson-assistant-header p,
+.teacher-tips-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88em;
+}
+
+.teacher-lesson-assistant-form {
+  display: grid;
+  gap: 8px;
+}
+
+.teacher-lesson-assistant-form textarea {
+  resize: vertical;
+}
+
+.teacher-lesson-assistant-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.teacher-lesson-assistant-entry {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.teacher-lesson-assistant-entry-question {
+  font-weight: 700;
+  margin: 0;
+  font-size: 0.9em;
+}
+
+.teacher-lesson-assistant-entry-answer {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9em;
+  white-space: pre-wrap;
+}
+
+.teacher-lesson-assistant-entry-answer-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 0.9em;
+  display: grid;
+  gap: 8px;
+}
+
+.teacher-lesson-assistant-answer-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-raised);
+}
+
+.teacher-lesson-assistant-answer-item .teacher-lesson-method-chip.is-accepted {
+  align-self: flex-end;
+}
+
+.teacher-lesson-assistant-item-accept {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.teacher-lesson-assistant-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.teacher-lesson-assistant-item-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.9em;
+  line-height: 1;
+  border-radius: 6px;
+  opacity: 0.7;
+}
+
+.teacher-lesson-assistant-item-actions button:hover {
+  opacity: 1;
+  background: var(--surface-hover);
+}
+
+.teacher-lesson-assistant-item-edit {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+.teacher-lesson-assistant-item-edit textarea {
+  width: 100%;
+  font-size: 0.9em;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1.5px solid var(--line-strong);
+  resize: vertical;
+}
+
+.teacher-lesson-assistant-item-edit .teacher-lesson-assistant-item-actions {
+  justify-content: flex-end;
+}
+
+.teacher-lesson-assistant-item-edit .teacher-lesson-assistant-item-actions button {
+  opacity: 1;
+  border: 1px solid var(--line);
+}
+
+.teacher-quick-actions-panel button {
+  width: 100%;
+  justify-content: center;
+}
+
+.teacher-plan-info-panel dl {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.teacher-plan-info-panel dt {
+  font-weight: 700;
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.teacher-plan-info-panel dd {
+  margin: 0 0 4px;
+}
+
+.teacher-colleague-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.teacher-colleague-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.admin-studio-field-hint {
+  color: var(--muted);
+  font-size: 0.82em;
+  justify-self: end;
+}
+
+.teacher-lesson-method-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--tblue-soft);
+  color: var(--tblue);
+  font-size: 0.78em;
+  font-weight: 700;
+}
+
+/* ---- Add Lesson Plan Row modal (manual entry) ---- */
+
+.teacher-lesson-row-modal {
+  /* calc(100vw - 32px), not a vw percentage guess, so this always matches
+     .modal-backdrop's actual available width (viewport minus its own 16px
+     side padding) instead of occasionally exceeding it by a few px on
+     narrow phones. */
+  width: min(1080px, calc(100vw - 32px));
+  overflow-x: hidden;
+}
+
+.teacher-lesson-row-modal-subtitle {
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.teacher-lesson-row-context-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--tblue-soft);
+  border: 1px solid var(--line);
+  margin-bottom: 18px;
+  font-size: 0.9em;
+}
+
+.teacher-lesson-row-change-chapter {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--tblue);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.teacher-lesson-row-form {
+  display: grid;
+  gap: 20px;
+}
+
+.teacher-lesson-row-grid {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Bare `1fr` tracks default to a minimum of `auto` (their content's
+   min-content size), not 0 -- a native <input type="date">/type="number">'s
+   un-shrinkable placeholder+spinner width can then force the whole track
+   (and the modal) wider than the viewport instead of clamping to it. Every
+   track here is explicitly minmax(0, ...) so it can always shrink to fit. */
+.teacher-lesson-row-grid-4 {
+  grid-template-columns: minmax(0, 0.6fr) minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.4fr);
+}
+
+.teacher-lesson-row-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.teacher-lesson-row-grid-3 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.2fr);
+}
+
+.teacher-lesson-row-grid > * {
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .teacher-lesson-row-grid-4,
+  .teacher-lesson-row-grid-2,
+  .teacher-lesson-row-grid-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.teacher-lesson-bloom-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.teacher-lesson-bloom-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.teacher-lesson-bloom-field > span {
+  font-weight: 600;
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.teacher-lesson-bloom-field textarea {
+  resize: vertical;
+}
+
+@media (max-width: 860px) {
+  .teacher-lesson-bloom-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.teacher-lesson-bloom-output {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.teacher-lesson-bloom-output-item {
+  min-width: 0;
+}
+
+.teacher-lesson-bloom-output-item b {
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.teacher-lesson-bloom-output-item p {
+  margin: 2px 0 0;
+  white-space: pre-wrap;
+}
+
+.teacher-lesson-row-preview {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: var(--bg-inset);
+}
+
+.teacher-lesson-row-preview h4,
+.teacher-lesson-resources-section h4 {
+  margin: 0 0 10px;
+}
+
+.teacher-lesson-resources-section {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.teacher-lesson-resources-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 860px) {
+  .teacher-lesson-resources-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teacher-lesson-dropzone {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 22px 12px;
+  border: 2px dashed var(--line-strong);
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--muted);
+  text-align: center;
+}
+
+.teacher-lesson-dropzone:hover {
+  border-color: var(--tblue);
+  background: var(--tblue-soft);
+}
+
+.teacher-lesson-dropzone-icon {
+  font-size: 1.4em;
+  color: var(--tblue);
+}
+
+.teacher-lesson-dropzone strong {
+  color: var(--text);
+}
+
+.teacher-lesson-resources-caption {
+  margin: 8px 0 0;
+  font-size: 0.8em;
+  color: var(--muted);
+}
+
+.teacher-lesson-resources-library {
+  display: grid;
+  gap: 8px;
+}
+
+.teacher-lesson-resources-library button {
+  justify-content: flex-start;
+}
+
+/* ---- Generate Lesson Plan with AI (stepper + two-panel layout) ---- */
+
+.teacher-lesson-context-pill {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--tblue-soft);
+  color: var(--tblue);
+  font-weight: 700;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.teacher-ai-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.teacher-ai-stepper-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.teacher-ai-stepper-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  font-weight: 700;
+  font-size: 0.85em;
+  flex-shrink: 0;
+}
+
+.teacher-ai-stepper-item.is-active .teacher-ai-stepper-badge {
+  background: var(--tblue);
+  border-color: var(--tblue);
+  color: #fff;
+}
+
+.teacher-ai-stepper-item.is-done .teacher-ai-stepper-badge {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+
+.teacher-ai-stepper-item.is-active .teacher-ai-stepper-label {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.teacher-ai-stepper-label {
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.teacher-ai-stepper-line {
+  width: 32px;
+  height: 2px;
+  background: var(--line);
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .teacher-ai-stepper-label {
+    display: none;
+  }
+  .teacher-ai-stepper-line {
+    width: 16px;
+  }
+}
+
+/* Default to stacked: this panel sits beside the app nav AND the real
+   Assistant/Quick Actions sidebar, so the "Set Requirements | AI Generated"
+   pair has far less room than the reference mockup assumed -- side by side,
+   the generated table's min-width forced its column wider than its fair
+   share of a plain minmax(0,1fr) track, and the resulting overflow visually
+   overlaid the sidebar instead of scrolling within its own column. A
+   container query (not a viewport media query, which can't see how much
+   width the persistent sidebar actually leaves) promotes to side-by-side
+   only once there's genuinely enough room. */
+.teacher-ai-generate-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@supports (container-type: inline-size) {
+  .teacher-lesson-create-main {
+    container-type: inline-size;
+  }
+
+  @container (min-width: 1000px) {
+    .teacher-ai-generate-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+.teacher-ai-generate-panel {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-width: 0;
+}
+
+/* Step 1 (Set Your Requirements) vs step 2 (AI Generated Lesson Plan) --
+   same tblue/tpurple tone pairing used for .teacher-ai-generate-panel's own
+   step badges, so the tint reinforces which card is which step. */
+.teacher-ai-generate-grid > .teacher-ai-generate-panel:nth-child(1) {
+  background: var(--tblue-soft);
+}
+
+.teacher-ai-generate-grid > .teacher-ai-generate-panel:nth-child(2) {
+  background: var(--tpurple-soft);
+}
+
+.teacher-ai-panel-head {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* The step badge + title/subtitle should always get their full natural
+   width, wrapping onto their own row above the "Generated in Xs" pill
+   rather than being squeezed into a sliver next to that pill's fixed,
+   non-shrinking width (which forced every word of the heading onto its
+   own line). */
+.teacher-ai-panel-head-text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.teacher-ai-panel-head h2 {
+  margin: 0;
+}
+
+.teacher-ai-panel-head p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.88em;
+}
+
+.teacher-ai-step-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--tblue);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.teacher-ai-generated-pill {
+  margin-left: auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 0.8em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.teacher-lesson-topics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.teacher-lesson-topic-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--tblue-soft);
+  color: var(--tblue);
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.teacher-lesson-topic-chip button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.1em;
+  line-height: 1;
+  padding: 0;
+}
+
+.teacher-lesson-topic-add {
+  background: none;
+  border: 1px dashed var(--line-strong);
+  border-radius: 999px;
+  padding: 5px 12px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.teacher-lesson-topic-input {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.85em;
+  min-width: 180px;
+}
+
+.teacher-ai-advanced-options {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.teacher-ai-advanced-options summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.teacher-ai-advanced-options summary::-webkit-details-marker {
+  display: none;
+}
+
+.teacher-ai-advanced-options summary span:first-child {
+  font-weight: 700;
+}
+
+.teacher-ai-advanced-subtitle {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.teacher-ai-advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.teacher-ai-advanced-grid > div {
+  min-width: 0;
+}
+
+/* This panel sits beside a persistent sidebar, so it's a narrow ~1/3-of-a-
+   half-page column well before the viewport itself hits a phone breakpoint
+   -- stack on container width symptoms (a media query on viewport width
+   can't see that), falling back to viewport width only where the browser
+   doesn't support container queries at all. */
+@supports (container-type: inline-size) {
+  .teacher-ai-generate-panel {
+    container-type: inline-size;
+  }
+
+  @container (max-width: 460px) {
+    .teacher-ai-advanced-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 960px) {
+  .teacher-ai-advanced-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teacher-ai-advanced-grid h4 {
+  margin: 0 0 8px;
+  font-size: 0.9em;
+}
+
+.teacher-ai-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.teacher-ai-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.85em;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.teacher-ai-option input {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.teacher-ai-panel-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.teacher-ai-panel-hint {
+  margin: 0;
+  text-align: right;
+  color: var(--muted);
+  font-size: 0.82em;
+}
+
+@media (max-width: 640px) {
+  .teacher-cta-arrow {
+    display: none;
+  }
+}
+
+.teacher-button-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  animation: teacher-button-spin 0.7s linear infinite;
+  vertical-align: -2px;
+  margin-right: 2px;
+}
+
+.teacher-button-spinner-dark {
+  border-color: var(--line-strong);
+  border-top-color: var(--muted-strong);
+}
+
+@keyframes teacher-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.teacher-ai-output-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 30px 10px;
+}
+
+.teacher-ai-output-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+
+.teacher-ai-output-tab {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 6px 12px;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.88em;
+}
+
+.teacher-ai-output-tab.is-active {
+  background: var(--tblue);
+  color: #fff;
+}
+
+.teacher-ai-output-content {
+  min-height: 60px;
+  min-width: 0;
+}
+
+.teacher-lesson-notes-list {
+  display: grid;
+  gap: 16px;
+}
+
+.teacher-lesson-notes-entry h4 {
+  margin: 0 0 6px;
+}
+
+.teacher-lesson-notes-entry p {
+  margin: 0 0 6px;
+  color: var(--muted);
+}
+
+.teacher-ai-output-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.teacher-ai-refine-box {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-inset);
+}
+
+.teacher-ai-save-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.teacher-ai-status-banner {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: var(--bg-inset);
+  display: grid;
+  gap: 10px;
+}
+
+.teacher-ai-status-banner.is-success {
+  background: var(--success-bg);
+  border-color: var(--success);
+}
+
+.teacher-ai-status-banner p {
+  margin: 0;
+}
+
+.teacher-ai-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.teacher-ai-kebab {
+  position: relative;
+}
+
+.teacher-ai-kebab summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-raised);
+}
+
+.teacher-ai-kebab summary::-webkit-details-marker {
+  display: none;
+}
+
+.teacher-ai-kebab-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--surface-strong);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  min-width: 200px;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.teacher-ai-kebab-menu button {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 10px 14px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.teacher-ai-kebab-menu button:hover {
+  background: var(--surface-hover);
+}
+
+/* ---- Lesson Planner dashboard ---- */
+
+.teacher-lessons-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 24px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--tblue-soft), var(--tpurple-soft));
+  border: 1px solid var(--line);
+  margin-bottom: 20px;
+}
+
+.teacher-lessons-hero h1 {
+  margin: 4px 0 6px;
+}
+
+.teacher-lessons-hero p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  max-width: 46ch;
+}
+
+.teacher-lessons-hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.teacher-lessons-hero-badges span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  font-size: 0.82em;
+  font-weight: 600;
+}
+
+.teacher-lessons-hero-actions {
+  flex-shrink: 0;
+}
+
+.teacher-lessons-ai-pill {
+  background: var(--surface-raised);
+  border: 1.5px solid var(--tpurple);
+  color: var(--tpurple);
+  font-weight: 700;
+}
+
+.teacher-lessons-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 920px) {
+  .teacher-lessons-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teacher-lessons-main {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.teacher-lessons-sidebar {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.teacher-lessons-main .admin-panel {
+  min-width: 0;
+}
+
+.teacher-lessons-quick-actions-head {
+  display: block;
+}
+
+.teacher-lessons-quick-actions-head p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+/* Default to 2 columns: this grid sits beside a 320px sidebar, so a plain
+   viewport-width media query can't see how much room is actually left next
+   to it (the same issue solved for .teacher-ai-generate-grid). A container
+   query promotes to 4 columns only once the main column itself is
+   genuinely wide enough. */
+.teacher-lessons-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  min-width: 0;
+}
+
+@supports (container-type: inline-size) {
+  .teacher-lessons-main {
+    container-type: inline-size;
+  }
+
+  @container (min-width: 760px) {
+    .teacher-lessons-quick-actions {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .teacher-lessons-quick-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teacher-lessons-quick-action {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+
+.teacher-lessons-quick-action.tone-purple {
+  background: var(--tpurple-soft);
+}
+.teacher-lessons-quick-action.tone-blue {
+  background: var(--tblue-soft);
+}
+.teacher-lessons-quick-action.tone-green {
+  background: var(--tgreen-soft);
+}
+.teacher-lessons-quick-action.tone-amber {
+  background: var(--tamber-soft);
+}
+.teacher-lessons-quick-action.tone-red {
+  background: var(--tred-soft);
+}
+
+.teacher-lessons-quick-action-icon {
+  font-size: 1.6em;
+}
+
+.teacher-lessons-quick-action h3 {
+  margin: 0;
+}
+
+.teacher-lessons-quick-action p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.88em;
+  min-height: 2.4em;
+}
+
+.teacher-lessons-quick-action button {
+  width: 100%;
+  justify-content: center;
+}
+
+.teacher-lessons-status-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.teacher-lessons-plan-card.is-clickable {
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.teacher-lessons-plan-card.is-clickable:hover,
+.teacher-lessons-plan-card.is-clickable:focus-visible {
+  border-color: var(--tblue);
+  box-shadow: var(--shadow-soft);
+}
+
+.teacher-lessons-widget {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.teacher-lessons-widget.tone-blue {
+  background: var(--tblue-soft);
+}
+.teacher-lessons-widget.tone-green {
+  background: var(--tgreen-soft);
+}
+
+.teacher-lessons-widget h3 {
+  margin: 0 0 10px;
+}
+
+.teacher-lessons-widget-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.teacher-lessons-widget-head h3 {
+  margin: 0;
+}
+
+.teacher-lessons-widget-head select {
+  font-size: 0.8em;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  max-width: 150px;
+}
+
+.teacher-lessons-impact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.teacher-lessons-impact-grid div {
+  display: grid;
+  gap: 2px;
+}
+
+.teacher-lessons-impact-grid strong {
+  font-size: 1.4em;
+}
+
+.teacher-lessons-impact-grid span {
+  color: var(--muted);
+  font-size: 0.78em;
+}
+
+.teacher-lessons-progress-caption {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.teacher-lessons-progress-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 0.82em;
+}
+
+.teacher-lessons-progress-legend .tone-green {
+  color: var(--tgreen);
+}
+.teacher-lessons-progress-legend .tone-blue {
+  color: var(--tblue);
+}
+.teacher-lessons-progress-legend .tone-muted {
+  color: var(--muted);
+}
+
+.teacher-lesson-share-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.teacher-lesson-share-rating-star {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.3em;
+  color: var(--line-strong);
+  padding: 0;
+  line-height: 1;
+}
+
+.teacher-lesson-share-rating-star.is-filled {
+  color: var(--tamber);
+}
+
+.teacher-lesson-share-rating span {
+  margin-left: 8px;
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+/* ---- Master Lesson Plan page (chapter-level) ---- */
+
+/* Section sub-headers sit as flat, direct children of .teacher-ai-generate-panel
+   (a grid with its own `gap`), so they need zero margin of their own --
+   otherwise the browser's default h3 margin doubles up with that gap. */
+.teacher-ai-generate-panel h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.teacher-lesson-title-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.teacher-lesson-title-edit-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.6em;
+  opacity: 0.6;
+  padding: 4px;
+}
+
+.teacher-lesson-title-edit-button:hover {
+  opacity: 1;
+}
+
+.teacher-lesson-title-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.teacher-lesson-title-input {
+  font-size: 1.4rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line-strong);
+  min-width: 260px;
+}
+
+.teacher-lessons-badge-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.teacher-master-plan-list-row {
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.teacher-master-plan-question-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.teacher-master-plan-question-row .admin-studio-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.teacher-master-plan-question-row .ghost-button {
+  flex-shrink: 0;
+  margin-top: 2px;
 }

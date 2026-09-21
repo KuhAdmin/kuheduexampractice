@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { getVivaFeedback, getVivaQuestions } from "../api/client";
 import { applyPreferredVoice } from "../utils/speechVoice";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import { useAuth } from "../context/authHooks";
 import { RobotAvatar } from "./RobotAvatar";
+import { MaleAvatar } from "./MaleAvatar";
 
 // Fixed reply window per question -- no overall viva time limit.
 const REPLY_WINDOW_SECONDS = 12;
@@ -48,6 +50,12 @@ const MicIcon = () => (
 // A reply within the window gets spoken feedback before moving on; no reply
 // just advances to the next question.
 export const StudentVivaMode = ({ assessmentUnitId }) => {
+  const { user } = useAuth();
+  // Profile > Tutor Avatar preference (see StudentProfilePage.jsx) -- both
+  // components share the exact same isThinking/isSpeaking/audioLevel prop
+  // contract (see MaleAvatar.jsx's own comment), so swapping which one
+  // renders here needs no other change to the narration logic below.
+  const TutorAvatar = user?.tutorAvatar === "male" ? MaleAvatar : RobotAvatar;
   const [state, setState] = useState(emptyState);
   // Desktop/tablet only -- the report card's per-question list is long
   // enough that showing it inline once complete made this card grow far
@@ -66,17 +74,25 @@ export const StudentVivaMode = ({ assessmentUnitId }) => {
   // must be visible for every moment speech is actually playing, not just
   // some of them.
   const [isNarrating, setIsNarrating] = useState(false);
+  // Precise mouth-open amount (0-1) driven by the utterance's own word
+  // boundaries -- see speak() below. null means no boundary has fired yet
+  // for the current utterance (or this browser/voice never fires them), in
+  // which case RobotAvatar/MaleAvatar fall back to their generic looping
+  // "isSpeaking" mouth animation instead of sitting frozen at 0.
+  const [mouthAudioLevel, setMouthAudioLevel] = useState(null);
 
   const set = (patch) => setState((current) => ({ ...current, ...patch }));
 
   const cancelledRef = useRef(false);
   const recognitionRef = useRef(null);
   const countdownIntervalRef = useRef(null);
+  const mouthPulseTimeoutRef = useRef(null);
 
   useEffect(
     () => () => {
       cancelledRef.current = true;
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      if (mouthPulseTimeoutRef.current) clearTimeout(mouthPulseTimeoutRef.current);
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
@@ -124,6 +140,11 @@ export const StudentVivaMode = ({ assessmentUnitId }) => {
         if (settled) return;
         settled = true;
         clearTimeout(timeoutId);
+        if (mouthPulseTimeoutRef.current) {
+          clearTimeout(mouthPulseTimeoutRef.current);
+          mouthPulseTimeoutRef.current = null;
+        }
+        setMouthAudioLevel(null);
         resolve();
       };
       const timeoutId = setTimeout(finish, estimateSpeechTimeoutMs(text));
@@ -131,6 +152,21 @@ export const StudentVivaMode = ({ assessmentUnitId }) => {
         const utterance = applyPreferredVoice(new SpeechSynthesisUtterance(text));
         utterance.onend = finish;
         utterance.onerror = finish;
+        // Precise mouth movement: pulse the mouth open exactly when the
+        // engine reports it's starting a new word, then let it settle back
+        // toward closed shortly after -- so a genuine pause (a comma, the
+        // end of a sentence, the gap before the next line) actually closes
+        // the mouth instead of the old fixed-rate loop animation flapping
+        // straight through it. Not every browser/voice fires `onboundary`
+        // (notably Safari) -- when it never fires, mouthAudioLevel simply
+        // stays null for this utterance and RobotAvatar/MaleAvatar fall back
+        // to their existing generic "isSpeaking" loop untouched.
+        utterance.onboundary = (event) => {
+          if (event.name && event.name !== "word") return;
+          if (mouthPulseTimeoutRef.current) clearTimeout(mouthPulseTimeoutRef.current);
+          setMouthAudioLevel(0.85);
+          mouthPulseTimeoutRef.current = setTimeout(() => setMouthAudioLevel(0.15), 130);
+        };
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utterance);
       } catch {
@@ -337,7 +373,7 @@ export const StudentVivaMode = ({ assessmentUnitId }) => {
       <span className="student-viva-avatar-ripple" />
       <span className="student-viva-avatar-ripple" />
       <span className="student-viva-avatar-ripple" />
-      <RobotAvatar isSpeaking size={72} />
+      <TutorAvatar isSpeaking audioLevel={mouthAudioLevel} size={72} />
     </div>
   );
 
@@ -453,7 +489,7 @@ export const StudentVivaMode = ({ assessmentUnitId }) => {
 
           {state.stage === "grading" && (
             <div className="student-viva-grading">
-              <RobotAvatar isThinking size={72} />
+              <TutorAvatar isThinking size={72} />
               <p className="admin-workbench-muted">Getting feedback...</p>
             </div>
           )}

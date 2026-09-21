@@ -184,6 +184,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const setTutorAvatar = async (tutorAvatar) => {
+    const data = await apiRequest("/auth/tutor-avatar", {
+      method: "PUT",
+      body: JSON.stringify({ tutorAvatar }),
+    });
+    persistUser(data.user);
+    return data;
+  };
+
   const changePassword = async (payload) =>
     apiRequest("/auth/change-password", {
       method: "POST",
@@ -202,6 +211,7 @@ export const AuthProvider = ({ children }) => {
         completeOnboarding,
         updateProfile,
         setTheme,
+        setTutorAvatar,
         changePassword,
         persistUser,
         isAuthenticated: Boolean(user),
