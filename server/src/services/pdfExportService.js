@@ -22,6 +22,19 @@ const collectPdfBuffer = (doc) =>
     doc.on("error", reject);
   });
 
+// pdfkit has no "line-height multiplier" option -- only a fixed-point
+// lineGap per .text() call -- so this wraps .text() to inject a lineGap
+// computed from whatever font size is active at call time, giving a
+// consistent ~1.5x line-height across the document regardless of how many
+// different font sizes it uses. Every .text() call in this file uses the
+// (string) or (string, options) signature, never positional x/y args.
+const LINE_HEIGHT_MULTIPLIER = 1.5;
+const withLineHeight = (doc) => {
+  const originalText = doc.text.bind(doc);
+  doc.text = (text, options) => originalText(text, { ...options, lineGap: options?.lineGap ?? doc._fontSize * (LINE_HEIGHT_MULTIPLIER - 1) });
+  return doc;
+};
+
 const optionLabel = (option, index) => {
   const letter = String.fromCharCode(97 + index);
   const text = typeof option === "string" ? option : option?.text || "";
@@ -29,7 +42,7 @@ const optionLabel = (option, index) => {
 };
 
 export const renderTestPaperPdf = async ({ title, institutionName, className, subjectName, totalMarks, items }) => {
-  const doc = new PDFDocument({ margin: 50, size: "A4" });
+  const doc = withLineHeight(new PDFDocument({ margin: 50, size: "A4" }));
   const bufferPromise = collectPdfBuffer(doc);
 
   doc.fontSize(18).font("Helvetica-Bold").text(title, { align: "center" });
@@ -68,7 +81,7 @@ export const renderTestPaperPdf = async ({ title, institutionName, className, su
 };
 
 export const renderLessonPlanPdf = async ({ title, institutionName, className, subjectName, entries }) => {
-  const doc = new PDFDocument({ margin: 50, size: "A4" });
+  const doc = withLineHeight(new PDFDocument({ margin: 50, size: "A4" }));
   const bufferPromise = collectPdfBuffer(doc);
 
   doc.fontSize(18).font("Helvetica-Bold").text(title, { align: "center" });
@@ -154,7 +167,7 @@ const TEACHING_AID_LABELS = {
 };
 
 export const renderMasterLessonPlanPdf = async ({ institutionName, className, subjectName, plan }) => {
-  const doc = new PDFDocument({ margin: 50, size: "A4" });
+  const doc = withLineHeight(new PDFDocument({ margin: 50, size: "A4" }));
   const bufferPromise = collectPdfBuffer(doc);
 
   doc.fontSize(18).font("Helvetica-Bold").text("MASTER LESSON PLAN", { align: "center" });

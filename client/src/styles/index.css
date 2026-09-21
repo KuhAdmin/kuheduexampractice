@@ -11654,7 +11654,13 @@ a {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 16px;
+  min-width: 0;
+}
+
+.admin-panel-head > * {
+  min-width: 0;
 }
 
 .admin-panel-head h2 {
@@ -14666,6 +14672,25 @@ a {
 
 .admin-exam-types-table tbody tr:hover {
   background: rgba(200, 76, 9, 0.04);
+}
+
+/* Assignment grid cell already claimed by another active teacher --
+   greyed out and labeled like an already-booked airline seat, so a class
+   section + subject can never visibly look available to double-book. */
+.admin-assignment-cell-taken {
+  background: rgba(31, 41, 51, 0.05);
+}
+
+.admin-assignment-cell-taken input[type="checkbox"] {
+  cursor: not-allowed;
+}
+
+.admin-assignment-cell-taken-label {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 /* Primary key -- display-only reference, never part of the editable form,
@@ -19463,7 +19488,7 @@ a {
    only once there's genuinely enough room. */
 .teacher-ai-generate-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -20214,11 +20239,20 @@ a {
   margin-bottom: 12px;
 }
 
+/* This row's grid collapses to a single column on narrow screens (see
+   .teacher-lesson-row-grid's own breakpoint) -- without this, the Remove
+   button stretches to fill that whole column instead of sizing to its
+   own label text. */
+.teacher-master-plan-list-row > button {
+  justify-self: start;
+}
+
 .teacher-master-plan-question-row {
   display: flex;
   gap: 8px;
   align-items: flex-start;
   margin-bottom: 8px;
+  min-width: 0;
 }
 
 .teacher-master-plan-question-row .admin-studio-field {
@@ -20229,4 +20263,15 @@ a {
 .teacher-master-plan-question-row .ghost-button {
   flex-shrink: 0;
   margin-top: 2px;
+}
+
+/* Icon-only Add/Remove on narrow screens -- these buttons sit next to a
+   heading (Add) or a full-width growing textarea (Remove), and their text
+   label was consistently the thing pushing the row past the viewport. The
+   icon plus an aria-label keeps the action reachable and named for screen
+   readers without needing the visible words. */
+@media (max-width: 640px) {
+  .teacher-master-plan-btn-label {
+    display: none;
+  }
 }

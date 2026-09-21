@@ -324,7 +324,7 @@ export const TeacherMasterLessonPlanPage = () => {
             <div className="admin-studio-form-grid">
               <label className="admin-studio-field">
                 <span>Class *</span>
-                <select value={batchId} onChange={(e) => setBatchId(e.target.value)} required>
+                <select value={batchId} onChange={(e) => setBatchId(e.target.value)} required disabled={Boolean(existingPlanId)}>
                   <option value="">Select a class...</option>
                   {batches.map((batch) => (
                     <option key={batch.id} value={batch.id}>
@@ -345,7 +345,11 @@ export const TeacherMasterLessonPlanPage = () => {
 
             <label className="admin-studio-field">
               <span>Chapter *</span>
-              <select value={chapterNumber} onChange={(e) => setChapterNumber(e.target.value)} disabled={!filterOptions.contentConfigured}>
+              <select
+                value={chapterNumber}
+                onChange={(e) => setChapterNumber(e.target.value)}
+                disabled={!filterOptions.contentConfigured || Boolean(existingPlanId)}
+              >
                 <option value="">Select a chapter...</option>
                 {(filterOptions.chapters || []).map((chapter) => (
                   <option key={chapter.chapterNumber} value={chapter.chapterNumber}>
@@ -363,7 +367,7 @@ export const TeacherMasterLessonPlanPage = () => {
                 max="60"
                 value={form.classTransactionTime}
                 onChange={(e) => updateField("classTransactionTime", Number(e.target.value))}
-                disabled={!isEditing}
+                disabled={Boolean(existingPlanId)}
               />
             </label>
 
@@ -433,8 +437,13 @@ export const TeacherMasterLessonPlanPage = () => {
                 <div className="admin-panel-head">
                   <h3>Skills and Competencies</h3>
                   {isEditing && (
-                    <button type="button" className="ghost-button" onClick={() => addListItem("skillsCompetencies", { title: "", description: "" })}>
-                      + Add Skill
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      aria-label="Add Skill"
+                      onClick={() => addListItem("skillsCompetencies", { title: "", description: "" })}
+                    >
+                      + <span className="teacher-master-plan-btn-label">Add Skill</span>
                     </button>
                   )}
                 </div>
@@ -458,8 +467,13 @@ export const TeacherMasterLessonPlanPage = () => {
                       />
                     </label>
                     {isEditing && (
-                      <button type="button" className="ghost-button admin-pipeline-runs-danger" onClick={() => removeListItem("skillsCompetencies", index)}>
-                        Remove
+                      <button
+                        type="button"
+                        className="ghost-button admin-pipeline-runs-danger"
+                        aria-label="Remove"
+                        onClick={() => removeListItem("skillsCompetencies", index)}
+                      >
+                        🗑 <span className="teacher-master-plan-btn-label">Remove</span>
                       </button>
                     )}
                   </div>
@@ -479,8 +493,13 @@ export const TeacherMasterLessonPlanPage = () => {
                 <div className="admin-panel-head">
                   <h3>Inter-Disciplinary Linkage</h3>
                   {isEditing && (
-                    <button type="button" className="ghost-button" onClick={() => addListItem("interDisciplinaryLinkage", { subjectPair: "", description: "" })}>
-                      + Add Linkage
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      aria-label="Add Linkage"
+                      onClick={() => addListItem("interDisciplinaryLinkage", { subjectPair: "", description: "" })}
+                    >
+                      + <span className="teacher-master-plan-btn-label">Add Linkage</span>
                     </button>
                   )}
                 </div>
@@ -505,8 +524,13 @@ export const TeacherMasterLessonPlanPage = () => {
                       />
                     </label>
                     {isEditing && (
-                      <button type="button" className="ghost-button admin-pipeline-runs-danger" onClick={() => removeListItem("interDisciplinaryLinkage", index)}>
-                        Remove
+                      <button
+                        type="button"
+                        className="ghost-button admin-pipeline-runs-danger"
+                        aria-label="Remove"
+                        onClick={() => removeListItem("interDisciplinaryLinkage", index)}
+                      >
+                        🗑 <span className="teacher-master-plan-btn-label">Remove</span>
                       </button>
                     )}
                   </div>
@@ -515,8 +539,8 @@ export const TeacherMasterLessonPlanPage = () => {
                 <div className="admin-panel-head">
                   <h3>Assessment Questions</h3>
                   {isEditing && (
-                    <button type="button" className="ghost-button" onClick={() => addListItem("assessmentQuestions", "")}>
-                      + Add Question
+                    <button type="button" className="ghost-button" aria-label="Add Question" onClick={() => addListItem("assessmentQuestions", "")}>
+                      + <span className="teacher-master-plan-btn-label">Add Question</span>
                     </button>
                   )}
                 </div>
@@ -531,8 +555,13 @@ export const TeacherMasterLessonPlanPage = () => {
                       />
                     </label>
                     {isEditing && (
-                      <button type="button" className="ghost-button admin-pipeline-runs-danger" onClick={() => removeListItem("assessmentQuestions", index)}>
-                        Remove
+                      <button
+                        type="button"
+                        className="ghost-button admin-pipeline-runs-danger"
+                        aria-label="Remove"
+                        onClick={() => removeListItem("assessmentQuestions", index)}
+                      >
+                        🗑 <span className="teacher-master-plan-btn-label">Remove</span>
                       </button>
                     )}
                   </div>
@@ -541,8 +570,8 @@ export const TeacherMasterLessonPlanPage = () => {
                 <div className="admin-panel-head">
                   <h3>Extra Questions (Other Than Textual)</h3>
                   {isEditing && (
-                    <button type="button" className="ghost-button" onClick={() => addListItem("extraQuestions", "")}>
-                      + Add Question
+                    <button type="button" className="ghost-button" aria-label="Add Question" onClick={() => addListItem("extraQuestions", "")}>
+                      + <span className="teacher-master-plan-btn-label">Add Question</span>
                     </button>
                   )}
                 </div>
@@ -557,8 +586,13 @@ export const TeacherMasterLessonPlanPage = () => {
                       />
                     </label>
                     {isEditing && (
-                      <button type="button" className="ghost-button admin-pipeline-runs-danger" onClick={() => removeListItem("extraQuestions", index)}>
-                        Remove
+                      <button
+                        type="button"
+                        className="ghost-button admin-pipeline-runs-danger"
+                        aria-label="Remove"
+                        onClick={() => removeListItem("extraQuestions", index)}
+                      >
+                        🗑 <span className="teacher-master-plan-btn-label">Remove</span>
                       </button>
                     )}
                   </div>

@@ -235,6 +235,10 @@ export const AdminInstitutionDetailPage = () => {
 
   const toggleAssignment = (sectionId, subjectId) => {
     const key = assignmentKey(sectionId, subjectId);
+    const takenBy = (assignmentGrid?.takenByOthers || []).some(
+      (taken) => assignmentKey(taken.institutionSectionId, taken.mstSubjectId) === key
+    );
+    if (takenBy) return;
     setAssignmentChecks((current) => ({ ...current, [key]: !current[key] }));
   };
 
@@ -284,6 +288,11 @@ export const AdminInstitutionDetailPage = () => {
     (user) => !teachers.some((teacher) => teacher.userId === user.id && teacher.isActive)
   );
   const openTeacher = teachers.find((teacher) => teacher.id === openAssignmentsFor);
+
+  const takenByOthersMap = {};
+  (assignmentGrid?.takenByOthers || []).forEach((taken) => {
+    takenByOthersMap[assignmentKey(taken.institutionSectionId, taken.mstSubjectId)] = taken.teacherName;
+  });
 
   return (
     <section className="admin-bulk-pipeline-page">
@@ -536,15 +545,21 @@ export const AdminInstitutionDetailPage = () => {
                           <td>
                             {section.className} - {section.name}
                           </td>
-                          {assignmentGrid.subjects.map((subject) => (
-                            <td key={subject.id}>
-                              <input
-                                type="checkbox"
-                                checked={Boolean(assignmentChecks[assignmentKey(section.id, subject.id)])}
-                                onChange={() => toggleAssignment(section.id, subject.id)}
-                              />
-                            </td>
-                          ))}
+                          {assignmentGrid.subjects.map((subject) => {
+                            const takenBy = takenByOthersMap[assignmentKey(section.id, subject.id)];
+                            return (
+                              <td key={subject.id} className={takenBy ? "admin-assignment-cell-taken" : undefined}>
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(assignmentChecks[assignmentKey(section.id, subject.id)])}
+                                  onChange={() => toggleAssignment(section.id, subject.id)}
+                                  disabled={Boolean(takenBy)}
+                                  title={takenBy ? `Already assigned to ${takenBy}` : undefined}
+                                />
+                                {takenBy && <span className="admin-assignment-cell-taken-label">{takenBy}</span>}
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))}
                     </tbody>

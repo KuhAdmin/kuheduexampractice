@@ -349,12 +349,42 @@ export const linkTeacherToInstitution = async (institutionId, userId, addedByUse
   return result.rows[0];
 };
 
+// Unlinking a teacher must also close out the classroom setup they had --
+// otherwise re-linking the same account (or the admin re-checking cells in
+// the assignment grid) silently inherits stale section/subject assignments
+// and their still-open batches from before the unlink, making the unlink
+// look like it had no effect. Mirrors saveTeacherAssignments' own
+// assignment-off branch: deactivate each batch, then its assignment.
 export const unlinkTeacherFromInstitution = async (institutionTeacherId) => {
-  const result = await pool.query(
-    "UPDATE institution_teacher SET is_active = FALSE WHERE id = $1 RETURNING id",
-    [institutionTeacherId]
-  );
-  return Boolean(result.rows[0]);
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const assignmentsResult = await client.query(
+      "SELECT id FROM teacher_class_assignment WHERE fk_institution_teacher_id = $1 AND is_active = TRUE",
+      [institutionTeacherId]
+    );
+    for (const assignment of assignmentsResult.rows) {
+      await deactivateBatchForAssignment(assignment.id, client);
+    }
+    await client.query(
+      "UPDATE teacher_class_assignment SET is_active = FALSE WHERE fk_institution_teacher_id = $1 AND is_active = TRUE",
+      [institutionTeacherId]
+    );
+
+    const result = await client.query(
+      "UPDATE institution_teacher SET is_active = FALSE WHERE id = $1 RETURNING id",
+      [institutionTeacherId]
+    );
+
+    await client.query("COMMIT");
+    return Boolean(result.rows[0]);
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 };
 
 // ---- Assignment grid (section x subject checkboxes for one teacher) ----
@@ -375,7 +405,7 @@ export const getAssignmentGrid = async (institutionTeacherId) => {
     throw error;
   }
 
-  const [sectionsResult, subjectsResult, assignmentsResult] = await Promise.all([
+  const [sectionsResult, subjectsResult, assignmentsResult, takenByOthersResult] = await Promise.all([
     pool.query(
       `
         SELECT sec.id, sec.name, lvl.name AS "className", ic.id AS "institutionClassId"
@@ -399,12 +429,31 @@ export const getAssignmentGrid = async (institutionTeacherId) => {
       `,
       [institutionTeacherId]
     ),
+    // Every (section, subject) cell already claimed by a DIFFERENT active
+    // teacher at this institution -- the client greys these out so a class
+    // can never be double-booked to two teachers, like an already-taken
+    // airline seat.
+    pool.query(
+      `
+        SELECT ta.fk_institution_section_id AS "institutionSectionId", ta.fk_mst_subject_id AS "mstSubjectId",
+               u.name AS "teacherName"
+        FROM teacher_class_assignment ta
+        JOIN institution_teacher it ON it.id = ta.fk_institution_teacher_id
+        JOIN users u ON u.id = it.fk_user_id
+        JOIN institution_section sec ON sec.id = ta.fk_institution_section_id
+        JOIN institution_class ic ON ic.id = sec.fk_institution_class_id
+        WHERE ic.fk_institution_id = $1 AND ta.fk_institution_teacher_id != $2
+          AND ta.is_active = TRUE AND it.is_active = TRUE
+      `,
+      [institutionTeacher.institutionId, institutionTeacherId]
+    ),
   ]);
 
   return {
     sections: sectionsResult.rows,
     subjects: subjectsResult.rows,
     assignments: assignmentsResult.rows,
+    takenByOthers: takenByOthersResult.rows,
   };
 };
 
@@ -423,6 +472,44 @@ export const saveTeacherAssignments = async ({ institutionTeacherId, assignments
     const error = new Error("Teacher link not found.");
     error.statusCode = 404;
     throw error;
+  }
+
+  // A class section + subject can only ever belong to one active teacher at
+  // a time -- reject the whole save if any cell being turned on here is
+  // already claimed by someone else, rather than silently overwriting or
+  // double-booking it. The client is expected to grey these out already
+  // (getAssignmentGrid's takenByOthers); this is the server-side guarantee.
+  const incomingActive = (assignments || [])
+    .map((entry) => ({ institutionSectionId: Number(entry?.institutionSectionId), mstSubjectId: Number(entry?.mstSubjectId), isActive: Boolean(entry?.isActive) }))
+    .filter((entry) => entry.isActive && entry.institutionSectionId && entry.mstSubjectId);
+
+  if (incomingActive.length) {
+    const conflictsResult = await pool.query(
+      `
+        SELECT ta.fk_institution_section_id AS "institutionSectionId", ta.fk_mst_subject_id AS "mstSubjectId",
+               sec.name AS "sectionName", lvl.name AS "className", subj.name AS "subjectName", u.name AS "teacherName"
+        FROM teacher_class_assignment ta
+        JOIN institution_teacher it ON it.id = ta.fk_institution_teacher_id
+        JOIN users u ON u.id = it.fk_user_id
+        JOIN institution_section sec ON sec.id = ta.fk_institution_section_id
+        JOIN institution_class ic ON ic.id = sec.fk_institution_class_id
+        JOIN mst_level lvl ON lvl.id = ic.fk_mst_level_id
+        JOIN mst_subject subj ON subj.id = ta.fk_mst_subject_id
+        WHERE ta.fk_institution_teacher_id != $1 AND ta.is_active = TRUE AND it.is_active = TRUE
+          AND (ta.fk_institution_section_id, ta.fk_mst_subject_id) IN (
+            SELECT * FROM UNNEST($2::bigint[], $3::bigint[])
+          )
+      `,
+      [institutionTeacherId, incomingActive.map((entry) => entry.institutionSectionId), incomingActive.map((entry) => entry.mstSubjectId)]
+    );
+    if (conflictsResult.rows[0]) {
+      const conflict = conflictsResult.rows[0];
+      const error = new Error(
+        `${conflict.className} - ${conflict.sectionName} / ${conflict.subjectName} is already assigned to ${conflict.teacherName}.`
+      );
+      error.statusCode = 409;
+      throw error;
+    }
   }
 
   const client = await pool.connect();
