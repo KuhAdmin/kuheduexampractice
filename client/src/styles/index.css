@@ -14890,6 +14890,19 @@ a {
   white-space: nowrap;
 }
 
+/* AdminChaptersPage.jsx uses this same pill as a clickable Active/Hidden
+   toggle -- reset the native <button> chrome a badge would otherwise pick up. */
+button.admin-bulk-pipeline-status-badge {
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button.admin-bulk-pipeline-status-badge:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .admin-bulk-pipeline-status-badge.is-not-started,
 .admin-bulk-pipeline-status-badge.is-idle {
   background: rgba(31, 41, 51, 0.06);

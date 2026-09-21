@@ -13,6 +13,7 @@ import { AdminExamGoalsPage } from "./pages/AdminExamGoalsPage";
 import { AdminLevelsPage } from "./pages/AdminLevelsPage";
 import { AdminSubjectsPage } from "./pages/AdminSubjectsPage";
 import { AdminBooksPage } from "./pages/AdminBooksPage";
+import { AdminChaptersPage } from "./pages/AdminChaptersPage";
 import { AdminConceptImportPage } from "./pages/AdminConceptImportPage";
 import { AdminPreWarmupImportPage } from "./pages/AdminPreWarmupImportPage";
 import { AdminContentEditorPage } from "./pages/AdminContentEditorPage";
@@ -376,6 +377,10 @@ const App = () => {
           <Route
             path="books"
             element={<AdminBooksPage />}
+          />
+          <Route
+            path="chapters"
+            element={<AdminChaptersPage />}
           />
           <Route
             path="concept-import"

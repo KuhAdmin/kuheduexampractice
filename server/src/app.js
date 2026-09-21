@@ -15,6 +15,7 @@ import adminExamGoalRoutes from "./routes/adminExamGoalRoutes.js";
 import adminLevelRoutes from "./routes/adminLevelRoutes.js";
 import adminSubjectRoutes from "./routes/adminSubjectRoutes.js";
 import adminBookRoutes from "./routes/adminBookRoutes.js";
+import adminChapterRoutes from "./routes/adminChapterRoutes.js";
 import adminConceptImportRoutes from "./routes/adminConceptImportRoutes.js";
 import adminPreWarmupImportRoutes from "./routes/adminPreWarmupImportRoutes.js";
 import adminDemoRoutes from "./routes/adminDemoRoutes.js";
@@ -128,6 +129,7 @@ export const createApp = () => {
   app.use("/api/admin/levels", adminLevelRoutes);
   app.use("/api/admin/subjects", adminSubjectRoutes);
   app.use("/api/admin/books", adminBookRoutes);
+  app.use("/api/admin/chapters", adminChapterRoutes);
   app.use("/api/admin/concept-import", adminConceptImportRoutes);
   app.use("/api/admin/pre-warmup-import", adminPreWarmupImportRoutes);
   app.use("/api/admin/ai-demo", adminDemoRoutes);

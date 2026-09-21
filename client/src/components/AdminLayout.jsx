@@ -16,6 +16,7 @@ const adminMenu = [
       { label: "Levels", to: "/admin/levels" },
       { label: "Subjects", to: "/admin/subjects" },
       { label: "Books", to: "/admin/books" },
+      { label: "Chapters", to: "/admin/chapters" },
     ],
   },
   { label: "Micro Learning Unit Import", to: "/admin/concept-import" },

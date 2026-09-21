@@ -45,7 +45,16 @@ export const answerLessonPlanQuestion = async ({ teacherUserId, batchId, chapter
       "could suit either day, pick one and commit to it. If the teacher's question doesn't name " +
       "specific days and a current day-by-day plan is given in context, cover every day in that plan " +
       "once, in order, with no gaps -- one idea per day. If the question does name a day or range, " +
-      "cover exactly those days, one idea per day, still with no gaps. Plain text only: no markdown, " +
+      "cover exactly those days, one idea per day, still with no gaps. " +
+      "SPECIAL CASE -- if the teacher is specifically asking for classroom ACTIVITY suggestions/ideas " +
+      "(not some other kind of question), the one-idea-per-day rule above does not apply -- instead, " +
+      "for EACH day being addressed, give at least 5 numbered items of distinct activity ideas for the " +
+      "general/mainstream group of learners, PLUS at least 1 additional numbered item explicitly " +
+      'labeled for "Learners Needing Additional Support" whose activity is primarily VISUAL in nature ' +
+      "(e.g. picture cards, diagrams, visual sequencing, hands-on visual aids) rather than text- or " +
+      "reading-heavy. Every item, in both groups, still stands alone and still names its one specific " +
+      "day exactly as above (e.g. '4. (Day 3 -- Learners Needing Additional Support, Visual): ...'). " +
+      "Plain text only: no markdown, " +
       'no asterisks, no bold/italic formatting. Return only valid JSON matching the schema: ' +
       '{ "answer": "" }',
     userPrompt: `${contextLines.join("\n")}\n\nTeacher's question: ${question.trim()}`.trim(),

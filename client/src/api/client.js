@@ -472,6 +472,26 @@ export const uploadAdminBooksBulk = async ({ fileName, dataUrl }) =>
     body: JSON.stringify({ fileName, dataUrl }),
   });
 
+export const getAdminChaptersForBook = async (bookId) => apiRequest(`/admin/chapters/book/${bookId}`);
+
+export const createAdminChapter = async ({ bookId, chapterNumber, chapterName, displayOrder }) =>
+  apiRequest("/admin/chapters", {
+    method: "POST",
+    body: JSON.stringify({ bookId, chapterNumber, chapterName, displayOrder }),
+  });
+
+export const updateAdminChapterActive = async (bookId, chapterNumber, isActive) =>
+  apiRequest(`/admin/chapters/${bookId}/${chapterNumber}/active`, {
+    method: "PUT",
+    body: JSON.stringify({ isActive }),
+  });
+
+export const updateAdminChapterHidden = async (bookId, chapterNumber, isHidden) =>
+  apiRequest(`/admin/chapters/${bookId}/${chapterNumber}/hidden`, {
+    method: "PUT",
+    body: JSON.stringify({ isHidden }),
+  });
+
 // Streams newline-delimited JSON progress events from postConceptImport
 // (server/src/controllers/adminConceptImportController.js) as the import
 // actually runs, calling onEvent for each one, so the caller can render a

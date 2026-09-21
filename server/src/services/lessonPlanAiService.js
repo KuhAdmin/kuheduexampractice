@@ -7,6 +7,7 @@
 import { assertTeacherOwnsBatch, resolveChapterId } from "./teacherContentContext.js";
 import { getChaptersForClassSubjectSelection } from "./studentDashboardService.js";
 import { createStructuredCompletion } from "./openAiService.js";
+import { getMasterLessonPlanByChapter } from "./masterLessonPlanService.js";
 import { BLOOM_LEVELS } from "../constants/bloomLevels.js";
 
 const AI_LESSON_PLAN_MODEL_ID = "deepseek-v4-flash";
@@ -63,6 +64,22 @@ export const generateLessonPlanWithAI = async ({
     subjectCode: context.subjectCode,
   });
 
+  // Optional enhancement, never blocking: if this chapter already has a
+  // Master Lesson Plan, its real Assessment/Extra Questions get offered to
+  // the model as material to draw each day's Bloom's-level Target Question
+  // from, instead of it inventing unrelated ones -- see the prompt block
+  // below. No master plan (or a lookup failure) just means generation
+  // proceeds exactly as before.
+  let masterQuestions = [];
+  if (mstChapterId) {
+    try {
+      const masterPlan = await getMasterLessonPlanByChapter({ teacherUserId, batchId, mstChapterId });
+      masterQuestions = [...(masterPlan?.assessmentQuestions || []), ...(masterPlan?.extraQuestions || [])];
+    } catch {
+      masterQuestions = [];
+    }
+  }
+
   const resolvedDayCount = Math.max(1, Math.min(MAX_DAYS, Number(dayCount) || DEFAULT_DAY_COUNT));
 
   const validTopics = Array.isArray(topics) ? topics.filter((topic) => String(topic || "").trim()) : [];
@@ -85,6 +102,13 @@ ${validBloomFocus.length ? `Emphasize these Bloom's-taxonomy levels across the p
 ${toneLine ? `Tone & style: ${toneLine}` : ""}
 ${validIncludeSections.length ? `Make sure the plan clearly addresses: ${validIncludeSections.join(", ")}.` : ""}
 ${additionalInstructions ? `Additional instructions from the teacher: ${additionalInstructions}` : ""}
+${
+  masterQuestions.length
+    ? `\nThis chapter's Master Lesson Plan already defines these real assessment/extra questions for the whole chapter:\n${masterQuestions
+        .map((question, index) => `${index + 1}. ${question}`)
+        .join("\n")}\nWhen choosing each day's per-Bloom's-level Target Question, prefer reusing or closely adapting one of these questions where it genuinely fits that day's topic and that cognitive level, instead of inventing an unrelated one -- this keeps daily practice aligned with the chapter's real assessment intent. Not every question needs to be used, and not every day/stage needs one; use judgment, and still write a fresh Teaching Approach either way.`
+    : ""
+}
 
 For each day, for each Bloom's-taxonomy stage (${BLOOM_LEVELS.join(", ")}) that genuinely applies to that day's activities${validBloomFocus.length ? ` (prioritize: ${validBloomFocus.join(", ")})` : ""}, write a value with exactly two lines: a specific target question that probes that cognitive level, and a concrete teaching approach/activity that develops it. Omit the key entirely for any stage that doesn't apply -- do not include empty strings.
 
