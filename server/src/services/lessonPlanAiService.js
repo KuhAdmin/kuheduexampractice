@@ -112,6 +112,8 @@ ${
 
 For each day, for each Bloom's-taxonomy stage (${BLOOM_LEVELS.join(", ")}) that genuinely applies to that day's activities${validBloomFocus.length ? ` (prioritize: ${validBloomFocus.join(", ")})` : ""}, write a value with exactly two lines: a specific target question that probes that cognitive level, and a concrete teaching approach/activity that develops it. Omit the key entirely for any stage that doesn't apply -- do not include empty strings.
 
+For each day's Activities section: suggest 5 distinct activities for normal/general learners. Suggest 1 activity for learners needing additional support (primarily visual in nature -- e.g. picture cards, diagrams, visual sequencing, hands-on visual aids -- rather than text- or reading-heavy). Repeat this 5-plus-1 structure for every day. Format the value as a numbered list string, one activity per line, e.g.: "1. <activity>\\n2. <activity>\\n3. <activity>\\n4. <activity>\\n5. <activity>\\n6. (Learners Needing Additional Support, Visual): <activity>".
+
 Schema:
 {
   "days": [
@@ -129,7 +131,8 @@ Schema:
         "create": "same two-line format, omit if not applicable"
       },
       "learningAid": "string, e.g. Charts, Models, Lab equipment",
-      "learningOutcome": "string, what students should be able to do after this day"
+      "learningOutcome": "string, what students should be able to do after this day",
+      "activities": "string, numbered list: 5 activities for normal/general learners plus 1 for learners needing additional support (visual), as described above"
     }
   ]
 }`,
@@ -160,6 +163,7 @@ Schema:
           : null,
       learningAid: day.learningAid || null,
       learningOutcome: day.learningOutcome || null,
+      activities: day.activities || null,
     }));
 
   if (!cleanedDays.length) {

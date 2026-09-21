@@ -19,8 +19,15 @@ const getAnswerListItems = (text) => {
     .split(/\s*(?=\d+\.\s)/)
     .map((part) => part.trim())
     .filter(Boolean);
-  if (parts.length < 2 || !parts.every((part) => /^\d+\.\s/.test(part))) return null;
-  return parts.map((part) => stripMarkdown(part.replace(/^\d+\.\s*/, "")));
+  // The model is told never to add one, but if a preamble sentence slips in
+  // before the first "1. " anyway, it can only ever be this leading part --
+  // every other split boundary falls exactly at a numbered marker by
+  // construction. Drop it rather than rejecting the whole list over one
+  // stray sentence.
+  const firstItemIndex = parts.findIndex((part) => /^\d+\.\s/.test(part));
+  const itemParts = firstItemIndex === -1 ? [] : parts.slice(firstItemIndex);
+  if (itemParts.length < 2 || !itemParts.every((part) => /^\d+\.\s/.test(part))) return null;
+  return itemParts.map((part) => stripMarkdown(part.replace(/^\d+\.\s*/, "")));
 };
 
 // A plain "Day N" match against THIS ONE ITEM's own text (not the whole

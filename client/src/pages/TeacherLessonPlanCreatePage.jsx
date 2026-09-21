@@ -9,6 +9,7 @@ import {
   getTeacherBatches,
   getTeacherLessonPlanColleagues,
   getTeacherLessonPlanFilterOptions,
+  getTeacherMasterLessonPlanByChapter,
   shareTeacherLessonPlan,
 } from "../api/client";
 import { BLOOM_LEVELS, BLOOM_LABELS } from "../constants/bloomLevels";
@@ -155,6 +156,10 @@ const StructuredView = ({ days }) => (
           <span>Learning Outcome</span>
           <p>{day.learningOutcome || "-"}</p>
         </div>
+        <div className="teacher-lesson-field">
+          <span>Activities</span>
+          <p style={{ whiteSpace: "pre-wrap" }}>{day.activities || "-"}</p>
+        </div>
       </div>
     ))}
   </div>
@@ -257,6 +262,13 @@ export const TeacherLessonPlanCreatePage = () => {
   const [sharing, setSharing] = useState(false);
   const [notice, setNotice] = useState("");
 
+  // A Daily Lesson Plan is meant to flow from its chapter's Master Lesson
+  // Plan (its Assessment/Extra Questions feed the daily Bloom's-level
+  // target questions) -- so neither AI generation nor manual day-building
+  // is allowed to start until one exists for the selected chapter.
+  const [masterPlanExists, setMasterPlanExists] = useState(null); // null = not checked yet
+  const [checkingMasterPlan, setCheckingMasterPlan] = useState(false);
+
   useEffect(() => {
     getTeacherBatches().then((result) => setBatches(result?.batches || []));
   }, []);
@@ -269,6 +281,19 @@ export const TeacherLessonPlanCreatePage = () => {
     getTeacherLessonPlanFilterOptions(batchId).then((result) => setFilterOptions(result || { chapters: [], contentConfigured: false }));
     setChapterNumber("");
   }, [batchId]);
+
+  useEffect(() => {
+    if (!batchId || !chapterNumber) {
+      setMasterPlanExists(null);
+      return;
+    }
+    setCheckingMasterPlan(true);
+    setMasterPlanExists(null);
+    getTeacherMasterLessonPlanByChapter(batchId, chapterNumber)
+      .then((result) => setMasterPlanExists(Boolean(result?.plan)))
+      .catch(() => setMasterPlanExists(null))
+      .finally(() => setCheckingMasterPlan(false));
+  }, [batchId, chapterNumber]);
 
   const selectedChapter = useMemo(
     () => filterOptions.chapters?.find((chapter) => String(chapter.chapterNumber) === String(chapterNumber)),
@@ -525,7 +550,25 @@ export const TeacherLessonPlanCreatePage = () => {
                 </label>
               </div>
 
-              <button type="button" className="primary-button" onClick={openAddDay} disabled={!batchId || !chapterNumber}>
+              {batchId && chapterNumber && !checkingMasterPlan && masterPlanExists === false && (
+                <p className="teacher-ai-panel-hint">
+                  Create a Master Lesson Plan for this chapter first --{" "}
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => navigate("/teacher/lessons/master-plan", { state: { batchId, chapterNumber } })}
+                  >
+                    Open Master Plan
+                  </button>
+                </p>
+              )}
+
+              <button
+                type="button"
+                className="primary-button"
+                onClick={openAddDay}
+                disabled={!batchId || !chapterNumber || checkingMasterPlan || masterPlanExists !== true}
+              >
                 + Add Day
               </button>
 
@@ -705,11 +748,29 @@ export const TeacherLessonPlanCreatePage = () => {
                   </p>
                 )}
 
+                {!generating && batchId && chapterNumber && !checkingMasterPlan && masterPlanExists === false && (
+                  <p className="teacher-ai-panel-hint">
+                    Create a Master Lesson Plan for this chapter first --{" "}
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={() => navigate("/teacher/lessons/master-plan", { state: { batchId, chapterNumber } })}
+                    >
+                      Open Master Plan
+                    </button>
+                  </p>
+                )}
+
                 <div className="teacher-ai-panel-actions">
                   <button type="button" className="ghost-button" onClick={handleReset}>
                     ↺ Reset
                   </button>
-                  <button type="button" className="primary-button" onClick={handleGenerate} disabled={generating || !batchId || !chapterNumber}>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={handleGenerate}
+                    disabled={generating || !batchId || !chapterNumber || checkingMasterPlan || masterPlanExists !== true}
+                  >
                     {generating ? (
                       <>
                         <span className="teacher-button-spinner" aria-hidden="true" /> Generating...
@@ -1015,6 +1076,15 @@ export const TeacherLessonPlanCreatePage = () => {
                   <span className="admin-studio-field-hint">{(dayForm.learningOutcome || "").length}/500</span>
                 </label>
               </div>
+
+              <label className="admin-studio-field">
+                <span>Activities (5 for general learners + 1 for learners needing additional support)</span>
+                <AutoSizeTextarea
+                  rows={6}
+                  value={dayForm.activities || ""}
+                  onChange={(e) => setDayForm((c) => ({ ...c, activities: e.target.value }))}
+                />
+              </label>
 
               <ResourcesPlaceholder onComingSoon={() => setNotice("File uploads are coming soon.")} />
 

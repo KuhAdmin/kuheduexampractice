@@ -1,4 +1,5 @@
 import { pool } from "../db/pool.js";
+import { getMasterLessonPlanByChapter } from "./masterLessonPlanService.js";
 
 const getPlanOrThrow = async (planId, teacherUserId) => {
   const result = await pool.query("SELECT * FROM lesson_plan WHERE id = $1 AND fk_teacher_id = $2", [
@@ -70,6 +71,19 @@ export const createLessonPlan = async ({ teacherUserId, batchId, title, mstChapt
     const error = new Error("batchId and title are required.");
     error.statusCode = 400;
     throw error;
+  }
+  // A Daily Lesson Plan is meant to flow from its chapter's Master Lesson
+  // Plan (see lessonPlanAiService.js's use of the master plan's Assessment/
+  // Extra Questions) -- so it can't be created for a chapter that doesn't
+  // have one yet. Skipped only if no chapter was resolved at all (nothing
+  // to check against), which the create UI never actually allows.
+  if (mstChapterId) {
+    const masterPlan = await getMasterLessonPlanByChapter({ teacherUserId, batchId, mstChapterId });
+    if (!masterPlan) {
+      const error = new Error("Create a Master Lesson Plan for this chapter first.");
+      error.statusCode = 400;
+      throw error;
+    }
   }
   const result = await pool.query(
     `

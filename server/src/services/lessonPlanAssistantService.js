@@ -39,8 +39,12 @@ export const answerLessonPlanQuestion = async ({ teacherUserId, batchId, chapter
       "If your answer includes two or more distinct suggestions, activities, or ideas (e.g. one " +
       "activity per day, or several alternative options), NEVER combine them into one paragraph -- " +
       'format each as its own numbered list item on its own line: "1. First idea in full. 2. Second ' +
-      'idea in full. 3. Third idea in full." Each numbered item must stand alone and make complete ' +
-      "sense if the others were deleted. Each numbered item must reference exactly one specific day " +
+      'idea in full. 3. Third idea in full." The answer must consist ONLY of these numbered items, ' +
+      "back to back -- never add an introductory sentence before the first item (e.g. 'Here are some " +
+      "ideas:') or a summary/closing sentence after the last one; those break the numbered format for " +
+      "the teacher's UI, which parses the answer purely by its numbering. Each numbered item must " +
+      "stand alone and make complete sense if the others were deleted. Each numbered item must " +
+      "reference exactly one specific day " +
       "(e.g. 'Day 3') -- never a range or alternative like 'Day 3 or 5' or 'Days 3-5'; if an idea " +
       "could suit either day, pick one and commit to it. If the teacher's question doesn't name " +
       "specific days and a current day-by-day plan is given in context, cover every day in that plan " +
