@@ -7,7 +7,9 @@ import {
   listMyCustomQuestions,
   listTeacherTestPapers,
   removeTeacherTestPaperItem,
+  setTeacherTestPaperAssignment,
   swapTeacherTestPaperItem,
+  updateTeacherTestPaperItemMarks,
 } from "../services/teacherTestService.js";
 import { buildTestPaperWorkbook } from "../services/excelExportService.js";
 import { renderTestPaperPdf } from "../services/pdfExportService.js";
@@ -69,6 +71,22 @@ export const postSwapPaperItem = async (req, res, next) => {
   }
 };
 
+export const putPaperItemMarks = async (req, res, next) => {
+  try {
+    res.json(await updateTeacherTestPaperItemMarks(req.params.paperId, req.params.itemId, req.body.marks, req.user.id));
+  } catch (error) {
+    handleError(error, res, next);
+  }
+};
+
+export const putPaperAssignment = async (req, res, next) => {
+  try {
+    res.json(await setTeacherTestPaperAssignment(req.params.paperId, req.user.id, req.body));
+  } catch (error) {
+    handleError(error, res, next);
+  }
+};
+
 export const postFinalizePaper = async (req, res, next) => {
   try {
     res.json(await finalizeTeacherTestPaper(req.params.paperId, req.user.id));
@@ -115,7 +133,7 @@ export const getPaperPdf = async (req, res, next) => {
 export const getPaperExcel = async (req, res, next) => {
   try {
     const paper = await getTeacherTestPaper(req.params.paperId, req.user.id);
-    const buffer = buildTestPaperWorkbook(paper);
+    const buffer = await buildTestPaperWorkbook(paper);
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="${paper.title.replace(/[^\w-]+/g, "_")}.xlsx"`);
     res.send(buffer);

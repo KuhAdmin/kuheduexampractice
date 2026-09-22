@@ -10,12 +10,25 @@ import {
   getTeacherTestFilterOptions,
   getTeacherTestPaper,
   removeTeacherTestPaperItem,
+  setTeacherTestPaperAssignment,
   swapTeacherTestPaperItem,
+  updateTeacherTestPaperItemMarks,
 } from "../api/client";
 
 const DIFFICULTY_TONE = { easy: "tgreen", medium: "tamber", hard: "tred" };
 
-const emptyFilters = { batchId: "", chapterNumbers: [], questionFamilies: [], generationMode: "custom_mix", questionCount: "20", targetTotalMarks: "40", difficultyEasy: "30", difficultyMedium: "50", difficultyHard: "20" };
+const emptyFilters = {
+  batchId: "",
+  chapterNumbers: [],
+  questionFamilies: [],
+  generationMode: "custom_mix",
+  questionCount: "20",
+  targetTotalMarks: "40",
+  difficultyEasy: "30",
+  difficultyMedium: "50",
+  difficultyHard: "20",
+  typeConfig: {},
+};
 
 const emptyCustomForm = { question: "", options: ["", "", "", ""], correctAnswer: "", questionFamily: "mcq", difficulty: "Medium", marks: "1" };
 
@@ -37,6 +50,7 @@ export const TeacherTestBuilderPage = () => {
   const [customFormOpen, setCustomFormOpen] = useState(false);
   const [customForm, setCustomForm] = useState(emptyCustomForm);
   const [customSubmitting, setCustomSubmitting] = useState(false);
+  const [dueAtInput, setDueAtInput] = useState("");
 
   useEffect(() => {
     getTeacherBatches()
@@ -66,6 +80,18 @@ export const TeacherTestBuilderPage = () => {
       setLoading(false);
     }
   }, [isNew, loadExistingPaper]);
+
+  useEffect(() => {
+    setDueAtInput(paper?.dueAt ? String(paper.dueAt).slice(0, 10) : "");
+  }, [paper?.dueAt]);
+
+  const handleToggleAssignment = async (isOpen) => {
+    try {
+      setPaper(await setTeacherTestPaperAssignment(paper.id, { isOpen, dueAt: dueAtInput || null }));
+    } catch (assignError) {
+      setError(assignError.message || "Failed to update assignment.");
+    }
+  };
 
   const loadFilterOptions = async (batchId) => {
     if (!batchId) {
@@ -97,10 +123,44 @@ export const TeacherTestBuilderPage = () => {
     }));
   };
 
+  // Keeps one { count, marks } row per available question family -- adds
+  // rows for newly available families, drops rows for families no longer
+  // offered (chapter/class changed), and preserves whatever the teacher
+  // already typed for families still present.
+  useEffect(() => {
+    const families = filterOptions?.questionFamilies || [];
+    setFilters((current) => {
+      const typeConfig = {};
+      families.forEach((family) => {
+        typeConfig[family] = current.typeConfig[family] || { count: "0", marks: "1" };
+      });
+      return { ...current, typeConfig };
+    });
+  }, [filterOptions?.questionFamilies]);
+
+  const setTypeConfigField = (family, field, value) => {
+    setFilters((current) => ({
+      ...current,
+      typeConfig: { ...current.typeConfig, [family]: { ...current.typeConfig[family], [field]: value } },
+    }));
+  };
+
+  const typeConfigTotalMarks = Object.values(filters.typeConfig).reduce(
+    (sum, cfg) => sum + (Number(cfg.count) || 0) * (Number(cfg.marks) || 0),
+    0
+  );
+
   const handleGenerate = async () => {
     if (!filters.batchId || !filters.chapterNumbers.length) {
       setError("Pick a class and at least one chapter.");
       return;
+    }
+    if (filters.generationMode === "type_mix") {
+      const hasAnyCount = Object.values(filters.typeConfig).some((cfg) => Number(cfg.count) > 0);
+      if (!hasAnyCount) {
+        setError("Set a count greater than 0 for at least one question type.");
+        return;
+      }
     }
     setGenerating(true);
     setError("");
@@ -112,7 +172,15 @@ export const TeacherTestBuilderPage = () => {
         chapterNumbers: filters.chapterNumbers,
         questionFamilies: filters.questionFamilies,
       };
-      if (filters.generationMode === "marks_target") {
+      if (filters.generationMode === "type_mix") {
+        const typeConfig = Object.fromEntries(
+          Object.entries(filters.typeConfig)
+            .filter(([, cfg]) => Number(cfg.count) > 0)
+            .map(([family, cfg]) => [family, { count: Number(cfg.count), marks: Number(cfg.marks) || 1 }])
+        );
+        payload.typeConfig = typeConfig;
+        payload.questionFamilies = Object.keys(typeConfig);
+      } else if (filters.generationMode === "marks_target") {
         payload.targetTotalMarks = Number(filters.targetTotalMarks);
       } else if (filters.generationMode === "difficulty_mix") {
         payload.questionCount = Number(filters.questionCount);
@@ -135,6 +203,12 @@ export const TeacherTestBuilderPage = () => {
     }
   };
 
+  const handleResetFilters = () => {
+    setFilters(emptyFilters);
+    setFilterOptions(null);
+    setTitle("Untitled Test");
+  };
+
   const handleRemoveItem = async (itemId) => {
     try {
       setPaper(await removeTeacherTestPaperItem(paper.id, itemId));
@@ -148,6 +222,19 @@ export const TeacherTestBuilderPage = () => {
       setPaper(await swapTeacherTestPaperItem(paper.id, itemId));
     } catch (swapError) {
       setError(swapError.message || "Failed to swap question.");
+    }
+  };
+
+  const handleCommitMarks = async (itemId, value) => {
+    const numericMarks = Number(value);
+    const currentItem = paper.items.find((item) => item.id === itemId);
+    if (!Number.isFinite(numericMarks) || numericMarks <= 0 || numericMarks === currentItem?.marks) {
+      return;
+    }
+    try {
+      setPaper(await updateTeacherTestPaperItemMarks(paper.id, itemId, numericMarks));
+    } catch (marksError) {
+      setError(marksError.message || "Failed to update marks.");
     }
   };
 
@@ -186,6 +273,9 @@ export const TeacherTestBuilderPage = () => {
       setError(finalizeError.message || "Failed to finalize.");
     }
   };
+
+  const marksMismatch =
+    paper?.targetTotalMarks != null && Math.round(paper.totalMarks * 100) !== Math.round(paper.targetTotalMarks * 100);
 
   const difficultyCounts = paper
     ? paper.items.reduce(
@@ -241,141 +331,261 @@ export const TeacherTestBuilderPage = () => {
       {notice && <div className="admin-bulk-pipeline-concurrency">{notice}</div>}
 
       {step === 1 && (
-        <div className="admin-panel">
-          <div className="admin-studio-form-grid">
-            <label className="admin-studio-field">
-              <span>Title</span>
-              <input value={title} onChange={(event) => setTitle(event.target.value)} />
-            </label>
-            <label className="admin-studio-field">
-              <span>Class</span>
-              <select
-                value={filters.batchId}
-                onChange={(event) => {
-                  const batchId = event.target.value;
-                  setFilters((current) => ({ ...current, batchId, chapterNumbers: [], questionFamilies: [] }));
-                  loadFilterOptions(batchId);
-                }}
-              >
-                <option value="">Select a class...</option>
-                {batches.map((batch) => (
-                  <option key={batch.id} value={batch.id}>
-                    {batch.className}-{batch.sectionName} &middot; {batch.subjectName}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+        <div className="teacher-lesson-create-main">
+          <div className="teacher-ai-generate-grid">
+            <div className="teacher-ai-generate-panel">
+              <div className="teacher-ai-panel-head">
+                <span className="teacher-ai-step-badge">1</span>
+                <div className="teacher-ai-panel-head-text">
+                  <h2>Set Your Requirements</h2>
+                  <p>Pick a class and chapters, then choose how questions should be selected.</p>
+                </div>
+              </div>
 
-          {filterOptions && !filterOptions.contentConfigured && (
-            <p className="error-text">This institution has no curriculum board configured yet -- ask an admin to set it.</p>
-          )}
-
-          {filterOptions?.chapters?.length > 0 && (
-            <>
               <div className="admin-studio-form-grid">
-                <div>
-                  <span style={{ fontWeight: 700 }}>Chapters</span>
-                  <div className="admin-users-scope-checklist">
-                    {filterOptions.chapters.map((chapter) => (
-                      <label key={chapter.chapterNumber}>
-                        <input
-                          type="checkbox"
-                          checked={filters.chapterNumbers.includes(String(chapter.chapterNumber))}
-                          onChange={() => toggleChapter(String(chapter.chapterNumber))}
-                        />
-                        {chapter.title}
-                      </label>
+                <label className="admin-studio-field">
+                  <span>Title</span>
+                  <input value={title} onChange={(event) => setTitle(event.target.value)} />
+                </label>
+                <label className="admin-studio-field">
+                  <span>Class *</span>
+                  <select
+                    value={filters.batchId}
+                    onChange={(event) => {
+                      const batchId = event.target.value;
+                      setFilters((current) => ({ ...current, batchId, chapterNumbers: [], questionFamilies: [] }));
+                      loadFilterOptions(batchId);
+                    }}
+                  >
+                    <option value="">Select a class...</option>
+                    {batches.map((batch) => (
+                      <option key={batch.id} value={batch.id}>
+                        {batch.className}-{batch.sectionName} &middot; {batch.subjectName}
+                      </option>
                     ))}
-                  </div>
-                </div>
-                <div>
-                  <span style={{ fontWeight: 700 }}>Question Types</span>
-                  <div className="admin-users-scope-checklist">
-                    {filterOptions.questionFamilies.map((family) => (
-                      <label key={family}>
-                        <input type="checkbox" checked={filters.questionFamilies.includes(family)} onChange={() => toggleFamily(family)} />
-                        {family}
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                  </select>
+                </label>
               </div>
 
-              <div className="admin-studio-field">
-                <span style={{ fontWeight: 700 }}>Paper Type</span>
-                <div className="admin-users-scope-checklist">
-                  {[
-                    { id: "custom_mix", label: "Custom Mix" },
-                    { id: "marks_target", label: "Target Total Marks" },
-                    { id: "difficulty_mix", label: "Difficulty Mix" },
-                  ].map((option) => (
-                    <label key={option.id}>
-                      <input
-                        type="radio"
-                        name="generationMode"
-                        checked={filters.generationMode === option.id}
-                        onChange={() => setFilters((current) => ({ ...current, generationMode: option.id }))}
-                      />
-                      {option.label}
+              {filterOptions && !filterOptions.contentConfigured && (
+                <p className="error-text">This institution has no curriculum board configured yet -- ask an admin to set it.</p>
+              )}
+
+              {filterOptions?.chapters?.length > 0 && (
+                <>
+                  <div className="admin-studio-form-grid">
+                    <div>
+                      <span style={{ fontWeight: 700 }}>Chapters *</span>
+                      <div className="admin-users-scope-checklist">
+                        {filterOptions.chapters.map((chapter) => (
+                          <label key={chapter.chapterNumber}>
+                            <input
+                              type="checkbox"
+                              checked={filters.chapterNumbers.includes(String(chapter.chapterNumber))}
+                              onChange={() => toggleChapter(String(chapter.chapterNumber))}
+                            />
+                            {chapter.title}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    {filters.generationMode !== "type_mix" && (
+                      <div>
+                        <span style={{ fontWeight: 700 }}>Question Types</span>
+                        <div className="admin-users-scope-checklist">
+                          {filterOptions.questionFamilies.map((family) => (
+                            <label key={family}>
+                              <input type="checkbox" checked={filters.questionFamilies.includes(family)} onChange={() => toggleFamily(family)} />
+                              {family}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="admin-studio-field">
+                    <span style={{ fontWeight: 700 }}>Paper Type</span>
+                    <div className="teacher-lesson-mode-toggle">
+                      {[
+                        { id: "custom_mix", label: "Custom Mix", hint: "Pick a total number of questions across all types." },
+                        { id: "marks_target", label: "Target Total Marks", hint: "Fill the paper up to a marks budget." },
+                        { id: "difficulty_mix", label: "Difficulty Mix", hint: "Split questions by Easy / Medium / Hard percentages." },
+                        { id: "type_mix", label: "By Question Type", hint: "Set an exact count and marks for each question type." },
+                      ].map((option) => (
+                        <button
+                          type="button"
+                          key={option.id}
+                          className={`teacher-lesson-mode-card ${filters.generationMode === option.id ? "is-active" : ""}`}
+                          onClick={() => setFilters((current) => ({ ...current, generationMode: option.id }))}
+                        >
+                          <strong>{option.label}</strong>
+                          <span>{option.hint}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {filters.generationMode === "custom_mix" && (
+                    <label className="admin-studio-field">
+                      <span>Number of Questions</span>
+                      <input type="number" min="1" value={filters.questionCount} onChange={(e) => setFilters((c) => ({ ...c, questionCount: e.target.value }))} />
                     </label>
-                  ))}
+                  )}
+                  {filters.generationMode === "marks_target" && (
+                    <label className="admin-studio-field">
+                      <span>Target Total Marks</span>
+                      <input type="number" min="1" value={filters.targetTotalMarks} onChange={(e) => setFilters((c) => ({ ...c, targetTotalMarks: e.target.value }))} />
+                    </label>
+                  )}
+                  {filters.generationMode === "difficulty_mix" && (
+                    <div className="admin-studio-form-grid">
+                      <label className="admin-studio-field">
+                        <span>Number of Questions</span>
+                        <input type="number" min="1" value={filters.questionCount} onChange={(e) => setFilters((c) => ({ ...c, questionCount: e.target.value }))} />
+                      </label>
+                      <label className="admin-studio-field">
+                        <span>Easy %</span>
+                        <input type="number" min="0" max="100" value={filters.difficultyEasy} onChange={(e) => setFilters((c) => ({ ...c, difficultyEasy: e.target.value }))} />
+                      </label>
+                      <label className="admin-studio-field">
+                        <span>Medium %</span>
+                        <input type="number" min="0" max="100" value={filters.difficultyMedium} onChange={(e) => setFilters((c) => ({ ...c, difficultyMedium: e.target.value }))} />
+                      </label>
+                      <label className="admin-studio-field">
+                        <span>Hard %</span>
+                        <input type="number" min="0" max="100" value={filters.difficultyHard} onChange={(e) => setFilters((c) => ({ ...c, difficultyHard: e.target.value }))} />
+                      </label>
+                    </div>
+                  )}
+                  {filters.generationMode === "type_mix" && (
+                    <div className="admin-studio-field">
+                      <span style={{ fontWeight: 700 }}>Question Types &middot; Count &amp; Marks Each</span>
+                      <div className="admin-studio-form-grid">
+                        {filterOptions.questionFamilies.map((family) => (
+                          <div key={family} style={{ display: "flex", alignItems: "flex-end", gap: "10px" }}>
+                            <label className="admin-studio-field" style={{ flex: 1 }}>
+                              <span>{family}</span>
+                            </label>
+                            <label className="admin-studio-field">
+                              <span>Count</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={filters.typeConfig[family]?.count ?? "0"}
+                                onChange={(e) => setTypeConfigField(family, "count", e.target.value)}
+                              />
+                            </label>
+                            <label className="admin-studio-field">
+                              <span>Marks Each</span>
+                              <input
+                                type="number"
+                                min="0.5"
+                                step="0.5"
+                                value={filters.typeConfig[family]?.marks ?? "1"}
+                                onChange={(e) => setTypeConfigField(family, "marks", e.target.value)}
+                              />
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="teacher-card-meta">Total: {typeConfigTotalMarks} marks</p>
+                    </div>
+                  )}
+
+                  {!filters.chapterNumbers.length && <p className="teacher-ai-panel-hint">Select at least one chapter to continue.</p>}
+
+                  <div className="teacher-ai-panel-actions">
+                    <button type="button" className="ghost-button" onClick={handleResetFilters}>
+                      ↺ Reset
+                    </button>
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={handleGenerate}
+                      disabled={generating || !filters.chapterNumbers.length}
+                    >
+                      {generating ? (
+                        <>
+                          <span className="teacher-button-spinner" aria-hidden="true" /> Generating...
+                        </>
+                      ) : (
+                        <>
+                          ✨ Generate Paper <span className="teacher-cta-arrow">→</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {!filterOptions?.chapters?.length && !filters.batchId && <p className="teacher-ai-panel-hint">Select a class to continue.</p>}
+            </div>
+
+            <div className="teacher-ai-generate-panel">
+              <div className="teacher-ai-panel-head">
+                <span className="teacher-ai-step-badge">2</span>
+                <div className="teacher-ai-panel-head-text">
+                  <h2>Test Preview</h2>
+                  <p>See your paper's shape update as you choose options.</p>
                 </div>
               </div>
 
-              {filters.generationMode === "custom_mix" && (
-                <label className="admin-studio-field">
-                  <span>Number of Questions</span>
-                  <input type="number" min="1" value={filters.questionCount} onChange={(e) => setFilters((c) => ({ ...c, questionCount: e.target.value }))} />
-                </label>
+              {generating && <p className="teacher-ai-output-empty">Generating your test…</p>}
+              {!generating && (!filters.batchId || !filters.chapterNumbers.length) && (
+                <p className="teacher-ai-output-empty">Pick a class and chapters on the left to preview your test.</p>
               )}
-              {filters.generationMode === "marks_target" && (
-                <label className="admin-studio-field">
-                  <span>Target Total Marks</span>
-                  <input type="number" min="1" value={filters.targetTotalMarks} onChange={(e) => setFilters((c) => ({ ...c, targetTotalMarks: e.target.value }))} />
-                </label>
-              )}
-              {filters.generationMode === "difficulty_mix" && (
-                <div className="admin-studio-form-grid">
-                  <label className="admin-studio-field">
-                    <span>Number of Questions</span>
-                    <input type="number" min="1" value={filters.questionCount} onChange={(e) => setFilters((c) => ({ ...c, questionCount: e.target.value }))} />
-                  </label>
-                  <label className="admin-studio-field">
-                    <span>Easy %</span>
-                    <input type="number" min="0" max="100" value={filters.difficultyEasy} onChange={(e) => setFilters((c) => ({ ...c, difficultyEasy: e.target.value }))} />
-                  </label>
-                  <label className="admin-studio-field">
-                    <span>Medium %</span>
-                    <input type="number" min="0" max="100" value={filters.difficultyMedium} onChange={(e) => setFilters((c) => ({ ...c, difficultyMedium: e.target.value }))} />
-                  </label>
-                  <label className="admin-studio-field">
-                    <span>Hard %</span>
-                    <input type="number" min="0" max="100" value={filters.difficultyHard} onChange={(e) => setFilters((c) => ({ ...c, difficultyHard: e.target.value }))} />
-                  </label>
+              {!generating && filters.batchId && filters.chapterNumbers.length > 0 && (
+                <div style={{ display: "grid", gap: "10px" }}>
+                  <p className="teacher-card-meta">
+                    {filters.chapterNumbers.length} chapter{filters.chapterNumbers.length === 1 ? "" : "s"} selected
+                  </p>
+                  {filters.generationMode === "custom_mix" && (
+                    <p className="teacher-card-meta">≈ {filters.questionCount || 0} questions (random mix)</p>
+                  )}
+                  {filters.generationMode === "marks_target" && (
+                    <p className="teacher-card-meta">Target: {filters.targetTotalMarks || 0} marks</p>
+                  )}
+                  {filters.generationMode === "difficulty_mix" && (
+                    <p className="teacher-card-meta">
+                      ≈ {filters.questionCount || 0} questions &middot; Easy {filters.difficultyEasy}% / Medium {filters.difficultyMedium}%
+                      / Hard {filters.difficultyHard}%
+                    </p>
+                  )}
+                  {filters.generationMode === "type_mix" && (
+                    <>
+                      <div className="teacher-lesson-topics">
+                        {Object.entries(filters.typeConfig)
+                          .filter(([, cfg]) => Number(cfg.count) > 0)
+                          .map(([family, cfg]) => (
+                            <span key={family} className="teacher-lesson-topic-chip">
+                              {family} × {cfg.count} ({cfg.marks} mk each)
+                            </span>
+                          ))}
+                      </div>
+                      <p className="teacher-card-meta">Total: {typeConfigTotalMarks} marks</p>
+                    </>
+                  )}
                 </div>
               )}
-
-              <div className="admin-bulk-pipeline-dialog-actions">
-                <button type="button" className="primary-button" disabled={generating} onClick={handleGenerate}>
-                  {generating ? "Generating..." : "Generate Paper →"}
-                </button>
-              </div>
-            </>
-          )}
+            </div>
+          </div>
         </div>
       )}
 
       {step === 2 && paper && (
         <div className="admin-panel">
           <div className="admin-panel-head">
-            <h2>
-              Generated Paper &middot; {paper.items.length} Questions &middot; {paper.totalMarks} Marks
-            </h2>
+            <h2>Generated Paper &middot; {paper.items.length} Questions</h2>
             <button type="button" className="ghost-button" onClick={() => setCustomFormOpen(true)}>
               + Add Custom Question
             </button>
           </div>
+
+          <p className={marksMismatch ? "error-text" : "teacher-card-meta"}>
+            Total Marks: {paper.totalMarks} / {paper.targetTotalMarks}
+            {marksMismatch && " -- adjust marks below so the total matches the target before finalizing."}
+          </p>
 
           <div className="teacher-card-list">
             {paper.items.map((item) => (
@@ -385,7 +595,18 @@ export const TeacherTestBuilderPage = () => {
                   <div className="teacher-question-row-tags">
                     <span className="teacher-badge tone-draft">{item.questionFamily}</span>
                     {item.difficulty && <span className="teacher-badge tone-draft">{item.difficulty}</span>}
-                    <span className="teacher-card-meta">{item.marks} marks</span>
+                    <label className="teacher-card-meta" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <input
+                        type="number"
+                        min="0.5"
+                        step="0.5"
+                        key={`${item.id}-${item.marks}`}
+                        defaultValue={item.marks}
+                        onBlur={(e) => handleCommitMarks(item.id, e.target.value)}
+                        style={{ width: "60px" }}
+                      />
+                      marks
+                    </label>
                   </div>
                 </div>
                 <div className="teacher-question-row-actions">
@@ -401,7 +622,7 @@ export const TeacherTestBuilderPage = () => {
           </div>
 
           <div className="admin-bulk-pipeline-dialog-actions">
-            <button type="button" className="primary-button" onClick={handleFinalize}>
+            <button type="button" className="primary-button" onClick={handleFinalize} disabled={marksMismatch}>
               Finalize →
             </button>
           </div>
@@ -452,6 +673,34 @@ export const TeacherTestBuilderPage = () => {
             <button type="button" className="primary-button" onClick={() => navigate("/teacher/grading/new", { state: { teacherTestPaperId: paper.id, batchId: paper.batchId } })}>
               Create Gradebook
             </button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && paper && (
+        <div className="admin-panel">
+          <div className="admin-panel-head">
+            <h2>Assign to Class</h2>
+          </div>
+          <p className="teacher-card-meta">
+            {paper.isOpenForStudents
+              ? `Open -- students in this class can take it online${paper.dueAt ? ` until ${new Date(paper.dueAt).toLocaleDateString()}` : ""}.`
+              : "Not yet assigned -- open it below to let students take this test digitally, with objective questions graded automatically."}
+          </p>
+          <label className="admin-studio-field">
+            <span>Due Date (optional)</span>
+            <input type="date" value={dueAtInput} onChange={(e) => setDueAtInput(e.target.value)} />
+          </label>
+          <div className="admin-bulk-pipeline-dialog-actions">
+            {paper.isOpenForStudents ? (
+              <button type="button" className="ghost-button" onClick={() => handleToggleAssignment(false)}>
+                Close Test
+              </button>
+            ) : (
+              <button type="button" className="primary-button" onClick={() => handleToggleAssignment(true)}>
+                Open for Students →
+              </button>
+            )}
           </div>
         </div>
       )}

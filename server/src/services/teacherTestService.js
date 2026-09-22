@@ -12,6 +12,7 @@ import { collectAnswerableChapterItems } from "./studentPracticeService.js";
 import { collectChapterHotsItems } from "./studentPreWarmupService.js";
 import { getChaptersForClassSubjectSelection } from "./studentDashboardService.js";
 import { assertTeacherOwnsBatch, resolveChapterId } from "./teacherContentContext.js";
+import { createStructuredCompletion } from "./openAiService.js";
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -26,6 +27,74 @@ const shuffleInPlace = (array) => {
 const resolveQbInteractionType = (item) =>
   item.interaction_type || (toArray(item.options).length > 0 ? "single_select" : "free_text");
 const resolveQbQuestionFamily = (item) => item.question_family || resolveQbInteractionType(item);
+
+// A printed test paper needs a real answer key for every question.
+// single_select/ordering/matching items already can't reach this pool without
+// a correct_answer (collectAnswerableChapterItems filters those out
+// upstream), so this only ever excludes free_text items with no answer on
+// record -- and those get an AI-generated answer instead of being dropped,
+// see fillMissingAnswersWithAi below. difficulty is left ungated entirely --
+// it's rarely populated in the content bank, and gating on it would exclude
+// nearly everything.
+const isUsableCandidate = (item) =>
+  item.interactionType === "free_text" || Boolean(String(item.correctAnswer || "").trim());
+
+const REFERENCE_ANSWER_MODEL_ID = "deepseek-v4-flash";
+
+const optionText = (option) => (typeof option === "string" ? option : option?.text || "");
+
+const generateReferenceAnswerWithAi = async ({ question, options }) => {
+  try {
+    const optionsList = toArray(options);
+    const optionsText = optionsList.length
+      ? `\nOptions: ${optionsList
+          .map((option, i) => `${String.fromCharCode(97 + i)}) ${optionText(option)}`)
+          .join(" | ")}`
+      : "";
+    const userPrompt = `Question: ${question}${optionsText}
+
+Provide the single correct answer to this question, exactly as it should appear on a teacher's answer key. Be concise -- just the answer text, no explanation.
+
+Schema:
+{
+  "answer": "the correct answer text"
+}`;
+    const { parsed } = await createStructuredCompletion({
+      systemPrompt:
+        "You are an expert teacher preparing an answer key for a school test. Return only valid JSON that exactly matches the requested schema.",
+      userPrompt,
+      responseFormatName: "reference_answer",
+      modelId: REFERENCE_ANSWER_MODEL_ID,
+    });
+    const answer = typeof parsed?.answer === "string" ? parsed.answer.trim() : "";
+    return answer || null;
+  } catch {
+    return null;
+  }
+};
+
+// Called once a question is actually selected onto a paper (generation or
+// swap-in) -- not for every candidate in the pool, so a chapter's whole
+// question bank never triggers AI calls just to build the filter-options
+// list or a selection preview. Persists the generated answer back onto
+// content_assessment_item so the next paper that pulls this same question
+// finds correct_answer already filled in and skips the AI call entirely.
+const fillMissingAnswersWithAi = async (items) => {
+  for (const item of items) {
+    if (item.interactionType !== "free_text" || String(item.correctAnswer || "").trim()) {
+      continue;
+    }
+    const answer = await generateReferenceAnswerWithAi({ question: item.question, options: item.options });
+    if (!answer) continue;
+    item.correctAnswer = answer;
+    if (item.contentAssessmentItemId) {
+      await pool.query("UPDATE content_assessment_item SET correct_answer = $1 WHERE id = $2", [
+        answer,
+        item.contentAssessmentItemId,
+      ]);
+    }
+  }
+};
 
 const CUSTOM_QUESTION_FAMILY_INTERACTION_TYPE = {
   mcq: "single_select",
@@ -106,6 +175,12 @@ const buildRawQuestionPool = async ({ context, chapterNumbers, teacherUserId }) 
           options: toArray(item.content?.options),
           correctAnswer: item.correctAnswer,
           interactionType: item.format === "reorder" ? "ordering" : "single_select",
+          // format/passage are dropped nowhere else that matters today (only
+          // buildRawQuestionPool consumers care), but a HOTS "reorder" item is
+          // ungradable without `format` -- digital test-taking's grader
+          // dispatches on it exactly like TestLab's gradeTestLabItem does.
+          format: item.format || null,
+          passage: item.content?.anchorSentence || null,
           questionFamily: "hots",
           difficulty: null,
           marks: 1,
@@ -132,7 +207,7 @@ const buildRawQuestionPool = async ({ context, chapterNumbers, teacherUserId }) 
     });
   }
 
-  return items;
+  return items.filter(isUsableCandidate);
 };
 
 export const getTeacherTestFilterOptions = async ({ batchId, teacherUserId }) => {
@@ -196,11 +271,34 @@ const selectByDifficultyMix = (candidatePool, distribution, questionCount) => {
   return selected.slice(0, questionCount);
 };
 
+// "By Question Type" mode -- typeConfig is { [questionFamily]: { count, marks } }.
+// The type's configured marks is authoritative for every question drawn into
+// that family (overriding whatever marks the source question happened to
+// carry), since the teacher is deliberately setting a per-type mark value.
+// Families that can't fulfill their requested count are reported in
+// `shortages` instead of silently under-filling the paper.
+const selectByTypeConfig = (candidatePool, typeConfig) => {
+  const selected = [];
+  const shortages = [];
+  for (const [family, config] of Object.entries(typeConfig || {})) {
+    const count = Number(config?.count || 0);
+    if (count <= 0) continue;
+    const marksPerQuestion = Number(config?.marks) || 1;
+    const familyPool = shuffleInPlace(candidatePool.filter((item) => item.questionFamily === family));
+    if (familyPool.length < count) {
+      shortages.push(`${family} (${familyPool.length} available, ${count} requested)`);
+      continue;
+    }
+    familyPool.slice(0, count).forEach((item) => selected.push({ ...item, marks: marksPerQuestion }));
+  }
+  return { selected, shortages };
+};
+
 const mapPaperItemRow = (row) => ({
   id: row.id,
   displayOrder: row.display_order,
-  marks: Number(row.marks),
   ...row.question_snapshot,
+  marks: Number(row.marks),
 });
 
 const mapPaper = (paper, itemRows) => ({
@@ -214,6 +312,9 @@ const mapPaper = (paper, itemRows) => ({
   difficultyDistribution: paper.difficulty_distribution,
   status: paper.status,
   createdAt: paper.created_at,
+  isOpenForStudents: paper.is_open_for_students,
+  openedAt: paper.opened_at,
+  dueAt: paper.due_at,
   items: itemRows.map(mapPaperItemRow),
   totalMarks: itemRows.reduce((sum, row) => sum + Number(row.marks), 0),
 });
@@ -278,6 +379,8 @@ export const listTeacherTestPapers = async (teacherUserId) => {
     questionCount: Number(row.question_count),
     totalMarks: Number(row.total_marks),
     createdAt: row.created_at,
+    isOpenForStudents: row.is_open_for_students,
+    dueAt: row.due_at,
   }));
 };
 
@@ -347,6 +450,7 @@ export const generateTeacherTestPaper = async ({
   questionCount,
   targetTotalMarks,
   difficultyDistribution,
+  typeConfig,
 }) => {
   const context = await assertTeacherOwnsBatch(batchId, teacherUserId);
   if (!context.isContentConfigured) {
@@ -377,7 +481,15 @@ export const generateTeacherTestPaper = async ({
   }
 
   let selected;
-  if (generationMode === "marks_target") {
+  if (generationMode === "type_mix") {
+    const { selected: typeSelected, shortages } = selectByTypeConfig(candidatePool, typeConfig);
+    if (shortages.length) {
+      const error = new Error(`Not enough questions available: ${shortages.join(", ")}.`);
+      error.statusCode = 400;
+      throw error;
+    }
+    selected = typeSelected;
+  } else if (generationMode === "marks_target") {
     selected = selectByMarksTarget(candidatePool, Number(targetTotalMarks) || 0);
   } else if (generationMode === "difficulty_mix") {
     selected = selectByDifficultyMix(candidatePool, difficultyDistribution, Number(questionCount) || DEFAULT_QUESTION_COUNT);
@@ -391,6 +503,13 @@ export const generateTeacherTestPaper = async ({
     throw error;
   }
 
+  await fillMissingAnswersWithAi(selected);
+
+  // Every paper needs a real target to check individual marks overrides
+  // against later (finalizeTeacherTestPaper) -- only marks_target mode sets
+  // one explicitly, so the rest fall back to the total actually generated.
+  const resolvedTargetTotalMarks = Number(targetTotalMarks) || selected.reduce((sum, item) => sum + item.marks, 0);
+
   const paperId = await persistTeacherTestPaper({
     teacherUserId,
     batchId,
@@ -398,7 +517,7 @@ export const generateTeacherTestPaper = async ({
     generationMode,
     chapters,
     questionFamilies: familyFilter,
-    targetTotalMarks,
+    targetTotalMarks: resolvedTargetTotalMarks,
     difficultyDistribution,
     selected,
   });
@@ -465,6 +584,7 @@ export const swapTeacherTestPaperItem = async (paperId, itemId, teacherUserId) =
   }
 
   const replacement = anyAlternative[0];
+  await fillMissingAnswersWithAi([replacement]);
   await pool.query(
     "UPDATE teacher_test_paper_item SET question_snapshot = $1, marks = $2, source_content_assessment_item_id = $3 WHERE id = $4",
     [JSON.stringify(replacement), replacement.marks, replacement.contentAssessmentItemId || null, itemId]
@@ -473,7 +593,51 @@ export const swapTeacherTestPaperItem = async (paperId, itemId, teacherUserId) =
   return getTeacherTestPaper(paperId, teacherUserId);
 };
 
+export const updateTeacherTestPaperItemMarks = async (paperId, itemId, marks, teacherUserId) => {
+  const paper = await getPaperOrThrow(paperId, teacherUserId);
+  if (paper.status !== "draft") {
+    const error = new Error("Only a draft paper's questions can be changed.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const numericMarks = Number(marks);
+  if (!Number.isFinite(numericMarks) || numericMarks <= 0) {
+    const error = new Error("Marks must be a positive number.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await pool.query(
+    `
+      UPDATE teacher_test_paper_item
+      SET marks = $1, question_snapshot = jsonb_set(question_snapshot, '{marks}', to_jsonb($1::numeric))
+      WHERE id = $2 AND fk_teacher_test_paper_id = $3
+      RETURNING id
+    `,
+    [numericMarks, itemId, paperId]
+  );
+  if (!result.rows[0]) {
+    const error = new Error("Question not found on this paper.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return getTeacherTestPaper(paperId, teacherUserId);
+};
+
+const roundTo2 = (value) => Math.round(Number(value || 0) * 100) / 100;
+
 export const finalizeTeacherTestPaper = async (paperId, teacherUserId) => {
+  const paper = await getTeacherTestPaper(paperId, teacherUserId);
+  if (paper.targetTotalMarks != null && roundTo2(paper.targetTotalMarks) !== roundTo2(paper.totalMarks)) {
+    const error = new Error(
+      `Total marks (${paper.totalMarks}) must equal the target total marks (${paper.targetTotalMarks}) before finalizing.`
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
   const result = await pool.query(
     "UPDATE teacher_test_paper SET status = 'finalized' WHERE id = $1 AND fk_teacher_id = $2 RETURNING id",
     [paperId, teacherUserId]
@@ -485,6 +649,52 @@ export const finalizeTeacherTestPaper = async (paperId, teacherUserId) => {
   }
   return getTeacherTestPaper(paperId, teacherUserId);
 };
+
+// ---- Digital test-taking: opening a finalized paper for its batch's
+// students to take online (see studentTestPaperService.js for the attempt
+// flow this unlocks) ----
+
+export const setTeacherTestPaperAssignment = async (paperId, teacherUserId, { isOpen, dueAt }) => {
+  const paper = await getPaperOrThrow(paperId, teacherUserId);
+  if (paper.status !== "finalized") {
+    const error = new Error("Only a finalized paper can be assigned to students.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await pool.query(
+    `
+      UPDATE teacher_test_paper
+      SET is_open_for_students = $1,
+          opened_at = CASE WHEN $1 THEN COALESCE(opened_at, NOW()) ELSE NULL END,
+          due_at = $2
+      WHERE id = $3 AND fk_teacher_id = $4
+      RETURNING id
+    `,
+    [Boolean(isOpen), dueAt || null, paperId, teacherUserId]
+  );
+  if (!result.rows[0]) {
+    const error = new Error("Test paper not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return getTeacherTestPaper(paperId, teacherUserId);
+};
+
+// Whitelists exactly what a student may see before/while attempting a
+// digital test -- correctAnswer/interactionData/acceptableAnswers are
+// deliberately excluded, same discipline as testLabService.js's
+// buildClientSafeItem.
+export const buildStudentSafeTestPaperItem = (row) => ({
+  displayOrder: row.display_order,
+  question: row.question_snapshot?.question,
+  options: row.question_snapshot?.options || [],
+  interactionType: row.question_snapshot?.interactionType,
+  marks: row.question_snapshot?.marks,
+  passage: row.question_snapshot?.passage || null,
+  studentAnswer: row.student_answer ?? null,
+  isCorrect: row.is_correct ?? null,
+});
 
 // ---- Teacher-authored custom questions (Decision #3: usable in the
 // author's own paper immediately, joins the shared bank only once approved) ----

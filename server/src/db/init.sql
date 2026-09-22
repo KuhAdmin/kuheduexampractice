@@ -1921,3 +1921,54 @@ CREATE TABLE IF NOT EXISTS master_lesson_plan_share (
 );
 
 CREATE INDEX IF NOT EXISTS idx_master_lesson_plan_share_recipient ON master_lesson_plan_share (shared_with_teacher_id, created_at DESC);
+
+-- "By Question Type" paper generation (per-questionFamily count + marks),
+-- alongside the original custom_mix/marks_target/difficulty_mix modes.
+ALTER TABLE teacher_test_paper DROP CONSTRAINT IF EXISTS teacher_test_paper_generation_mode_check;
+ALTER TABLE teacher_test_paper ADD CONSTRAINT teacher_test_paper_generation_mode_check
+CHECK (generation_mode IN ('custom_mix', 'marks_target', 'difficulty_mix', 'type_mix'));
+
+-- Digital test-taking: a finalized paper can be opened for its batch's
+-- students to take online (see teacher_test_paper_attempt below), instead of
+-- only ever being printed and hand-graded.
+ALTER TABLE teacher_test_paper ADD COLUMN IF NOT EXISTS is_open_for_students BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE teacher_test_paper ADD COLUMN IF NOT EXISTS opened_at TIMESTAMPTZ;
+ALTER TABLE teacher_test_paper ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ;
+
+-- One attempt per student per paper (UNIQUE) -- this is a real exam sitting,
+-- not repeatable practice like test_lab_attempt, so no retakes. Items keep
+-- the paper's own printed display_order (unshuffled), unlike TestLab's
+-- random draw, since a real exam's question order is fixed.
+CREATE TABLE IF NOT EXISTS teacher_test_paper_attempt (
+  id BIGSERIAL PRIMARY KEY,
+  fk_teacher_test_paper_id BIGINT NOT NULL REFERENCES teacher_test_paper(id) ON DELETE CASCADE,
+  fk_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(20) NOT NULL DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'completed')),
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  submitted_at TIMESTAMPTZ,
+  score NUMERIC(6,2),
+  UNIQUE (fk_teacher_test_paper_id, fk_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_teacher_test_paper_attempt_user ON teacher_test_paper_attempt (fk_user_id);
+
+-- question_snapshot carries everything needed to render AND grade the item,
+-- copied from teacher_test_paper_item at attempt-start time -- same
+-- anti-drift idiom as test_lab_attempt_item.question_snapshot. Objective
+-- items (single_select/ordering/matching) are auto-graded immediately and
+-- finally into marks_awarded; free_text items are AI-graded for partial
+-- credit into ai_suggested_marks/ai_feedback only -- marks_awarded stays
+-- NULL until a teacher accepts it in the Gradebook, same as the existing
+-- manual AI-assist flow.
+CREATE TABLE IF NOT EXISTS teacher_test_paper_attempt_item (
+  id BIGSERIAL PRIMARY KEY,
+  fk_teacher_test_paper_attempt_id BIGINT NOT NULL REFERENCES teacher_test_paper_attempt(id) ON DELETE CASCADE,
+  display_order INTEGER NOT NULL,
+  question_snapshot JSONB NOT NULL,
+  student_answer TEXT,
+  is_correct BOOLEAN,
+  marks_awarded NUMERIC(6,2),
+  ai_suggested_marks NUMERIC(6,2),
+  ai_feedback TEXT,
+  UNIQUE (fk_teacher_test_paper_attempt_id, display_order)
+);

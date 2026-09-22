@@ -15376,6 +15376,7 @@ button.admin-bulk-pipeline-status-badge:disabled {
 
 .admin-bulk-pipeline-dialog-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 20px;

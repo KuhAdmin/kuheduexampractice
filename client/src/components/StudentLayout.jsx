@@ -18,7 +18,13 @@ const baseStudentMenuItems = navItems.map((item) => {
     disabled: !item.path,
   };
   return item.id === "assessments"
-    ? { ...mapped, children: [{ label: "Write", to: "/tests/write", icon: <StudentNavIcon type="clipboard" /> }] }
+    ? {
+        ...mapped,
+        children: [
+          { label: "Write", to: "/tests/write", icon: <StudentNavIcon type="clipboard" /> },
+          { label: "My Tests", to: "/test-papers", icon: <StudentNavIcon type="clipboard" /> },
+        ],
+      }
     : mapped;
 });
 

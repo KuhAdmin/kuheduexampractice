@@ -857,6 +857,24 @@ export const submitTestLabAttempt = async (attemptId) =>
 export const getTestLabAttemptResult = async (attemptId) =>
   apiRequest(`/user/test-lab/attempts/${attemptId}/result`);
 
+// ---- Student: digital Test Papers (assigned by a teacher, see Teacher: Tests below) ----
+
+export const getAssignedTestPapers = async () => apiRequest("/user/test-papers/assigned");
+
+export const startTestPaperAttempt = async (paperId) =>
+  apiRequest(`/user/test-papers/${paperId}/attempts`, { method: "POST" });
+
+export const getTestPaperAttempt = async (attemptId) => apiRequest(`/user/test-papers/attempts/${attemptId}`);
+
+export const submitTestPaperAnswer = async (attemptId, displayOrder, studentAnswer) =>
+  apiRequest(`/user/test-papers/attempts/${attemptId}/items/${displayOrder}/answer`, {
+    method: "POST",
+    body: JSON.stringify({ studentAnswer }),
+  });
+
+export const submitTestPaperAttempt = async (attemptId) =>
+  apiRequest(`/user/test-papers/attempts/${attemptId}/submit`, { method: "POST" });
+
 export const getRecentTestLabAttempts = async () => apiRequest("/user/test-lab/attempts/recent");
 
 // ---- Admin: Institutions ----
@@ -970,6 +988,12 @@ export const removeTeacherTestPaperItem = async (paperId, itemId) =>
 
 export const swapTeacherTestPaperItem = async (paperId, itemId) =>
   apiRequest(`/teacher/test-papers/${paperId}/items/${itemId}/swap`, { method: "POST" });
+
+export const updateTeacherTestPaperItemMarks = async (paperId, itemId, marks) =>
+  apiRequest(`/teacher/test-papers/${paperId}/items/${itemId}/marks`, { method: "PUT", body: JSON.stringify({ marks }) });
+
+export const setTeacherTestPaperAssignment = async (paperId, { isOpen, dueAt }) =>
+  apiRequest(`/teacher/test-papers/${paperId}/assignment`, { method: "PUT", body: JSON.stringify({ isOpen, dueAt }) });
 
 export const finalizeTeacherTestPaper = async (paperId) =>
   apiRequest(`/teacher/test-papers/${paperId}/finalize`, { method: "POST" });

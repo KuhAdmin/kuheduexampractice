@@ -71,6 +71,8 @@ import { StudentPracticePage } from "./pages/StudentPracticePage";
 import { StudentTestLabPage } from "./pages/StudentTestLabPage";
 import { StudentTestLabSessionPage } from "./pages/StudentTestLabSessionPage";
 import { StudentTestLabResultPage } from "./pages/StudentTestLabResultPage";
+import { StudentTestPapersPage } from "./pages/StudentTestPapersPage";
+import { StudentTestPaperSessionPage } from "./pages/StudentTestPaperSessionPage";
 import { StudentSectionDetailPage } from "./pages/StudentSectionDetailPage";
 
 const isStudentOnboardingComplete = (user) => {
@@ -234,6 +236,8 @@ const App = () => {
           <Route path="/test-lab" element={<StudentTestLabPage />} />
           <Route path="/test-lab/attempts/:attemptId" element={<StudentTestLabSessionPage />} />
           <Route path="/test-lab/attempts/:attemptId/result" element={<StudentTestLabResultPage />} />
+          <Route path="/test-papers" element={<StudentTestPapersPage />} />
+          <Route path="/test-papers/attempts/:attemptId" element={<StudentTestPaperSessionPage />} />
           <Route path="/goals" element={<StudentRemainingConceptsPage />} />
           <Route path="/tests/write" element={<StudentWritingCategoriesPage />} />
           <Route path="/tests/write/:categorySlug" element={<StudentWritingSubCategoriesPage />} />

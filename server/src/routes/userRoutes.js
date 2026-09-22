@@ -72,6 +72,13 @@ import {
   getRecentAttempts as getRecentTestLabAttempts,
   startAttempt as startTestLabAttemptHandler,
 } from "../controllers/testLabController.js";
+import {
+  answerAttemptItem as answerTestPaperAttemptItem,
+  finishAttempt as finishTestPaperAttempt,
+  getAssignedTestPapers,
+  getAttempt as getTestPaperAttemptHandler,
+  startAttempt as startTestPaperAttemptHandler,
+} from "../controllers/studentTestPaperController.js";
 import { postHandwrittenNoteOcr } from "../controllers/ocrController.js";
 import {
   getTutorUsageHandler,
@@ -247,6 +254,12 @@ router.post("/test-lab/attempts/:attemptId/items/:displayOrder/answer", answerTe
 router.patch("/test-lab/attempts/:attemptId/items/:displayOrder/review", setTestLabItemReviewFlagHandler);
 router.post("/test-lab/attempts/:attemptId/submit", finishTestLabAttempt);
 router.get("/test-lab/attempts/:attemptId/result", getTestLabAttemptResultHandler);
+
+router.get("/test-papers/assigned", getAssignedTestPapers);
+router.post("/test-papers/:paperId/attempts", startTestPaperAttemptHandler);
+router.get("/test-papers/attempts/:attemptId", getTestPaperAttemptHandler);
+router.post("/test-papers/attempts/:attemptId/items/:displayOrder/answer", answerTestPaperAttemptItem);
+router.post("/test-papers/attempts/:attemptId/submit", finishTestPaperAttempt);
 
 router.post("/ocr/handwritten-note", postHandwrittenNoteOcr);
 

@@ -22,6 +22,8 @@ import {
   postFinalizePaper,
   postPaper,
   postSwapPaperItem,
+  putPaperAssignment,
+  putPaperItemMarks,
 } from "../controllers/teacherTestController.js";
 import {
   getExam,
@@ -96,6 +98,8 @@ router.get("/test-papers/:paperId/export.pdf", getPaperPdf);
 router.get("/test-papers/:paperId/export.xlsx", getPaperExcel);
 router.delete("/test-papers/:paperId/items/:itemId", deletePaperItem);
 router.post("/test-papers/:paperId/items/:itemId/swap", postSwapPaperItem);
+router.put("/test-papers/:paperId/items/:itemId/marks", putPaperItemMarks);
+router.put("/test-papers/:paperId/assignment", putPaperAssignment);
 router.post("/custom-questions", postCustomQuestion);
 router.get("/custom-questions", getMyCustomQuestions);
 

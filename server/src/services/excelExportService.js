@@ -3,9 +3,9 @@
 import XLSX from "xlsx";
 // xlsx (SheetJS Community Edition) cannot WRITE cell styling at all -- bold,
 // borders, alignment and wrap-text are explicitly a paid "Pro"-only feature
-// (see its own README). exceljs is used here instead, only for the one
-// export that actually needs real formatting -- xlsx stays the tool for
-// everything else above/below (plain data dumps, and reading uploads).
+// (see its own README). exceljs is used instead for the exports that need
+// real formatting -- xlsx stays the tool for the plain data dumps (gradebook)
+// and for reading uploads.
 import ExcelJS from "exceljs";
 import { BLOOM_LEVELS } from "../constants/bloomLevels.js";
 
@@ -20,20 +20,52 @@ const BLOOM_STAGE_LABELS = {
 
 const optionText = (option) => (typeof option === "string" ? option : option?.text || "");
 
-export const buildTestPaperWorkbook = ({ items }) => {
-  const rows = items.map((item, index) => ({
-    "Q#": index + 1,
-    Question: item.question,
-    Options: (item.options || []).map((option, i) => `${String.fromCharCode(97 + i)}) ${optionText(option)}`).join(" | "),
-    "Correct Answer": item.correctAnswer || "",
-    Marks: item.marks,
-    Difficulty: item.difficulty || "",
-  }));
+export const buildTestPaperWorkbook = async ({ title, items }) => {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet((title || "Test Paper").slice(0, 31));
 
-  const sheet = XLSX.utils.json_to_sheet(rows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, sheet, "Paper");
-  return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+  sheet.columns = [
+    { header: "Q#", key: "qNo", width: 6 },
+    { header: "Question", key: "question", width: 40 },
+    { header: "Options", key: "options", width: 40 },
+    { header: "Correct Answer", key: "correctAnswer", width: 40 },
+    { header: "Marks", key: "marks", width: 10 },
+    { header: "Difficulty", key: "difficulty", width: 14 },
+  ];
+
+  items.forEach((item, index) => {
+    sheet.addRow({
+      qNo: index + 1,
+      question: item.question,
+      options: (item.options || []).map((option, i) => `${String.fromCharCode(97 + i)}) ${optionText(option)}`).join(" | "),
+      correctAnswer: item.correctAnswer || "",
+      marks: item.marks,
+      difficulty: item.difficulty || "",
+    });
+  });
+
+  sheet.getRow(1).font = { bold: true };
+
+  // Question/Options/Correct Answer hold free text -- top+wrap; Q#/Marks/
+  // Difficulty are short single values that read better centered, same rule
+  // as the lesson planner sheet.
+  const middleAlignedColumns = new Set([1, 5, 6]);
+
+  sheet.eachRow((row) => {
+    row.eachCell((cell) => {
+      cell.alignment = middleAlignedColumns.has(cell.col)
+        ? { vertical: "middle", horizontal: "center" }
+        : { vertical: "top", wrapText: true };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+  });
+
+  return workbook.xlsx.writeBuffer();
 };
 
 export const buildLessonPlanWorkbook = async ({ plan, entries }) => {

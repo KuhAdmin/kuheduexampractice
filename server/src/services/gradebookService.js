@@ -100,6 +100,36 @@ export const createGradebookExam = async ({
     }
 
     await seedGradebookMarks(client, exam.id);
+
+    // Pre-fill from any completed digital attempts of the source paper --
+    // objective items become final marks immediately (there's a definite
+    // correct answer); free_text items only pre-fill the answer text + AI
+    // suggestion, exactly what the AI-assist modal would otherwise ask the
+    // teacher to type in by hand -- marks_awarded stays NULL until the
+    // teacher clicks Accept there, same review discipline as manual entry.
+    // display_order lines up 1:1 between the two tables because both are
+    // built by iterating the paper's items in the same order.
+    if (sourceType === "test_paper" && teacherTestPaperId) {
+      await client.query(
+        `
+          UPDATE gradebook_mark gm
+          SET marks_awarded = CASE WHEN tpai.question_snapshot->>'interactionType' != 'free_text' THEN tpai.marks_awarded ELSE gm.marks_awarded END,
+              student_answer_text = CASE WHEN tpai.question_snapshot->>'interactionType' = 'free_text' THEN tpai.student_answer ELSE gm.student_answer_text END,
+              ai_suggested_marks = CASE WHEN tpai.question_snapshot->>'interactionType' = 'free_text' THEN tpai.ai_suggested_marks ELSE gm.ai_suggested_marks END,
+              ai_suggested_feedback = CASE WHEN tpai.question_snapshot->>'interactionType' = 'free_text' THEN tpai.ai_feedback ELSE gm.ai_suggested_feedback END,
+              graded_at = CASE WHEN tpai.question_snapshot->>'interactionType' != 'free_text' THEN NOW() ELSE gm.graded_at END
+          FROM teacher_test_paper_attempt tpa
+          JOIN teacher_test_paper_attempt_item tpai ON tpai.fk_teacher_test_paper_attempt_id = tpa.id
+          JOIN gradebook_exam_question geq ON geq.display_order = tpai.display_order AND geq.fk_gradebook_exam_id = $1
+          WHERE tpa.fk_teacher_test_paper_id = $2
+            AND tpa.status = 'completed'
+            AND gm.fk_gradebook_exam_question_id = geq.id
+            AND gm.fk_user_id = tpa.fk_user_id
+        `,
+        [exam.id, teacherTestPaperId]
+      );
+    }
+
     await client.query("COMMIT");
     return getGradebookExam(exam.id, teacherUserId);
   } catch (error) {
@@ -255,9 +285,43 @@ export const bulkSaveGradebookMarks = async (examId, teacherUserId, marks, grade
   return getGradebookExam(examId, teacherUserId);
 };
 
-// Null-safe: returns null on any failure so the teacher just sees no
-// suggestion and grades manually -- same discipline as
-// gradeFreeTextAnswerWithAi in studentPracticeService.js.
+// Null-safe: returns null on any failure so the caller just falls back to
+// manual grading -- same discipline as gradeFreeTextAnswerWithAi in
+// studentPracticeService.js. Shared by the teacher-facing AI-assist button
+// (suggestAiGrade, below) and digital test-taking's automatic per-answer
+// grading (studentTestPaperService.js), so there's exactly one
+// "partial credit out of N marks" implementation.
+export const gradeFreeTextForMarks = async ({ question, maxMarks, correctAnswer, studentAnswerText }) => {
+  try {
+    const { parsed } = await createStructuredCompletion({
+      systemPrompt:
+        "You are a fair, encouraging school exam grader. Return only valid JSON that exactly matches the requested schema.",
+      userPrompt: `Question: ${question || "(question text unavailable)"}
+Maximum marks: ${maxMarks}
+Expected/model answer: ${correctAnswer || "(not specified -- use your own subject judgement)"}
+Student's written answer: ${studentAnswerText}
+
+Grade the student's answer out of the maximum marks, giving partial credit where reasoning is partially correct.
+
+Schema:
+{
+  "suggestedMarks": a number between 0 and ${maxMarks},
+  "feedback": "1-2 sentences, addressed directly to the student, explaining the score"
+}`,
+      responseFormatName: "gradebook_ai_assist",
+      modelId: AI_GRADING_MODEL_ID,
+    });
+
+    if (typeof parsed?.suggestedMarks !== "number") return null;
+    return {
+      suggestedMarks: Math.max(0, Math.min(maxMarks, parsed.suggestedMarks)),
+      feedback: typeof parsed.feedback === "string" ? parsed.feedback.trim() : null,
+    };
+  } catch {
+    return null;
+  }
+};
+
 export const suggestAiGrade = async ({ examId, questionId, userId, teacherUserId, studentAnswerText }) => {
   await getExamOrThrow(examId, teacherUserId);
   const questionResult = await pool.query("SELECT * FROM gradebook_exam_question WHERE id = $1 AND fk_gradebook_exam_id = $2", [
@@ -274,36 +338,12 @@ export const suggestAiGrade = async ({ examId, questionId, userId, teacherUserId
   const questionText = question.question_snapshot?.question || question.question_label;
   const correctAnswer = question.question_snapshot?.correctAnswer || null;
 
-  let suggestion = null;
-  try {
-    const { parsed } = await createStructuredCompletion({
-      systemPrompt:
-        "You are a fair, encouraging school exam grader. Return only valid JSON that exactly matches the requested schema.",
-      userPrompt: `Question: ${questionText || "(question text unavailable)"}
-Maximum marks: ${question.max_marks}
-Expected/model answer: ${correctAnswer || "(not specified -- use your own subject judgement)"}
-Student's written answer: ${studentAnswerText}
-
-Grade the student's answer out of the maximum marks, giving partial credit where reasoning is partially correct.
-
-Schema:
-{
-  "suggestedMarks": a number between 0 and ${question.max_marks},
-  "feedback": "1-2 sentences, addressed directly to the student, explaining the score"
-}`,
-      responseFormatName: "gradebook_ai_assist",
-      modelId: AI_GRADING_MODEL_ID,
-    });
-
-    if (typeof parsed?.suggestedMarks === "number") {
-      suggestion = {
-        suggestedMarks: Math.max(0, Math.min(question.max_marks, parsed.suggestedMarks)),
-        feedback: typeof parsed.feedback === "string" ? parsed.feedback.trim() : null,
-      };
-    }
-  } catch {
-    suggestion = null;
-  }
+  const suggestion = await gradeFreeTextForMarks({
+    question: questionText,
+    maxMarks: question.max_marks,
+    correctAnswer,
+    studentAnswerText,
+  });
 
   if (!suggestion) {
     const error = new Error("AI grading is unavailable right now -- enter the mark manually.");

@@ -14,6 +14,7 @@ export const TeacherGradebookPage = () => {
   const [aiModal, setAiModal] = useState(null);
   const [aiAnswerText, setAiAnswerText] = useState("");
   const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [aiSuggestionIsAuto, setAiSuggestionIsAuto] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState("");
 
@@ -83,9 +84,16 @@ export const TeacherGradebookPage = () => {
     exam.questions.reduce((sum, question) => sum + (Number(draftMarks[cellKey(question.id, student.id)]) || 0), 0);
 
   const openAiAssist = (question, student) => {
+    const mark = student.marks[question.id] || {};
     setAiModal({ question, student });
-    setAiAnswerText(student.marks[question.id]?.studentAnswerText || "");
-    setAiSuggestion(null);
+    setAiAnswerText(mark.studentAnswerText || "");
+    // Digital test-taking already ran this same AI grading at submit time
+    // (studentTestPaperService.js) -- if it's on record, show it straight
+    // away instead of making the teacher click "Get AI Suggestion" again for
+    // an answer they never had to transcribe in the first place.
+    const hasAutoSuggestion = Boolean(mark.studentAnswerText) && mark.aiSuggestedMarks != null;
+    setAiSuggestion(hasAutoSuggestion ? { suggestedMarks: mark.aiSuggestedMarks, feedback: mark.aiSuggestedFeedback } : null);
+    setAiSuggestionIsAuto(hasAutoSuggestion);
     setAiError("");
   };
 
@@ -95,6 +103,7 @@ export const TeacherGradebookPage = () => {
     try {
       const suggestion = await requestAiGradeAssist(examId, aiModal.question.id, aiModal.student.id, aiAnswerText);
       setAiSuggestion(suggestion);
+      setAiSuggestionIsAuto(false);
     } catch (aiRequestError) {
       setAiError(aiRequestError.message || "AI grading is unavailable right now -- enter the mark manually.");
     } finally {
@@ -191,6 +200,9 @@ export const TeacherGradebookPage = () => {
             <p className="teacher-card-meta">
               {aiModal.student.name} &middot; {aiModal.question.questionLabel} ({aiModal.question.maxMarks} marks)
             </p>
+            {aiSuggestionIsAuto && (
+              <p className="teacher-card-meta">✨ Auto-graded from the student's digital submission -- review before accepting.</p>
+            )}
             <div className="teacher-ai-assist-grid">
               <div>
                 <span style={{ fontWeight: 700 }}>Student Answer</span>
