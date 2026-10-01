@@ -4,7 +4,7 @@
 
 Version: 1.0  
 Status: MVP  
-Target Domain: `kuhedu-exam-prep.study`
+Target Domain: `platform.kuhedu.com`
 
 ## 1. Overview
 
