@@ -620,7 +620,7 @@ export const StudentProfilePage = ({ user, onLogout }) => {
           <div className="student-profile-premium-copy">
             <div className="student-profile-premium-head">
               <div>
-                <strong>English 24x7 Premium</strong>
+                <strong>Kuhedu Premium</strong>
                 <p>
                   {user?.isPremium
                     ? "You have full access to all features and premium content"
@@ -737,7 +737,7 @@ export const StudentProfilePage = ({ user, onLogout }) => {
             <div className="student-profile-premium-copy">
               <div className="student-profile-premium-head">
                 <div>
-                  <strong>English 24x7</strong>
+                  <strong>Kuhedu</strong>
                   <p>Add to your Home Screen for quick access</p>
                 </div>
               </div>

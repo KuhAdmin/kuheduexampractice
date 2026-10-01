@@ -24,7 +24,7 @@ export const PaymentStatusModal = ({ open, status, errorMessage, onClose, onRetr
               </button>
             )}
             <p className="eyebrow" id="payment-status">
-              English 24x7 Premium
+              Kuhedu Premium
             </p>
             {status === "processing" ? (
               <>

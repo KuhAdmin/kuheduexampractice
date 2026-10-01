@@ -40,7 +40,7 @@ export const AdminLayout = ({ onLogout, user }) => {
 
   return (
     <AppSidebarLayout
-      brandTitle="English 24x7 Admin"
+      brandTitle="Kuhedu Admin"
       brandSubtitle="Workspace for content and analytics"
       menuItems={menu.map((item) => ({ ...item, end: item.to === "/admin" }))}
       homeLink={isModerator ? { to: "/dashboard", label: "Back to app" } : { to: "/", label: "Home" }}

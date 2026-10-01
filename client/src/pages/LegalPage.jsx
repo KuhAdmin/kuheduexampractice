@@ -12,9 +12,9 @@ export const LegalPage = () => {
     <div className="legal-page">
       <header className="legal-page-header">
         <img src="/kuhedu-logo.png" alt="" />
-        <span>English 24x7</span>
+        <span>Kuhedu</span>
         <Link className="legal-page-back" to="/">
-          Back to English 24x7
+          Back to Kuhedu
         </Link>
       </header>
       <div className="legal-page-content">

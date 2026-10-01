@@ -45,7 +45,7 @@ export const createApp = () => {
 
   // "www." is treated as optional/interchangeable on both sides -- a single
   // exact-string CLIENT_URL match caused a real production outage: prod was
-  // actually served from https://www.english24x7.study, but CLIENT_URL
+  // actually served from https://www.kuhedu.com, but CLIENT_URL
   // didn't have that exact "www.", so the site's OWN real visitors'
   // same-origin requests were rejected as a foreign origin.
   const stripWww = (hostname) => hostname.replace(/^www\./, "");

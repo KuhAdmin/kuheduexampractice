@@ -14,7 +14,7 @@ const BASE_FEATURES = [
   "Access to Virtual Labs",
 ];
 
-const CBSE_SUBTITLE = "CBSE Board | Class 6, 7 & 8";
+const CBSE_SUBTITLE = "CBSE Board | Class 6-12";
 
 // Both options are one-time, fixed payments -- no auto-renewal, nothing
 // recurring. planId matches server/src/services/paymentService.js's
@@ -22,7 +22,7 @@ const CBSE_SUBTITLE = "CBSE Board | Class 6, 7 & 8";
 export const pricingCards = [
   {
     id: "premium",
-    name: "English 24x7 Premium",
+    name: "Kuhedu Premium",
     subtitle: CBSE_SUBTITLE,
     options: [
       {

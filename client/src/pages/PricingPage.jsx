@@ -171,9 +171,9 @@ export const PricingPage = () => {
     <div className="legal-page pricing-page">
       <header className="legal-page-header">
         <img src="/kuhedu-logo.png" alt="" />
-        <span>English 24x7</span>
+        <span>Kuhedu</span>
         <Link className="legal-page-back" to={backTo} state={backState}>
-          Back to English 24x7
+          Back to Kuhedu
         </Link>
       </header>
 
@@ -189,7 +189,7 @@ export const PricingPage = () => {
               <img src="/crown.png" alt="" className="pricing-card-mark-image" aria-hidden="true" />
             </div>
             <strong>You&apos;re already Premium</strong>
-            <p>Enjoy full access to English 24x7 Premium.</p>
+            <p>Enjoy full access to Kuhedu Premium.</p>
           </div>
         ) : (
           <div className={`pricing-cards-grid${pricingCards.length === 1 ? " pricing-cards-grid--single" : ""}`}>

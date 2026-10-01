@@ -91,9 +91,9 @@ const boardOptions = [
   { id: "neet", label: "NEET", badge: "N", disabled: true },
   { id: "jee-foundation", label: "JEE Foundation", badge: "J", disabled: true },
 ];
-// Only classes 6-8 have content today -- 9-12 stay visible but disabled, and
-// 6 is the forced default so the class step can never be left unselected.
-const DISABLED_CLASSES = new Set(["9", "10", "11", "12"]);
+// Classes 6-12 all have content today -- 6 is still the forced default so
+// the class step can never be left unselected.
+const DISABLED_CLASSES = new Set([]);
 const classOptions = ["6", "7", "8", "9", "10", "11", "12"];
 // Only English content exists today -- the rest stay visible but disabled,
 // and English is the forced default so the subject step can never be left
@@ -584,7 +584,7 @@ const HomeScreen = ({
           {showBrandChrome ? (
             <div className="home-onboarding-topbar">
               <img src="/kuhedu-logo.png" alt="KUHEDU logo" />
-              <span>English 24x7</span>
+              <span>Kuhedu</span>
             </div>
           ) : (
             <div className="home-screen-topline" aria-hidden="true" />
@@ -685,7 +685,7 @@ const HomeScreen = ({
                     About Kuhedu
                   </button>
                   <button type="button" onClick={onOpenStudyBuddy}>
-                    English 24x7
+                    Kuhedu App
                   </button>
                   <button type="button" onClick={onOpenLearnerInfo}>
                     Learners
@@ -1189,14 +1189,14 @@ export const HomePage = ({
         <nav className="home-desktop-navbar">
           <div className="home-desktop-navbar-brand">
             <img src="/kuhedu-logo.png" alt="KUHEDU logo" />
-            <span>English 24x7</span>
+            <span>Kuhedu</span>
           </div>
           <nav className="home-desktop-navbar-links" aria-label="Company">
             <button type="button" className="home-desktop-navbar-link-button" onClick={openCorporateSite}>
               About Kuhedu
             </button>
             <button type="button" className="home-desktop-navbar-link-button" onClick={openStudyBuddy}>
-              English 24x7
+              Kuhedu App
             </button>
             <button type="button" className="home-desktop-navbar-link-button" onClick={openLearnerInfo}>
               Learners

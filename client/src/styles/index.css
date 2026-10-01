@@ -932,7 +932,7 @@ a {
 }
 
 /* clamp() instead of a fixed 0.8em -- on narrow phones these 5-6 item rows
-   (About Kuhedu/English 24x7/Learners/Institutions/Pricing, then Privacy/
+   (About Kuhedu/Kuhedu App/Learners/Institutions/Pricing, then Privacy/
    Terms/Refund/Cancellation/Disclaimer/Contact) wrapped with a single
    orphaned word stranded on its own line. Scales down continuously as the
    viewport narrows (2.6vw) rather than jumping at one breakpoint, floored
@@ -9310,7 +9310,7 @@ a {
   color: var(--text);
 }
 
-/* Heading is "Install<br/>English 24x7" here (see StudentProfilePage.jsx)
+/* Heading is "Install<br/>Kuhedu" here (see StudentProfilePage.jsx)
    -- smaller than the base .student-profile-premium-copy strong size so the
    product name fits on its own single line instead of wrapping a second time. */
 /* 1.08em is just under the measured wrap boundary (breaks to 2 lines

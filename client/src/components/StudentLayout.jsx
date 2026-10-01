@@ -63,7 +63,7 @@ export const StudentLayout = ({ user, onLogout }) => {
     <AiTutorAvatarProvider>
       <ClassSubjectProvider user={user}>
         <AppSidebarLayout
-          brandTitle="English 24x7"
+          brandTitle="Kuhedu"
           brandSubtitle="Your learning workspace"
           belowBrand={<StudentClassSubjectSwitcher />}
           menuItems={studentMenuItems}
